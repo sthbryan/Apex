@@ -2,6 +2,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use async_trait::async_trait;
+use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use serde::Serialize;
 use tokio::io::{AsyncRead, AsyncWrite, Join, join, split};
@@ -68,6 +69,35 @@ impl Connection {
 
     pub async fn recv(&mut self) -> Option<Result<Frame, TransportError>> {
         self.framed.next().await
+    }
+
+    pub fn split(self) -> (ConnectionWriter, ConnectionReader) {
+        let (sink, stream) = self.framed.split();
+        (ConnectionWriter { sink }, ConnectionReader { stream })
+    }
+}
+
+pub struct ConnectionWriter {
+    sink: SplitSink<Framed<BoxedStream, FrameCodec>, Frame>,
+}
+
+impl ConnectionWriter {
+    pub async fn send(&mut self, frame: Frame) -> Result<(), TransportError> {
+        self.sink.send(frame).await
+    }
+
+    pub async fn send_control<T: Serialize>(&mut self, message: &T) -> Result<(), TransportError> {
+        self.send(Frame::control(message)?).await
+    }
+}
+
+pub struct ConnectionReader {
+    stream: SplitStream<Framed<BoxedStream, FrameCodec>>,
+}
+
+impl ConnectionReader {
+    pub async fn recv(&mut self) -> Option<Result<Frame, TransportError>> {
+        self.stream.next().await
     }
 }
 

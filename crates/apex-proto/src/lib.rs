@@ -7,5 +7,6 @@ pub use codec::{Frame, FrameCodec};
 pub use error::{ErrorCode, ProtocolError, TransportError};
 pub use message::*;
 pub use transport::{
-    BoxedStream, Connection, Listener, PeerInfo, UnixTransport, box_stream, connect_unix,
+    BoxedStream, Connection, ConnectionReader, ConnectionWriter, Listener, PeerInfo, UnixTransport,
+    box_stream, connect_unix,
 };
