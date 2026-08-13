@@ -1,7 +1,7 @@
 import type { Messages } from "./en";
 
 export const es: Messages = {
-  "app.name": "apex",
+  "app.name": "Apex",
   "status.connecting": "conectando",
   "status.ready": "listo",
   "status.failed": "fallo",

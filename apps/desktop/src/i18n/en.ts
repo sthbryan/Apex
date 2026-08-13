@@ -1,5 +1,5 @@
 export const en = {
-  "app.name": "apex",
+  "app.name": "Apex",
   "status.connecting": "connecting",
   "status.ready": "ready",
   "status.failed": "failed",
