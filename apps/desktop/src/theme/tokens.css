@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --color-bg: var(--apex-bg);
+  --color-surface: var(--apex-surface);
+  --color-raised: var(--apex-raised);
+  --color-border: var(--apex-border);
+  --color-text: var(--apex-text);
+  --color-muted: var(--apex-muted);
+  --color-faint: var(--apex-faint);
+  --color-accent: var(--apex-accent);
+
+  --color-state-idle: var(--apex-state-idle);
+  --color-state-working: var(--apex-state-working);
+  --color-state-blocked: var(--apex-state-blocked);
+  --color-state-done: var(--apex-state-done);
+}
+
+:root {
+  --apex-bg: #ffffff;
+  --apex-surface: #f6f7f9;
+  --apex-raised: #ffffff;
+  --apex-border: #dfe2e6;
+  --apex-text: #1c1e21;
+  --apex-muted: #656d76;
+  --apex-faint: #8c959f;
+  --apex-accent: #0969da;
+
+  --apex-state-idle: #8c959f;
+  --apex-state-working: #0969da;
+  --apex-state-blocked: #bf8700;
+  --apex-state-done: #1a7f37;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --apex-bg: #0c0d10;
+    --apex-surface: #131519;
+    --apex-raised: #1a1d22;
+    --apex-border: #24272e;
+    --apex-text: #e4e6eb;
+    --apex-muted: #8b919c;
+    --apex-faint: #5c626d;
+    --apex-accent: #4a9eff;
+
+    --apex-state-idle: #6e7681;
+    --apex-state-working: #4a9eff;
+    --apex-state-blocked: #e8a33d;
+    --apex-state-done: #3fb950;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --apex-bg: #0c0d10;
+  --apex-surface: #131519;
+  --apex-raised: #1a1d22;
+  --apex-border: #24272e;
+  --apex-text: #e4e6eb;
+  --apex-muted: #8b919c;
+  --apex-faint: #5c626d;
+  --apex-accent: #4a9eff;
+
+  --apex-state-idle: #6e7681;
+  --apex-state-working: #4a9eff;
+  --apex-state-blocked: #e8a33d;
+  --apex-state-done: #3fb950;
+
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--apex-bg);
+  color: var(--apex-text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}

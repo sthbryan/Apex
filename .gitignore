@@ -5,3 +5,4 @@ dist
 *.log
 .apex/
 apps/desktop/src/bindings/
+apps/desktop/src-tauri/gen/
