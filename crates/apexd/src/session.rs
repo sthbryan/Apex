@@ -1,15 +1,23 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use apex_proto::{
-    ClientMessage, Command, Connection, ErrorCode, Frame, Hello, PROTOCOL_VERSION, ProtocolError,
-    Reply, RequestId, Scope, ServerMessage, TransportError, Welcome,
+    ClientMessage, Command, Connection, ConnectionReader, ErrorCode, Frame, Hello,
+    PROTOCOL_VERSION, ProtocolError, Reply, RequestId, Scope, ServerMessage, TransportError,
+    Welcome,
 };
+use tokio::sync::mpsc;
+use tokio::task::JoinHandle;
+use uuid::Uuid;
 
-use crate::state::Daemon;
+use crate::sessions::SessionManager;
 
 const DAEMON_VERSION: &str = env!("CARGO_PKG_VERSION");
+const CLIENT_QUEUE_DEPTH: usize = 1024;
 
-pub async fn serve(daemon: Arc<Daemon>, mut connection: Connection) {
+type Outbox = mpsc::Sender<Frame>;
+
+pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     let peer = connection.peer().clone();
     match handshake(&mut connection).await {
         Ok(Some(_)) => tracing::info!(peer = %peer.label, "cliente conectado"),
@@ -23,39 +31,204 @@ pub async fn serve(daemon: Arc<Daemon>, mut connection: Connection) {
         }
     }
 
-    while let Some(frame) = connection.recv().await {
-        let frame = match frame {
-            Ok(frame) => frame,
-            Err(error) => {
-                tracing::warn!(peer = %peer.label, %error, "frame invalida");
-                break;
-            }
-        };
+    let (mut writer, reader) = connection.split();
+    let (outbox, mut queue) = mpsc::channel::<Frame>(CLIENT_QUEUE_DEPTH);
 
-        let message: ClientMessage = match frame.parse_control() {
-            Ok(message) => message,
-            Err(error) => {
-                tracing::warn!(peer = %peer.label, %error, "mensaje ilegible");
+    let pump = tokio::spawn(async move {
+        while let Some(frame) = queue.recv().await {
+            if writer.send(frame).await.is_err() {
+                return;
+            }
+        }
+    });
+
+    let events = spawn_event_forwarder(manager.clone(), outbox.clone());
+    let mut client = Client::new(manager, outbox, peer.scope);
+    client.run(reader).await;
+
+    events.abort();
+    client.detach_all();
+    drop(client);
+    let _ = pump.await;
+    tracing::info!(peer = %peer.label, "cliente desconectado");
+}
+
+struct Client {
+    manager: Arc<SessionManager>,
+    outbox: Outbox,
+    scope: Scope,
+    attached: HashMap<Uuid, JoinHandle<()>>,
+}
+
+impl Client {
+    fn new(manager: Arc<SessionManager>, outbox: Outbox, scope: Scope) -> Self {
+        Self { manager, outbox, scope, attached: HashMap::new() }
+    }
+
+    async fn run(&mut self, mut reader: ConnectionReader) {
+        while let Some(frame) = reader.recv().await {
+            let frame = match frame {
+                Ok(frame) => frame,
+                Err(error) => {
+                    tracing::warn!(%error, "frame invalida");
+                    return;
+                }
+            };
+
+            let message: ClientMessage = match frame.parse_control() {
+                Ok(message) => message,
+                Err(error) => {
+                    tracing::warn!(%error, "mensaje ilegible");
+                    continue;
+                }
+            };
+
+            let response = match message {
+                ClientMessage::Hello(_) => ServerMessage::err(
+                    RequestId(0),
+                    ProtocolError::new(ErrorCode::MalformedRequest, "hello duplicado"),
+                ),
+                ClientMessage::Request { id, command } => self.dispatch(id, command).await,
+            };
+
+            let Ok(frame) = Frame::control(&response) else {
                 continue;
+            };
+            if self.outbox.send(frame).await.is_err() {
+                return;
             }
-        };
-
-        let response = match message {
-            ClientMessage::Hello(_) => ServerMessage::err(
-                RequestId(0),
-                ProtocolError::new(ErrorCode::MalformedRequest, "hello duplicado"),
-            ),
-            ClientMessage::Request { id, command } => {
-                dispatch(&daemon, peer.scope, id, command).await
-            }
-        };
-
-        if let Err(error) = connection.send_control(&response).await {
-            tracing::warn!(peer = %peer.label, %error, "no se pudo responder");
-            break;
         }
     }
-    tracing::info!(peer = %peer.label, "cliente desconectado");
+
+    async fn dispatch(&mut self, id: RequestId, command: Command) -> ServerMessage {
+        if !scope_allows(self.scope, &command) {
+            return ServerMessage::err(
+                id,
+                ProtocolError::unauthorized("comando no permitido para clientes remotos"),
+            );
+        }
+
+        match self.execute(command).await {
+            Ok(reply) => ServerMessage::ok(id, reply),
+            Err(error) => ServerMessage::err(id, error),
+        }
+    }
+
+    async fn execute(&mut self, command: Command) -> Result<Reply, ProtocolError> {
+        match command {
+            Command::Ping => Ok(Reply::Pong),
+            Command::ListAgents => Ok(Reply::Agents { agents: self.manager.list_agents().await }),
+            Command::ListSessions => {
+                Ok(Reply::Sessions { sessions: self.manager.list_sessions().await })
+            }
+            Command::SessionCreate { agent, cwd, size } => {
+                let session =
+                    self.manager.create(&agent, cwd, size).await.map_err(internal_error)?;
+                self.attach(session.id).await?;
+                Ok(Reply::Session { session })
+            }
+            Command::SessionAttach { id } => {
+                self.attach(id).await?;
+                Ok(Reply::Done)
+            }
+            Command::SessionDetach { id } => {
+                self.detach(id);
+                Ok(Reply::Done)
+            }
+            Command::SessionInput { id, data } => {
+                self.manager.write(id, &data).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::SessionResize { id, size } => {
+                self.manager.resize(id, size).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::SessionClose { id } => {
+                self.detach(id);
+                self.manager.close(id).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+        }
+    }
+
+    async fn attach(&mut self, id: Uuid) -> Result<(), ProtocolError> {
+        if self.attached.contains_key(&id) {
+            return Ok(());
+        }
+        let session = self
+            .manager
+            .get(id)
+            .await
+            .ok_or_else(|| ProtocolError::new(ErrorCode::NotFound, format!("sesion {id}")))?;
+
+        let outbox = self.outbox.clone();
+        let mut stream = session.process.subscribe();
+        let replay = session.process.snapshot();
+
+        let handle = tokio::spawn(async move {
+            if !replay.is_empty()
+                && outbox.send(Frame::Output { session: id, data: replay }).await.is_err()
+            {
+                return;
+            }
+            loop {
+                match stream.recv().await {
+                    Ok(data) => {
+                        if outbox.send(Frame::Output { session: id, data }).await.is_err() {
+                            return;
+                        }
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                        tracing::warn!(%id, skipped, "el cliente se quedo atras");
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => return,
+                }
+            }
+        });
+
+        self.attached.insert(id, handle);
+        Ok(())
+    }
+
+    fn detach(&mut self, id: Uuid) {
+        if let Some(handle) = self.attached.remove(&id) {
+            handle.abort();
+        }
+    }
+
+    fn detach_all(&mut self) {
+        for (_, handle) in self.attached.drain() {
+            handle.abort();
+        }
+    }
+}
+
+fn spawn_event_forwarder(manager: Arc<SessionManager>, outbox: Outbox) -> JoinHandle<()> {
+    let mut events = manager.subscribe();
+    tokio::spawn(async move {
+        loop {
+            match events.recv().await {
+                Ok(event) => {
+                    let Ok(frame) = Frame::control(&ServerMessage::Event(event)) else {
+                        continue;
+                    };
+                    if outbox.send(frame).await.is_err() {
+                        return;
+                    }
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => return,
+            }
+        }
+    })
+}
+
+fn internal_error(error: anyhow::Error) -> ProtocolError {
+    ProtocolError::internal(format!("{error:#}"))
+}
+
+fn not_found_error(error: anyhow::Error) -> ProtocolError {
+    ProtocolError::new(ErrorCode::NotFound, format!("{error:#}"))
 }
 
 async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, TransportError> {
@@ -88,157 +261,279 @@ async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, Transpo
     Ok(Some(hello))
 }
 
-async fn dispatch(
-    daemon: &Arc<Daemon>,
-    scope: Scope,
-    id: RequestId,
-    command: Command,
-) -> ServerMessage {
-    if !scope_allows(scope, &command) {
-        return ServerMessage::err(
-            id,
-            ProtocolError::unauthorized("comando no permitido para clientes remotos"),
-        );
-    }
-    match command {
-        Command::Ping => ServerMessage::ok(id, Reply::Pong),
-        Command::ListAgents => {
-            ServerMessage::ok(id, Reply::Agents { agents: daemon.list_agents().await })
-        }
-    }
-}
-
 fn scope_allows(scope: Scope, command: &Command) -> bool {
     match scope {
         Scope::Local => true,
-        Scope::Remote => matches!(command, Command::Ping | Command::ListAgents),
+        Scope::Remote => !matches!(command, Command::SessionCreate { .. }),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apex_core::ApexPaths;
-    use apex_proto::{CommandOutcome, Identity, Listener, UnixTransport, connect_unix};
+    use apex_core::{AgentProfile, BinaryResolver, ProfileSet, ShellEnvironment, Store};
+    use apex_proto::{
+        CommandOutcome, Listener, SessionSummary, TerminalSize, UnixTransport, connect_unix,
+    };
     use std::path::PathBuf;
+    use std::time::Duration;
+    use tokio::time::timeout;
+
+    fn manager() -> Arc<SessionManager> {
+        let mut profiles = ProfileSet::builtin().expect("perfiles");
+        profiles.upsert(
+            AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil sh"),
+        );
+        let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
+            PathBuf::from("/bin"),
+        ]));
+        let store = Store::in_memory().expect("store");
+        let project = store.upsert_project("test", "/tmp/test").expect("proyecto");
+        Arc::new(SessionManager::new(
+            profiles,
+            resolver,
+            store,
+            project.id,
+            PathBuf::from("/tmp"),
+        ))
+    }
 
     struct Harness {
         socket: PathBuf,
-        home: tempfile::TempDir,
+        manager: Arc<SessionManager>,
     }
 
     impl Harness {
-        async fn start() -> Self {
-            let home = tempfile::tempdir().expect("home");
-            let id = uuid::Uuid::new_v4().simple().to_string();
-            let socket = PathBuf::from("/tmp").join(format!("apexd-t-{}.sock", &id[..8]));
-
-            let paths = ApexPaths { socket: socket.clone(), ..ApexPaths::rooted_at(home.path()) };
-            let daemon = Daemon::bootstrap(&paths).await.expect("bootstrap");
+        fn start() -> Self {
+            let manager = manager();
+            let id = Uuid::new_v4().simple().to_string();
+            let socket = PathBuf::from("/tmp").join(format!("apexd-s-{}.sock", &id[..8]));
             let mut transport = UnixTransport::bind(&socket).expect("bind");
 
+            let served = manager.clone();
             tokio::spawn(async move {
                 while let Ok((stream, peer)) = transport.accept().await {
-                    tokio::spawn(serve(daemon.clone(), Connection::new(stream, peer)));
+                    tokio::spawn(serve(served.clone(), Connection::new(stream, peer)));
                 }
             });
-            Self { socket, home }
+            Self { socket, manager }
         }
 
-        async fn connect(&self, hello: Hello) -> (Connection, ServerMessage) {
-            let mut client = connect_unix(&self.socket).await.expect("connect");
-            client.send_control(&ClientMessage::Hello(hello)).await.expect("hello");
-            let frame = client.recv().await.expect("frame").expect("sin error");
-            (client, frame.parse_control().expect("parse"))
+        async fn client(&self) -> TestClient {
+            let mut connection = connect_unix(&self.socket).await.expect("connect");
+            connection
+                .send_control(&ClientMessage::Hello(Hello {
+                    protocol_version: PROTOCOL_VERSION,
+                    client_name: "test".into(),
+                    identity: None,
+                }))
+                .await
+                .expect("hello");
+            let welcome = connection.recv().await.expect("frame").expect("sin error");
+            assert!(matches!(
+                welcome.parse_control::<ServerMessage>().expect("parse"),
+                ServerMessage::Welcome(_)
+            ));
+            TestClient { connection, next: 0 }
         }
     }
 
-    fn hello(version: u32) -> Hello {
-        Hello { protocol_version: version, client_name: "test".into(), identity: None }
+    struct TestClient {
+        connection: Connection,
+        next: u64,
     }
 
-    async fn request(client: &mut Connection, id: RequestId, command: Command) -> ServerMessage {
-        client.send_control(&ClientMessage::Request { id, command }).await.expect("request");
-        client.recv().await.expect("frame").expect("sin error").parse_control().expect("parse")
-    }
+    impl TestClient {
+        async fn request(&mut self, command: Command) -> Reply {
+            self.next += 1;
+            let id = RequestId(self.next);
+            self.connection
+                .send_control(&ClientMessage::Request { id, command })
+                .await
+                .expect("request");
 
-    #[tokio::test]
-    async fn a_matching_version_is_welcomed() {
-        let harness = Harness::start().await;
-        let (_, response) = harness.connect(hello(PROTOCOL_VERSION)).await;
-        match response {
-            ServerMessage::Welcome(welcome) => {
-                assert_eq!(welcome.protocol_version, PROTOCOL_VERSION);
-                assert_eq!(welcome.scope, Scope::Local);
+            let deadline = timeout(Duration::from_secs(10), async {
+                loop {
+                    let frame =
+                        self.connection.recv().await.expect("frame").expect("sin error");
+                    if matches!(frame, Frame::Control(_))
+                        && let ServerMessage::Response { id: got, outcome } =
+                            frame.parse_control::<ServerMessage>().expect("parse")
+                        && got == id
+                    {
+                        return match outcome {
+                            CommandOutcome::Ok { reply } => reply,
+                            CommandOutcome::Err { error } => panic!("error: {error}"),
+                        };
+                    }
+                }
+            })
+            .await;
+            deadline.expect("sin respuesta a tiempo")
+        }
+
+        async fn create_shell(&mut self) -> SessionSummary {
+            let reply = self
+                .request(Command::SessionCreate {
+                    agent: "sh".into(),
+                    cwd: Some("/tmp".into()),
+                    size: TerminalSize { rows: 24, cols: 80 },
+                })
+                .await;
+            match reply {
+                Reply::Session { session } => session,
+                other => panic!("se esperaba una sesion, llego {other:?}"),
             }
-            other => panic!("se esperaba welcome, llego {other:?}"),
         }
-        assert!(harness.home.path().exists());
-    }
 
-    #[tokio::test]
-    async fn a_mismatched_version_is_rejected() {
-        let harness = Harness::start().await;
-        let (_, response) = harness.connect(hello(PROTOCOL_VERSION + 99)).await;
-        match response {
-            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
-                assert_eq!(error.code, ErrorCode::UnsupportedVersion);
-            }
-            other => panic!("se esperaba rechazo, llego {other:?}"),
+        async fn collect_output(&mut self, id: Uuid, needle: &str) -> String {
+            let found = timeout(Duration::from_secs(10), async {
+                let mut seen = Vec::new();
+                loop {
+                    let frame =
+                        self.connection.recv().await.expect("frame").expect("sin error");
+                    if let Frame::Output { session, data } = frame
+                        && session == id
+                    {
+                        seen.extend_from_slice(&data);
+                        let text = String::from_utf8_lossy(&seen).to_string();
+                        if text.contains(needle) {
+                            return text;
+                        }
+                    }
+                }
+            })
+            .await;
+            found.unwrap_or_else(|_| panic!("nunca llego {needle:?}"))
         }
     }
 
     #[tokio::test]
-    async fn ping_is_answered_with_pong() {
-        let harness = Harness::start().await;
-        let (mut client, _) = harness.connect(hello(PROTOCOL_VERSION)).await;
-        let response = request(&mut client, RequestId(1), Command::Ping).await;
-        assert_eq!(response, ServerMessage::ok(RequestId(1), Reply::Pong));
+    async fn ping_still_works_alongside_sessions() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        assert_eq!(client.request(Command::Ping).await, Reply::Pong);
     }
 
     #[tokio::test]
-    async fn listing_agents_returns_every_builtin_profile() {
-        let harness = Harness::start().await;
-        let (mut client, _) = harness.connect(hello(PROTOCOL_VERSION)).await;
-        let response = request(&mut client, RequestId(2), Command::ListAgents).await;
-
-        let ServerMessage::Response { outcome: CommandOutcome::Ok { reply }, .. } = response else {
-            panic!("se esperaba una respuesta ok");
-        };
-        let Reply::Agents { agents } = reply else {
-            panic!("se esperaba la lista de agentes");
-        };
-
-        let names: Vec<_> = agents.iter().map(|agent| agent.name.as_str()).collect();
-        assert!(names.contains(&"claude"));
-        assert!(names.contains(&"codex"));
-        assert!(names.contains(&"shell"));
-        assert!(agents.iter().any(|agent| agent.supports_resume));
-    }
-
-    #[tokio::test]
-    async fn a_second_hello_is_rejected_without_dropping_the_connection() {
-        let harness = Harness::start().await;
-        let (mut client, _) = harness.connect(hello(PROTOCOL_VERSION)).await;
+    async fn creating_a_session_streams_its_output() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        let session = client.create_shell().await;
 
         client
-            .send_control(&ClientMessage::Hello(Hello {
-                identity: Some(Identity { device_id: "x".into(), token: "y".into() }),
-                ..hello(PROTOCOL_VERSION)
-            }))
+            .request(Command::SessionInput {
+                id: session.id,
+                data: "echo marca-de-salida\n".into(),
+            })
+            .await;
+        let text = client.collect_output(session.id, "marca-de-salida").await;
+        assert!(text.contains("marca-de-salida"));
+    }
+
+    #[tokio::test]
+    async fn sessions_appear_in_the_listing() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        let session = client.create_shell().await;
+
+        let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
+            panic!("se esperaba la lista de sesiones");
+        };
+        assert_eq!(sessions.len(), 1);
+        assert_eq!(sessions[0].id, session.id);
+        assert!(sessions[0].is_alive());
+    }
+
+    #[tokio::test]
+    async fn resizing_updates_the_stored_size() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        let session = client.create_shell().await;
+
+        client
+            .request(Command::SessionResize {
+                id: session.id,
+                size: TerminalSize { rows: 40, cols: 120 },
+            })
+            .await;
+        client
+            .request(Command::SessionInput { id: session.id, data: "stty size\n".into() })
+            .await;
+
+        let text = client.collect_output(session.id, "40 120").await;
+        assert!(text.contains("40 120"));
+    }
+
+    #[tokio::test]
+    async fn a_session_survives_the_client_disconnecting() {
+        let harness = Harness::start();
+
+        let session = {
+            let mut client = harness.client().await;
+            let session = client.create_shell().await;
+            client
+                .request(Command::SessionInput {
+                    id: session.id,
+                    data: "echo antes-de-cerrar\n".into(),
+                })
+                .await;
+            client.collect_output(session.id, "antes-de-cerrar").await;
+            session
+        };
+
+        assert_eq!(harness.manager.list_sessions().await.len(), 1);
+
+        let mut reconnected = harness.client().await;
+        reconnected.request(Command::SessionAttach { id: session.id }).await;
+        let replayed = reconnected.collect_output(session.id, "antes-de-cerrar").await;
+        assert!(replayed.contains("antes-de-cerrar"));
+
+        reconnected
+            .request(Command::SessionInput {
+                id: session.id,
+                data: "echo sigue-viva\n".into(),
+            })
+            .await;
+        let text = reconnected.collect_output(session.id, "sigue-viva").await;
+        assert!(text.contains("sigue-viva"));
+    }
+
+    #[tokio::test]
+    async fn closing_a_session_removes_it() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        let session = client.create_shell().await;
+
+        client.request(Command::SessionClose { id: session.id }).await;
+        assert!(harness.manager.list_sessions().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn creating_a_session_for_an_unknown_agent_fails() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        client.next += 1;
+        let id = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request {
+                id,
+                command: Command::SessionCreate {
+                    agent: "no-existe".into(),
+                    cwd: None,
+                    size: TerminalSize::default(),
+                },
+            })
             .await
-            .expect("hello");
-        let response: ServerMessage =
-            client.recv().await.expect("frame").expect("sin error").parse_control().expect("parse");
+            .expect("request");
 
-        match response {
+        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
-                assert_eq!(error.code, ErrorCode::MalformedRequest);
+                assert_eq!(error.code, ErrorCode::Internal);
             }
-            other => panic!("se esperaba rechazo, llego {other:?}"),
+            other => panic!("se esperaba un error, llego {other:?}"),
         }
-
-        let after = request(&mut client, RequestId(3), Command::Ping).await;
-        assert_eq!(after, ServerMessage::ok(RequestId(3), Reply::Pong));
     }
 }

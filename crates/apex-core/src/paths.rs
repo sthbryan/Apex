@@ -6,6 +6,7 @@ const MAX_SOCKET_PATH_BYTES: usize = 100;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApexPaths {
+    pub home: PathBuf,
     pub config_dir: PathBuf,
     pub data_dir: PathBuf,
     pub socket: PathBuf,
@@ -24,7 +25,7 @@ impl ApexPaths {
         let config_dir = home.join(".apex");
         let data_dir = config_dir.join("data");
         let socket = pick_socket_path(&config_dir);
-        Self { config_dir, data_dir, socket }
+        Self { home: home.to_path_buf(), config_dir, data_dir, socket }
     }
 
     pub fn agents_dir(&self) -> PathBuf {

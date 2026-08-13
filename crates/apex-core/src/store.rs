@@ -140,6 +140,21 @@ impl Store {
         Ok(())
     }
 
+    pub fn close_session(&self, id: Uuid) -> Result<()> {
+        self.connection.execute(
+            "UPDATE sessions SET closed_at = unixepoch() WHERE id = ?1 AND closed_at IS NULL",
+            params![id.to_string()],
+        )?;
+        Ok(())
+    }
+
+    pub fn close_orphaned_sessions(&self) -> Result<usize> {
+        Ok(self.connection.execute(
+            "UPDATE sessions SET closed_at = unixepoch() WHERE closed_at IS NULL",
+            [],
+        )?)
+    }
+
     pub fn list_open_sessions(&self, project_id: Uuid) -> Result<Vec<Session>> {
         let mut statement = self.connection.prepare(
             "SELECT id, project_id, agent, title, cwd, state FROM sessions
@@ -246,6 +261,28 @@ mod tests {
         store.insert_session(apex.id, "claude", "a", "/tmp/apex").expect("sesion");
 
         assert!(store.list_open_sessions(otro.id).expect("abiertas").is_empty());
+    }
+
+    #[test]
+    fn closing_a_session_removes_it_from_the_open_list() {
+        let store = store();
+        let project = store.upsert_project("apex", "/tmp/apex").expect("proyecto");
+        let session = store.insert_session(project.id, "claude", "a", "/tmp").expect("sesion");
+
+        store.close_session(session.id).expect("cerrar");
+        assert!(store.list_open_sessions(project.id).expect("abiertas").is_empty());
+    }
+
+    #[test]
+    fn orphaned_sessions_from_a_previous_run_are_closed() {
+        let store = store();
+        let project = store.upsert_project("apex", "/tmp/apex").expect("proyecto");
+        store.insert_session(project.id, "claude", "a", "/tmp").expect("sesion");
+        store.insert_session(project.id, "codex", "b", "/tmp").expect("sesion");
+
+        assert_eq!(store.close_orphaned_sessions().expect("limpiar"), 2);
+        assert_eq!(store.close_orphaned_sessions().expect("limpiar"), 0);
+        assert!(store.list_open_sessions(project.id).expect("abiertas").is_empty());
     }
 
     #[test]

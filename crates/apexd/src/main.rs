@@ -1,10 +1,10 @@
 mod session;
+mod sessions;
 mod state;
 
 use anyhow::{Context, Result};
 use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
-use state::Daemon;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
         .init();
 
     let paths = ApexPaths::discover()?;
-    let daemon = Daemon::bootstrap(&paths).await?;
+    let manager = state::bootstrap(&paths).await?;
 
     let mut transport = UnixTransport::bind(&paths.socket)
         .with_context(|| format!("escuchando en {}", paths.socket.display()))?;
@@ -26,8 +26,8 @@ async fn main() -> Result<()> {
         tokio::select! {
             accepted = transport.accept() => {
                 let (stream, peer) = accepted.context("aceptando conexion")?;
-                let daemon = daemon.clone();
-                tokio::spawn(session::serve(daemon, Connection::new(stream, peer)));
+                let manager = manager.clone();
+                tokio::spawn(session::serve(manager, Connection::new(stream, peer)));
             }
             _ = tokio::signal::ctrl_c() => {
                 tracing::info!("apexd apagandose");

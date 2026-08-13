@@ -2,42 +2,35 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, ShellEnvironment, Store};
-use apex_proto::AgentSummary;
-use tokio::sync::Mutex;
 
-pub struct Daemon {
-    profiles: ProfileSet,
-    resolver: Mutex<BinaryResolver>,
-}
+use crate::sessions::SessionManager;
 
-impl Daemon {
-    pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<Self>> {
-        paths.ensure_dirs()?;
+pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
+    paths.ensure_dirs()?;
 
-        let store = Store::open(&paths.database())?;
-        tracing::info!(
-            database = %paths.database().display(),
-            schema = store.schema_version()?,
-            "store listo"
-        );
-        drop(store);
+    let store = Store::open(&paths.database())?;
+    let orphaned = store.close_orphaned_sessions()?;
+    let project = store.upsert_project("default", &paths.config_dir.display().to_string())?;
+    tracing::info!(
+        database = %paths.database().display(),
+        schema = store.schema_version()?,
+        orphaned,
+        "store listo"
+    );
 
-        let profiles = ProfileSet::load(&paths.agents_dir())?;
-        let environment = ShellEnvironment::probe().await;
-        tracing::info!(
-            source = ?environment.source(),
-            entries = environment.search_path().len(),
-            "PATH resuelto"
-        );
+    let profiles = ProfileSet::load(&paths.agents_dir())?;
+    let environment = ShellEnvironment::probe().await;
+    tracing::info!(
+        source = ?environment.source(),
+        entries = environment.search_path().len(),
+        "PATH resuelto"
+    );
 
-        Ok(Arc::new(Self {
-            profiles,
-            resolver: Mutex::new(BinaryResolver::with_environment(environment)),
-        }))
-    }
-
-    pub async fn list_agents(&self) -> Vec<AgentSummary> {
-        let mut resolver = self.resolver.lock().await;
-        self.profiles.summarize(&mut resolver)
-    }
+    Ok(Arc::new(SessionManager::new(
+        profiles,
+        BinaryResolver::with_environment(environment),
+        store,
+        project.id,
+        paths.home.clone(),
+    )))
 }
