@@ -1,0 +1,24 @@
+import { signal } from "@preact/signals";
+import { invoke } from "@tauri-apps/api/core";
+
+import type { AgentSummary } from "./bindings/AgentSummary";
+
+export type ConnectionStatus = "connecting" | "ready" | "failed";
+
+export const status = signal<ConnectionStatus>("connecting");
+export const failure = signal<string | null>(null);
+export const agents = signal<AgentSummary[]>([]);
+export const daemonVersion = signal<string | null>(null);
+
+export async function connect(): Promise<void> {
+  status.value = "connecting";
+  failure.value = null;
+  try {
+    daemonVersion.value = await invoke<string>("daemon_version");
+    agents.value = await invoke<AgentSummary[]>("list_agents");
+    status.value = "ready";
+  } catch (cause) {
+    failure.value = cause instanceof Error ? cause.message : String(cause);
+    status.value = "failed";
+  }
+}
