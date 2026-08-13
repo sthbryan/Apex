@@ -58,11 +58,11 @@ dependencies = [
  "anyhow",
  "apex-core",
  "apex-proto",
- "directories",
- "serde_json",
+ "tempfile",
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
