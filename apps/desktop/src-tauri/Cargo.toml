@@ -1,0 +1,26 @@
+[package]
+name = "apex-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "apex_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+apex-core.workspace = true
+apex-proto.workspace = true
+
+anyhow.workspace = true
+serde.workspace = true
+tauri = { version = "2", features = [] }
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true
