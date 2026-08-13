@@ -1,0 +1,8 @@
+name = "gemini"
+command = "gemini"
+mode = "pty"
+acp_command = "gemini"
+acp_args = ["--experimental-acp"]
+
+[state_patterns]
+blocked = ["\\(y/n\\)", "Apply this change"]

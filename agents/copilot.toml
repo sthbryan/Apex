@@ -1,0 +1,6 @@
+name = "copilot"
+command = "copilot"
+mode = "pty"
+
+[state_patterns]
+blocked = ["\\(y/n\\)"]

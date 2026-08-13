@@ -1,0 +1,6 @@
+name = "opencode"
+command = "opencode"
+mode = "pty"
+
+[state_patterns]
+blocked = ["\\(y/n\\)"]

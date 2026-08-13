@@ -1,0 +1,257 @@
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use anyhow::{Context, Result};
+use apex_proto::{AgentMode, AgentSummary};
+use serde::{Deserialize, Serialize};
+
+use crate::discovery::BinaryResolver;
+
+const BUILTIN_PROFILES: &[(&str, &str)] = &[
+    ("claude", include_str!("../../../agents/claude.toml")),
+    ("codex", include_str!("../../../agents/codex.toml")),
+    ("gemini", include_str!("../../../agents/gemini.toml")),
+    ("copilot", include_str!("../../../agents/copilot.toml")),
+    ("opencode", include_str!("../../../agents/opencode.toml")),
+    ("shell", include_str!("../../../agents/shell.toml")),
+];
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgentProfile {
+    pub name: String,
+    pub command: String,
+    #[serde(default)]
+    pub args: Vec<String>,
+    #[serde(default)]
+    pub mode: AgentMode,
+    #[serde(default)]
+    pub acp_command: Option<String>,
+    #[serde(default)]
+    pub acp_args: Vec<String>,
+    #[serde(default)]
+    pub mcp_flag: Option<String>,
+    #[serde(default)]
+    pub env: BTreeMap<String, String>,
+    #[serde(default)]
+    pub state_patterns: StatePatterns,
+    #[serde(default)]
+    pub history: Option<HistoryConfig>,
+    #[serde(default)]
+    pub quota: Option<QuotaConfig>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StatePatterns {
+    #[serde(default)]
+    pub blocked: Vec<String>,
+    #[serde(default)]
+    pub done: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HistorySource {
+    Dir,
+    Command,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HistoryConfig {
+    pub source: HistorySource,
+    pub path: String,
+    #[serde(default)]
+    pub resume_args: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct QuotaConfig {
+    pub provider: String,
+    #[serde(default = "default_quota_ttl")]
+    pub cache_ttl_secs: u64,
+}
+
+fn default_quota_ttl() -> u64 {
+    900
+}
+
+impl AgentProfile {
+    pub fn parse(raw: &str) -> Result<Self> {
+        toml::from_str(raw).context("perfil de agente invalido")
+    }
+
+    pub fn supports_resume(&self) -> bool {
+        self.history.as_ref().is_some_and(|history| !history.resume_args.is_empty())
+    }
+
+    pub fn summarize(&self, resolver: &mut BinaryResolver) -> AgentSummary {
+        AgentSummary {
+            name: self.name.clone(),
+            command: self.command.clone(),
+            resolved_path: resolver
+                .resolve(&self.command)
+                .map(|path| path.display().to_string()),
+            mode: self.mode,
+            supports_resume: self.supports_resume(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ProfileSet {
+    profiles: Vec<AgentProfile>,
+}
+
+impl ProfileSet {
+    pub fn builtin() -> Result<Self> {
+        let mut profiles = Vec::with_capacity(BUILTIN_PROFILES.len());
+        for (name, raw) in BUILTIN_PROFILES {
+            profiles.push(
+                AgentProfile::parse(raw)
+                    .with_context(|| format!("perfil embebido {name} invalido"))?,
+            );
+        }
+        Ok(Self { profiles })
+    }
+
+    pub fn load(agents_dir: &Path) -> Result<Self> {
+        let mut set = Self::builtin()?;
+        set.merge_dir(agents_dir)?;
+        Ok(set)
+    }
+
+    pub fn merge_dir(&mut self, agents_dir: &Path) -> Result<()> {
+        let Ok(entries) = std::fs::read_dir(agents_dir) else {
+            return Ok(());
+        };
+        let mut paths: Vec<_> = entries
+            .flatten()
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().is_some_and(|ext| ext == "toml"))
+            .collect();
+        paths.sort();
+
+        for path in paths {
+            let raw = std::fs::read_to_string(&path)
+                .with_context(|| format!("leyendo {}", path.display()))?;
+            let profile = AgentProfile::parse(&raw)
+                .with_context(|| format!("perfil invalido en {}", path.display()))?;
+            self.upsert(profile);
+        }
+        Ok(())
+    }
+
+    pub fn upsert(&mut self, profile: AgentProfile) {
+        match self.profiles.iter_mut().find(|existing| existing.name == profile.name) {
+            Some(existing) => *existing = profile,
+            None => self.profiles.push(profile),
+        }
+    }
+
+    pub fn get(&self, name: &str) -> Option<&AgentProfile> {
+        self.profiles.iter().find(|profile| profile.name == name)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &AgentProfile> {
+        self.profiles.iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.profiles.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.profiles.is_empty()
+    }
+
+    pub fn summarize(&self, resolver: &mut BinaryResolver) -> Vec<AgentSummary> {
+        self.profiles.iter().map(|profile| profile.summarize(resolver)).collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::discovery::ShellEnvironment;
+    use std::path::PathBuf;
+
+    #[test]
+    fn every_builtin_profile_parses() {
+        let set = ProfileSet::builtin().expect("perfiles embebidos");
+        assert_eq!(set.len(), BUILTIN_PROFILES.len());
+        for (name, _) in BUILTIN_PROFILES {
+            assert!(set.get(name).is_some(), "falta el perfil {name}");
+        }
+    }
+
+    #[test]
+    fn claude_declares_resume_and_acp() {
+        let set = ProfileSet::builtin().expect("perfiles embebidos");
+        let claude = set.get("claude").expect("claude");
+        assert!(claude.supports_resume());
+        assert_eq!(claude.acp_command.as_deref(), Some("npx"));
+        assert!(!claude.state_patterns.blocked.is_empty());
+    }
+
+    #[test]
+    fn shell_profile_has_no_agent_machinery() {
+        let set = ProfileSet::builtin().expect("perfiles embebidos");
+        let shell = set.get("shell").expect("shell");
+        assert!(!shell.supports_resume());
+        assert!(shell.quota.is_none());
+    }
+
+    #[test]
+    fn a_user_profile_overrides_a_builtin_by_name() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(
+            dir.path().join("claude.toml"),
+            "name = \"claude\"\ncommand = \"/opt/mi-claude\"\n",
+        )
+        .expect("escribir");
+
+        let set = ProfileSet::load(dir.path()).expect("cargar");
+        assert_eq!(set.len(), BUILTIN_PROFILES.len());
+        assert_eq!(set.get("claude").expect("claude").command, "/opt/mi-claude");
+    }
+
+    #[test]
+    fn a_user_profile_can_add_a_new_agent() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(
+            dir.path().join("glm.toml"),
+            "name = \"glm\"\ncommand = \"glm\"\nmode = \"pty\"\n",
+        )
+        .expect("escribir");
+
+        let set = ProfileSet::load(dir.path()).expect("cargar");
+        assert_eq!(set.len(), BUILTIN_PROFILES.len() + 1);
+        assert_eq!(set.get("glm").expect("glm").mode, AgentMode::Pty);
+    }
+
+    #[test]
+    fn a_missing_agents_dir_leaves_the_builtins_intact() {
+        let set = ProfileSet::load(Path::new("/no/existe/agents")).expect("cargar");
+        assert_eq!(set.len(), BUILTIN_PROFILES.len());
+    }
+
+    #[test]
+    fn an_invalid_user_profile_is_reported_with_its_path() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(dir.path().join("roto.toml"), "esto no es toml valido = = =")
+            .expect("escribir");
+
+        let error = ProfileSet::load(dir.path()).expect_err("deberia fallar");
+        assert!(format!("{error:#}").contains("roto.toml"));
+    }
+
+    #[test]
+    fn summaries_mark_availability_from_the_resolver() {
+        let env = ShellEnvironment::from_search_path(vec![PathBuf::from("/bin")]);
+        let mut resolver = BinaryResolver::with_environment(env);
+        let profile = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil");
+
+        let summary = profile.summarize(&mut resolver);
+        assert!(summary.is_available());
+        assert_eq!(summary.resolved_path.as_deref(), Some("/bin/sh"));
+    }
+}

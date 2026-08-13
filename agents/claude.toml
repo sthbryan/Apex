@@ -1,0 +1,19 @@
+name = "claude"
+command = "claude"
+mode = "pty"
+acp_command = "npx"
+acp_args = ["@zed-industries/claude-code-acp"]
+mcp_flag = "--mcp-config"
+
+[state_patterns]
+blocked = ["Do you want to proceed", "❯ 1\\. Yes", "\\? for shortcuts"]
+done = ["Total cost:"]
+
+[history]
+source = "dir"
+path = "~/.claude/projects/{project_slug}"
+resume_args = ["--resume", "{session_id}"]
+
+[quota]
+provider = "anthropic_oauth"
+cache_ttl_secs = 900
