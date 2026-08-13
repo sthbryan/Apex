@@ -3,5 +3,10 @@
   "identifier": "default",
   "description": "Permisos de la ventana principal de Apex",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "core:event:allow-listen",
+    "core:window:allow-start-dragging",
+    "core:window:allow-is-fullscreen"
+  ]
 }

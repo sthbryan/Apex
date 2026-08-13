@@ -1,8 +1,10 @@
 import { useEffect } from "preact/hooks";
 
-import { agents, connect, daemonVersion, failure, status } from "./daemon";
+import { agents, connect, daemonVersion, failure, platform, status } from "./daemon";
 import { locale, setLocale, t } from "./i18n";
 import { AgentList } from "./panels/AgentList";
+import { TitleBar } from "./shell/TitleBar";
+import { watchFullscreen } from "./shell/windowControls";
 
 export function App() {
   useEffect(() => {
@@ -10,25 +12,33 @@ export function App() {
     void connect();
   }, []);
 
+  useEffect(() => {
+    if (!platform.value) {
+      return;
+    }
+    let dispose: (() => void) | undefined;
+    void watchFullscreen(platform.value).then((stop) => {
+      dispose = stop;
+    });
+    return () => dispose?.();
+  }, [platform.value]);
+
   return (
     <div class="flex h-full flex-col bg-bg text-text">
-      <header class="flex h-9 shrink-0 items-center justify-between border-b border-border bg-surface px-3">
-        <span class="font-semibold tracking-wide">{t("app.name")}</span>
-        <div class="flex items-center gap-3">
-          <span class="text-faint">
-            {status.value === "ready"
-              ? `apexd ${daemonVersion.value ?? ""}`
-              : t(`status.${status.value}`)}
-          </span>
-          <button
-            type="button"
-            class="rounded border border-border px-1.5 uppercase text-faint hover:text-text"
-            onClick={() => setLocale(locale.value === "es" ? "en" : "es")}
-          >
-            {locale.value}
-          </button>
-        </div>
-      </header>
+      <TitleBar title={t("app.name")}>
+        <span class="text-faint">
+          {status.value === "ready"
+            ? `apexd ${daemonVersion.value ?? ""}`
+            : t(`status.${status.value}`)}
+        </span>
+        <button
+          type="button"
+          class="rounded border border-border px-1.5 uppercase text-faint hover:text-text"
+          onClick={() => setLocale(locale.value === "es" ? "en" : "es")}
+        >
+          {locale.value}
+        </button>
+      </TitleBar>
 
       <main class="min-h-0 flex-1 overflow-auto p-4">
         {status.value === "failed" ? (

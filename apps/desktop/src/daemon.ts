@@ -9,11 +9,13 @@ export const status = signal<ConnectionStatus>("connecting");
 export const failure = signal<string | null>(null);
 export const agents = signal<AgentSummary[]>([]);
 export const daemonVersion = signal<string | null>(null);
+export const platform = signal<string | null>(null);
 
 export async function connect(): Promise<void> {
   status.value = "connecting";
   failure.value = null;
   try {
+    platform.value = await invoke<string>("host_platform");
     daemonVersion.value = await invoke<string>("daemon_version");
     agents.value = await invoke<AgentSummary[]>("list_agents");
     status.value = "ready";

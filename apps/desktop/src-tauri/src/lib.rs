@@ -16,6 +16,11 @@ fn daemon_version(state: tauri::State<'_, AppState>) -> String {
 }
 
 #[tauri::command]
+fn host_platform() -> &'static str {
+    std::env::consts::OS
+}
+
+#[tauri::command]
 async fn list_agents(state: tauri::State<'_, AppState>) -> Result<Vec<AgentSummary>, String> {
     match state.daemon.request(Command::ListAgents).await {
         Ok(Reply::Agents { agents }) => Ok(agents),
@@ -39,7 +44,7 @@ pub fn run() {
             app.manage(AppState { daemon });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![daemon_version, list_agents])
+        .invoke_handler(tauri::generate_handler![daemon_version, host_platform, list_agents])
         .run(tauri::generate_context!())
         .expect("no se pudo arrancar Apex");
 }
