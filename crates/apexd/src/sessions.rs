@@ -161,7 +161,13 @@ impl SessionManager {
     }
 
     async fn next_title(&self, agent: &str) -> String {
-        let taken = self.sessions.read().await.len();
+        let sessions = self.sessions.read().await;
+        let mut taken = 0;
+        for session in sessions.values() {
+            if session.summary.lock().await.agent == agent {
+                taken += 1;
+            }
+        }
         if taken == 0 {
             return agent.to_string();
         }

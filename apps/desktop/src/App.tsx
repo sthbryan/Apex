@@ -10,7 +10,15 @@ import { TabBar } from "./shell/TabBar";
 import { TitleBar } from "./shell/TitleBar";
 import { findLeaf } from "./shell/tree";
 import { watchFullscreen } from "./shell/windowControls";
-import { activeTab, activeTabId, closePane, splitWithNewSession, tabs } from "./shell/workspace";
+import {
+  activeSessionId,
+  activeTab,
+  activeTabId,
+  closePane,
+  splitWithNewSession,
+  tabs,
+} from "./shell/workspace";
+import { focusTerminal } from "./views/terminalRegistry";
 
 export function App() {
   const [dockOpen, setDockOpen] = useState(true);
@@ -31,6 +39,16 @@ export function App() {
     });
     return () => dispose?.();
   }, [platform.value]);
+
+  useEffect(() => {
+    if (paletteOpen) {
+      return;
+    }
+    const session = activeSessionId.value;
+    if (session) {
+      focusTerminal(session);
+    }
+  }, [paletteOpen]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

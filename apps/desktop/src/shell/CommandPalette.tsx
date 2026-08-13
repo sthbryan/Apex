@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import type { AgentSummary } from "../bindings/AgentSummary";
 import type { SessionSummary } from "../bindings/SessionSummary";
@@ -30,6 +30,7 @@ type Props = {
 export function CommandPalette({ open, onClose, agents, sessions }: Props) {
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
+  const field = useRef<HTMLInputElement>(null);
 
   const actions = useMemo(
     () => buildActions(agents, sessions, onClose),
@@ -45,10 +46,16 @@ export function CommandPalette({ open, onClose, agents, sessions }: Props) {
   }, [actions, query]);
 
   useEffect(() => {
-    if (open) {
-      setQuery("");
-      setCursor(0);
+    if (!open) {
+      return;
     }
+    setQuery("");
+    setCursor(0);
+
+    const claimFocus = () => field.current?.focus();
+    claimFocus();
+    const retry = requestAnimationFrame(claimFocus);
+    return () => cancelAnimationFrame(retry);
   }, [open]);
 
   useEffect(() => {
@@ -85,8 +92,11 @@ export function CommandPalette({ open, onClose, agents, sessions }: Props) {
         onMouseDown={(event) => event.stopPropagation()}
       >
         <input
+          ref={field}
           type="text"
-          autoFocus
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck={false}
           value={query}
           placeholder={t("palette.placeholder")}
           onInput={(event) => setQuery(event.currentTarget.value)}
