@@ -2,6 +2,7 @@ import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { AgentSummary } from "./bindings/AgentSummary";
+import { startSessionBridge } from "./sessions";
 
 export type ConnectionStatus = "connecting" | "ready" | "failed";
 
@@ -18,6 +19,7 @@ export async function connect(): Promise<void> {
     platform.value = await invoke<string>("host_platform");
     daemonVersion.value = await invoke<string>("daemon_version");
     agents.value = await invoke<AgentSummary[]>("list_agents");
+    await startSessionBridge();
     status.value = "ready";
   } catch (cause) {
     failure.value = cause instanceof Error ? cause.message : String(cause);

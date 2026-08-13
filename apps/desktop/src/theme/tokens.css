@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@xterm/xterm/css/xterm.css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -29,11 +30,29 @@
   --apex-muted: #656d76;
   --apex-faint: #8c959f;
   --apex-accent: #0969da;
+  --apex-selection: #0969da33;
 
   --apex-state-idle: #8c959f;
   --apex-state-working: #0969da;
   --apex-state-blocked: #bf8700;
   --apex-state-done: #1a7f37;
+
+  --apex-ansi-black: #24292f;
+  --apex-ansi-red: #cf222e;
+  --apex-ansi-green: #1a7f37;
+  --apex-ansi-yellow: #9a6700;
+  --apex-ansi-blue: #0969da;
+  --apex-ansi-magenta: #8250df;
+  --apex-ansi-cyan: #1b7c83;
+  --apex-ansi-white: #6e7781;
+  --apex-ansi-bright-black: #57606a;
+  --apex-ansi-bright-red: #a40e26;
+  --apex-ansi-bright-green: #2da44e;
+  --apex-ansi-bright-yellow: #bf8700;
+  --apex-ansi-bright-blue: #218bff;
+  --apex-ansi-bright-magenta: #a475f9;
+  --apex-ansi-bright-cyan: #3192aa;
+  --apex-ansi-bright-white: #8c959f;
 
   color-scheme: light;
 }
@@ -48,11 +67,29 @@
     --apex-muted: #8b919c;
     --apex-faint: #5c626d;
     --apex-accent: #4a9eff;
+    --apex-selection: #4a9eff40;
 
     --apex-state-idle: #6e7681;
     --apex-state-working: #4a9eff;
     --apex-state-blocked: #e8a33d;
     --apex-state-done: #3fb950;
+
+    --apex-ansi-black: #24272e;
+    --apex-ansi-red: #ff6b6b;
+    --apex-ansi-green: #3fb950;
+    --apex-ansi-yellow: #e8a33d;
+    --apex-ansi-blue: #4a9eff;
+    --apex-ansi-magenta: #bc8cff;
+    --apex-ansi-cyan: #39c5cf;
+    --apex-ansi-white: #b1bac4;
+    --apex-ansi-bright-black: #5c626d;
+    --apex-ansi-bright-red: #ff8787;
+    --apex-ansi-bright-green: #56d364;
+    --apex-ansi-bright-yellow: #f0b849;
+    --apex-ansi-bright-blue: #6cb6ff;
+    --apex-ansi-bright-magenta: #d2a8ff;
+    --apex-ansi-bright-cyan: #56d4dd;
+    --apex-ansi-bright-white: #e4e6eb;
 
     color-scheme: dark;
   }
@@ -67,11 +104,29 @@
   --apex-muted: #8b919c;
   --apex-faint: #5c626d;
   --apex-accent: #4a9eff;
+  --apex-selection: #4a9eff40;
 
   --apex-state-idle: #6e7681;
   --apex-state-working: #4a9eff;
   --apex-state-blocked: #e8a33d;
   --apex-state-done: #3fb950;
+
+  --apex-ansi-black: #24272e;
+  --apex-ansi-red: #ff6b6b;
+  --apex-ansi-green: #3fb950;
+  --apex-ansi-yellow: #e8a33d;
+  --apex-ansi-blue: #4a9eff;
+  --apex-ansi-magenta: #bc8cff;
+  --apex-ansi-cyan: #39c5cf;
+  --apex-ansi-white: #b1bac4;
+  --apex-ansi-bright-black: #5c626d;
+  --apex-ansi-bright-red: #ff8787;
+  --apex-ansi-bright-green: #56d364;
+  --apex-ansi-bright-yellow: #f0b849;
+  --apex-ansi-bright-blue: #6cb6ff;
+  --apex-ansi-bright-magenta: #d2a8ff;
+  --apex-ansi-bright-cyan: #56d4dd;
+  --apex-ansi-bright-white: #e4e6eb;
 
   color-scheme: dark;
 }
@@ -90,4 +145,9 @@ body {
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+.xterm .xterm-viewport {
+  scrollbar-width: thin;
+  scrollbar-color: var(--apex-border) transparent;
 }
