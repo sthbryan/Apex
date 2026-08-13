@@ -11,11 +11,17 @@ const DAEMON_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub async fn serve(daemon: Arc<Daemon>, mut connection: Connection) {
     let peer = connection.peer().clone();
-    if let Err(error) = handshake(&mut connection).await {
-        tracing::warn!(peer = %peer.label, %error, "handshake fallido");
-        return;
+    match handshake(&mut connection).await {
+        Ok(Some(_)) => tracing::info!(peer = %peer.label, "cliente conectado"),
+        Ok(None) => {
+            tracing::debug!(peer = %peer.label, "sonda de disponibilidad");
+            return;
+        }
+        Err(error) => {
+            tracing::warn!(peer = %peer.label, %error, "handshake fallido");
+            return;
+        }
     }
-    tracing::info!(peer = %peer.label, "cliente conectado");
 
     while let Some(frame) = connection.recv().await {
         let frame = match frame {
@@ -52,12 +58,11 @@ pub async fn serve(daemon: Arc<Daemon>, mut connection: Connection) {
     tracing::info!(peer = %peer.label, "cliente desconectado");
 }
 
-async fn handshake(connection: &mut Connection) -> Result<Hello, TransportError> {
-    let frame = connection
-        .recv()
-        .await
-        .ok_or_else(|| TransportError::MalformedFrame("conexion cerrada antes del hello".into()))??;
-    let hello = match frame.parse_control::<ClientMessage>()? {
+async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, TransportError> {
+    let Some(frame) = connection.recv().await else {
+        return Ok(None);
+    };
+    let hello = match frame?.parse_control::<ClientMessage>()? {
         ClientMessage::Hello(hello) => hello,
         ClientMessage::Request { .. } => {
             return Err(TransportError::MalformedFrame("se esperaba hello".into()));
@@ -80,7 +85,7 @@ async fn handshake(connection: &mut Connection) -> Result<Hello, TransportError>
             scope: connection.peer().scope,
         }))
         .await?;
-    Ok(hello)
+    Ok(Some(hello))
 }
 
 async fn dispatch(
