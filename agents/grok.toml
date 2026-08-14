@@ -1,0 +1,22 @@
+name = "grok"
+command = "grok"
+mode = "pty"
+
+[state_patterns]
+blocked = ["\\(y/n\\)", "Allow this", "Approve"]
+
+[history]
+source = "dir"
+path = "~/.grok/sessions/{project_encoded}"
+entries = "dirs"
+label_file = "prompt_history.jsonl"
+label_id_key = "session_id"
+label_key = "prompt"
+resume_args = ["--resume", "{session_id}"]
+
+[quota]
+source = "command"
+format = "codexbar"
+command = "codexbar"
+args = ["usage", "--json", "--provider", "grok"]
+cache_ttl_secs = 900
