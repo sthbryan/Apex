@@ -13,6 +13,7 @@ import { ProjectPicker } from "./shell/ProjectPicker";
 import { TitleBar } from "./shell/TitleBar";
 import { Toolbar } from "./shell/Toolbar";
 import { findLeaf } from "./shell/tree";
+import { startNotifications } from "./notifications";
 import { startThemeWatcher } from "./theme/mode";
 import { watchFullscreen } from "./shell/windowControls";
 import {
@@ -32,7 +33,17 @@ export function App() {
   useEffect(() => {
     document.documentElement.lang = locale.value;
     void connect().then(loadProjects);
-    return startThemeWatcher();
+
+    let stopNotifications: (() => void) | undefined;
+    void startNotifications().then((stop) => {
+      stopNotifications = stop;
+    });
+
+    const stopTheme = startThemeWatcher();
+    return () => {
+      stopNotifications?.();
+      stopTheme();
+    };
   }, []);
 
   useEffect(() => {

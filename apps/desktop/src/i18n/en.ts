@@ -28,6 +28,10 @@ export const en = {
   "toolbar.theme.light": "Theme: light",
   "toolbar.theme.dark": "Theme: dark",
 
+
+  "notify.blocked": "An agent is waiting for you",
+  "notify.done": "An agent finished",
+  "sessions.waiting": "Waiting for you",
   "sessions.live": "Running",
   "sessions.finished": "Finished",
   "sessions.empty": "No sessions yet.",

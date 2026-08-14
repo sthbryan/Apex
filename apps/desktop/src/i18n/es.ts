@@ -30,6 +30,10 @@ export const es: Messages = {
   "toolbar.theme.light": "Tema: claro",
   "toolbar.theme.dark": "Tema: oscuro",
 
+
+  "notify.blocked": "Un agente te está esperando",
+  "notify.done": "Un agente terminó",
+  "sessions.waiting": "Te esperan",
   "sessions.live": "Corriendo",
   "sessions.finished": "Terminadas",
   "sessions.empty": "Todavía no hay sesiones.",
