@@ -134,6 +134,16 @@ impl Client {
             Command::ListHistory { project } => Ok(Reply::History {
                 entries: self.manager.list_history(project).await.map_err(not_found_error)?,
             }),
+            Command::DirList { project, path } => Ok(Reply::Directory {
+                entries: self
+                    .manager
+                    .list_directory(project, &path)
+                    .await
+                    .map_err(not_found_error)?,
+            }),
+            Command::FileRead { project, path } => Ok(Reply::File {
+                contents: self.manager.read_file(project, &path).await.map_err(not_found_error)?,
+            }),
             Command::SessionResume { project, agent, session_id, size } => {
                 let session = self
                     .manager
@@ -367,7 +377,7 @@ mod tests {
         socket: PathBuf,
         manager: Arc<SessionManager>,
         project: Uuid,
-        _root: tempfile::TempDir,
+        root: tempfile::TempDir,
     }
 
     impl Harness {
@@ -389,7 +399,7 @@ mod tests {
                     tokio::spawn(serve(served.clone(), Connection::new(stream, peer)));
                 }
             });
-            Self { socket, manager, project, _root: root }
+            Self { socket, manager, project, root }
         }
 
         async fn client(&self) -> TestClient {
@@ -682,6 +692,60 @@ mod tests {
             .send_control(&ClientMessage::Request {
                 id,
                 command: Command::ProjectOpen { root: "/no/such/folder".into() },
+            })
+            .await
+            .expect("request");
+
+        let frame = client.connection.recv().await.expect("frame").expect("no error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
+            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
+                assert_eq!(error.code, ErrorCode::NotFound);
+            }
+            other => panic!("expected an error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_project_tree_is_listed_and_read() {
+        let harness = Harness::start().await;
+        std::fs::create_dir(harness.root.path().join("src")).expect("src");
+        std::fs::write(harness.root.path().join("src/main.rs"), "fn main() {}\n").expect("write");
+        let mut client = harness.client().await;
+
+        let Reply::Directory { entries } =
+            client.request(Command::DirList { project: harness.project, path: String::new() }).await
+        else {
+            panic!("expected a directory");
+        };
+        assert_eq!(entries.len(), 1);
+        assert!(entries[0].is_dir);
+
+        let Reply::File { contents } = client
+            .request(Command::FileRead {
+                project: harness.project,
+                path: "src/main.rs".into(),
+            })
+            .await
+        else {
+            panic!("expected a file");
+        };
+        assert_eq!(contents.text.as_deref(), Some("fn main() {}\n"));
+    }
+
+    #[tokio::test]
+    async fn reading_outside_the_project_is_refused() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        client.next += 1;
+        let id = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request {
+                id,
+                command: Command::FileRead {
+                    project: harness.project,
+                    path: "../../etc/hosts".into(),
+                },
             })
             .await
             .expect("request");

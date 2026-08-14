@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, Event, HistoryEntry, MetricsSnapshot, ProjectSummary, Reply,
-    SessionSummary, TerminalSize,
+    AgentSummary, Command, Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot,
+    ProjectSummary, Reply, SessionSummary, TerminalSize,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -135,6 +135,30 @@ async fn list_history(
 }
 
 #[tauri::command]
+async fn list_directory(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    path: String,
+) -> Answer<Vec<FileEntry>> {
+    match state.daemon.request(Command::DirList { project, path }).await.map_err(failed)? {
+        Reply::Directory { entries } => Ok(entries),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn read_file(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    path: String,
+) -> Answer<FileContents> {
+    match state.daemon.request(Command::FileRead { project, path }).await.map_err(failed)? {
+        Reply::File { contents } => Ok(contents),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn resume_session(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -232,6 +256,8 @@ pub fn run() {
             read_metrics,
             kill_process,
             list_history,
+            list_directory,
+            read_file,
             resume_session,
             create_session,
             attach_session,

@@ -3,11 +3,12 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
-use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, history};
+use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, files, history};
 use std::collections::BTreeMap;
 use apex_proto::{
-    Event, HistoryEntry, MetricsSnapshot, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
-    SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize,
+    Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot, ProcessUsage, ProjectSummary,
+    QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage, SystemUsage,
+    TerminalSize,
 };
 use apex_metrics::Sampler;
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
@@ -254,6 +255,18 @@ impl SessionManager {
 
         entries.sort_by_key(|entry| std::cmp::Reverse(entry.updated_at));
         Ok(entries)
+    }
+
+    pub async fn list_directory(&self, project: Uuid, path: &str) -> Result<Vec<FileEntry>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || files::list_directory(&root, &path)).await?
+    }
+
+    pub async fn read_file(&self, project: Uuid, path: &str) -> Result<FileContents> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || files::read_file(&root, &path)).await?
     }
 
     pub async fn resume(

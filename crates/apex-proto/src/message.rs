@@ -123,6 +123,27 @@ pub struct ProjectSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct FileEntry {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+    #[ts(type = "number")]
+    pub size: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct FileContents {
+    pub path: String,
+    pub text: Option<String>,
+    #[ts(type = "number")]
+    pub size: u64,
+    pub truncated: bool,
+    pub binary: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct HistoryEntry {
     pub agent: String,
     pub session_id: String,
@@ -233,6 +254,16 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    DirList {
+        #[ts(type = "string")]
+        project: Uuid,
+        path: String,
+    },
+    FileRead {
+        #[ts(type = "string")]
+        project: Uuid,
+        path: String,
+    },
     SessionResume {
         #[ts(type = "string")]
         project: Uuid,
@@ -292,6 +323,8 @@ pub enum Reply {
     Project { project: ProjectSummary },
     Layout { payload: Option<String> },
     History { entries: Vec<HistoryEntry> },
+    Directory { entries: Vec<FileEntry> },
+    File { contents: FileContents },
     Metrics { snapshot: MetricsSnapshot },
     Done,
 }
