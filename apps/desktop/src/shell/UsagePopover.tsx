@@ -10,85 +10,63 @@ type Props = {
 
 export function UsagePopover({ reports, onClose }: Props) {
   return (
-    <div class="w-[22rem] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl">
-      {reports.length === 0 ? (
-        <p class="p-4 text-faint">{t("resources.noQuota")}</p>
-      ) : (
-        reports.map((report) => (
-          <section key={report.agent} class="border-b border-border last:border-0">
-            <header class="flex items-center gap-2 px-4 pt-3">
-              <span class="text-muted">{report.agent}</span>
-              <button
-                type="button"
-                title={t("resources.refresh")}
-                onClick={() => void refreshQuota()}
-                class="ml-auto text-faint hover:text-text"
-              >
-                ↻
-              </button>
-              <button type="button" onClick={onClose} class="text-faint hover:text-text">
-                ×
-              </button>
-            </header>
+    <div class="w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl">
+      <header class="flex items-center gap-2 border-b border-border px-2.5 py-1.5">
+        <span class="text-muted">{t("usage.title")}</span>
+        <button
+          type="button"
+          title={t("resources.refresh")}
+          onClick={() => void refreshQuota()}
+          class="ml-auto text-faint hover:text-text"
+        >
+          ↻
+        </button>
+        <button type="button" onClick={onClose} class="text-faint hover:text-text">
+          ×
+        </button>
+      </header>
 
-            <div class="flex flex-col gap-2 p-3">
+      <div class="max-h-80 overflow-y-auto py-1">
+        {reports.length === 0 ? (
+          <p class="px-2.5 py-2 text-faint">{t("resources.noQuota")}</p>
+        ) : (
+          reports.map((report) => (
+            <section key={report.agent} class="px-2.5 py-1">
+              <p class="text-faint">{report.agent}</p>
               {report.windows.map((window, index) => (
-                <Card key={window.label ?? index} window={window} />
+                <Row key={window.label ?? index} window={window} />
               ))}
-            </div>
-
-            {report.updated_at && (
-              <p class="px-4 pb-3 text-faint">
-                {t("usage.updated", { when: relative(report.updated_at) })}
-              </p>
-            )}
-          </section>
-        ))
-      )}
+            </section>
+          ))
+        )}
+      </div>
     </div>
   );
 }
 
-function Card({ window }: { window: QuotaWindow }) {
+function Row({ window }: { window: QuotaWindow }) {
   const percent = Math.min(100, Math.max(0, window.used_percent));
   const level = tone(percent);
   const pace = pacing(window);
 
   return (
-    <div class="rounded-lg bg-raised p-3">
-      <div class="flex items-start gap-2">
-        <div class="min-w-0">
-          <p class="text-text">{title(window.label)}</p>
-          {window.label && (
-            <p class="text-faint">{t("usage.window", { window: window.label })}</p>
-          )}
-        </div>
-        <span class={`ml-auto shrink-0 text-2xl leading-none ${level.text}`}>{percent}%</span>
-      </div>
+    <div class="flex items-center gap-2 py-0.5" title={resetText(window)}>
+      <span class="w-6 shrink-0 text-faint">{window.label ?? "·"}</span>
+      <span class={`w-9 shrink-0 text-right ${level.text}`}>{percent}%</span>
 
-      <div class="relative mt-2.5 h-1.5 overflow-hidden rounded-full bg-border">
-        <div class={`h-full rounded-full ${level.bar}`} style={{ width: `${percent}%` }} />
+      <span class="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
+        <span class={`block h-full rounded-full ${level.bar}`} style={{ width: `${percent}%` }} />
         {window.expected_percent !== null && (
           <span
-            title={t("usage.expected", { percent: String(window.expected_percent) })}
             class="absolute top-0 h-full w-px bg-text/40"
             style={{ left: `${Math.min(100, Math.max(0, window.expected_percent))}%` }}
           />
         )}
-      </div>
+      </span>
 
-      <p class="mt-2 truncate text-faint">{resetText(window)}</p>
-      {pace && <p class={`mt-0.5 ${pace.tone}`}>{pace.text}</p>}
+      {pace && <span class={`shrink-0 ${pace.tone}`}>{pace.text}</span>}
     </div>
   );
-}
-
-function title(label: string | null): string {
-  if (!label) {
-    return t("usage.limit");
-  }
-  const hours = label.endsWith("h") ? Number.parseInt(label, 10) : Number.NaN;
-  return Number.isFinite(hours) && hours <= 6 ? t("usage.session") : t("usage.weekly");
 }
 
 export function resetText(window: QuotaWindow): string {
@@ -110,13 +88,10 @@ function pacing(window: QuotaWindow): { text: string; tone: string } | null {
     return null;
   }
   if (window.lasts_to_reset) {
-    return { text: `✓ ${t("usage.onTrack")}`, tone: "text-faint" };
+    return { text: "✓", tone: "text-faint" };
   }
   const away = window.eta_seconds !== null ? countdown(window.eta_seconds) : null;
-  return {
-    text: `▲ ${away ? t("usage.emptyIn", { away }) : t("usage.overPace")}`,
-    tone: "text-state-blocked",
-  };
+  return { text: `▲ ${away ?? ""}`.trim(), tone: "text-state-blocked" };
 }
 
 function tone(percent: number): { text: string; bar: string } {
@@ -147,19 +122,10 @@ function countdown(seconds: number): string | null {
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (days > 0) {
-    return `${days}d ${hours}h`;
+    return `${days}d${hours}h`;
   }
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    return `${hours}h${minutes}m`;
   }
   return `${Math.max(1, minutes)}m`;
-}
-
-function relative(iso: string): string {
-  const when = new Date(iso);
-  if (Number.isNaN(when.getTime())) {
-    return iso;
-  }
-  const away = countdown((Date.now() - when.getTime()) / 1000);
-  return away ?? t("usage.justNow");
 }

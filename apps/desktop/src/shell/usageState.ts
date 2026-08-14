@@ -1,0 +1,23 @@
+import { computed, signal } from "@preact/signals";
+
+import { metrics } from "../metrics";
+
+export const usageOpen = signal(false);
+
+export const tightestUsage = computed(() => {
+  const windows = (metrics.value?.quotas ?? []).flatMap((report) => report.windows);
+  if (windows.length === 0) {
+    return null;
+  }
+  return Math.max(...windows.map((window) => window.used_percent));
+});
+
+export const anyOverPace = computed(() =>
+  (metrics.value?.quotas ?? [])
+    .flatMap((report) => report.windows)
+    .some((window) => window.lasts_to_reset === false),
+);
+
+export function toggleUsagePopover(): void {
+  usageOpen.value = !usageOpen.value;
+}
