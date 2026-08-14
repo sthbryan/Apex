@@ -21,9 +21,89 @@
   --color-state-blocked: var(--apex-state-blocked);
   --color-state-done: var(--apex-state-done);
   --color-state-failed: var(--apex-state-failed);
+
+  --default-transition-duration: var(--apex-quick);
+  --default-transition-timing-function: var(--apex-ease);
+
+  --animate-veil-in: apex-veil-in var(--apex-quick) var(--apex-ease) both;
+  --animate-veil-out: apex-veil-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-pop-in: apex-pop-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-pop-out: apex-pop-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-drop-in: apex-drop-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-drop-out: apex-drop-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-rise-in: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-rise-out: apex-rise-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-row-in: apex-row-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
+
+  @keyframes apex-veil-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes apex-veil-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes apex-pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.985);
+    }
+  }
+  @keyframes apex-pop-out {
+    to {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.99);
+    }
+  }
+  @keyframes apex-drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+  }
+  @keyframes apex-drop-out {
+    to {
+      opacity: 0;
+      transform: translateY(-3px);
+    }
+  }
+  @keyframes apex-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+  }
+  @keyframes apex-rise-out {
+    to {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+  }
+  @keyframes apex-row-in {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+  }
+  @keyframes apex-breathe {
+    50% {
+      opacity: 0.35;
+      transform: scale(0.8);
+    }
+  }
 }
 
 :root {
+  --apex-ease: cubic-bezier(0.2, 0, 0, 1);
+  --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --apex-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --apex-quick: 120ms;
+  --apex-swift: 180ms;
+  --apex-exit: 110ms;
+
   --apex-bg: #ffffff;
   --apex-surface: #f6f7f9;
   --apex-raised: #ffffff;
@@ -165,6 +245,20 @@ body {
   border-radius: var(--apex-window-radius);
   overflow: hidden;
   isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --apex-quick: 1ms;
+    --apex-swift: 1ms;
+    --apex-exit: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .xterm .xterm-viewport {
