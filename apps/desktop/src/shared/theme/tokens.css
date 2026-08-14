@@ -34,6 +34,8 @@
   --animate-rise-in: apex-rise-in var(--apex-swift) var(--apex-ease-spring) both;
   --animate-rise-out: apex-rise-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-row-in: apex-row-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-push-in: apex-push-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-push-out: apex-push-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-slide-in: apex-slide-in var(--apex-swift) var(--apex-ease-out) both;
   --animate-slide-out: apex-slide-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
@@ -90,6 +92,22 @@
       transform: translateX(-10px);
     }
   }
+  @keyframes apex-push-in {
+    from {
+      width: 0;
+    }
+    to {
+      width: var(--apex-dock-width);
+    }
+  }
+  @keyframes apex-push-out {
+    from {
+      width: var(--apex-dock-width);
+    }
+    to {
+      width: 0;
+    }
+  }
   @keyframes apex-slide-in {
     from {
       opacity: 0;
@@ -111,6 +129,7 @@
 }
 
 :root {
+  --apex-dock-width: 14rem;
   --apex-ease: cubic-bezier(0.2, 0, 0, 1);
   --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --apex-ease-in: cubic-bezier(0.4, 0, 1, 1);

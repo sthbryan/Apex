@@ -24,10 +24,10 @@ export function Dock({ panel, onPanel, sessions, elsewhere, projects }: Props) {
   return (
     <aside
       class={cn(
-        "flex w-56 flex-col bg-surface",
+        "flex w-(--apex-dock-width) flex-col",
         dockMode.value === "floating"
-          ? "h-full overflow-hidden rounded-xl border border-border shadow-2xl"
-          : "shrink-0 border-r border-border",
+          ? "h-full overflow-hidden rounded-xl border border-border bg-raised shadow-2xl"
+          : "shrink-0 border-r border-border bg-surface",
       )}
     >
       {PANELS.length > 1 && (
