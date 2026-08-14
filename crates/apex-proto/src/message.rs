@@ -123,6 +123,15 @@ pub struct ProjectSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct HistoryEntry {
+    pub agent: String,
+    pub session_id: String,
+    pub label: Option<String>,
+    pub updated_at: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct SessionSummary {
     #[ts(type = "string")]
     pub id: Uuid,
@@ -152,6 +161,17 @@ pub enum Command {
     ListProjects,
     ProjectOpen {
         root: String,
+    },
+    ListHistory {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
+    SessionResume {
+        #[ts(type = "string")]
+        project: Uuid,
+        agent: String,
+        session_id: String,
+        size: TerminalSize,
     },
     LayoutSave {
         #[ts(type = "string")]
@@ -204,6 +224,7 @@ pub enum Reply {
     Projects { projects: Vec<ProjectSummary> },
     Project { project: ProjectSummary },
     Layout { payload: Option<String> },
+    History { entries: Vec<HistoryEntry> },
     Done,
 }
 

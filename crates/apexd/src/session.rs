@@ -124,6 +124,18 @@ impl Client {
             Command::ListProjects => Ok(Reply::Projects {
                 projects: self.manager.list_projects().await.map_err(internal_error)?,
             }),
+            Command::ListHistory { project } => Ok(Reply::History {
+                entries: self.manager.list_history(project).await.map_err(not_found_error)?,
+            }),
+            Command::SessionResume { project, agent, session_id, size } => {
+                let session = self
+                    .manager
+                    .resume(project, &agent, &session_id, size)
+                    .await
+                    .map_err(internal_error)?;
+                self.attach(session.id).await?;
+                Ok(Reply::Session { session })
+            }
             Command::ProjectOpen { root } => Ok(Reply::Project {
                 project: self.manager.open_project(&root).await.map_err(not_found_error)?,
             }),
@@ -643,6 +655,53 @@ mod tests {
         match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
                 assert_eq!(error.code, ErrorCode::NotFound);
+            }
+            other => panic!("se esperaba un error, llego {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn history_is_listed_across_agents_newest_first() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+
+        let Reply::History { entries } =
+            client.request(Command::ListHistory { project: harness.project }).await
+        else {
+            panic!("se esperaba historial");
+        };
+        assert!(entries.iter().all(|entry| entry.updated_at > 0 || entry.label.is_none()));
+        assert!(
+            entries.windows(2).all(|pair| pair[0].updated_at >= pair[1].updated_at),
+            "el historial no vino ordenado"
+        );
+    }
+
+    #[tokio::test]
+    async fn resuming_an_agent_without_history_support_fails() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        client.next += 1;
+        let id = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request {
+                id,
+                command: Command::SessionResume {
+                    project: harness.project,
+                    agent: "sh".into(),
+                    session_id: "abc".into(),
+                    size: TerminalSize::default(),
+                },
+            })
+            .await
+            .expect("request");
+
+        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
+            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
+                assert_eq!(error.code, ErrorCode::Internal);
+                assert!(error.message.contains("reanudar"));
             }
             other => panic!("se esperaba un error, llego {other:?}"),
         }

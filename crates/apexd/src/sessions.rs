@@ -3,9 +3,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
-use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store};
+use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, history};
 use std::collections::BTreeMap;
-use apex_proto::{Event, ProjectSummary, SessionState, SessionSummary, TerminalSize};
+use apex_proto::{
+    Event, HistoryEntry, ProjectSummary, SessionState, SessionSummary, TerminalSize,
+};
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
 use bytes::Bytes;
 use std::time::Instant;
@@ -119,6 +121,45 @@ impl SessionManager {
         self.store.lock().await.load_layout(project)
     }
 
+    pub async fn list_history(&self, project: Uuid) -> Result<Vec<HistoryEntry>> {
+        let root = self.project_root(project).await?;
+        let home = directories::UserDirs::new()
+            .map(|dirs| dirs.home_dir().to_path_buf())
+            .unwrap_or_else(|| PathBuf::from("/"));
+
+        let mut entries: Vec<HistoryEntry> = self
+            .profiles
+            .iter()
+            .flat_map(|profile| history::read_history(profile, &PathBuf::from(&root), &home))
+            .map(|entry| HistoryEntry {
+                agent: entry.agent,
+                session_id: entry.session_id,
+                label: entry.label,
+                updated_at: entry.updated_at.min(u64::from(u32::MAX)) as u32,
+            })
+            .collect();
+
+        entries.sort_by_key(|entry| std::cmp::Reverse(entry.updated_at));
+        Ok(entries)
+    }
+
+    pub async fn resume(
+        self: &Arc<Self>,
+        project: Uuid,
+        agent: &str,
+        session_id: &str,
+        size: TerminalSize,
+    ) -> Result<SessionSummary> {
+        let profile = self
+            .profiles
+            .get(agent)
+            .with_context(|| format!("no existe el perfil {agent}"))?;
+        let args = history::resume_args(profile, session_id)
+            .with_context(|| format!("{agent} no sabe reanudar sesiones"))?;
+
+        self.spawn(project, agent, None, size, Some(args)).await
+    }
+
     pub async fn create(
         self: &Arc<Self>,
         project: Uuid,
@@ -126,23 +167,28 @@ impl SessionManager {
         cwd: Option<String>,
         size: TerminalSize,
     ) -> Result<SessionSummary> {
+        self.spawn(project, agent, cwd, size, None).await
+    }
+
+    async fn spawn(
+        self: &Arc<Self>,
+        project: Uuid,
+        agent: &str,
+        cwd: Option<String>,
+        size: TerminalSize,
+        override_args: Option<Vec<String>>,
+    ) -> Result<SessionSummary> {
         let profile = self
             .profiles
             .get(agent)
             .cloned()
             .with_context(|| format!("no existe el perfil {agent}"))?;
         let binary = self.resolve_binary(&profile).await?;
-        let project_root = {
-            let store = self.store.lock().await;
-            store
-                .project(project)?
-                .with_context(|| format!("no existe el proyecto {project}"))?
-                .root
-        };
+        let project_root = self.project_root(project).await?;
         let cwd = cwd.map(PathBuf::from).unwrap_or_else(|| PathBuf::from(project_root));
 
         let mut spec = PtySpec::new(binary, &cwd);
-        spec.args = profile.args.clone();
+        spec.args = override_args.unwrap_or_else(|| profile.args.clone());
         spec.env = self.base_env.clone();
         spec.env.extend(profile.env.clone());
         spec.rows = size.rows;
@@ -201,6 +247,14 @@ impl SessionManager {
         store.close_session(id)?;
         let _ = self.events.send(Event::SessionClosed { id });
         Ok(())
+    }
+
+    async fn project_root(&self, project: Uuid) -> Result<String> {
+        let store = self.store.lock().await;
+        Ok(store
+            .project(project)?
+            .with_context(|| format!("no existe el proyecto {project}"))?
+            .root)
     }
 
     async fn require(&self, id: Uuid) -> Result<Arc<LiveSession>> {
