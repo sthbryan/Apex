@@ -5,9 +5,8 @@ use std::sync::Arc;
 use apex_core::ApexPaths;
 use apex_proto::{
     AgentSummary, Command, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit,
-    GitStatus, GitTarget, HistoryEntry,
-    Isolation, MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TerminalSize,
-    WorktreeDisposal, WorktreeInfo,
+    GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
+    Reply, SessionSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
 };
 use client::DaemonClient;
 use tauri::Manager;

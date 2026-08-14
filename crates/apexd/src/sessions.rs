@@ -1,21 +1,20 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, editors, files, history};
-use std::collections::BTreeMap;
-use apex_proto::{
-    EditorSummary, Event, FileContents, FileEntry, HistoryEntry, Isolation, MetricsSnapshot,
-    DiffScope, GitChange, GitCommit, GitStatus, GitTarget, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
-    SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize, WorktreeDisposal,
-    WorktreeInfo,
-};
 use apex_metrics::Sampler;
+use apex_proto::{
+    DiffScope, EditorSummary, Event, FileContents, FileEntry, GitChange, GitCommit, GitStatus,
+    GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProcessUsage, ProjectSummary,
+    QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage, SystemUsage,
+    TerminalSize, WorktreeDisposal, WorktreeInfo,
+};
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
 use apex_quota::QuotaCache;
 use bytes::Bytes;
-use std::time::Instant;
 use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio::time::{MissedTickBehavior, interval};
 use uuid::Uuid;
@@ -56,11 +55,7 @@ pub struct SessionManager {
 }
 
 impl SessionManager {
-    pub fn new(
-        profiles: ProfileSet,
-        resolver: BinaryResolver,
-        store: Store,
-    ) -> Self {
+    pub fn new(profiles: ProfileSet, resolver: BinaryResolver, store: Store) -> Self {
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
         let base_env = resolver
             .environment()
@@ -446,10 +441,7 @@ impl SessionManager {
             worktree: worktree.clone(),
         };
 
-        let session = Arc::new(LiveSession {
-            summary: Mutex::new(summary.clone()),
-            process,
-        });
+        let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
         self.sessions.write().await.insert(record.id, session.clone());
         let _ = self.events.send(Event::SessionOpened { session: summary.clone() });
         self.watch_state(record.id, session.clone(), &profile);
@@ -693,10 +685,7 @@ impl SessionManager {
         }
         let created =
             tokio::task::spawn_blocking(move || apex_git::add_worktree(&root, &slug)).await??;
-        Ok(WorktreeInfo {
-            path: created.path.display().to_string(),
-            branch: created.branch,
-        })
+        Ok(WorktreeInfo { path: created.path.display().to_string(), branch: created.branch })
     }
 
     async fn project_root(&self, project: Uuid) -> Result<String> {
@@ -733,10 +722,8 @@ impl SessionManager {
     }
 
     fn watch_state(self: &Arc<Self>, id: Uuid, session: Arc<LiveSession>, profile: &AgentProfile) {
-        let patterns = StatePatterns::compile(
-            &profile.state_patterns.blocked,
-            &profile.state_patterns.done,
-        );
+        let patterns =
+            StatePatterns::compile(&profile.state_patterns.blocked, &profile.state_patterns.done);
         let manager = self.clone();
         let mut output = session.process.subscribe();
         let produced_before_subscribing = session.process.snapshot();
