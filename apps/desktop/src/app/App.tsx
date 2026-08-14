@@ -29,6 +29,7 @@ import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
 import { dockOpen, toggleDock, toggleSettings } from "@/features/settings/state";
+import { startPeeking } from "@/features/tasks/state";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { PaneTree } from "@/features/workspace/PaneTree";
@@ -64,12 +65,14 @@ export function App() {
     });
 
     const stopGit = startGitWatch();
+    const stopPeeking = startPeeking();
     const stopCleanup = startPaneCleanup();
     const stopTheme = startThemeWatcher();
     return () => {
       stopNotifications?.();
       stopMetrics?.();
       stopGit();
+      stopPeeking();
       stopCleanup();
       stopTheme();
     };

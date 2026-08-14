@@ -17,6 +17,7 @@ export const en = {
     files: "Files",
     git: "Git",
     context: "Context",
+    tasks: "Tasks",
   },
   files: {
     empty: "This folder is empty.",
@@ -90,6 +91,12 @@ export const en = {
     saving: "Saving…",
     unsaved: "Unsaved",
     shared: "Every agent here can read this",
+  },
+  tasks: {
+    empty: "No tasks found in this project.",
+    refresh: "Look for tasks again",
+    start: "Run it",
+    stop: "Stop it",
   },
   git: {
     noRepo: "This project is not a git repository.",

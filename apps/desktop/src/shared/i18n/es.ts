@@ -19,6 +19,7 @@ export const es: Messages = {
     files: "Archivos",
     git: "Git",
     context: "Contexto",
+    tasks: "Tareas",
   },
   files: {
     empty: "Esta carpeta está vacía.",
@@ -92,6 +93,12 @@ export const es: Messages = {
     saving: "Guardando…",
     unsaved: "Sin guardar",
     shared: "Todos los agentes de aquí pueden leerlo",
+  },
+  tasks: {
+    empty: "No hay tareas en este proyecto.",
+    refresh: "Buscar tareas otra vez",
+    start: "Arrancarla",
+    stop: "Pararla",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
