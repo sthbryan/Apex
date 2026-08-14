@@ -26,9 +26,12 @@ export const es: Messages = {
   "toolbar.theme.dark": "Tema: oscuro",
 
   "sessions.live": "Corriendo",
+  "sessions.finished": "Terminadas",
   "sessions.empty": "Todavía no hay sesiones.",
   "sessions.exited": "salió {code}",
   "sessions.close": "Cerrar sesión",
+  "sessions.dismiss": "Descartar",
+  "sessions.clearFinished": "Limpiar terminadas",
 
   "workspace.empty": "No hay nada abierto.",
   "workspace.emptyHint": "Pulsa {shortcut} para arrancar una sesión.",

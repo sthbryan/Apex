@@ -20,6 +20,7 @@
   --color-state-working: var(--apex-state-working);
   --color-state-blocked: var(--apex-state-blocked);
   --color-state-done: var(--apex-state-done);
+  --color-state-failed: var(--apex-state-failed);
 }
 
 :root {
@@ -38,6 +39,7 @@
   --apex-state-working: #0969da;
   --apex-state-blocked: #bf8700;
   --apex-state-done: #1a7f37;
+  --apex-state-failed: #cf222e;
 
   --apex-ansi-black: #24292f;
   --apex-ansi-red: #cf222e;
@@ -76,6 +78,7 @@
     --apex-state-working: #4a9eff;
     --apex-state-blocked: #e8a33d;
     --apex-state-done: #3fb950;
+    --apex-state-failed: #ff6b6b;
 
     --apex-ansi-black: #24272e;
     --apex-ansi-red: #ff6b6b;
@@ -114,6 +117,7 @@
   --apex-state-working: #4a9eff;
   --apex-state-blocked: #e8a33d;
   --apex-state-done: #3fb950;
+  --apex-state-failed: #ff6b6b;
 
   --apex-ansi-black: #24272e;
   --apex-ansi-red: #ff6b6b;

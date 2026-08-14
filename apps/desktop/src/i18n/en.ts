@@ -24,9 +24,12 @@ export const en = {
   "toolbar.theme.dark": "Theme: dark",
 
   "sessions.live": "Running",
+  "sessions.finished": "Finished",
   "sessions.empty": "No sessions yet.",
   "sessions.exited": "exited {code}",
   "sessions.close": "Close session",
+  "sessions.dismiss": "Dismiss",
+  "sessions.clearFinished": "Clear finished",
 
   "workspace.empty": "Nothing open.",
   "workspace.emptyHint": "Press {shortcut} to start a session.",
