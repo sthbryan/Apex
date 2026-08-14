@@ -492,6 +492,8 @@ impl SessionManager {
                         path: change.path,
                         kind: kind_name(change.kind).to_owned(),
                         staged: change.staged,
+                        added: change.added,
+                        removed: change.removed,
                     })
                     .collect(),
                 isolated,

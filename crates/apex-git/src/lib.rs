@@ -21,6 +21,8 @@ pub struct Change {
     pub path: String,
     pub kind: ChangeKind,
     pub staged: bool,
+    pub added: u32,
+    pub removed: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,11 +61,55 @@ pub fn status(dir: &Path) -> Result<Vec<Change>> {
             path: path.to_owned(),
             kind: classify(index, worktree),
             staged: index != ' ' && index != '?',
+            added: 0,
+            removed: 0,
         });
+    }
+
+    let counts = line_counts(dir)?;
+    for change in &mut changes {
+        if let Some((added, removed)) = counts.get(&change.path) {
+            change.added = *added;
+            change.removed = *removed;
+        } else if change.kind == ChangeKind::Untracked {
+            change.added = count_lines(&dir.join(&change.path));
+        }
     }
 
     changes.sort_by(|left, right| left.path.cmp(&right.path));
     Ok(changes)
+}
+
+fn line_counts(dir: &Path) -> Result<std::collections::HashMap<String, (u32, u32)>> {
+    let raw = run(dir, &["diff", "--numstat", "-z", "HEAD"]).unwrap_or_default();
+    let mut fields = raw.split('\0').filter(|field| !field.is_empty());
+    let mut counts = std::collections::HashMap::new();
+
+    while let Some(record) = fields.next() {
+        let mut parts = record.splitn(3, '\t');
+        let added = parts.next().unwrap_or_default();
+        let removed = parts.next().unwrap_or_default();
+        let Some(path) = parts.next() else {
+            continue;
+        };
+        let path = if path.is_empty() {
+            fields.next();
+            match fields.next() {
+                Some(renamed) => renamed.to_owned(),
+                None => continue,
+            }
+        } else {
+            path.to_owned()
+        };
+        counts.insert(path, (added.parse().unwrap_or(0), removed.parse().unwrap_or(0)));
+    }
+    Ok(counts)
+}
+
+fn count_lines(path: &Path) -> u32 {
+    std::fs::read_to_string(path)
+        .map(|text| text.lines().count() as u32)
+        .unwrap_or_default()
 }
 
 pub fn diff(dir: &Path, path: &str) -> Result<String> {
@@ -244,7 +290,9 @@ mod tests {
         assert_eq!(changes[0].path, "README.md");
         assert_eq!(changes[0].kind, ChangeKind::Modified);
         assert!(!changes[0].staged);
+        assert_eq!((changes[0].added, changes[0].removed), (1, 1));
         assert_eq!(changes[1].kind, ChangeKind::Untracked);
+        assert_eq!((changes[1].added, changes[1].removed), (1, 0));
     }
 
     #[test]

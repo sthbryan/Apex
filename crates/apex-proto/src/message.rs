@@ -191,6 +191,8 @@ pub struct GitChange {
     pub path: String,
     pub kind: String,
     pub staged: bool,
+    pub added: u32,
+    pub removed: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

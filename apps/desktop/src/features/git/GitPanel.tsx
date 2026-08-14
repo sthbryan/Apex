@@ -77,11 +77,25 @@ export function GitPanel() {
         <p class="px-2 py-1 text-faint">{t("git.clean")}</p>
       )}
 
-      <ul class="min-h-0 flex-1 overflow-auto py-1">
-        {status?.changes.map((change) => (
-          <Row key={change.path} change={change} session={target} />
-        ))}
-      </ul>
+      <div class="min-h-0 flex-1 overflow-auto py-1">
+        <Section
+          label={t("git.staged")}
+          changes={status?.changes.filter((change) => change.staged) ?? []}
+          session={target}
+        />
+        <Section
+          label={t("git.tracked")}
+          changes={
+            status?.changes.filter((change) => !change.staged && change.kind !== "untracked") ?? []
+          }
+          session={target}
+        />
+        <Section
+          label={t("git.untracked")}
+          changes={status?.changes.filter((change) => change.kind === "untracked") ?? []}
+          session={target}
+        />
+      </div>
 
       {status?.isolated && target && (
         <div class="shrink-0 border-t border-border p-2">
@@ -140,6 +154,39 @@ function Target({ id, label, branch, selected }: TargetProps) {
   );
 }
 
+function Section({
+  label,
+  changes,
+  session,
+}: {
+  label: string;
+  changes: GitChange[];
+  session: string | null;
+}) {
+  if (changes.length === 0) {
+    return null;
+  }
+  const added = changes.reduce((total, change) => total + change.added, 0);
+  const removed = changes.reduce((total, change) => total + change.removed, 0);
+
+  return (
+    <section class="mb-1">
+      <h3 class="flex items-center gap-2 px-2 uppercase tracking-wider text-faint">
+        {label}
+        <span class="ml-auto shrink-0 tabular-nums">
+          <span class="text-state-done">+{added}</span>{" "}
+          <span class="text-state-failed">−{removed}</span>
+        </span>
+      </h3>
+      <ul>
+        {changes.map((change) => (
+          <Row key={change.path} change={change} session={session} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Row({ change, session }: { change: GitChange; session: string | null }) {
   return (
     <li>
@@ -159,6 +206,10 @@ function Row({ change, session }: { change: GitChange; session: string | null })
           {MARKS[change.kind] ?? "•"}
         </span>
         <span class="truncate">{change.path}</span>
+        <span class="ml-auto shrink-0 tabular-nums text-faint">
+          {change.added > 0 && <span class="text-state-done">+{change.added}</span>}
+          {change.removed > 0 && <span class="text-state-failed"> −{change.removed}</span>}
+        </span>
       </button>
     </li>
   );
