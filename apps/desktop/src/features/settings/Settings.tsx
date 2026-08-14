@@ -1,4 +1,5 @@
 import { useEffect } from "preact/hooks";
+
 import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import { SettingsRow } from "@/features/settings/SettingsRow";
@@ -48,7 +49,7 @@ export function Settings() {
 
       <div class="min-h-0 flex-1 overflow-y-auto px-4">
         <SettingsRow label={t("settings.theme")} hint={t("settings.themeHint")}>
-          <Segmented>
+          <Segmented label={t("settings.theme")}>
             {THEMES.map((option) => (
               <Choice
                 key={option.value}
@@ -78,7 +79,7 @@ export function Settings() {
         </SettingsRow>
 
         <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>
-          <Segmented>
+          <Segmented label={t("settings.language")}>
             {LANGUAGES.map((option) => (
               <Choice
                 key={option.value}

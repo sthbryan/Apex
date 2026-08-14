@@ -10,12 +10,13 @@ export function Choice({ selected, onSelect, children }: Props) {
   return (
     <button
       type="button"
-      aria-pressed={selected}
+      role="radio"
+      aria-checked={selected}
       onClick={onSelect}
-      class={cn(`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97]`, {
-        "bg-raised text-text": selected,
-        "text-muted hover:text-text": !selected,
-      })}
+      class={cn(
+        "flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97]",
+        selected ? "bg-raised text-text" : "text-muted hover:text-text",
+      )}
     >
       {children}
     </button>

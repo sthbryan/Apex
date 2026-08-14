@@ -1,9 +1,16 @@
 type Props = {
+  label: string;
   children: preact.ComponentChildren;
 };
 
-export function Segmented({ children }: Props) {
+export function Segmented({ label, children }: Props) {
   return (
-    <div class="flex items-center gap-0.5 rounded-lg border border-border p-0.5">{children}</div>
+    <div
+      role="radiogroup"
+      aria-label={label}
+      class="flex items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5"
+    >
+      {children}
+    </div>
   );
 }
