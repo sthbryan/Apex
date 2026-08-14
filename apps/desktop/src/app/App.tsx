@@ -22,7 +22,7 @@ import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
-import { closeDock, dockOpen, toggleDock, toggleSettings } from "@/features/settings/state";
+import { dockOpen, toggleDock, toggleSettings } from "@/features/settings/state";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
@@ -146,7 +146,7 @@ export function App() {
       </TitleBar>
 
       <div class="relative flex min-h-0 flex-1">
-        <DockSlot open={dockOpen.value} onDismiss={closeDock}>
+        <DockSlot open={dockOpen.value}>
           <Dock
             panel={panel}
             onPanel={setPanel}

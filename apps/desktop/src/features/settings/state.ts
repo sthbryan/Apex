@@ -19,10 +19,6 @@ export function toggleDock(): void {
   dockOpen.value = !dockOpen.value;
 }
 
-export function closeDock(): void {
-  dockOpen.value = false;
-}
-
 function readDockMode(): DockMode {
   try {
     return localStorage.getItem(DOCK_KEY) === "floating" ? "floating" : "pinned";
