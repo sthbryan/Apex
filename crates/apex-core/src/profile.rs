@@ -21,7 +21,11 @@ const BUILTIN_PROFILES: &[(&str, &str)] = &[
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum McpDelivery {
-    Flag { flag: String },
+    Flag {
+        flag: String,
+        #[serde(default)]
+        merge_from: Option<String>,
+    },
     Project { path: String, format: McpFormat },
 }
 

@@ -521,7 +521,8 @@ mod tests {
                  command = \"echo\"\n\
                  [mcp]\n\
                  kind = \"flag\"\n\
-                 flag = \"--mcp-config\"\n",
+                 flag = \"--mcp-config\"\n\
+                 merge_from = \"~/.apex-test-mcp.json\"\n",
             )
             .expect("mcp profile"),
         );
@@ -1123,9 +1124,14 @@ mod tests {
         let config = paths.mcp_dir().join(format!("{}.json", session.id));
         assert!(config.is_file(), "the config was never written");
 
+
         let written: serde_json::Value =
             serde_json::from_slice(&std::fs::read(&config).expect("read")).expect("json");
         let server = &written["mcpServers"]["apex"];
+        assert!(
+            written["mcpServers"].as_object().expect("servers").len() >= 1,
+            "apex should always be in there"
+        );
         let launcher = server["command"].as_str().expect("command");
         assert!(std::path::Path::new(launcher).is_absolute());
         assert!(launcher.contains("apexd"));
@@ -1186,6 +1192,39 @@ mod tests {
 
         let status = manager.git_status(project, GitTarget::Project).await.expect("status");
         assert!(status.changes.is_empty(), "the project should still look clean");
+    }
+
+    #[tokio::test]
+    async fn the_servers_the_agent_already_had_survive_ours() {
+        let home = tempfile::tempdir().expect("tempdir");
+        std::fs::write(
+            home.path().join(".apex-test-mcp.json"),
+            r#"{"mcpServers":{"theirs":{"command":"bunx","args":["-y","their-server"]}}}"#,
+        )
+        .expect("their config");
+
+        let paths = ApexPaths::rooted_at(home.path());
+        let manager = manager_at(&paths);
+        let root = tempfile::tempdir().expect("project");
+        let project = manager
+            .open_project(&root.path().display().to_string())
+            .await
+            .expect("project")
+            .id;
+
+        let session = manager
+            .create(project, "mcp-aware", None, TerminalSize::default(), Isolation::Directory, None)
+            .await
+            .expect("session");
+
+        let config = paths.mcp_dir().join(format!("{}.json", session.id));
+        let written: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&config).expect("read")).expect("json");
+
+        let servers = written["mcpServers"].as_object().expect("servers");
+        assert!(servers.contains_key("apex"), "ours went missing");
+        assert!(servers.contains_key("theirs"), "we replaced what the agent already had");
+        assert_eq!(servers["theirs"]["command"], "bunx");
     }
 
     #[tokio::test]

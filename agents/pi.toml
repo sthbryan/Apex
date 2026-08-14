@@ -5,6 +5,7 @@ mode = "pty"
 [mcp]
 kind = "flag"
 flag = "--mcp-config"
+merge_from = "~/.pi/agent/mcp.json"
 
 [state_patterns]
 blocked = ["\\(y/n\\)", "\\[y/N\\]", "Allow"]
