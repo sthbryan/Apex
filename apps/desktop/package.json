@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "cargo build -p apexd && vite",
     "build": "tsc --noEmit && vite build",
     "tauri": "tauri",
     "lint": "biome check",
