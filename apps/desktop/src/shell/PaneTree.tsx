@@ -3,6 +3,7 @@ import { useRef } from "preact/hooks";
 import { TerminalView } from "../views/TerminalView";
 import { type PaneNode, clampRatio } from "./tree";
 import { focusLeaf, resizeSplit } from "./workspace";
+import cn from "cnfast";
 
 type Props = {
   tabId: string;
@@ -16,9 +17,11 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
     const focused = tabActive && node.id === activeLeafId;
     return (
       <div
-        class={`h-full w-full overflow-hidden border transition-colors ${
+        class={cn(
+          "h-full w-full overflow-hidden border transition-colors",
           focused ? "border-focus" : "border-transparent"
-        }`}
+        )}
+        tabIndex={-1}
         onFocusCapture={() => focusLeaf(tabId, node.id)}
         onMouseDown={() => focusLeaf(tabId, node.id)}
       >
@@ -29,7 +32,12 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
 
   const horizontal = node.direction === "row";
   return (
-    <div class={`flex h-full w-full ${horizontal ? "flex-row" : "flex-col"}`}>
+    <div
+      class={cn(
+        "flex h-full w-full",
+        horizontal ? "flex-row" : "flex-col"
+      )}
+    >
       <div style={{ flex: `${node.ratio} 1 0%`, minWidth: 0, minHeight: 0 }}>
         <PaneTree
           tabId={tabId}
@@ -93,9 +101,10 @@ function Divider({
       role="separator"
       aria-orientation={horizontal ? "vertical" : "horizontal"}
       onMouseDown={startDrag}
-      class={`shrink-0 bg-border transition-[background-color,box-shadow] hover:bg-accent hover:shadow-[0_0_0_1px_var(--apex-accent)] ${
+      class={cn(
+        "shrink-0 bg-border transition-[background-color,box-shadow] hover:bg-accent hover:shadow-[0_0_0_1px_var(--apex-accent)]",
         horizontal ? "w-px cursor-col-resize" : "h-px cursor-row-resize"
-      }`}
+      )}
     />
   );
 }
