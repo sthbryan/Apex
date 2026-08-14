@@ -113,11 +113,24 @@ impl BinaryResolver {
     }
 }
 
+const PROBE_SEED: &[&str] = &["HOME", "USER", "LOGNAME", "SHELL"];
+
+fn probe_seed() -> BTreeMap<String, String> {
+    let mut seed: BTreeMap<String, String> = PROBE_SEED
+        .iter()
+        .filter_map(|key| std::env::var(key).ok().map(|value| ((*key).to_string(), value)))
+        .collect();
+    seed.insert("TERM".into(), "dumb".into());
+    seed
+}
+
 async fn run_env_probe(shell: &Path, flags: &[&str]) -> Option<BTreeMap<String, String>> {
     let mut command = Command::new(shell);
     command.args(flags).arg(format!("printf '%s\\0' {ENV_MARKER}; env -0"));
     command.stdin(std::process::Stdio::null());
     command.kill_on_drop(true);
+    command.env_clear();
+    command.envs(probe_seed());
 
     let output = timeout(PROBE_TIMEOUT, command.output()).await.ok()?.ok()?;
     if !output.status.success() {
@@ -222,6 +235,36 @@ mod tests {
     #[test]
     fn output_without_the_marker_yields_nothing() {
         assert!(parse_env(b"PATH=/bin\0").is_empty());
+    }
+
+    #[test]
+    fn the_probe_seed_carries_only_identity_and_a_dumb_terminal() {
+        let seed = probe_seed();
+        assert_eq!(seed.get("TERM").map(String::as_str), Some("dumb"));
+        for key in seed.keys() {
+            assert!(
+                key == "TERM" || PROBE_SEED.contains(&key.as_str()),
+                "el seed no deberia incluir {key}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn the_probe_does_not_inherit_the_parent_environment() {
+        const SHELL_PROVIDES: &[&str] =
+            &["PATH", "PWD", "SHLVL", "_", "OLDPWD", "TERM", "TMPDIR", "IFS"];
+
+        let Some(candidate) = std::env::vars().map(|(key, _)| key).find(|key| {
+            !PROBE_SEED.contains(&key.as_str()) && !SHELL_PROVIDES.contains(&key.as_str())
+        }) else {
+            return;
+        };
+
+        let env = ShellEnvironment::probe_with_shell(Path::new("/bin/sh")).await;
+        if env.source() == ProbeSource::InheritedPath {
+            return;
+        }
+        assert!(!env.env().contains_key(&candidate), "el probe heredo {candidate}");
     }
 
     #[tokio::test]
