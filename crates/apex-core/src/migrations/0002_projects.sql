@@ -1,0 +1,7 @@
+ALTER TABLE projects ADD COLUMN is_git INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE layouts (
+    project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+    payload TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+);

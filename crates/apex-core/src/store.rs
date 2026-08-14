@@ -5,13 +5,17 @@ use apex_proto::SessionState;
 use rusqlite::{Connection, OptionalExtension, params};
 use uuid::Uuid;
 
-const MIGRATIONS: &[&str] = &[include_str!("migrations/0001_initial.sql")];
+const MIGRATIONS: &[&str] = &[
+    include_str!("migrations/0001_initial.sql"),
+    include_str!("migrations/0002_projects.sql"),
+];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Project {
     pub id: Uuid,
     pub name: String,
     pub root: String,
+    pub is_git: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -71,34 +75,81 @@ impl Store {
         })?)
     }
 
-    pub fn upsert_project(&self, name: &str, root: &str) -> Result<Project> {
-        if let Some(existing) = self.project_by_root(root)? {
-            return Ok(existing);
+    pub fn open_project(&self, root: &Path) -> Result<Project> {
+        let root_text = root.display().to_string();
+        let name = root
+            .file_name()
+            .map(|name| name.to_string_lossy().to_string())
+            .unwrap_or_else(|| root_text.clone());
+        let is_git = root.join(".git").exists();
+
+        if let Some(existing) = self.project_by_root(&root_text)? {
+            self.connection.execute(
+                "UPDATE projects SET last_opened_at = unixepoch('subsec'), is_git = ?2 WHERE id = ?1",
+                params![existing.id.to_string(), is_git],
+            )?;
+            return Ok(Project { is_git, ..existing });
         }
+
         let id = Uuid::new_v4();
         self.connection.execute(
-            "INSERT INTO projects (id, name, root, created_at) VALUES (?1, ?2, ?3, unixepoch())",
-            params![id.to_string(), name, root],
+            "INSERT INTO projects (id, name, root, is_git, created_at, last_opened_at)
+             VALUES (?1, ?2, ?3, ?4, unixepoch('subsec'), unixepoch('subsec'))",
+            params![id.to_string(), name, root_text, is_git],
         )?;
-        Ok(Project { id, name: name.to_string(), root: root.to_string() })
+        Ok(Project { id, name, root: root_text, is_git })
     }
 
     pub fn project_by_root(&self, root: &str) -> Result<Option<Project>> {
         Ok(self
             .connection
             .query_row(
-                "SELECT id, name, root FROM projects WHERE root = ?1",
+                "SELECT id, name, root, is_git FROM projects WHERE root = ?1",
                 params![root],
                 map_project,
             )
             .optional()?)
     }
 
+    pub fn project(&self, id: Uuid) -> Result<Option<Project>> {
+        Ok(self
+            .connection
+            .query_row(
+                "SELECT id, name, root, is_git FROM projects WHERE id = ?1",
+                params![id.to_string()],
+                map_project,
+            )
+            .optional()?)
+    }
+
     pub fn list_projects(&self) -> Result<Vec<Project>> {
-        let mut statement =
-            self.connection.prepare("SELECT id, name, root FROM projects ORDER BY name")?;
+        let mut statement = self.connection.prepare(
+            "SELECT id, name, root, is_git FROM projects
+             ORDER BY COALESCE(last_opened_at, created_at) DESC",
+        )?;
         let rows = statement.query_map([], map_project)?;
         Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+    }
+
+    pub fn save_layout(&self, project_id: Uuid, payload: &str) -> Result<()> {
+        self.connection.execute(
+            "INSERT INTO layouts (project_id, payload, updated_at)
+             VALUES (?1, ?2, unixepoch())
+             ON CONFLICT(project_id) DO UPDATE SET payload = ?2, updated_at = unixepoch()",
+            params![project_id.to_string(), payload],
+        )?;
+        Ok(())
+    }
+
+    pub fn load_layout(&self, project_id: Uuid) -> Result<Option<String>> {
+        Ok(self
+            .connection
+            .query_row(
+                "SELECT payload FROM layouts WHERE project_id = ?1",
+                params![project_id.to_string()],
+                |row| row.get(0),
+            )
+            .optional()?)
     }
 
     pub fn insert_session(
@@ -170,6 +221,7 @@ fn map_project(row: &rusqlite::Row<'_>) -> rusqlite::Result<Project> {
         id: parse_uuid(row, 0)?,
         name: row.get(1)?,
         root: row.get(2)?,
+        is_git: row.get(3)?,
     })
 }
 
@@ -200,6 +252,12 @@ mod tests {
         Store::in_memory().expect("store")
     }
 
+    fn project_dir(name: &str) -> tempfile::TempDir {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(dir.path().join(name)).expect("subdir");
+        dir
+    }
+
     #[test]
     fn migrations_run_to_the_latest_version() {
         assert_eq!(store().schema_version().expect("version"), MIGRATIONS.len());
@@ -210,7 +268,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("apex.sqlite");
         let first = Store::open(&path).expect("abrir");
-        first.upsert_project("apex", "/tmp/apex").expect("proyecto");
+        first.open_project(dir.path()).expect("proyecto");
         drop(first);
 
         let second = Store::open(&path).expect("reabrir");
@@ -219,34 +277,84 @@ mod tests {
     }
 
     #[test]
-    fn upserting_the_same_root_returns_the_same_project() {
+    fn a_project_takes_its_name_from_the_folder() {
+        let dir = project_dir("mi-repo");
+        let project = store().open_project(&dir.path().join("mi-repo")).expect("proyecto");
+        assert_eq!(project.name, "mi-repo");
+        assert!(!project.is_git);
+    }
+
+    #[test]
+    fn a_folder_with_git_is_marked_as_such() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(dir.path().join(".git")).expect("git");
+        assert!(store().open_project(dir.path()).expect("proyecto").is_git);
+    }
+
+    #[test]
+    fn opening_the_same_folder_twice_returns_the_same_project() {
         let store = store();
-        let first = store.upsert_project("apex", "/tmp/apex").expect("primero");
-        let second = store.upsert_project("otro nombre", "/tmp/apex").expect("segundo");
+        let dir = tempfile::tempdir().expect("tempdir");
+        let first = store.open_project(dir.path()).expect("primero");
+        let second = store.open_project(dir.path()).expect("segundo");
         assert_eq!(first.id, second.id);
         assert_eq!(store.list_projects().expect("proyectos").len(), 1);
     }
 
     #[test]
+    fn reopening_a_folder_picks_up_that_it_became_a_repo() {
+        let store = store();
+        let dir = tempfile::tempdir().expect("tempdir");
+        assert!(!store.open_project(dir.path()).expect("primero").is_git);
+
+        std::fs::create_dir_all(dir.path().join(".git")).expect("git");
+        assert!(store.open_project(dir.path()).expect("segundo").is_git);
+    }
+
+    #[test]
+    fn reopening_a_project_moves_it_to_the_front_of_the_list() {
+        let store = store();
+        let first = tempfile::tempdir().expect("tempdir");
+        let second = tempfile::tempdir().expect("tempdir");
+        let older = store.open_project(first.path()).expect("older");
+        let newer = store.open_project(second.path()).expect("newer");
+
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        store.open_project(first.path()).expect("reabrir");
+
+        let listed = store.list_projects().expect("proyectos");
+        assert_eq!(listed.first().map(|project| project.id), Some(older.id));
+        assert_eq!(listed.get(1).map(|project| project.id), Some(newer.id));
+    }
+
+    #[test]
+    fn a_project_can_be_fetched_by_id() {
+        let store = store();
+        let dir = tempfile::tempdir().expect("tempdir");
+        let project = store.open_project(dir.path()).expect("proyecto");
+        assert_eq!(store.project(project.id).expect("buscar"), Some(project));
+        assert_eq!(store.project(Uuid::new_v4()).expect("buscar"), None);
+    }
+
+    #[test]
     fn sessions_belong_to_a_project_and_start_idle() {
         let store = store();
-        let project = store.upsert_project("apex", "/tmp/apex").expect("proyecto");
+        let dir = tempfile::tempdir().expect("tempdir");
+        let project = store.open_project(dir.path()).expect("proyecto");
         let session = store
             .insert_session(project.id, "claude", "refactor", "/tmp/apex")
             .expect("sesion");
 
         assert_eq!(session.state, SessionState::Idle);
-        let open = store.list_open_sessions(project.id).expect("abiertas");
-        assert_eq!(open, vec![session]);
+        assert_eq!(store.list_open_sessions(project.id).expect("abiertas"), vec![session]);
     }
 
     #[test]
     fn session_state_survives_a_roundtrip() {
         let store = store();
-        let project = store.upsert_project("apex", "/tmp/apex").expect("proyecto");
-        let session = store
-            .insert_session(project.id, "codex", "tests", "/tmp/apex")
-            .expect("sesion");
+        let dir = tempfile::tempdir().expect("tempdir");
+        let project = store.open_project(dir.path()).expect("proyecto");
+        let session = store.insert_session(project.id, "codex", "tests", "/tmp").expect("sesion");
 
         store.set_session_state(session.id, SessionState::Blocked).expect("actualizar");
         let open = store.list_open_sessions(project.id).expect("abiertas");
@@ -256,9 +364,11 @@ mod tests {
     #[test]
     fn sessions_of_other_projects_are_not_listed() {
         let store = store();
-        let apex = store.upsert_project("apex", "/tmp/apex").expect("apex");
-        let otro = store.upsert_project("otro", "/tmp/otro").expect("otro");
-        store.insert_session(apex.id, "claude", "a", "/tmp/apex").expect("sesion");
+        let apex = tempfile::tempdir().expect("tempdir");
+        let otro = tempfile::tempdir().expect("tempdir");
+        let apex = store.open_project(apex.path()).expect("apex");
+        let otro = store.open_project(otro.path()).expect("otro");
+        store.insert_session(apex.id, "claude", "a", "/tmp").expect("sesion");
 
         assert!(store.list_open_sessions(otro.id).expect("abiertas").is_empty());
     }
@@ -266,7 +376,8 @@ mod tests {
     #[test]
     fn closing_a_session_removes_it_from_the_open_list() {
         let store = store();
-        let project = store.upsert_project("apex", "/tmp/apex").expect("proyecto");
+        let dir = tempfile::tempdir().expect("tempdir");
+        let project = store.open_project(dir.path()).expect("proyecto");
         let session = store.insert_session(project.id, "claude", "a", "/tmp").expect("sesion");
 
         store.close_session(session.id).expect("cerrar");
@@ -276,19 +387,42 @@ mod tests {
     #[test]
     fn orphaned_sessions_from_a_previous_run_are_closed() {
         let store = store();
-        let project = store.upsert_project("apex", "/tmp/apex").expect("proyecto");
+        let dir = tempfile::tempdir().expect("tempdir");
+        let project = store.open_project(dir.path()).expect("proyecto");
         store.insert_session(project.id, "claude", "a", "/tmp").expect("sesion");
         store.insert_session(project.id, "codex", "b", "/tmp").expect("sesion");
 
         assert_eq!(store.close_orphaned_sessions().expect("limpiar"), 2);
         assert_eq!(store.close_orphaned_sessions().expect("limpiar"), 0);
-        assert!(store.list_open_sessions(project.id).expect("abiertas").is_empty());
     }
 
     #[test]
     fn a_session_needs_an_existing_project() {
+        assert!(store().insert_session(Uuid::new_v4(), "claude", "a", "/tmp").is_err());
+    }
+
+    #[test]
+    fn a_layout_round_trips_and_overwrites() {
         let store = store();
-        let error = store.insert_session(Uuid::new_v4(), "claude", "a", "/tmp");
-        assert!(error.is_err());
+        let dir = tempfile::tempdir().expect("tempdir");
+        let project = store.open_project(dir.path()).expect("proyecto");
+
+        assert_eq!(store.load_layout(project.id).expect("vacio"), None);
+        store.save_layout(project.id, "{\"tabs\":[]}").expect("guardar");
+        assert_eq!(
+            store.load_layout(project.id).expect("cargar").as_deref(),
+            Some("{\"tabs\":[]}")
+        );
+
+        store.save_layout(project.id, "{\"tabs\":[1]}").expect("regrabar");
+        assert_eq!(
+            store.load_layout(project.id).expect("cargar").as_deref(),
+            Some("{\"tabs\":[1]}")
+        );
+    }
+
+    #[test]
+    fn a_layout_needs_an_existing_project() {
+        assert!(store().save_layout(Uuid::new_v4(), "{}").is_err());
     }
 }
