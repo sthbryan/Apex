@@ -42,6 +42,8 @@
   --animate-slide-out: apex-slide-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-push-in: apex-push-in var(--apex-swift) var(--apex-ease-out) both;
   --animate-push-out: apex-push-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-dock-in: apex-slide-in var(--apex-dock) var(--apex-ease-out) both;
+  --animate-dock-out: apex-slide-out var(--apex-dock) var(--apex-ease) both;
   --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
 
   @keyframes apex-veil-in {
@@ -133,6 +135,7 @@
   --apex-quick: 140ms;
   --apex-swift: 300ms;
   --apex-exit: 150ms;
+  --apex-dock: 360ms;
 
   --apex-bg: #ffffff;
   --apex-surface: #f6f7f9;
@@ -295,6 +298,7 @@ code {
     --apex-quick: 1ms;
     --apex-swift: 1ms;
     --apex-exit: 1ms;
+    --apex-dock: 1ms;
   }
 
   *,
