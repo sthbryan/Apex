@@ -1,9 +1,9 @@
 import cn from "cnfast";
-import type { MetricsSnapshot } from "../bindings/MetricsSnapshot";
-import { Icon, type IconName } from "../components/Icon";
-import { t } from "../i18n";
-import { compactBytes, killProcess, percentOf } from "../metrics";
-import { focusSession } from "../shell/workspace";
+import type { MetricsSnapshot } from "@/bindings/MetricsSnapshot";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { t } from "@/shared/i18n";
+import { compactBytes, killProcess, percentOf } from "@/shared/telemetry";
+import { focusSession } from "@/features/workspace/state";
 
 type Props = {
   snapshot: MetricsSnapshot | null;

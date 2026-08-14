@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "preact/hooks";
 
-import { Icon, type IconName } from "../components/Icon";
-import { usePresence } from "../components/presence";
-import { t } from "../i18n";
-import { metrics } from "../metrics";
-import { UsagePopover } from "./UsagePopover";
-import { toggleSettings } from "./Settings";
-import { anyOverPace, tightestUsage, toggleUsagePopover, usageOpen } from "./usageState";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
+import { t } from "@/shared/i18n";
+import { metrics } from "@/shared/telemetry";
+import { UsagePopover } from "@/features/usage/UsagePopover";
+import { toggleSettings } from "@/features/settings/Settings";
+import { anyOverPace, tightestUsage, toggleUsagePopover, usageOpen } from "@/features/usage/state";
 import { cn } from "cnfast";
 
 type Props = {

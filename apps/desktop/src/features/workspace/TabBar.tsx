@@ -1,7 +1,7 @@
-import { Icon } from "../components/Icon";
-import type { SessionSummary } from "../bindings/SessionSummary";
-import { leaves } from "./tree";
-import { type Tab, activeTabId, closeTab } from "./workspace";
+import { Icon } from "@/shared/ui/Icon";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import { leaves } from "@/features/workspace/tree";
+import { type Tab, activeTabId, closeTab } from "@/features/workspace/state";
 import cn from "cnfast";
 
 type Props = {

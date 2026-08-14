@@ -2,15 +2,15 @@ import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
-import type { HistoryEntry } from "./bindings/HistoryEntry";
-import type { ProjectSummary } from "./bindings/ProjectSummary";
-import { sessions } from "./sessions";
+import type { HistoryEntry } from "@/bindings/HistoryEntry";
+import type { ProjectSummary } from "@/bindings/ProjectSummary";
+import { sessions } from "@/features/sessions/state";
 import {
   clearWorkspace,
   restoreLayout,
   serializeLayout,
   tabs,
-} from "./shell/workspace";
+} from "@/features/workspace/state";
 
 const STORAGE_KEY = "apex.project";
 

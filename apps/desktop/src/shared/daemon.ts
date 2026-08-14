@@ -1,8 +1,8 @@
 import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
-import type { AgentSummary } from "./bindings/AgentSummary";
-import { startSessionBridge } from "./sessions";
+import type { AgentSummary } from "@/bindings/AgentSummary";
+import { startSessionBridge } from "@/features/sessions/state";
 
 export type ConnectionStatus = "connecting" | "ready" | "failed";
 

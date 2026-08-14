@@ -1,10 +1,10 @@
 import { useState } from "preact/hooks";
 
-import type { QuotaReport } from "../bindings/QuotaReport";
-import type { QuotaWindow } from "../bindings/QuotaWindow";
-import { Icon } from "../components/Icon";
-import { t } from "../i18n";
-import { refreshQuota } from "../metrics";
+import type { QuotaReport } from "@/bindings/QuotaReport";
+import type { QuotaWindow } from "@/bindings/QuotaWindow";
+import { Icon } from "@/shared/ui/Icon";
+import { t } from "@/shared/i18n";
+import { refreshQuota } from "@/shared/telemetry";
 import cn from "cnfast";
 
 type Props = {

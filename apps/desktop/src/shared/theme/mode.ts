@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 
-import { retheme } from "../views/terminalRegistry";
+import { retheme } from "@/features/sessions/registry";
 
 export type ThemeMode = "system" | "light" | "dark";
 

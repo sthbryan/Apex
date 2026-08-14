@@ -1,8 +1,8 @@
 import { useRef } from "preact/hooks";
 
-import { TerminalView } from "../views/TerminalView";
-import { type PaneNode, clampRatio } from "./tree";
-import { focusLeaf, resizeSplit } from "./workspace";
+import { TerminalView } from "@/features/sessions/TerminalView";
+import { type PaneNode, clampRatio } from "@/features/workspace/tree";
+import { focusLeaf, resizeSplit } from "@/features/workspace/state";
 import cn from "cnfast";
 
 type Props = {

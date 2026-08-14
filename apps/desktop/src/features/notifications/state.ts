@@ -7,10 +7,10 @@ import {
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 
-import type { SessionState } from "./bindings/SessionState";
-import { t } from "./i18n";
-import { projects } from "./projects";
-import { sessions } from "./sessions";
+import type { SessionState } from "@/bindings/SessionState";
+import { t } from "@/shared/i18n";
+import { projects } from "@/features/projects/state";
+import { sessions } from "@/features/sessions/state";
 
 export const waiting = computed(() =>
   sessions.value.filter((session) => session.state === "blocked"),

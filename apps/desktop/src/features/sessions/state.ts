@@ -1,10 +1,10 @@
 import { signal } from "@preact/signals";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
-import type { Event } from "./bindings/Event";
-import type { SessionSummary } from "./bindings/SessionSummary";
-import type { TerminalSize } from "./bindings/TerminalSize";
-import { disposeTerminal } from "./views/terminalRegistry";
+import type { Event } from "@/bindings/Event";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import type { TerminalSize } from "@/bindings/TerminalSize";
+import { disposeTerminal } from "@/features/sessions/registry";
 
 const UUID_BYTES = 16;
 

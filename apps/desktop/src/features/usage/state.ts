@@ -1,6 +1,6 @@
 import { computed, signal } from "@preact/signals";
 
-import { metrics } from "../metrics";
+import { metrics } from "@/shared/telemetry";
 
 export const usageOpen = signal(false);
 

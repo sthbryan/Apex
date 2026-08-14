@@ -1,4 +1,4 @@
-import type { Messages } from "./en";
+import type { Messages } from "@/shared/i18n/en";
 
 export const es: Messages = {
   "app.name": "Apex",

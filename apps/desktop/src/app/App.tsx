@@ -1,31 +1,31 @@
 import { useEffect, useState } from "preact/hooks";
 
-import { agents, connect, daemonVersion, failure, platform, status } from "./daemon";
+import { agents, connect, daemonVersion, failure, platform, status } from "@/shared/daemon";
 import {
   activeProject,
   foreignSessions,
   history,
   loadProjects,
   projectSessions,
-} from "./projects";
-import { locale, t } from "./i18n";
-import { sessions } from "./sessions";
-import { projects } from "./projects";
-import { type DockPanel, Dock } from "./shell/Dock";
-import { Settings, toggleSettings } from "./shell/Settings";
-import { StatusBar } from "./shell/StatusBar";
-import { toggleUsagePopover } from "./shell/usageState";
-import { CommandPalette } from "./shell/CommandPalette";
-import { PaneTree } from "./shell/PaneTree";
-import { TabBar } from "./shell/TabBar";
-import { ProjectPicker } from "./shell/ProjectPicker";
-import { TitleBar } from "./shell/TitleBar";
-import { Toolbar } from "./shell/Toolbar";
-import { findLeaf } from "./shell/tree";
-import { startMetrics } from "./metrics";
-import { startNotifications } from "./notifications";
-import { startThemeWatcher } from "./theme/mode";
-import { watchFullscreen } from "./shell/windowControls";
+} from "@/features/projects/state";
+import { locale, t } from "@/shared/i18n";
+import { sessions } from "@/features/sessions/state";
+import { projects } from "@/features/projects/state";
+import { type DockPanel, Dock } from "@/shell/Dock";
+import { Settings, toggleSettings } from "@/features/settings/Settings";
+import { StatusBar } from "@/shell/StatusBar";
+import { toggleUsagePopover } from "@/features/usage/state";
+import { CommandPalette } from "@/features/palette/CommandPalette";
+import { PaneTree } from "@/features/workspace/PaneTree";
+import { TabBar } from "@/features/workspace/TabBar";
+import { ProjectPicker } from "@/features/projects/ProjectPicker";
+import { TitleBar } from "@/shell/TitleBar";
+import { Toolbar } from "@/shell/Toolbar";
+import { findLeaf } from "@/features/workspace/tree";
+import { startMetrics } from "@/shared/telemetry";
+import { startNotifications } from "@/features/notifications/state";
+import { startThemeWatcher } from "@/shared/theme/mode";
+import { watchFullscreen } from "@/shell/windowControls";
 import {
   activeSessionId,
   activeTab,
@@ -33,8 +33,8 @@ import {
   closePane,
   splitWithNewSession,
   tabs,
-} from "./shell/workspace";
-import { focusTerminal } from "./views/terminalRegistry";
+} from "@/features/workspace/state";
+import { focusTerminal } from "@/features/sessions/registry";
 
 export function App() {
   const [dockOpen, setDockOpen] = useState(true);

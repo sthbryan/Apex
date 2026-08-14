@@ -1,9 +1,9 @@
 import cn from "cnfast";
-import type { ProjectSummary } from "../bindings/ProjectSummary";
-import type { SessionSummary } from "../bindings/SessionSummary";
-import { Icon, type IconName } from "../components/Icon";
-import { t } from "../i18n";
-import { SessionsPanel } from "../panels/SessionsPanel";
+import type { ProjectSummary } from "@/bindings/ProjectSummary";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { t } from "@/shared/i18n";
+import { SessionsPanel } from "@/features/sessions/SessionsPanel";
 
 export type DockPanel = "sessions";
 

@@ -1,7 +1,7 @@
 import { computed, signal } from "@preact/signals";
 
-import { en, type MessageKey, type Messages } from "./en";
-import { es } from "./es";
+import { en, type MessageKey, type Messages } from "@/shared/i18n/en";
+import { es } from "@/shared/i18n/es";
 
 export type Locale = "en" | "es";
 export type { MessageKey };

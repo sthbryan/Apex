@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import type { AgentSummary } from "../bindings/AgentSummary";
-import type { HistoryEntry } from "../bindings/HistoryEntry";
-import type { SessionSummary } from "../bindings/SessionSummary";
-import { usePresence } from "../components/presence";
-import { t } from "../i18n";
-import { createSession, resumeSession } from "../sessions";
-import { toggleSettings } from "./Settings";
-import { findLeaf } from "./tree";
+import type { AgentSummary } from "@/bindings/AgentSummary";
+import type { HistoryEntry } from "@/bindings/HistoryEntry";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import { usePresence } from "@/shared/ui/presence";
+import { t } from "@/shared/i18n";
+import { createSession, resumeSession } from "@/features/sessions/state";
+import { toggleSettings } from "@/features/settings/Settings";
+import { findLeaf } from "@/features/workspace/tree";
 import {
   activeTab,
   closePane,
@@ -15,7 +15,7 @@ import {
   focusSession,
   openInNewTab,
   splitWithNewSession,
-} from "./workspace";
+} from "@/features/workspace/state";
 import { cn } from "cnfast";
 
 type Action = {

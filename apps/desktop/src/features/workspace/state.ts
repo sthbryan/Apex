@@ -1,7 +1,7 @@
 import { computed, signal } from "@preact/signals";
 
-import type { SessionSummary } from "../bindings/SessionSummary";
-import { closeSession, createSession } from "../sessions";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import { closeSession, createSession } from "@/features/sessions/state";
 import {
   type Direction,
   type Leaf,
@@ -14,7 +14,7 @@ import {
   removeLeaf,
   setRatio,
   splitLeaf,
-} from "./tree";
+} from "@/features/workspace/tree";
 
 export type Tab = {
   id: string;

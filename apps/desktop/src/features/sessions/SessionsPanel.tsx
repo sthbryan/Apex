@@ -1,13 +1,13 @@
 import { useState } from "preact/hooks";
 
-import { Icon } from "../components/Icon";
-import type { ProjectSummary } from "../bindings/ProjectSummary";
-import type { SessionSummary } from "../bindings/SessionSummary";
-import { t } from "../i18n";
-import { waiting } from "../notifications";
-import { switchTo } from "../projects";
-import { closeSession } from "../sessions";
-import { activeSessionId, dropSession, focusSession, openInNewTab } from "../shell/workspace";
+import { Icon } from "@/shared/ui/Icon";
+import type { ProjectSummary } from "@/bindings/ProjectSummary";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import { t } from "@/shared/i18n";
+import { waiting } from "@/features/notifications/state";
+import { switchTo } from "@/features/projects/state";
+import { closeSession } from "@/features/sessions/state";
+import { activeSessionId, dropSession, focusSession, openInNewTab } from "@/features/workspace/state";
 import { cn } from "cnfast";
 
 type Props = {

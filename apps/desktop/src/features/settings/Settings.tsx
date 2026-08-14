@@ -1,10 +1,10 @@
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 
-import { Icon, type IconName } from "../components/Icon";
-import { usePresence } from "../components/presence";
-import { type Locale, locale, setLocale, t } from "../i18n";
-import { type ThemeMode, setThemeMode, themeMode } from "../theme/mode";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
+import { type Locale, locale, setLocale, t } from "@/shared/i18n";
+import { type ThemeMode, setThemeMode, themeMode } from "@/shared/theme/mode";
 import cn from "cnfast";
 
 export const settingsOpen = signal(false);

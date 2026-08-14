@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import { Icon } from "../components/Icon";
-import { usePresence } from "../components/presence";
-import { t } from "../i18n";
-import { activeProject, pickProject, projects, switchTo } from "../projects";
-import { sessions } from "../sessions";
+import { Icon } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
+import { t } from "@/shared/i18n";
+import { activeProject, pickProject, projects, switchTo } from "@/features/projects/state";
+import { sessions } from "@/features/sessions/state";
 import cn from "cnfast";
 
 export function ProjectPicker() {

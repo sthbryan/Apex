@@ -2,7 +2,7 @@ import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import type { MetricsSnapshot } from "./bindings/MetricsSnapshot";
+import type { MetricsSnapshot } from "@/bindings/MetricsSnapshot";
 
 const POLL_MS = 2000;
 

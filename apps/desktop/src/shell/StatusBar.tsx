@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import { Icon, type IconName } from "../components/Icon";
-import { usePresence } from "../components/presence";
-import { t } from "../i18n";
-import { compactBytes, metrics } from "../metrics";
-import { ResourcesPanel } from "../panels/ResourcesPanel";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
+import { t } from "@/shared/i18n";
+import { compactBytes, metrics } from "@/shared/telemetry";
+import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
 import cn from "cnfast";
 
 export function StatusBar() {
