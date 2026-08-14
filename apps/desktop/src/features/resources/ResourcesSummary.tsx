@@ -1,9 +1,9 @@
 import { cn } from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { Gauge } from "@/features/resources/Gauge";
 import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
 import { t } from "@/shared/i18n";
 import { compactBytes, metrics } from "@/shared/telemetry";
-import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
 export function ResourcesSummary() {
@@ -84,14 +84,5 @@ export function ResourcesSummary() {
         />
       </button>
     </div>
-  );
-}
-
-function Gauge({ icon, label, value }: { icon: IconName; label: string; value: string }) {
-  return (
-    <span class="flex items-center gap-1" title={label}>
-      <Icon name={icon} size={12} />
-      {value}
-    </span>
   );
 }
