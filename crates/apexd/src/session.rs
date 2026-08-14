@@ -6,7 +6,7 @@ use apex_proto::{
     PROTOCOL_VERSION, ProtocolError, Reply, RequestId, Scope, ServerMessage, TransportError,
     Welcome,
 };
-use tokio::sync::mpsc;
+use tokio::sync::{Mutex, mpsc};
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
@@ -47,22 +47,23 @@ pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     client.run(reader).await;
 
     events.abort();
-    client.detach_all();
+    client.detach_all().await;
     drop(client);
     let _ = pump.await;
     tracing::info!(peer = %peer.label, "client disconnected");
 }
 
+#[derive(Clone)]
 struct Client {
     manager: Arc<SessionManager>,
     outbox: Outbox,
     scope: Scope,
-    attached: HashMap<Uuid, JoinHandle<()>>,
+    attached: Arc<Mutex<HashMap<Uuid, JoinHandle<()>>>>,
 }
 
 impl Client {
     fn new(manager: Arc<SessionManager>, outbox: Outbox, scope: Scope) -> Self {
-        Self { manager, outbox, scope, attached: HashMap::new() }
+        Self { manager, outbox, scope, attached: Arc::new(Mutex::new(HashMap::new())) }
     }
 
     async fn run(&mut self, mut reader: ConnectionReader) {
@@ -97,6 +98,16 @@ impl Client {
                     RequestId(0),
                     ProtocolError::new(ErrorCode::MalformedRequest, "hello duplicado"),
                 ),
+                ClientMessage::Request { id, command } if runs_detached(&command) => {
+                    let client = self.clone();
+                    tokio::spawn(async move {
+                        let response = client.dispatch(id, command).await;
+                        if let Ok(frame) = Frame::control(&response) {
+                            let _ = client.outbox.send(frame).await;
+                        }
+                    });
+                    continue;
+                }
                 ClientMessage::Request { id, command } => self.dispatch(id, command).await,
             };
 
@@ -109,7 +120,7 @@ impl Client {
         }
     }
 
-    async fn dispatch(&mut self, id: RequestId, command: Command) -> ServerMessage {
+    async fn dispatch(&self, id: RequestId, command: Command) -> ServerMessage {
         if !scope_allows(self.scope, &command) {
             return ServerMessage::err(
                 id,
@@ -123,7 +134,7 @@ impl Client {
         }
     }
 
-    async fn execute(&mut self, command: Command) -> Result<Reply, ProtocolError> {
+    async fn execute(&self, command: Command) -> Result<Reply, ProtocolError> {
         match command {
             Command::Ping => Ok(Reply::Pong),
             Command::ListAgents => Ok(Reply::Agents { agents: self.manager.list_agents().await }),
@@ -203,7 +214,7 @@ impl Client {
                 Ok(Reply::Done)
             }
             Command::SessionDetach { id } => {
-                self.detach(id);
+                self.detach(id).await;
                 Ok(Reply::Done)
             }
             Command::SessionInput { id, data } => {
@@ -215,15 +226,15 @@ impl Client {
                 Ok(Reply::Done)
             }
             Command::SessionClose { id } => {
-                self.detach(id);
+                self.detach(id).await;
                 self.manager.close(id).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
         }
     }
 
-    async fn attach(&mut self, id: Uuid) -> Result<(), ProtocolError> {
-        if self.attached.contains_key(&id) {
+    async fn attach(&self, id: Uuid) -> Result<(), ProtocolError> {
+        if self.attached.lock().await.contains_key(&id) {
             return Ok(());
         }
         let session = self
@@ -257,21 +268,34 @@ impl Client {
             }
         });
 
-        self.attached.insert(id, handle);
+        self.attached.lock().await.insert(id, handle);
         Ok(())
     }
 
-    fn detach(&mut self, id: Uuid) {
-        if let Some(handle) = self.attached.remove(&id) {
+    async fn detach(&self, id: Uuid) {
+        if let Some(handle) = self.attached.lock().await.remove(&id) {
             handle.abort();
         }
     }
 
-    fn detach_all(&mut self) {
-        for (_, handle) in self.attached.drain() {
+    async fn detach_all(&self) {
+        for (_, handle) in self.attached.lock().await.drain() {
             handle.abort();
         }
     }
+}
+
+fn runs_detached(command: &Command) -> bool {
+    matches!(
+        command,
+        Command::ReadMetrics { .. }
+            | Command::ListHistory { .. }
+            | Command::ListEditors
+            | Command::DirList { .. }
+            | Command::FileRead { .. }
+            | Command::FileSearch { .. }
+            | Command::FileOpenExternal { .. }
+    )
 }
 
 fn spawn_event_forwarder(manager: Arc<SessionManager>, outbox: Outbox) -> JoinHandle<()> {
@@ -754,6 +778,41 @@ mod tests {
                 assert_eq!(error.code, ErrorCode::MalformedRequest);
             }
             other => panic!("expected an error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_slow_command_does_not_hold_up_the_others() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+
+        client.next += 1;
+        let slow = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request {
+                id: slow,
+                command: Command::ReadMetrics { refresh_quota: true },
+            })
+            .await
+            .expect("metrics");
+
+        client.next += 1;
+        let quick = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request { id: quick, command: Command::Ping })
+            .await
+            .expect("ping");
+
+        let frame = timeout(Duration::from_secs(5), client.connection.recv())
+            .await
+            .expect("no timeout")
+            .expect("frame")
+            .expect("no error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
+            ServerMessage::Response { id, .. } => assert_eq!(id, quick),
+            other => panic!("expected the ping answer first, got {other:?}"),
         }
     }
 
