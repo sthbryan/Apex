@@ -34,7 +34,7 @@ export function TasksPanel() {
   return (
     <div class="flex h-full flex-col">
       <div class="flex shrink-0 items-center gap-2 px-2 py-1">
-        <h2 class="uppercase tracking-wider text-faint">{t("dock.tasks")}</h2>
+        <h2 class="text-micro uppercase tracking-wider text-faint">{t("dock.tasks")}</h2>
         <button
           type="button"
           title={t("tasks.refresh")}

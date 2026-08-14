@@ -4,7 +4,11 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --text-micro: 0.6875rem;
+  --text-code: 0.8125rem;
 
   --color-bg: var(--apex-bg);
   --color-surface: var(--apex-surface);
@@ -267,10 +271,16 @@ body {
   margin: 0;
   background: transparent;
   color: var(--apex-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+pre,
+code {
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
 }
 
 #root {

@@ -23,7 +23,9 @@ export function SessionsPanel({ sessions, elsewhere, projects }: Props) {
       {waiting.value.length > 0 && <WaitingList sessions={waiting.value} projects={projects} />}
 
       <section>
-        <h2 class="mb-1 px-1 uppercase tracking-wider text-faint">{t("sessions.live")}</h2>
+        <h2 class="mb-1 px-1 text-micro uppercase tracking-wider text-faint">
+          {t("sessions.live")}
+        </h2>
         {live.length === 0 ? (
           <p class="px-1 text-faint">{t("sessions.empty")}</p>
         ) : (
@@ -38,7 +40,7 @@ export function SessionsPanel({ sessions, elsewhere, projects }: Props) {
       {finished.length > 0 && (
         <section>
           <div class="mb-1 flex items-center gap-2 px-1">
-            <h2 class="uppercase tracking-wider text-faint">{t("sessions.finished")}</h2>
+            <h2 class="text-micro uppercase tracking-wider text-faint">{t("sessions.finished")}</h2>
             <button
               type="button"
               title={t("sessions.clearFinished")}

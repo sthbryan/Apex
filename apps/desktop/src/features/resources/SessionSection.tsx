@@ -15,7 +15,7 @@ export function SessionSection({ sessions }: Props) {
   return (
     <section class="border-t border-border px-2 py-1.5">
       <header class="mb-0.5 flex items-baseline gap-1">
-        <h3 class="uppercase tracking-wider text-faint">{t("resources.bySession")}</h3>
+        <h3 class="text-micro uppercase tracking-wider text-faint">{t("resources.bySession")}</h3>
         {sessions.length > 0 && (
           <span class="truncate text-faint">
             ·{" "}

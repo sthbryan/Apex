@@ -28,7 +28,7 @@ export function ElsewhereList({ sessions, projects }: Props) {
       <button
         type="button"
         onClick={() => setOpen((shown) => !shown)}
-        class="mb-1 flex w-full items-center gap-2 px-1 uppercase tracking-wider text-faint hover:text-muted"
+        class="mb-1 flex w-full items-center gap-2 px-1 text-micro uppercase tracking-wider text-faint hover:text-muted"
       >
         <Icon
           name="chevron"

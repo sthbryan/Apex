@@ -32,7 +32,7 @@ export function FilesPanel() {
   return (
     <div class="flex h-full flex-col">
       <div class="flex shrink-0 items-center gap-2 px-2 py-1">
-        <h2 class="truncate uppercase tracking-wider text-faint">{project.name}</h2>
+        <h2 class="truncate text-micro uppercase tracking-wider text-faint">{project.name}</h2>
         <button
           type="button"
           title={t("files.refresh")}

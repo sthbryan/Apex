@@ -11,7 +11,7 @@ export function SystemSection({ system }: Props) {
   return (
     <section class="px-2 py-1.5">
       <header class="mb-0.5 flex items-baseline gap-1">
-        <h3 class="uppercase tracking-wider text-faint">{t("resources.system")}</h3>
+        <h3 class="text-micro uppercase tracking-wider text-faint">{t("resources.system")}</h3>
         <span class="text-faint">·</span>
         <span class="text-faint">{t("resources.cores", { count: String(system.cores) })}</span>
       </header>

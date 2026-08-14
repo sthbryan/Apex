@@ -12,7 +12,9 @@ type Props = {
 export function WaitingList({ sessions, projects }: Props) {
   return (
     <section class="animate-pop-in rounded border border-state-blocked/40 bg-state-blocked/5 p-1">
-      <h2 class="mb-1 px-1 uppercase tracking-wider text-state-blocked">{t("sessions.waiting")}</h2>
+      <h2 class="mb-1 px-1 text-micro uppercase tracking-wider text-state-blocked">
+        {t("sessions.waiting")}
+      </h2>
       <ul class="flex flex-col">
         {sessions.map((session) => (
           <li key={session.id}>

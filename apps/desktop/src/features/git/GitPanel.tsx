@@ -58,7 +58,7 @@ export function GitPanel() {
             type="button"
             onClick={() => showTab(tab)}
             class={cn(
-              "uppercase tracking-wider transition-colors",
+              "text-micro uppercase tracking-wider transition-colors",
               gitTab.value === tab ? "text-text" : "text-faint hover:text-muted",
             )}
           >
@@ -188,7 +188,7 @@ function History({ target }: { target: GitTarget }) {
               <span class="ml-auto shrink-0 tabular-nums text-faint">{since(commit.when)}</span>
             </span>
             <span class="flex w-full items-baseline gap-2 text-faint">
-              <span class="shrink-0 tabular-nums">{commit.short}</span>
+              <span class="shrink-0 font-mono tabular-nums">{commit.short}</span>
               <span class="truncate">{commit.author}</span>
               {commit.refs && (
                 <span class="ml-auto shrink-0 truncate text-state-working">
@@ -257,7 +257,7 @@ function Section({
 
   return (
     <section class="mb-1">
-      <h3 class="flex items-center gap-2 px-2 uppercase tracking-wider text-faint">
+      <h3 class="flex items-center gap-2 px-2 text-micro uppercase tracking-wider text-faint">
         <button
           type="button"
           title={staged ? t("git.unstageAll") : t("git.stageAll")}

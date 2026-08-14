@@ -135,7 +135,7 @@ function Group({ label, hunks, action, onApply, tone }: GroupProps) {
     <section>
       <h2
         class={cn(
-          "sticky top-0 z-10 border-b border-border bg-surface px-3 py-1 uppercase tracking-wider",
+          "sticky top-0 z-10 border-b border-border bg-surface px-3 py-1 text-micro uppercase tracking-wider",
           tone ?? "text-faint",
         )}
       >
