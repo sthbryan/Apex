@@ -70,7 +70,6 @@ export function Dock({ header, floating = false }: Props) {
                   event.stopPropagation();
                   dropOn(id, event);
                 }}
-                class="group relative"
               >
                 <button
                   type="button"
@@ -87,14 +86,6 @@ export function Dock({ header, floating = false }: Props) {
                   )}
                 >
                   <Icon name={entry.icon} />
-                </button>
-                <button
-                  type="button"
-                  title={t("dock.popOut")}
-                  onClick={() => popPanelToTab(id)}
-                  class="absolute -top-0.5 -right-0.5 hidden size-3.5 items-center justify-center rounded bg-raised text-faint shadow group-hover:flex hover:text-text"
-                >
-                  <Icon name="external" size={10} />
                 </button>
               </div>
             );
