@@ -181,6 +181,13 @@ impl Client {
                     .await
                     .map_err(not_found_error)?,
             }),
+            Command::GitHunks { project, session, path, scope } => Ok(Reply::Hunks {
+                patches: self
+                    .manager
+                    .git_hunks(project, session, &path, scope)
+                    .await
+                    .map_err(not_found_error)?,
+            }),
             Command::GitStage { project, session, paths, staged } => {
                 self.manager
                     .git_stage(project, session, paths, staged)
@@ -339,6 +346,7 @@ fn runs_detached(command: &Command) -> bool {
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
             | Command::GitLog { .. }
+            | Command::GitHunks { .. }
             | Command::GitStage { .. }
             | Command::GitStageHunk { .. }
             | Command::GitCommitStaged { .. }
@@ -943,6 +951,49 @@ mod tests {
         let status = harness.manager.git_status(harness.project, None).await.expect("status");
         assert_eq!(status.changes.len(), 1);
         assert_eq!(status.changes[0].path, "left.txt");
+    }
+
+    #[tokio::test]
+    async fn a_file_is_split_into_hunks_that_can_be_staged_apart() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+        let lines: Vec<String> = (1..=20).map(|n| format!("line {n}")).collect();
+        std::fs::write(harness.root.path().join("many.txt"), format!("{}\n", lines.join("\n")))
+            .expect("write");
+        for args in [&["add", "."][..], &["commit", "-m", "many"][..]] {
+            std::process::Command::new("git")
+                .args(args)
+                .current_dir(harness.root.path())
+                .output()
+                .expect("git");
+        }
+
+        let mut edited = lines.clone();
+        edited[1] = "line 2 touched".into();
+        edited[18] = "line 19 touched".into();
+        std::fs::write(harness.root.path().join("many.txt"), format!("{}\n", edited.join("\n")))
+            .expect("write");
+
+        let hunks = harness
+            .manager
+            .git_hunks(harness.project, None, "many.txt", DiffScope::Unstaged)
+            .await
+            .expect("hunks");
+        assert_eq!(hunks.len(), 2);
+
+        harness
+            .manager
+            .git_stage_hunk(harness.project, None, hunks[0].clone(), true)
+            .await
+            .expect("stage hunk");
+
+        let staged = harness
+            .manager
+            .git_diff(harness.project, None, "many.txt", None, DiffScope::Staged)
+            .await
+            .expect("staged");
+        assert!(staged.contains("+line 2 touched"));
+        assert!(!staged.contains("+line 19 touched"));
     }
 
     #[tokio::test]

@@ -319,6 +319,25 @@ async fn git_log(
 }
 
 #[tauri::command]
+async fn git_hunks(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    session: Option<Uuid>,
+    path: String,
+    scope: DiffScope,
+) -> Answer<Vec<String>> {
+    match state
+        .daemon
+        .request(Command::GitHunks { project, session, path, scope })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Hunks { patches } => Ok(patches),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn git_stage(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -425,6 +444,7 @@ pub fn run() {
             git_status,
             git_diff,
             git_log,
+            git_hunks,
             git_stage,
             git_stage_hunk,
             git_commit,

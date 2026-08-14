@@ -521,6 +521,21 @@ impl SessionManager {
         .await?
     }
 
+    pub async fn git_hunks(
+        &self,
+        project: Uuid,
+        session: Option<Uuid>,
+        path: &str,
+        scope: DiffScope,
+    ) -> Result<Vec<String>> {
+        let dir = self.git_dir(project, session).await?;
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || {
+            Ok(apex_git::split_hunks(&apex_git::diff_scoped(&dir, &path, scope_of(scope))?))
+        })
+        .await?
+    }
+
     pub async fn git_stage(
         &self,
         project: Uuid,

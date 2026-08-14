@@ -427,6 +427,14 @@ pub enum Command {
         #[serde(default)]
         scope: DiffScope,
     },
+    GitHunks {
+        #[ts(type = "string")]
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
+        path: String,
+        scope: DiffScope,
+    },
     GitStage {
         #[ts(type = "string")]
         project: Uuid,
@@ -480,6 +488,7 @@ pub enum Reply {
     Git { status: GitStatus },
     Log { commits: Vec<GitCommit> },
     Committed { commit: GitCommit },
+    Hunks { patches: Vec<String> },
     Diff { patch: String },
     Merge { report: MergeReport },
     File { contents: FileContents },
