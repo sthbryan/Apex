@@ -12,6 +12,7 @@ import { locale, t } from "./i18n";
 import { sessions } from "./sessions";
 import { projects } from "./projects";
 import { type DockPanel, Dock } from "./shell/Dock";
+import { Settings, toggleSettings } from "./shell/Settings";
 import { StatusBar } from "./shell/StatusBar";
 import { toggleUsagePopover } from "./shell/usageState";
 import { CommandPalette } from "./shell/CommandPalette";
@@ -93,6 +94,11 @@ export function App() {
       if (key === "k") {
         event.preventDefault();
         setPaletteOpen((open) => !open);
+        return;
+      }
+      if (event.key === ",") {
+        event.preventDefault();
+        toggleSettings();
         return;
       }
       if (key === "u") {
@@ -218,6 +224,8 @@ export function App() {
       </div>
 
       <StatusBar />
+
+      <Settings />
 
       <CommandPalette
         open={paletteOpen}

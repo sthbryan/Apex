@@ -5,6 +5,7 @@ import type { HistoryEntry } from "../bindings/HistoryEntry";
 import type { SessionSummary } from "../bindings/SessionSummary";
 import { t } from "../i18n";
 import { createSession, resumeSession } from "../sessions";
+import { toggleSettings } from "./Settings";
 import { findLeaf } from "./tree";
 import {
   activeTab,
@@ -183,6 +184,15 @@ function buildActions(
       },
     });
   }
+
+  actions.push({
+    id: "settings",
+    label: t("palette.settings"),
+    run: () => {
+      onClose();
+      toggleSettings();
+    },
+  });
 
   const tab = activeTab.value;
   if (tab) {

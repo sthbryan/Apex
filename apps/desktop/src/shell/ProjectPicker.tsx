@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import { Icon } from "../components/Icon";
 import { t } from "../i18n";
 import { activeProject, pickProject, projects, switchTo } from "../projects";
 import { sessions } from "../sessions";
@@ -33,7 +34,7 @@ export function ProjectPicker() {
       >
         <span class="truncate">{current?.name ?? t("projects.none")}</span>
         {waitingElsewhere() > 0 && <span class="size-1.5 rounded-full bg-state-blocked" />}
-        <span class="text-faint">▾</span>
+        <Icon name="chevron" size={12} class="text-faint" />
       </button>
 
       {open && (

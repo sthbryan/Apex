@@ -1,17 +1,11 @@
-import type { ComponentChildren } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 
-import { locale, setLocale, t } from "../i18n";
+import { Icon, type IconName } from "../components/Icon";
+import { t } from "../i18n";
 import { metrics } from "../metrics";
-import { cycleThemeMode, themeMode } from "../theme/mode";
 import { UsagePopover } from "./UsagePopover";
+import { toggleSettings } from "./Settings";
 import { anyOverPace, tightestUsage, toggleUsagePopover, usageOpen } from "./usageState";
-
-const THEME_GLYPH: Record<string, string> = {
-  system: "◐",
-  light: "○",
-  dark: "●",
-};
 
 type Props = {
   onNewSession: () => void;
@@ -46,7 +40,7 @@ export function Toolbar({ onNewSession, status }: Props) {
             onClick={toggleUsagePopover}
             class={`flex h-6 items-center rounded px-1.5 hover:bg-raised ${usageTone()}`}
           >
-            {anyOverPace.value && <span class="mr-1">▲</span>}
+            {anyOverPace.value && <Icon name="activity" class="mr-1" />}
             {tightestUsage.value}%
           </button>
 
@@ -63,20 +57,8 @@ export function Toolbar({ onNewSession, status }: Props) {
         </div>
       )}
 
-      <ToolbarButton label={t("toolbar.newSession")} onClick={onNewSession}>
-        +
-      </ToolbarButton>
-
-      <ToolbarButton label={t(`toolbar.theme.${themeMode.value}`)} onClick={cycleThemeMode}>
-        {THEME_GLYPH[themeMode.value]}
-      </ToolbarButton>
-
-      <ToolbarButton
-        label={locale.value}
-        onClick={() => setLocale(locale.value === "es" ? "en" : "es")}
-      >
-        <span class="uppercase">{locale.value}</span>
-      </ToolbarButton>
+      <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
+      <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
     </div>
   );
 }
@@ -91,12 +73,12 @@ function usageTone(): string {
 
 function ToolbarButton({
   label,
+  icon,
   onClick,
-  children,
 }: {
   label: string;
+  icon: IconName;
   onClick: () => void;
-  children: ComponentChildren;
 }) {
   return (
     <button
@@ -106,7 +88,7 @@ function ToolbarButton({
       onClick={onClick}
       class="flex size-6 items-center justify-center rounded text-faint hover:bg-raised hover:text-text"
     >
-      {children}
+      <Icon name={icon} />
     </button>
   );
 }

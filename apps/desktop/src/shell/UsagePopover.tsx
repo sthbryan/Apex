@@ -1,5 +1,6 @@
 import type { QuotaReport } from "../bindings/QuotaReport";
 import type { QuotaWindow } from "../bindings/QuotaWindow";
+import { Icon } from "../components/Icon";
 import { t } from "../i18n";
 import { refreshQuota } from "../metrics";
 
@@ -19,10 +20,10 @@ export function UsagePopover({ reports, onClose }: Props) {
           onClick={() => void refreshQuota()}
           class="ml-auto text-faint hover:text-text"
         >
-          ↻
+          <Icon name="refresh" />
         </button>
         <button type="button" onClick={onClose} class="text-faint hover:text-text">
-          ×
+          <Icon name="close" />
         </button>
       </header>
 
@@ -88,10 +89,10 @@ function pacing(window: QuotaWindow): { text: string; tone: string } | null {
     return null;
   }
   if (window.lasts_to_reset) {
-    return { text: "✓", tone: "text-faint" };
+    return null;
   }
   const away = window.eta_seconds !== null ? countdown(window.eta_seconds) : null;
-  return { text: `▲ ${away ?? ""}`.trim(), tone: "text-state-blocked" };
+  return { text: away ?? t("usage.overPace"), tone: "text-state-blocked" };
 }
 
 function tone(percent: number): { text: string; bar: string } {
