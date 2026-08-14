@@ -13,6 +13,9 @@ const RUN_TIMEOUT: Duration = Duration::from_secs(30);
 pub struct QuotaWindow {
     pub label: String,
     pub used_percent: u8,
+    pub expected_percent: Option<u8>,
+    pub lasts_to_reset: Option<bool>,
+    pub eta_seconds: Option<u64>,
     pub resets_at: Option<String>,
     pub reset_description: Option<String>,
 }
@@ -108,10 +111,11 @@ fn parse_codexbar(agent: &str, raw: &str) -> Option<QuotaReport> {
     let parsed: serde_json::Value = serde_json::from_str(raw.trim()).ok()?;
     let first = parsed.as_array()?.first()?;
     let usage = first.get("usage")?;
+    let pace = first.get("pace");
 
     let windows: Vec<QuotaWindow> = ["primary", "secondary", "tertiary"]
         .iter()
-        .filter_map(|key| read_window(usage.get(*key)?))
+        .filter_map(|key| read_window(usage.get(*key)?, pace.and_then(|entry| entry.get(*key))))
         .collect();
 
     if windows.is_empty() {
@@ -124,11 +128,21 @@ fn parse_codexbar(agent: &str, raw: &str) -> Option<QuotaReport> {
     })
 }
 
-fn read_window(value: &serde_json::Value) -> Option<QuotaWindow> {
+fn read_window(value: &serde_json::Value, pace: Option<&serde_json::Value>) -> Option<QuotaWindow> {
     let used = value.get("usedPercent")?.as_f64()?;
     Some(QuotaWindow {
         label: window_label(value.get("windowMinutes").and_then(serde_json::Value::as_u64)),
         used_percent: used.clamp(0.0, 100.0).round() as u8,
+        expected_percent: pace
+            .and_then(|entry| entry.get("expectedUsedPercent"))
+            .and_then(serde_json::Value::as_f64)
+            .map(|value| value.clamp(0.0, 100.0).round() as u8),
+        lasts_to_reset: pace
+            .and_then(|entry| entry.get("willLastToReset"))
+            .and_then(serde_json::Value::as_bool),
+        eta_seconds: pace
+            .and_then(|entry| entry.get("etaSeconds"))
+            .and_then(serde_json::Value::as_u64),
         resets_at: value.get("resetsAt").and_then(|entry| entry.as_str()).map(str::to_string),
         reset_description: value
             .get("resetDescription")
@@ -151,7 +165,9 @@ fn window_label(minutes: Option<u64>) -> String {
 mod tests {
     use super::*;
 
-    const SAMPLE: &str = r#"[{"provider":"claude","usage":{
+    const SAMPLE: &str = r#"[{"provider":"claude",
+        "pace":{"primary":{"expectedUsedPercent":43,"willLastToReset":false,"etaSeconds":1919}},
+        "usage":{
         "primary":{"windowMinutes":300,"usedPercent":65,"resetsAt":"2026-08-14T05:40:00Z","resetDescription":"Resets 11:40pm"},
         "secondary":{"windowMinutes":10080,"usedPercent":50,"resetsAt":"2026-08-18T03:00:00Z"},
         "tertiary":null,
@@ -167,8 +183,13 @@ mod tests {
         assert_eq!(report.windows[0].used_percent, 65);
         assert_eq!(report.windows[0].reset_description.as_deref(), Some("Resets 11:40pm"));
 
+        assert_eq!(report.windows[0].expected_percent, Some(43));
+        assert_eq!(report.windows[0].lasts_to_reset, Some(false));
+        assert_eq!(report.windows[0].eta_seconds, Some(1919));
+
         assert_eq!(report.windows[1].label, "1w");
         assert_eq!(report.windows[1].used_percent, 50);
+        assert_eq!(report.windows[1].expected_percent, None);
         assert_eq!(report.updated_at.as_deref(), Some("2026-08-14T01:54:46Z"));
     }
 

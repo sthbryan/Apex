@@ -219,6 +219,11 @@ impl SessionManager {
                     .map(|window| QuotaWindow {
                         label: window.label,
                         used_percent: window.used_percent,
+                        expected_percent: window.expected_percent,
+                        lasts_to_reset: window.lasts_to_reset,
+                        eta_seconds: window
+                            .eta_seconds
+                            .map(|seconds| seconds.min(u64::from(u32::MAX)) as u32),
                         resets_at: window.resets_at,
                         reset_description: window.reset_description,
                     })

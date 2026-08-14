@@ -188,6 +188,9 @@ pub struct SessionUsage {
 pub struct QuotaWindow {
     pub label: String,
     pub used_percent: u8,
+    pub expected_percent: Option<u8>,
+    pub lasts_to_reset: Option<bool>,
+    pub eta_seconds: Option<u32>,
     pub resets_at: Option<String>,
     pub reset_description: Option<String>,
 }
