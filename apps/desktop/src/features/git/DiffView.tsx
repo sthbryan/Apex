@@ -9,9 +9,10 @@ import { Icon } from "@/shared/ui/Icon";
 type Props = {
   sessionId: string | null;
   path: string;
+  commit: string | null;
 };
 
-export function DiffView({ sessionId, path }: Props) {
+export function DiffView({ sessionId, path, commit }: Props) {
   const [markup, setMarkup] = useState<string | null>(null);
   const [patch, setPatch] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export function DiffView({ sessionId, path }: Props) {
     setPatch(null);
     setFailure(null);
 
-    void readDiff(sessionId, path)
+    void readDiff(sessionId, path, commit)
       .then(async (text) => {
         const painted = text ? await highlight("patch.diff", text) : null;
         if (mine === ticket.current) {
@@ -38,7 +39,7 @@ export function DiffView({ sessionId, path }: Props) {
           setFailure(String(error));
         }
       });
-  }, [sessionId, path]);
+  }, [sessionId, path, commit]);
 
   useEffect(load, [load]);
 
@@ -46,7 +47,7 @@ export function DiffView({ sessionId, path }: Props) {
     <div class="flex h-full flex-col bg-bg">
       <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
         <Icon name="branch" size={12} />
-        <span class="truncate text-text">{path}</span>
+        <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
         <span class="truncate text-faint">{label}</span>
         <button
           type="button"

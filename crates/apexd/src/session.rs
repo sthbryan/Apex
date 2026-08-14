@@ -174,10 +174,17 @@ impl Client {
             Command::GitRead { project, session } => Ok(Reply::Git {
                 status: self.manager.git_status(project, session).await.map_err(not_found_error)?,
             }),
-            Command::GitDiff { project, session, path } => Ok(Reply::Diff {
+            Command::GitDiff { project, session, path, commit } => Ok(Reply::Diff {
                 patch: self
                     .manager
-                    .git_diff(project, session, &path)
+                    .git_diff(project, session, &path, commit)
+                    .await
+                    .map_err(not_found_error)?,
+            }),
+            Command::GitLog { project, session, limit } => Ok(Reply::Log {
+                commits: self
+                    .manager
+                    .git_log(project, session, limit as usize)
                     .await
                     .map_err(not_found_error)?,
             }),
@@ -310,6 +317,7 @@ fn runs_detached(command: &Command) -> bool {
             | Command::FileOpenExternal { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
+            | Command::GitLog { .. }
             | Command::WorktreeMerge { .. }
     )
 }
@@ -853,7 +861,7 @@ mod tests {
         assert!(
             harness
                 .manager
-                .git_diff(harness.project, Some(session.id), "README.md")
+                .git_diff(harness.project, Some(session.id), "README.md", None)
                 .await
                 .expect("diff")
                 .contains("+# agent")
@@ -873,11 +881,36 @@ mod tests {
         assert!(
             harness
                 .manager
-                .git_diff(harness.project, None, "README.md")
+                .git_diff(harness.project, None, "README.md", None)
                 .await
                 .expect("diff")
                 .contains("+# edited")
         );
+    }
+
+    #[tokio::test]
+    async fn the_history_is_listed_newest_first() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+        std::fs::write(harness.root.path().join("later.txt"), "later\n").expect("write");
+        for args in [&["add", "."][..], &["commit", "-m", "a later commit"][..]] {
+            std::process::Command::new("git")
+                .args(args)
+                .current_dir(harness.root.path())
+                .output()
+                .expect("git");
+        }
+
+        let commits = harness.manager.git_log(harness.project, None, 10).await.expect("log");
+        assert_eq!(commits[0].summary, "a later commit");
+        assert_eq!(commits.len(), 2);
+
+        let patch = harness
+            .manager
+            .git_diff(harness.project, None, "", Some(commits[0].id.clone()))
+            .await
+            .expect("show");
+        assert!(patch.contains("+later"));
     }
 
     #[tokio::test]

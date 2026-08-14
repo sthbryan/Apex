@@ -197,6 +197,18 @@ pub struct GitChange {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct GitCommit {
+    pub id: String,
+    pub short: String,
+    pub author: String,
+    #[ts(type = "number")]
+    pub when: i64,
+    pub summary: String,
+    pub refs: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct GitStatus {
     pub branch: String,
     pub base: String,
@@ -400,6 +412,15 @@ pub enum Command {
         #[ts(type = "string | null")]
         session: Option<Uuid>,
         path: String,
+        #[serde(default)]
+        commit: Option<String>,
+    },
+    GitLog {
+        #[ts(type = "string")]
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
+        limit: u32,
     },
     WorktreeMerge {
         #[ts(type = "string")]
@@ -422,6 +443,7 @@ pub enum Reply {
     Directory { entries: Vec<FileEntry> },
     Editors { editors: Vec<EditorSummary> },
     Git { status: GitStatus },
+    Log { commits: Vec<GitCommit> },
     Diff { patch: String },
     Merge { report: MergeReport },
     File { contents: FileContents },

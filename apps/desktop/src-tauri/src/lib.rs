@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, EditorSummary, Event, FileContents, FileEntry, GitStatus, HistoryEntry,
+    AgentSummary, Command, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus, HistoryEntry,
     Isolation, MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TerminalSize,
     WorktreeDisposal,
 };
@@ -285,9 +285,33 @@ async fn git_diff(
     project: Uuid,
     session: Option<Uuid>,
     path: String,
+    commit: Option<String>,
 ) -> Answer<String> {
-    match state.daemon.request(Command::GitDiff { project, session, path }).await.map_err(failed)? {
+    match state
+        .daemon
+        .request(Command::GitDiff { project, session, path, commit })
+        .await
+        .map_err(failed)?
+    {
         Reply::Diff { patch } => Ok(patch),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn git_log(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    session: Option<Uuid>,
+    limit: u32,
+) -> Answer<Vec<GitCommit>> {
+    match state
+        .daemon
+        .request(Command::GitLog { project, session, limit })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Log { commits } => Ok(commits),
         other => Err(format!("unexpected reply: {other:?}")),
     }
 }
@@ -348,6 +372,7 @@ pub fn run() {
             close_session,
             git_status,
             git_diff,
+            git_log,
             merge_worktree
         ])
         .run(tauri::generate_context!())

@@ -52,8 +52,12 @@ export function openInNewTab(session: SessionSummary): void {
   openView({ type: "session", sessionId: session.id });
 }
 
-export function openDiff(sessionId: string | null, path: string): void {
-  openBeside({ type: "diff", sessionId, path }, (view) => view.type === "diff");
+export function openDiff(
+  sessionId: string | null,
+  path: string,
+  commit: string | null = null,
+): void {
+  openBeside({ type: "diff", sessionId, path, commit }, (view) => view.type === "diff");
 }
 
 export function openFile(path: string): void {
@@ -88,7 +92,9 @@ function same(left: PaneView, right: PaneView): boolean {
     return left.path === right.path;
   }
   if (left.type === "diff" && right.type === "diff") {
-    return left.path === right.path && left.sessionId === right.sessionId;
+    return (
+      left.path === right.path && left.sessionId === right.sessionId && left.commit === right.commit
+    );
   }
   return false;
 }

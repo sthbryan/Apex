@@ -59,7 +59,10 @@ function titleOf(tab: Tab, sessions: SessionSummary[]): string {
       return pane.view.path.split("/").at(-1) ?? pane.view.path;
     }
     if (pane.view.type === "diff") {
-      return `± ${pane.view.path.split("/").at(-1) ?? pane.view.path}`;
+      const label = pane.view.path
+        ? (pane.view.path.split("/").at(-1) ?? pane.view.path)
+        : (pane.view.commit ?? "").slice(0, 7);
+      return `± ${label}`;
     }
     const { sessionId } = pane.view;
     return sessions.find((session) => session.id === sessionId)?.title ?? sessionId.slice(0, 8);

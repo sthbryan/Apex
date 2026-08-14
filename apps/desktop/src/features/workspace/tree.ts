@@ -3,7 +3,7 @@ export type Direction = "row" | "column";
 export type PaneView =
   | { type: "session"; sessionId: string }
   | { type: "file"; path: string }
-  | { type: "diff"; sessionId: string | null; path: string };
+  | { type: "diff"; sessionId: string | null; path: string; commit: string | null };
 
 export type Leaf = {
   kind: "leaf";

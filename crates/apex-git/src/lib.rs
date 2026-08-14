@@ -123,6 +123,51 @@ pub fn diff(dir: &Path, path: &str) -> Result<String> {
     })
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Commit {
+    pub id: String,
+    pub short: String,
+    pub author: String,
+    pub when: i64,
+    pub summary: String,
+    pub refs: String,
+}
+
+pub fn log(dir: &Path, limit: usize) -> Result<Vec<Commit>> {
+    let format = "--pretty=format:%H%x1f%h%x1f%an%x1f%at%x1f%s%x1f%D%x1e";
+    let raw = run(dir, &["log", &format!("-n{limit}"), format])?;
+
+    let mut commits = Vec::new();
+    for record in raw.split('\u{1e}') {
+        let record = record.trim_start_matches('\n');
+        if record.is_empty() {
+            continue;
+        }
+        let fields: Vec<&str> = record.split('\u{1f}').collect();
+        let [id, short, author, when, summary, refs] = fields.as_slice() else {
+            continue;
+        };
+        commits.push(Commit {
+            id: (*id).to_owned(),
+            short: (*short).to_owned(),
+            author: (*author).to_owned(),
+            when: when.parse().unwrap_or_default(),
+            summary: (*summary).to_owned(),
+            refs: (*refs).to_owned(),
+        });
+    }
+    Ok(commits)
+}
+
+pub fn show(dir: &Path, commit: &str, path: Option<&str>) -> Result<String> {
+    let mut args = vec!["show", "--patch", "--stat", commit];
+    if let Some(path) = path {
+        args.push("--");
+        args.push(path);
+    }
+    run(dir, &args)
+}
+
 pub fn add_worktree(root: &Path, slug: &str) -> Result<Worktree> {
     let branch = format!("{BRANCH_PREFIX}/{slug}");
     let path = root.join(WORKTREE_DIR).join(slug);
@@ -309,6 +354,41 @@ mod tests {
         let dir = repo();
         std::fs::write(dir.path().join("new.txt"), "hello\n").expect("write");
         assert!(diff(dir.path(), "new.txt").expect("diff").contains("+hello"));
+    }
+
+    #[test]
+    fn the_log_carries_the_summary_and_the_author() {
+        let dir = repo();
+        std::fs::write(dir.path().join("second.txt"), "more\n").expect("write");
+        run(dir.path(), &["add", "."]).expect("add");
+        run(dir.path(), &["commit", "-m", "second commit"]).expect("commit");
+
+        let commits = log(dir.path(), 10).expect("log");
+        assert_eq!(commits.len(), 2);
+        assert_eq!(commits[0].summary, "second commit");
+        assert_eq!(commits[0].author, "Apex Test");
+        assert!(commits[0].when > 0);
+        assert_eq!(commits[0].short.len(), 7);
+        assert!(commits[0].refs.contains("HEAD"));
+        assert_eq!(commits[1].summary, "first");
+    }
+
+    #[test]
+    fn a_commit_can_be_shown_whole_or_by_file() {
+        let dir = repo();
+        std::fs::write(dir.path().join("README.md"), "# changed\n").expect("write");
+        std::fs::write(dir.path().join("other.txt"), "hello\n").expect("write");
+        run(dir.path(), &["add", "."]).expect("add");
+        run(dir.path(), &["commit", "-m", "touch two files"]).expect("commit");
+        let head = &log(dir.path(), 1).expect("log")[0].id;
+
+        let whole = show(dir.path(), head, None).expect("show");
+        assert!(whole.contains("+# changed"));
+        assert!(whole.contains("+hello"));
+
+        let single = show(dir.path(), head, Some("other.txt")).expect("show");
+        assert!(single.contains("+hello"));
+        assert!(!single.contains("+# changed"));
     }
 
     #[test]

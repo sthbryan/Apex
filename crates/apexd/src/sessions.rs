@@ -7,7 +7,7 @@ use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, editors, files,
 use std::collections::BTreeMap;
 use apex_proto::{
     EditorSummary, Event, FileContents, FileEntry, HistoryEntry, Isolation, MetricsSnapshot,
-    GitChange, GitStatus, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
+    GitChange, GitCommit, GitStatus, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
     SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize, WorktreeDisposal,
     WorktreeInfo,
 };
@@ -502,13 +502,50 @@ impl SessionManager {
         .await?
     }
 
-    pub async fn git_diff(&self, project: Uuid, session: Option<Uuid>, path: &str) -> Result<String> {
-        let dir = match self.worktree_of(session).await? {
-            Some(tree) => PathBuf::from(tree.path),
-            None => PathBuf::from(self.project_root(project).await?),
-        };
+    pub async fn git_diff(
+        &self,
+        project: Uuid,
+        session: Option<Uuid>,
+        path: &str,
+        commit: Option<String>,
+    ) -> Result<String> {
+        let dir = self.git_dir(project, session).await?;
         let path = path.to_owned();
-        tokio::task::spawn_blocking(move || apex_git::diff(&dir, &path)).await?
+        tokio::task::spawn_blocking(move || match commit {
+            Some(commit) => {
+                apex_git::show(&dir, &commit, (!path.is_empty()).then_some(path.as_str()))
+            }
+            None => apex_git::diff(&dir, &path),
+        })
+        .await?
+    }
+
+    pub async fn git_log(
+        &self,
+        project: Uuid,
+        session: Option<Uuid>,
+        limit: usize,
+    ) -> Result<Vec<GitCommit>> {
+        let dir = self.git_dir(project, session).await?;
+        let commits = tokio::task::spawn_blocking(move || apex_git::log(&dir, limit)).await??;
+        Ok(commits
+            .into_iter()
+            .map(|commit| GitCommit {
+                id: commit.id,
+                short: commit.short,
+                author: commit.author,
+                when: commit.when,
+                summary: commit.summary,
+                refs: commit.refs,
+            })
+            .collect())
+    }
+
+    async fn git_dir(&self, project: Uuid, session: Option<Uuid>) -> Result<PathBuf> {
+        match self.worktree_of(session).await? {
+            Some(tree) => Ok(PathBuf::from(tree.path)),
+            None => Ok(PathBuf::from(self.project_root(project).await?)),
+        }
     }
 
     async fn worktree_of(&self, session: Option<Uuid>) -> Result<Option<WorktreeInfo>> {

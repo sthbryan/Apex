@@ -2,14 +2,20 @@ import cn from "cnfast";
 import { useState } from "preact/hooks";
 
 import type { GitChange } from "@/bindings/GitChange";
+import type { GitStatus } from "@/bindings/GitStatus";
 import type { MergeReport } from "@/bindings/MergeReport";
 import {
+  commits,
   gitFailure,
   gitStatus,
+  gitTab,
   gitTarget,
   mergeWorktree,
+  readLog,
   refreshGit,
   selectTarget,
+  showTab,
+  since,
   worktrees,
 } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
@@ -41,12 +47,29 @@ export function GitPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <div class="flex shrink-0 items-center gap-2 px-2 py-1">
-        <h2 class="uppercase tracking-wider text-faint">{t("dock.git")}</h2>
+      <div class="flex shrink-0 items-center gap-3 px-2 py-1">
+        {(["changes", "history"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => showTab(tab)}
+            class={cn(
+              "uppercase tracking-wider transition-colors",
+              gitTab.value === tab ? "text-text" : "text-faint hover:text-muted",
+            )}
+          >
+            {t(`git.${tab}`)}
+          </button>
+        ))}
         <button
           type="button"
           title={t("git.refresh")}
-          onClick={() => void refreshGit()}
+          onClick={() => {
+            void refreshGit();
+            if (gitTab.value === "history") {
+              void readLog();
+            }
+          }}
           class="ml-auto shrink-0 text-faint transition-colors hover:text-text"
         >
           <Icon name="refresh" size={12} />
@@ -73,31 +96,13 @@ export function GitPanel() {
 
       {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
 
-      {status && status.changes.length === 0 && (
-        <p class="px-2 py-1 text-faint">{t("git.clean")}</p>
+      {gitTab.value === "history" ? (
+        <History session={target} />
+      ) : (
+        <Changes status={status} session={target} />
       )}
 
-      <div class="min-h-0 flex-1 overflow-auto py-1">
-        <Section
-          label={t("git.staged")}
-          changes={status?.changes.filter((change) => change.staged) ?? []}
-          session={target}
-        />
-        <Section
-          label={t("git.tracked")}
-          changes={
-            status?.changes.filter((change) => !change.staged && change.kind !== "untracked") ?? []
-          }
-          session={target}
-        />
-        <Section
-          label={t("git.untracked")}
-          changes={status?.changes.filter((change) => change.kind === "untracked") ?? []}
-          session={target}
-        />
-      </div>
-
-      {status?.isolated && target && (
+      {status?.isolated && target && gitTab.value === "changes" && (
         <div class="shrink-0 border-t border-border p-2">
           <button
             type="button"
@@ -125,6 +130,66 @@ export function GitPanel() {
         </div>
       )}
     </div>
+  );
+}
+
+function Changes({ status, session }: { status: GitStatus | null; session: string | null }) {
+  if (status && status.changes.length === 0) {
+    return <p class="px-2 py-1 text-faint">{t("git.clean")}</p>;
+  }
+  return (
+    <div class="min-h-0 flex-1 overflow-auto py-1">
+      <Section
+        label={t("git.staged")}
+        changes={status?.changes.filter((change) => change.staged) ?? []}
+        session={session}
+      />
+      <Section
+        label={t("git.tracked")}
+        changes={
+          status?.changes.filter((change) => !change.staged && change.kind !== "untracked") ?? []
+        }
+        session={session}
+      />
+      <Section
+        label={t("git.untracked")}
+        changes={status?.changes.filter((change) => change.kind === "untracked") ?? []}
+        session={session}
+      />
+    </div>
+  );
+}
+
+function History({ session }: { session: string | null }) {
+  if (commits.value.length === 0) {
+    return <p class="px-2 py-1 text-faint">{t("git.noHistory")}</p>;
+  }
+  return (
+    <ul class="min-h-0 flex-1 overflow-auto py-1">
+      {commits.value.map((commit) => (
+        <li key={commit.id}>
+          <button
+            type="button"
+            onClick={() => openDiff(session, "", commit.id)}
+            class="flex w-full flex-col gap-0.5 px-2 py-1 text-left transition-colors hover:bg-raised"
+          >
+            <span class="flex w-full items-baseline gap-2">
+              <span class="truncate text-muted">{commit.summary}</span>
+              <span class="ml-auto shrink-0 tabular-nums text-faint">{since(commit.when)}</span>
+            </span>
+            <span class="flex w-full items-baseline gap-2 text-faint">
+              <span class="shrink-0 tabular-nums">{commit.short}</span>
+              <span class="truncate">{commit.author}</span>
+              {commit.refs && (
+                <span class="ml-auto shrink-0 truncate text-state-working">
+                  {commit.refs.split(", ")[0]}
+                </span>
+              )}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
 
