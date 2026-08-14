@@ -5,9 +5,9 @@ use std::sync::Arc;
 use apex_core::ApexPaths;
 use apex_proto::{
     AgentSummary, Command, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit,
-    GitStatus, HistoryEntry,
+    GitStatus, GitTarget, HistoryEntry,
     Isolation, MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TerminalSize,
-    WorktreeDisposal,
+    WorktreeDisposal, WorktreeInfo,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -272,9 +272,9 @@ async fn close_session(
 async fn git_status(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
 ) -> Answer<GitStatus> {
-    match state.daemon.request(Command::GitRead { project, session }).await.map_err(failed)? {
+    match state.daemon.request(Command::GitRead { project, target }).await.map_err(failed)? {
         Reply::Git { status } => Ok(status),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -284,14 +284,14 @@ async fn git_status(
 async fn git_diff(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
     path: String,
     commit: Option<String>,
     scope: DiffScope,
 ) -> Answer<String> {
     match state
         .daemon
-        .request(Command::GitDiff { project, session, path, commit, scope })
+        .request(Command::GitDiff { project, target, path, commit, scope })
         .await
         .map_err(failed)?
     {
@@ -304,12 +304,12 @@ async fn git_diff(
 async fn git_log(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
     limit: u32,
 ) -> Answer<Vec<GitCommit>> {
     match state
         .daemon
-        .request(Command::GitLog { project, session, limit })
+        .request(Command::GitLog { project, target, limit })
         .await
         .map_err(failed)?
     {
@@ -319,16 +319,27 @@ async fn git_log(
 }
 
 #[tauri::command]
+async fn list_worktrees(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Vec<WorktreeInfo>> {
+    match state.daemon.request(Command::WorktreeList { project }).await.map_err(failed)? {
+        Reply::Worktrees { worktrees } => Ok(worktrees),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn git_hunks(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
     path: String,
     scope: DiffScope,
 ) -> Answer<Vec<String>> {
     match state
         .daemon
-        .request(Command::GitHunks { project, session, path, scope })
+        .request(Command::GitHunks { project, target, path, scope })
         .await
         .map_err(failed)?
     {
@@ -341,13 +352,13 @@ async fn git_hunks(
 async fn git_stage(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
     paths: Vec<String>,
     staged: bool,
 ) -> Answer<()> {
     state
         .daemon
-        .request(Command::GitStage { project, session, paths, staged })
+        .request(Command::GitStage { project, target, paths, staged })
         .await
         .map_err(failed)?;
     Ok(())
@@ -357,13 +368,13 @@ async fn git_stage(
 async fn git_stage_hunk(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
     patch: String,
     staged: bool,
 ) -> Answer<()> {
     state
         .daemon
-        .request(Command::GitStageHunk { project, session, patch, staged })
+        .request(Command::GitStageHunk { project, target, patch, staged })
         .await
         .map_err(failed)?;
     Ok(())
@@ -373,12 +384,12 @@ async fn git_stage_hunk(
 async fn git_commit(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-    session: Option<Uuid>,
+    target: GitTarget,
     message: String,
 ) -> Answer<GitCommit> {
     match state
         .daemon
-        .request(Command::GitCommitStaged { project, session, message })
+        .request(Command::GitCommitStaged { project, target, message })
         .await
         .map_err(failed)?
     {
@@ -390,9 +401,10 @@ async fn git_commit(
 #[tauri::command]
 async fn merge_worktree(
     state: tauri::State<'_, AppState>,
-    session: Uuid,
+    project: Uuid,
+    target: GitTarget,
 ) -> Answer<MergeReport> {
-    match state.daemon.request(Command::WorktreeMerge { session }).await.map_err(failed)? {
+    match state.daemon.request(Command::WorktreeMerge { project, target }).await.map_err(failed)? {
         Reply::Merge { report } => Ok(report),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -445,6 +457,7 @@ pub fn run() {
             git_diff,
             git_log,
             git_hunks,
+            list_worktrees,
             git_stage,
             git_stage_hunk,
             git_commit,

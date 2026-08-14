@@ -195,6 +195,20 @@ pub struct GitChange {
     pub removed: u32,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum GitTarget {
+    Project,
+    Session {
+        #[ts(type = "string")]
+        id: Uuid,
+    },
+    Worktree {
+        path: String,
+    },
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 #[serde(rename_all = "snake_case")]
@@ -413,14 +427,16 @@ pub enum Command {
     GitRead {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
+    },
+    WorktreeList {
+        #[ts(type = "string")]
+        project: Uuid,
     },
     GitDiff {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
         path: String,
         #[serde(default)]
         commit: Option<String>,
@@ -430,44 +446,40 @@ pub enum Command {
     GitHunks {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
         path: String,
         scope: DiffScope,
     },
     GitStage {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
         paths: Vec<String>,
         staged: bool,
     },
     GitStageHunk {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
         patch: String,
         staged: bool,
     },
     GitCommitStaged {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
         message: String,
     },
     GitLog {
         #[ts(type = "string")]
         project: Uuid,
-        #[ts(type = "string | null")]
-        session: Option<Uuid>,
+        target: GitTarget,
         limit: u32,
     },
     WorktreeMerge {
         #[ts(type = "string")]
-        session: Uuid,
+        project: Uuid,
+        target: GitTarget,
     },
 }
 
@@ -489,6 +501,7 @@ pub enum Reply {
     Log { commits: Vec<GitCommit> },
     Committed { commit: GitCommit },
     Hunks { patches: Vec<String> },
+    Worktrees { worktrees: Vec<WorktreeInfo> },
     Diff { patch: String },
     Merge { report: MergeReport },
     File { contents: FileContents },

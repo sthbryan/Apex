@@ -7,7 +7,7 @@ use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, editors, files,
 use std::collections::BTreeMap;
 use apex_proto::{
     EditorSummary, Event, FileContents, FileEntry, HistoryEntry, Isolation, MetricsSnapshot,
-    DiffScope, GitChange, GitCommit, GitStatus, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
+    DiffScope, GitChange, GitCommit, GitStatus, GitTarget, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
     SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize, WorktreeDisposal,
     WorktreeInfo,
 };
@@ -471,13 +471,10 @@ impl SessionManager {
         Ok(())
     }
 
-    pub async fn git_status(&self, project: Uuid, session: Option<Uuid>) -> Result<GitStatus> {
+    pub async fn git_status(&self, project: Uuid, target: GitTarget) -> Result<GitStatus> {
         let root = PathBuf::from(self.project_root(project).await?);
-        let worktree = self.worktree_of(session).await?;
-        let isolated = worktree.is_some();
-        let dir = worktree
-            .map(|tree| PathBuf::from(tree.path))
-            .unwrap_or_else(|| root.clone());
+        let dir = self.git_dir(project, &target).await?;
+        let isolated = dir != root;
 
         tokio::task::spawn_blocking(move || {
             if !apex_git::is_repo(&dir) {
@@ -505,12 +502,12 @@ impl SessionManager {
     pub async fn git_diff(
         &self,
         project: Uuid,
-        session: Option<Uuid>,
+        target: GitTarget,
         path: &str,
         commit: Option<String>,
         scope: DiffScope,
     ) -> Result<String> {
-        let dir = self.git_dir(project, session).await?;
+        let dir = self.git_dir(project, &target).await?;
         let path = path.to_owned();
         tokio::task::spawn_blocking(move || match commit {
             Some(commit) => {
@@ -524,11 +521,11 @@ impl SessionManager {
     pub async fn git_hunks(
         &self,
         project: Uuid,
-        session: Option<Uuid>,
+        target: GitTarget,
         path: &str,
         scope: DiffScope,
     ) -> Result<Vec<String>> {
-        let dir = self.git_dir(project, session).await?;
+        let dir = self.git_dir(project, &target).await?;
         let path = path.to_owned();
         tokio::task::spawn_blocking(move || {
             Ok(apex_git::split_hunks(&apex_git::diff_scoped(&dir, &path, scope_of(scope))?))
@@ -539,11 +536,11 @@ impl SessionManager {
     pub async fn git_stage(
         &self,
         project: Uuid,
-        session: Option<Uuid>,
+        target: GitTarget,
         paths: Vec<String>,
         staged: bool,
     ) -> Result<()> {
-        let dir = self.git_dir(project, session).await?;
+        let dir = self.git_dir(project, &target).await?;
         tokio::task::spawn_blocking(move || {
             if staged {
                 apex_git::stage(&dir, &paths)
@@ -557,21 +554,21 @@ impl SessionManager {
     pub async fn git_stage_hunk(
         &self,
         project: Uuid,
-        session: Option<Uuid>,
+        target: GitTarget,
         patch: String,
         staged: bool,
     ) -> Result<()> {
-        let dir = self.git_dir(project, session).await?;
+        let dir = self.git_dir(project, &target).await?;
         tokio::task::spawn_blocking(move || apex_git::apply_to_index(&dir, &patch, !staged)).await?
     }
 
     pub async fn git_commit(
         &self,
         project: Uuid,
-        session: Option<Uuid>,
+        target: GitTarget,
         message: String,
     ) -> Result<GitCommit> {
-        let dir = self.git_dir(project, session).await?;
+        let dir = self.git_dir(project, &target).await?;
         let commit = tokio::task::spawn_blocking(move || apex_git::commit(&dir, &message)).await??;
         Ok(GitCommit {
             id: commit.id,
@@ -586,10 +583,10 @@ impl SessionManager {
     pub async fn git_log(
         &self,
         project: Uuid,
-        session: Option<Uuid>,
+        target: GitTarget,
         limit: usize,
     ) -> Result<Vec<GitCommit>> {
-        let dir = self.git_dir(project, session).await?;
+        let dir = self.git_dir(project, &target).await?;
         let commits = tokio::task::spawn_blocking(move || apex_git::log(&dir, limit)).await??;
         Ok(commits
             .into_iter()
@@ -604,27 +601,46 @@ impl SessionManager {
             .collect())
     }
 
-    async fn git_dir(&self, project: Uuid, session: Option<Uuid>) -> Result<PathBuf> {
-        match self.worktree_of(session).await? {
-            Some(tree) => Ok(PathBuf::from(tree.path)),
-            None => Ok(PathBuf::from(self.project_root(project).await?)),
+    async fn git_dir(&self, project: Uuid, target: &GitTarget) -> Result<PathBuf> {
+        match target {
+            GitTarget::Project => Ok(PathBuf::from(self.project_root(project).await?)),
+            GitTarget::Worktree { path } => Ok(PathBuf::from(path)),
+            GitTarget::Session { id } => {
+                match self.require(*id).await?.snapshot_summary().await.worktree {
+                    Some(tree) => Ok(PathBuf::from(tree.path)),
+                    None => Ok(PathBuf::from(self.project_root(project).await?)),
+                }
+            }
         }
     }
 
-    async fn worktree_of(&self, session: Option<Uuid>) -> Result<Option<WorktreeInfo>> {
-        let Some(session) = session else {
-            return Ok(None);
-        };
-        Ok(self.require(session).await?.snapshot_summary().await.worktree)
+    pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeInfo>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let trees = tokio::task::spawn_blocking({
+            let root = root.clone();
+            move || apex_git::list_worktrees(&root)
+        })
+        .await??;
+
+        Ok(trees
+            .into_iter()
+            .filter(|tree| tree.path != root)
+            .map(|tree| WorktreeInfo { path: tree.path.display().to_string(), branch: tree.branch })
+            .collect())
     }
 
-    pub async fn merge_worktree(&self, session: Uuid) -> Result<MergeReport> {
-        let summary = self.require(session).await?.snapshot_summary().await;
-        let tree = summary.worktree.context("the session is not isolated")?;
-        let root = PathBuf::from(self.project_root(summary.project_id).await?);
+    pub async fn merge_worktree(&self, project: Uuid, target: GitTarget) -> Result<MergeReport> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let dir = self.git_dir(project, &target).await?;
+        if dir == root {
+            bail!("the project itself has nothing to merge back")
+        }
 
-        let outcome =
-            tokio::task::spawn_blocking(move || apex_git::merge(&root, &tree.branch)).await??;
+        let outcome = tokio::task::spawn_blocking(move || {
+            let branch = apex_git::current_branch(&dir)?;
+            apex_git::merge(&root, &branch)
+        })
+        .await??;
         Ok(match outcome {
             apex_git::MergeOutcome::Merged => MergeReport::Merged,
             apex_git::MergeOutcome::Conflicted { files } => MergeReport::Conflicted { files },
