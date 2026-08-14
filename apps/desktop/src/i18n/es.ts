@@ -6,14 +6,6 @@ export const es: Messages = {
   "status.ready": "listo",
   "status.failed": "fallo",
 
-  "agents.detecting": "Detectando agentes…",
-  "agents.available": "Disponibles",
-  "agents.missing": "Sin instalar",
-  "agents.notFound": 'no se encontró "{command}" en el PATH',
-  "agents.supportsResume": "reanudar",
-  "agents.dot.available": "disponible",
-  "agents.dot.missing": "sin instalar",
-
   "daemon.unreachable": "No se pudo hablar con apexd.",
   "daemon.retry": "Reintentar",
 
@@ -23,25 +15,11 @@ export const es: Messages = {
   "projects.open": "Abrir proyecto…",
   "projects.empty": "Abre un proyecto para empezar.",
   "projects.elsewhere": "Otros proyectos",
-  "dock.toggle": "Mostrar u ocultar el panel",
 
-  "dock.resources": "Recursos",
-
-  "usage.session": "Sesión",
-  "usage.weekly": "Semanal",
-  "usage.limit": "Límite",
-  "usage.window": "ventana de {window}",
+  "usage.title": "Uso de suscripción",
   "usage.resetsIn": "reinicia en {away} · {when}",
   "usage.resetsAt": "reinicia {when}",
-  "usage.onTrack": "al ritmo",
-  "usage.emptyIn": "se acaba en {away}",
-  "usage.overPace": "vas acelerado",
-  "usage.expected": "se esperaba {percent}% a esta hora",
-  "usage.updated": "hace {when}",
-  "usage.justNow": "un momento",
 
-  "status.cpu": "cpu {percent}%",
-  "status.gpu": "gpu {percent}%",
   "status.sessions": "{count} vivas",
 
   "resources.sampling": "Midiendo…",
@@ -53,7 +31,6 @@ export const es: Messages = {
   "resources.cores": "núcleos",
   "resources.bySession": "Por sesión",
   "resources.noSessions": "No hay sesiones corriendo.",
-  "resources.quota": "Suscripción",
   "resources.noQuota": "Sin datos.",
   "resources.refresh": "Actualizar ahora",
   "resources.kill": "Matar el proceso {pid}",
@@ -62,7 +39,6 @@ export const es: Messages = {
   "toolbar.theme.system": "Tema: sistema",
   "toolbar.theme.light": "Tema: claro",
   "toolbar.theme.dark": "Tema: oscuro",
-
 
   "notify.blocked": "Un agente te está esperando",
   "notify.done": "Un agente terminó",

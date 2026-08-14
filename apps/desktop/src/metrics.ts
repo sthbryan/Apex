@@ -60,6 +60,10 @@ export function percentOf(used: number, total: number): number {
   return total > 0 ? (used / total) * 100 : 0;
 }
 
+export function compactBytes(bytes: number): string {
+  return formatBytes(bytes).replace(" ", "").replace(/B$/, "");
+}
+
 export function formatBytes(bytes: number): string {
   const units = ["B", "KB", "MB", "GB", "TB"];
   let value = bytes;

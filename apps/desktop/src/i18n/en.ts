@@ -4,14 +4,6 @@ export const en = {
   "status.ready": "ready",
   "status.failed": "failed",
 
-  "agents.detecting": "Detecting agents…",
-  "agents.available": "Available",
-  "agents.missing": "Not installed",
-  "agents.notFound": 'could not find "{command}" on the PATH',
-  "agents.supportsResume": "resume",
-  "agents.dot.available": "available",
-  "agents.dot.missing": "not installed",
-
   "daemon.unreachable": "Could not reach apexd.",
   "daemon.retry": "Retry",
 
@@ -21,25 +13,11 @@ export const en = {
   "projects.open": "Open project…",
   "projects.empty": "Open a project to get started.",
   "projects.elsewhere": "Other projects",
-  "dock.toggle": "Toggle sidebar",
 
-  "dock.resources": "Resources",
-
-  "usage.session": "Session",
-  "usage.weekly": "Weekly",
-  "usage.limit": "Limit",
-  "usage.window": "{window} window",
+  "usage.title": "Subscription usage",
   "usage.resetsIn": "resets in {away} · {when}",
   "usage.resetsAt": "resets {when}",
-  "usage.onTrack": "on track",
-  "usage.emptyIn": "empty in {away}",
-  "usage.overPace": "over pace",
-  "usage.expected": "expected {percent}% by now",
-  "usage.updated": "updated {when} ago",
-  "usage.justNow": "just now",
 
-  "status.cpu": "cpu {percent}%",
-  "status.gpu": "gpu {percent}%",
   "status.sessions": "{count} live",
 
   "resources.sampling": "Sampling…",
@@ -51,7 +29,6 @@ export const en = {
   "resources.cores": "cores",
   "resources.bySession": "By session",
   "resources.noSessions": "No sessions running.",
-  "resources.quota": "Subscription",
   "resources.noQuota": "No data.",
   "resources.refresh": "Refresh now",
   "resources.kill": "Kill process {pid}",
@@ -60,7 +37,6 @@ export const en = {
   "toolbar.theme.system": "Theme: system",
   "toolbar.theme.light": "Theme: light",
   "toolbar.theme.dark": "Theme: dark",
-
 
   "notify.blocked": "An agent is waiting for you",
   "notify.done": "An agent finished",
