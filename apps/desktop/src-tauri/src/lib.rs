@@ -4,7 +4,8 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit,
+    AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry,
+    GitCommit,
     GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
     Reply, SessionSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
 };
@@ -399,6 +400,44 @@ async fn git_commit(
 }
 
 #[tauri::command]
+async fn context_list(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Vec<ContextEntry>> {
+    match state.daemon.request(Command::ContextList { project }).await.map_err(failed)? {
+        Reply::Context { entries } => Ok(entries),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn context_read(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    key: String,
+) -> Answer<String> {
+    match state.daemon.request(Command::ContextRead { project, key }).await.map_err(failed)? {
+        Reply::Text { text } => Ok(text),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn context_write(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    key: String,
+    contents: String,
+) -> Answer<()> {
+    state
+        .daemon
+        .request(Command::ContextWrite { project, key, contents })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn merge_worktree(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -461,7 +500,10 @@ pub fn run() {
             git_stage,
             git_stage_hunk,
             git_commit,
-            merge_worktree
+            merge_worktree,
+            context_list,
+            context_read,
+            context_write
         ])
         .run(tauri::generate_context!())
         .expect("failed to start Apex");

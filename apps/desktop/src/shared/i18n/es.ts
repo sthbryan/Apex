@@ -18,6 +18,7 @@ export const es: Messages = {
     sessions: "Sesiones",
     files: "Archivos",
     git: "Git",
+    context: "Contexto",
   },
   files: {
     empty: "Esta carpeta está vacía.",
@@ -79,6 +80,18 @@ export const es: Messages = {
   notify: {
     blocked: "Un agente te está esperando",
     done: "Un agente terminó",
+  },
+  context: {
+    empty: "Todavía no hay nada compartido. Los agentes escriben aquí por MCP.",
+    add: "Nueva entrada",
+    refresh: "Recargar el contexto",
+    keyPlaceholder: "Nombre, como arquitectura o decisiones",
+    bodyPlaceholder: "Markdown que puede leer cualquier agente del proyecto…",
+    save: "Guardar",
+    close: "Cerrar",
+    saving: "Guardando…",
+    unsaved: "Sin guardar",
+    shared: "Todos los agentes de aquí pueden leerlo",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

@@ -1,6 +1,7 @@
 import {
   Activity,
   ArrowRightLeft,
+  BookMarked,
   Check,
   ChevronDown,
   Cpu,
@@ -36,6 +37,7 @@ const ICONS = {
   sessions: SquareTerminal,
   files: Folder,
   branch: GitBranch,
+  context: BookMarked,
   check: Check,
   file: File,
   external: ExternalLink,

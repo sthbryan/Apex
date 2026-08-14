@@ -16,6 +16,7 @@ export const en = {
     sessions: "Sessions",
     files: "Files",
     git: "Git",
+    context: "Context",
   },
   files: {
     empty: "This folder is empty.",
@@ -77,6 +78,18 @@ export const en = {
   notify: {
     blocked: "An agent is waiting for you",
     done: "An agent finished",
+  },
+  context: {
+    empty: "Nothing shared yet. Agents write here through MCP.",
+    add: "New entry",
+    refresh: "Reload the context",
+    keyPlaceholder: "Name, like architecture or decisions",
+    bodyPlaceholder: "Markdown every agent on this project can read…",
+    save: "Save",
+    close: "Close",
+    saving: "Saving…",
+    unsaved: "Unsaved",
+    shared: "Every agent here can read this",
   },
   git: {
     noRepo: "This project is not a git repository.",
