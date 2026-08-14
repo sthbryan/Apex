@@ -13,7 +13,7 @@ type Loaded = {
   markup: string | null;
 };
 
-export function FileView({ path }: { path: string }) {
+export function FileView({ path, chrome = true }: { path: string; chrome?: boolean }) {
   const project = activeProject.value;
   const projectId = project?.id ?? null;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -50,34 +50,38 @@ export function FileView({ path }: { path: string }) {
 
   return (
     <div class="flex h-full flex-col bg-bg">
-      <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
-        <Icon name="file" size={12} />
-        <span class="truncate text-text">{fileName(path)}</span>
-        <span class="truncate text-faint">{path}</span>
-        <span class="ml-auto shrink-0 text-faint">{contents ? formatSize(contents.size) : ""}</span>
-        <button
-          type="button"
-          title={t("files.reload")}
-          onClick={load}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-        {projectId && (
+      {chrome && (
+        <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
+          <Icon name="file" size={12} />
+          <span class="truncate text-text">{fileName(path)}</span>
+          <span class="truncate text-faint">{path}</span>
+          <span class="ml-auto shrink-0 text-faint">
+            {contents ? formatSize(contents.size) : ""}
+          </span>
           <button
             type="button"
-            title={t("files.openExternally")}
-            onClick={() =>
-              void openExternally(projectId, path).catch((error: unknown) =>
-                setFailure(String(error)),
-              )
-            }
+            title={t("files.reload")}
+            onClick={load}
             class="shrink-0 text-faint transition-colors hover:text-text"
           >
-            <Icon name="external" size={12} />
+            <Icon name="refresh" size={12} />
           </button>
-        )}
-      </header>
+          {projectId && (
+            <button
+              type="button"
+              title={t("files.openExternally")}
+              onClick={() =>
+                void openExternally(projectId, path).catch((error: unknown) =>
+                  setFailure(String(error)),
+                )
+              }
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name="external" size={12} />
+            </button>
+          )}
+        </header>
+      )}
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
