@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 
+import { Icon } from "../components/Icon";
 import type { ProjectSummary } from "../bindings/ProjectSummary";
 import type { SessionSummary } from "../bindings/SessionSummary";
 import { t } from "../i18n";
@@ -54,9 +55,9 @@ export function SessionsPanel({ sessions, elsewhere, projects }: Props) {
                   dismiss(session.id);
                 }
               }}
-              class="ml-auto text-faint hover:text-text"
+              class="ml-auto text-faint transition-colors hover:text-text"
             >
-              ×
+              <Icon name="close" size={12} />
             </button>
           </div>
           <ul class="flex flex-col">
@@ -80,7 +81,7 @@ function Waiting({
   projects: ProjectSummary[];
 }) {
   return (
-    <section class="rounded border border-state-blocked/40 bg-state-blocked/5 p-1">
+    <section class="animate-pop-in rounded border border-state-blocked/40 bg-state-blocked/5 p-1">
       <h2 class="mb-1 px-1 uppercase tracking-wider text-state-blocked">
         {t("sessions.waiting")}
       </h2>
@@ -94,7 +95,7 @@ function Waiting({
                   void switchTo(session.project_id);
                 }
               }}
-              class="flex w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-raised"
+              class="flex w-full items-center gap-2 rounded px-1 py-1 text-left transition-colors hover:bg-raised"
             >
               <span class="size-2 shrink-0 rounded-full bg-state-blocked" />
               <span class="truncate">{session.title}</span>
@@ -127,7 +128,7 @@ function Elsewhere({ sessions, projects }: { sessions: SessionSummary[]; project
         onClick={() => setOpen((shown) => !shown)}
         class="mb-1 flex w-full items-center gap-2 px-1 uppercase tracking-wider text-faint hover:text-muted"
       >
-        <span>{open ? "▾" : "▸"}</span>
+        <Icon name="chevron" size={12} class={`transition-transform ${open ? "" : "-rotate-90"}`} />
         <span>{t("projects.elsewhere")}</span>
         <span class="ml-auto normal-case">
           {waiting > 0 ? <span class="text-state-blocked">{waiting}</span> : sessions.length}
@@ -152,7 +153,7 @@ function Elsewhere({ sessions, projects }: { sessions: SessionSummary[]; project
                     onClick={() => void switchTo(session.project_id)}
                     class="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-muted hover:bg-raised"
                   >
-                    <span class={`size-2 shrink-0 rounded-full ${dotStyle(session)}`} />
+                    <StateDot session={session} />
                     <span class="truncate">{session.title}</span>
                   </button>
                 </li>
@@ -169,7 +170,7 @@ function Row({ session }: { session: SessionSummary }) {
 
   return (
     <li
-      class={`group flex items-center gap-2 rounded px-1 hover:bg-raised ${
+      class={`group flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised ${
         activeSessionId.value === session.id ? "bg-raised" : ""
       }`}
     >
@@ -184,7 +185,7 @@ function Row({ session }: { session: SessionSummary }) {
           finished ? "text-muted" : ""
         }`}
       >
-        <span class={`size-2 shrink-0 rounded-full ${dotStyle(session)}`} />
+        <StateDot session={session} />
         <span class="truncate">{session.title}</span>
         {finished && (
           <span class="ml-auto shrink-0 text-faint">
@@ -196,11 +197,23 @@ function Row({ session }: { session: SessionSummary }) {
         type="button"
         title={finished ? t("sessions.dismiss") : t("sessions.close")}
         onClick={() => dismiss(session.id)}
-        class="shrink-0 text-faint opacity-0 group-hover:opacity-100 hover:text-text"
+        class="shrink-0 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
       >
-        ×
+        <Icon name="close" size={12} />
       </button>
     </li>
+  );
+}
+
+function StateDot({ session }: { session: SessionSummary }) {
+  const live = session.exit_code === null;
+  return (
+    <span class="relative flex size-2 shrink-0">
+      {live && session.state === "working" && (
+        <span class="absolute inset-0 animate-ping rounded-full bg-state-working opacity-60" />
+      )}
+      <span class={`relative size-2 rounded-full ${dotStyle(session)}`} />
+    </span>
   );
 }
 
