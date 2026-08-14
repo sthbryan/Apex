@@ -18,6 +18,7 @@ import {
   Monitor,
   Moon,
   PanelLeft,
+  PencilRuler,
   Plus,
   RefreshCw,
   Settings2,
@@ -51,6 +52,7 @@ const ICONS = {
   gpu: Gpu,
   memory: MemoryStick,
   swap: ArrowRightLeft,
+  externalApp: PencilRuler,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

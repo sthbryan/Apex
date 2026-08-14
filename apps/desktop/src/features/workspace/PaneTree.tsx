@@ -152,7 +152,7 @@ function FileExtras({
           onClick={() => void openExternally(projectId, path)}
           class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
         >
-          <Icon name="external" size={12} />
+          <Icon name="externalApp" size={12} />
         </button>
       )}
     </>
