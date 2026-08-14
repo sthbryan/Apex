@@ -1,7 +1,7 @@
-import { openPath } from "@tauri-apps/plugin-opener";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { FileContents } from "@/bindings/FileContents";
+import { openExternally } from "@/features/files/editors";
 import { highlight } from "@/features/files/highlight";
 import { fileName, formatSize, readFile } from "@/features/files/state";
 import { activeProject } from "@/features/projects/state";
@@ -63,11 +63,15 @@ export function FileView({ path }: { path: string }) {
         >
           <Icon name="refresh" size={12} />
         </button>
-        {project && (
+        {projectId && (
           <button
             type="button"
             title={t("files.openExternally")}
-            onClick={() => void openPath(`${project.root}/${path}`)}
+            onClick={() =>
+              void openExternally(projectId, path).catch((error: unknown) =>
+                setFailure(String(error)),
+              )
+            }
             class="shrink-0 text-faint transition-colors hover:text-text"
           >
             <Icon name="external" size={12} />

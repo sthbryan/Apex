@@ -60,6 +60,9 @@ export const en = {
     themeHint: "Follows your system.",
     language: "Language",
     languageHint: "Applies instantly.",
+    editor: "External editor",
+    editorHint: "Where files open when you leave Apex. Only detected editors are listed.",
+    editorSystem: "System default",
     agentsHint: "Agents are TOML files in {path} — drop one in to add a CLI.",
   },
   theme: {

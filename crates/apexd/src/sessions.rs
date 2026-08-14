@@ -3,12 +3,12 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
-use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, files, history};
+use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, editors, files, history};
 use std::collections::BTreeMap;
 use apex_proto::{
-    Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot, ProcessUsage, ProjectSummary,
-    QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage, SystemUsage,
-    TerminalSize,
+    EditorSummary, Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot, ProcessUsage,
+    ProjectSummary, QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage,
+    SystemUsage, TerminalSize,
 };
 use apex_metrics::Sampler;
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
@@ -237,9 +237,7 @@ impl SessionManager {
 
     pub async fn list_history(&self, project: Uuid) -> Result<Vec<HistoryEntry>> {
         let root = self.project_root(project).await?;
-        let home = directories::UserDirs::new()
-            .map(|dirs| dirs.home_dir().to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("/"));
+        let home = home_directory();
 
         let mut entries: Vec<HistoryEntry> = self
             .profiles
@@ -267,6 +265,59 @@ impl SessionManager {
         let root = PathBuf::from(self.project_root(project).await?);
         let path = path.to_owned();
         tokio::task::spawn_blocking(move || files::read_file(&root, &path)).await?
+    }
+
+    pub async fn list_editors(&self) -> Vec<EditorSummary> {
+        let home = home_directory();
+        let mut resolver = self.resolver.lock().await;
+        editors::EDITORS
+            .iter()
+            .map(|editor| EditorSummary {
+                id: editor.id.to_owned(),
+                name: editor.name.to_owned(),
+                command: editor.command.to_owned(),
+                resolved_path: resolver
+                    .resolve(editor.command)
+                    .or_else(|| editors::bundle(editor, &home))
+                    .map(|path| path.display().to_string()),
+            })
+            .collect()
+    }
+
+    pub async fn open_externally(
+        &self,
+        project: Uuid,
+        path: &str,
+        editor: Option<&str>,
+    ) -> Result<()> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let target = files::resolve(&root, path)?;
+
+        let launcher = match editor {
+            Some(id) => {
+                let spec = editors::find(id).context("unknown editor")?;
+                let mut resolver = self.resolver.lock().await;
+                resolver
+                    .resolve(spec.command)
+                    .or_else(|| editors::bundle(spec, &home_directory()))
+                    .with_context(|| format!("{} is not installed", spec.name))?
+            }
+            None => PathBuf::from(editors::system_opener()),
+        };
+
+        let mut command = if editors::is_bundle(&launcher) {
+            let mut open = tokio::process::Command::new(editors::system_opener());
+            open.arg("-a").arg(&launcher);
+            open
+        } else {
+            tokio::process::Command::new(&launcher)
+        };
+
+        command
+            .arg(&target)
+            .spawn()
+            .with_context(|| format!("spawning {}", launcher.display()))?;
+        Ok(())
     }
 
     pub async fn search_files(
@@ -482,4 +533,10 @@ impl SessionManager {
         }
         let _ = self.events.send(Event::SessionStateChanged { id, state });
     }
+}
+
+fn home_directory() -> PathBuf {
+    directories::UserDirs::new()
+        .map(|dirs| dirs.home_dir().to_path_buf())
+        .unwrap_or_else(|| PathBuf::from("/"))
 }

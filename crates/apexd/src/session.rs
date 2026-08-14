@@ -160,6 +160,16 @@ impl Client {
                     .await
                     .map_err(not_found_error)?,
             }),
+            Command::ListEditors => {
+                Ok(Reply::Editors { editors: self.manager.list_editors().await })
+            }
+            Command::FileOpenExternal { project, path, editor } => {
+                self.manager
+                    .open_externally(project, &path, editor.as_deref())
+                    .await
+                    .map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
             Command::SessionResume { project, agent, session_id, size } => {
                 let session = self
                     .manager

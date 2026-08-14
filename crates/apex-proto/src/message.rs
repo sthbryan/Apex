@@ -133,6 +133,15 @@ pub struct FileEntry {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct EditorSummary {
+    pub id: String,
+    pub name: String,
+    pub command: String,
+    pub resolved_path: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct FileContents {
     pub path: String,
     pub text: Option<String>,
@@ -270,6 +279,13 @@ pub enum Command {
         query: String,
         limit: u32,
     },
+    ListEditors,
+    FileOpenExternal {
+        #[ts(type = "string")]
+        project: Uuid,
+        path: String,
+        editor: Option<String>,
+    },
     SessionResume {
         #[ts(type = "string")]
         project: Uuid,
@@ -330,6 +346,7 @@ pub enum Reply {
     Layout { payload: Option<String> },
     History { entries: Vec<HistoryEntry> },
     Directory { entries: Vec<FileEntry> },
+    Editors { editors: Vec<EditorSummary> },
     File { contents: FileContents },
     Metrics { snapshot: MetricsSnapshot },
     Done,

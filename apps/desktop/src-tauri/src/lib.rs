@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot,
+    AgentSummary, Command, EditorSummary, Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot,
     ProjectSummary, Reply, SessionSummary, TerminalSize,
 };
 use client::DaemonClient;
@@ -159,6 +159,29 @@ async fn read_file(
 }
 
 #[tauri::command]
+async fn list_editors(state: tauri::State<'_, AppState>) -> Answer<Vec<EditorSummary>> {
+    match state.daemon.request(Command::ListEditors).await.map_err(failed)? {
+        Reply::Editors { editors } => Ok(editors),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn open_externally(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    path: String,
+    editor: Option<String>,
+) -> Answer<()> {
+    state
+        .daemon
+        .request(Command::FileOpenExternal { project, path, editor })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn search_files(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -248,7 +271,6 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             let paths = ApexPaths::discover()?;
@@ -274,6 +296,8 @@ pub fn run() {
             list_directory,
             read_file,
             search_files,
+            list_editors,
+            open_externally,
             resume_session,
             create_session,
             attach_session,

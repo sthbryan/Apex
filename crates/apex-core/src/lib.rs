@@ -1,4 +1,5 @@
 pub mod discovery;
+pub mod editors;
 pub mod files;
 pub mod history;
 pub mod paths;

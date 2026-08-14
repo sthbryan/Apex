@@ -1,5 +1,6 @@
 import cn from "cnfast";
 import { useEffect, useRef } from "preact/hooks";
+import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import { SettingsRow } from "@/features/settings/SettingsRow";
 import { closeSettings, settingsOpen } from "@/features/settings/state";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
@@ -8,6 +9,7 @@ import { Choice } from "@/shared/ui/Choice";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 import { Segmented } from "@/shared/ui/Segmented";
+import { Select } from "@/shared/ui/Select";
 
 const THEMES: { value: ThemeMode; icon: IconName }[] = [
   { value: "system", icon: "monitor" },
@@ -94,6 +96,21 @@ export function Settings() {
                 </Choice>
               ))}
             </Segmented>
+          </SettingsRow>
+
+          <SettingsRow label={t("settings.editor")} hint={t("settings.editorHint")}>
+            <Select
+              label={t("settings.editor")}
+              value={preferredEditor.value ?? ""}
+              onSelect={(value) => setPreferredEditor(value === "" ? null : value)}
+              options={[
+                { value: "", label: t("settings.editorSystem") },
+                ...installedEditors().map((editor) => ({
+                  value: editor.id,
+                  label: editor.name,
+                })),
+              ]}
+            />
           </SettingsRow>
 
           <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>

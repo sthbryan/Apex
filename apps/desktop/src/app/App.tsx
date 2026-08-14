@@ -7,6 +7,7 @@ import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
 import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
+import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
 import { startNotifications } from "@/features/notifications/state";
 import { CommandPalette } from "@/features/palette/CommandPalette";
@@ -46,7 +47,7 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
-    void connect().then(loadProjects);
+    void connect().then(loadProjects).then(loadEditors);
 
     let stopNotifications: (() => void) | undefined;
     void startNotifications().then((stop) => {
