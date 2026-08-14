@@ -14,6 +14,15 @@ export const en = {
   dock: {
     toggle: "Toggle sidebar",
     sessions: "Sessions",
+    files: "Files",
+  },
+  files: {
+    empty: "This folder is empty.",
+    noProject: "Open a project to browse its files.",
+    binary: "Binary file.",
+    truncated: "Showing the first megabyte.",
+    openExternally: "Open in the default app",
+    refresh: "Reload the tree",
   },
   projects: {
     none: "No project",

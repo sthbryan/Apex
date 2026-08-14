@@ -11,7 +11,9 @@ import {
   neighbourLeaf,
   newId,
   type PaneNode,
+  type PaneView,
   removeLeaf,
+  sessionOf,
   setRatio,
   splitLeaf,
 } from "@/features/workspace/tree";
@@ -34,19 +36,54 @@ export const activeSessionId = computed(() => {
   if (!tab) {
     return null;
   }
-  return findLeaf(tab.root, tab.activeLeafId)?.sessionId ?? null;
+  const pane = findLeaf(tab.root, tab.activeLeafId);
+  return pane ? sessionOf(pane) : null;
 });
 
 export function openInNewTab(session: SessionSummary): void {
-  const root = leaf(session.id);
+  openView({ type: "session", sessionId: session.id });
+}
+
+export function openFile(path: string): void {
+  if (focusPane((view) => view.type === "file" && view.path === path)) {
+    return;
+  }
+  const tab = activeTab.value;
+  if (tab) {
+    splitActive({ type: "file", path }, "row");
+    return;
+  }
+  openView({ type: "file", path });
+}
+
+export function focusSession(sessionId: string): boolean {
+  return focusPane((view) => view.type === "session" && view.sessionId === sessionId);
+}
+
+export function splitActive(view: PaneView, direction: Direction): void {
+  const tab = activeTab.value;
+  if (!tab) {
+    openView(view);
+    return;
+  }
+  const incoming = leaf(view);
+  updateTab(tab.id, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, current.activeLeafId, direction, incoming),
+    activeLeafId: incoming.id,
+  }));
+}
+
+function openView(view: PaneView): void {
+  const root = leaf(view);
   const tab: Tab = { id: newId(), root, activeLeafId: root.id };
   tabs.value = [...tabs.value, tab];
   activeTabId.value = tab.id;
 }
 
-export function focusSession(sessionId: string): boolean {
+function focusPane(matches: (view: PaneView) => boolean): boolean {
   for (const tab of tabs.value) {
-    const match = leaves(tab.root).find((candidate) => candidate.sessionId === sessionId);
+    const match = leaves(tab.root).find((candidate) => matches(candidate.view));
     if (match) {
       activeTabId.value = tab.id;
       updateTab(tab.id, (current) => ({ ...current, activeLeafId: match.id }));
@@ -56,27 +93,13 @@ export function focusSession(sessionId: string): boolean {
   return false;
 }
 
-export function splitActive(session: SessionSummary, direction: Direction): void {
-  const tab = activeTab.value;
-  if (!tab) {
-    openInNewTab(session);
-    return;
-  }
-  const incoming = leaf(session.id);
-  updateTab(tab.id, (current) => ({
-    ...current,
-    root: splitLeaf(current.root, current.activeLeafId, direction, incoming),
-    activeLeafId: incoming.id,
-  }));
-}
-
 export async function splitWithNewSession(
   project: string,
   agent: string,
   direction: Direction,
 ): Promise<void> {
   const created = await createSession(project, agent, { rows: 24, cols: 80 });
-  splitActive(created, direction);
+  splitActive({ type: "session", sessionId: created.id }, direction);
 }
 
 export type LayoutPayload = {
@@ -113,12 +136,25 @@ function parseLayout(raw: string | null): LayoutPayload {
   try {
     const parsed = JSON.parse(raw) as Partial<LayoutPayload>;
     return {
-      tabs: Array.isArray(parsed.tabs) ? parsed.tabs : [],
+      tabs: Array.isArray(parsed.tabs)
+        ? parsed.tabs.map((tab) => ({ ...tab, root: adoptNode(tab.root) }))
+        : [],
       activeTabId: typeof parsed.activeTabId === "string" ? parsed.activeTabId : null,
     };
   } catch {
     return { tabs: [], activeTabId: null };
   }
+}
+
+function adoptNode(node: PaneNode): PaneNode {
+  if (node.kind === "leaf") {
+    if (node.view) {
+      return node;
+    }
+    const legacy = (node as unknown as { sessionId: string }).sessionId;
+    return { kind: "leaf", id: node.id, view: { type: "session", sessionId: legacy } };
+  }
+  return { ...node, first: adoptNode(node.first), second: adoptNode(node.second) };
 }
 
 function pruneTab(tab: Tab, liveSessionIds: Set<string>): Tab | null {
@@ -135,7 +171,8 @@ function pruneTab(tab: Tab, liveSessionIds: Set<string>): Tab | null {
 
 function pruneNode(node: PaneNode, liveSessionIds: Set<string>): PaneNode | null {
   if (node.kind === "leaf") {
-    return liveSessionIds.has(node.sessionId) ? node : null;
+    const session = sessionOf(node);
+    return session === null || liveSessionIds.has(session) ? node : null;
   }
   const first = pruneNode(node.first, liveSessionIds);
   const second = pruneNode(node.second, liveSessionIds);
@@ -162,8 +199,9 @@ export function closePane(tabId: string, target: Leaf, terminate: boolean): void
   if (!tab) {
     return;
   }
-  if (terminate) {
-    void closeSession(target.sessionId);
+  const session = sessionOf(target);
+  if (terminate && session) {
+    void closeSession(session);
   }
 
   const fallback = neighbourLeaf(tab.root, target.id);
@@ -185,7 +223,7 @@ export function closeTab(tabId: string): void {
 
 export function dropSession(sessionId: string): void {
   for (const tab of tabs.value) {
-    const match = leaves(tab.root).find((candidate) => candidate.sessionId === sessionId);
+    const match = leaves(tab.root).find((candidate) => sessionOf(candidate) === sessionId);
     if (match) {
       closePane(tab.id, match, false);
     }

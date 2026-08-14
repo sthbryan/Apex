@@ -10,7 +10,7 @@ import {
   splitWithNewSession,
   tabs,
 } from "@/features/workspace/state";
-import { findLeaf } from "@/features/workspace/tree";
+import { findLeaf, sessionOf } from "@/features/workspace/tree";
 
 type Toggles = {
   togglePalette: () => void;
@@ -53,7 +53,8 @@ const BINDINGS: Record<string, (context: Context) => void> = {
   b: () => toggleDock(),
   d: ({ event }) => {
     const pane = currentPane();
-    const session = sessions.value.find((candidate) => candidate.id === pane?.sessionId);
+    const current = pane ? sessionOf(pane) : null;
+    const session = sessions.value.find((candidate) => candidate.id === current);
     if (session) {
       void splitWithNewSession(
         session.project_id,

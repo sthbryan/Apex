@@ -1,4 +1,5 @@
 import cn from "cnfast";
+import { FileView } from "@/features/files/FileView";
 import { TerminalView } from "@/features/sessions/TerminalView";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
 import { focusLeaf } from "@/features/workspace/state";
@@ -24,7 +25,11 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
         onFocusCapture={() => focusLeaf(tabId, node.id)}
         onMouseDown={() => focusLeaf(tabId, node.id)}
       >
-        <TerminalView id={node.sessionId} active={focused} />
+        {node.view.type === "session" ? (
+          <TerminalView id={node.view.sessionId} active={focused} />
+        ) : (
+          <FileView path={node.view.path} />
+        )}
       </div>
     );
   }

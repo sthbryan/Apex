@@ -16,6 +16,15 @@ export const es: Messages = {
   dock: {
     toggle: "Mostrar u ocultar la barra lateral",
     sessions: "Sesiones",
+    files: "Archivos",
+  },
+  files: {
+    empty: "Esta carpeta está vacía.",
+    noProject: "Abre un proyecto para ver sus archivos.",
+    binary: "Archivo binario.",
+    truncated: "Mostrando el primer megabyte.",
+    openExternally: "Abrir en la app predeterminada",
+    refresh: "Recargar el árbol",
   },
   projects: {
     none: "Sin proyecto",

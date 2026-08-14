@@ -54,10 +54,12 @@ export function TabBar({ tabs, sessions }: Props) {
 }
 
 function titleOf(tab: Tab, sessions: SessionSummary[]): string {
-  const titles = leaves(tab.root).map(
-    (pane) =>
-      sessions.find((session) => session.id === pane.sessionId)?.title ??
-      pane.sessionId.slice(0, 8),
-  );
+  const titles = leaves(tab.root).map((pane) => {
+    if (pane.view.type === "file") {
+      return pane.view.path.split("/").at(-1) ?? pane.view.path;
+    }
+    const { sessionId } = pane.view;
+    return sessions.find((session) => session.id === sessionId)?.title ?? sessionId.slice(0, 8);
+  });
   return titles.length > 1 ? `${titles[0]} +${titles.length - 1}` : (titles[0] ?? "");
 }
