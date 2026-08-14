@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store};
 use std::collections::BTreeMap;
-use apex_proto::{Event, SessionState, SessionSummary, TerminalSize};
+use apex_proto::{Event, ProjectSummary, SessionState, SessionSummary, TerminalSize};
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
 use bytes::Bytes;
 use std::time::Instant;
@@ -32,8 +32,6 @@ pub struct SessionManager {
     base_env: BTreeMap<String, String>,
     resolver: Mutex<BinaryResolver>,
     store: Mutex<Store>,
-    project_id: Uuid,
-    default_cwd: PathBuf,
     sessions: RwLock<HashMap<Uuid, Arc<LiveSession>>>,
     events: broadcast::Sender<Event>,
 }
@@ -43,8 +41,6 @@ impl SessionManager {
         profiles: ProfileSet,
         resolver: BinaryResolver,
         store: Store,
-        project_id: Uuid,
-        default_cwd: PathBuf,
     ) -> Self {
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
         let base_env = resolver
@@ -56,8 +52,6 @@ impl SessionManager {
             base_env,
             resolver: Mutex::new(resolver),
             store: Mutex::new(store),
-            project_id,
-            default_cwd,
             sessions: RwLock::new(HashMap::new()),
             events,
         }
@@ -86,8 +80,48 @@ impl SessionManager {
         self.sessions.read().await.get(&id).cloned()
     }
 
+    pub async fn list_projects(&self) -> Result<Vec<ProjectSummary>> {
+        let store = self.store.lock().await;
+        Ok(store
+            .list_projects()?
+            .into_iter()
+            .map(|project| ProjectSummary {
+                id: project.id,
+                name: project.name,
+                root: project.root,
+                is_git: project.is_git,
+            })
+            .collect())
+    }
+
+    pub async fn open_project(&self, root: &str) -> Result<ProjectSummary> {
+        let path = PathBuf::from(root);
+        if !path.is_dir() {
+            bail!("{root} no es una carpeta")
+        }
+        let canonical = path.canonicalize().unwrap_or(path);
+
+        let store = self.store.lock().await;
+        let project = store.open_project(&canonical)?;
+        Ok(ProjectSummary {
+            id: project.id,
+            name: project.name,
+            root: project.root,
+            is_git: project.is_git,
+        })
+    }
+
+    pub async fn save_layout(&self, project: Uuid, payload: &str) -> Result<()> {
+        self.store.lock().await.save_layout(project, payload)
+    }
+
+    pub async fn load_layout(&self, project: Uuid) -> Result<Option<String>> {
+        self.store.lock().await.load_layout(project)
+    }
+
     pub async fn create(
         self: &Arc<Self>,
+        project: Uuid,
         agent: &str,
         cwd: Option<String>,
         size: TerminalSize,
@@ -98,7 +132,14 @@ impl SessionManager {
             .cloned()
             .with_context(|| format!("no existe el perfil {agent}"))?;
         let binary = self.resolve_binary(&profile).await?;
-        let cwd = cwd.map(PathBuf::from).unwrap_or_else(|| self.default_cwd.clone());
+        let project_root = {
+            let store = self.store.lock().await;
+            store
+                .project(project)?
+                .with_context(|| format!("no existe el proyecto {project}"))?
+                .root
+        };
+        let cwd = cwd.map(PathBuf::from).unwrap_or_else(|| PathBuf::from(project_root));
 
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = profile.args.clone();
@@ -113,11 +154,12 @@ impl SessionManager {
 
         let record = {
             let store = self.store.lock().await;
-            store.insert_session(self.project_id, &profile.name, &title, &cwd_text)?
+            store.insert_session(project, &profile.name, &title, &cwd_text)?
         };
 
         let summary = SessionSummary {
             id: record.id,
+            project_id: project,
             agent: profile.name.clone(),
             title,
             cwd: cwd_text,
@@ -193,9 +235,17 @@ impl SessionManager {
         );
         let manager = self.clone();
         let mut output = session.process.subscribe();
+        let produced_before_subscribing = session.process.snapshot();
 
         tokio::spawn(async move {
             let mut detector = StateDetector::new(patterns, Instant::now());
+            if !produced_before_subscribing.is_empty()
+                && let Some(state) =
+                    detector.observe(&produced_before_subscribing, Instant::now())
+            {
+                manager.publish_state(id, &session, state).await;
+            }
+
             let mut ticker = interval(POLL_INTERVAL);
             ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
 

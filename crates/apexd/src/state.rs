@@ -10,10 +10,10 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
 
     let store = Store::open(&paths.database())?;
     let orphaned = store.close_orphaned_sessions()?;
-    let project = store.upsert_project("default", &paths.config_dir.display().to_string())?;
     tracing::info!(
         database = %paths.database().display(),
         schema = store.schema_version()?,
+        projects = store.list_projects()?.len(),
         orphaned,
         "store listo"
     );
@@ -30,7 +30,5 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
         profiles,
         BinaryResolver::with_environment(environment),
         store,
-        project.id,
-        paths.home.clone(),
     )))
 }

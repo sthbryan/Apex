@@ -121,9 +121,25 @@ impl Client {
             Command::ListSessions => {
                 Ok(Reply::Sessions { sessions: self.manager.list_sessions().await })
             }
-            Command::SessionCreate { agent, cwd, size } => {
-                let session =
-                    self.manager.create(&agent, cwd, size).await.map_err(internal_error)?;
+            Command::ListProjects => Ok(Reply::Projects {
+                projects: self.manager.list_projects().await.map_err(internal_error)?,
+            }),
+            Command::ProjectOpen { root } => Ok(Reply::Project {
+                project: self.manager.open_project(&root).await.map_err(not_found_error)?,
+            }),
+            Command::LayoutSave { project, payload } => {
+                self.manager.save_layout(project, &payload).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::LayoutLoad { project } => Ok(Reply::Layout {
+                payload: self.manager.load_layout(project).await.map_err(not_found_error)?,
+            }),
+            Command::SessionCreate { project, agent, cwd, size } => {
+                let session = self
+                    .manager
+                    .create(project, &agent, cwd, size)
+                    .await
+                    .map_err(internal_error)?;
                 self.attach(session.id).await?;
                 Ok(Reply::Session { session })
             }
@@ -297,25 +313,25 @@ mod tests {
         let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
             PathBuf::from("/bin"),
         ]));
-        let store = Store::in_memory().expect("store");
-        let project = store.upsert_project("test", "/tmp/test").expect("proyecto");
-        Arc::new(SessionManager::new(
-            profiles,
-            resolver,
-            store,
-            project.id,
-            PathBuf::from("/tmp"),
-        ))
+        Arc::new(SessionManager::new(profiles, resolver, Store::in_memory().expect("store")))
     }
 
     struct Harness {
         socket: PathBuf,
         manager: Arc<SessionManager>,
+        project: Uuid,
+        _root: tempfile::TempDir,
     }
 
     impl Harness {
-        fn start() -> Self {
+        async fn start() -> Self {
             let manager = manager();
+            let root = tempfile::tempdir().expect("tempdir");
+            let project = manager
+                .open_project(&root.path().display().to_string())
+                .await
+                .expect("proyecto")
+                .id;
             let id = Uuid::new_v4().simple().to_string();
             let socket = PathBuf::from("/tmp").join(format!("apexd-s-{}.sock", &id[..8]));
             let mut transport = UnixTransport::bind(&socket).expect("bind");
@@ -326,7 +342,7 @@ mod tests {
                     tokio::spawn(serve(served.clone(), Connection::new(stream, peer)));
                 }
             });
-            Self { socket, manager }
+            Self { socket, manager, project, _root: root }
         }
 
         async fn client(&self) -> TestClient {
@@ -382,9 +398,10 @@ mod tests {
             deadline.expect("sin respuesta a tiempo")
         }
 
-        async fn create_shell(&mut self) -> SessionSummary {
+        async fn create_shell(&mut self, project: Uuid) -> SessionSummary {
             let reply = self
                 .request(Command::SessionCreate {
+                    project: project,
                     agent: "sh".into(),
                     cwd: Some("/tmp".into()),
                     size: TerminalSize { rows: 24, cols: 80 },
@@ -420,16 +437,16 @@ mod tests {
 
     #[tokio::test]
     async fn ping_still_works_alongside_sessions() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
         assert_eq!(client.request(Command::Ping).await, Reply::Pong);
     }
 
     #[tokio::test]
     async fn creating_a_session_streams_its_output() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
-        let session = client.create_shell().await;
+        let session = client.create_shell(harness.project).await;
 
         client
             .request(Command::SessionInput {
@@ -443,9 +460,9 @@ mod tests {
 
     #[tokio::test]
     async fn sessions_appear_in_the_listing() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
-        let session = client.create_shell().await;
+        let session = client.create_shell(harness.project).await;
 
         let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
             panic!("se esperaba la lista de sesiones");
@@ -457,9 +474,9 @@ mod tests {
 
     #[tokio::test]
     async fn resizing_updates_the_stored_size() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
-        let session = client.create_shell().await;
+        let session = client.create_shell(harness.project).await;
 
         client
             .request(Command::SessionResize {
@@ -477,11 +494,11 @@ mod tests {
 
     #[tokio::test]
     async fn a_session_survives_the_client_disconnecting() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
 
         let session = {
             let mut client = harness.client().await;
-            let session = client.create_shell().await;
+            let session = client.create_shell(harness.project).await;
             client
                 .request(Command::SessionInput {
                     id: session.id,
@@ -514,34 +531,26 @@ mod tests {
         id: Uuid,
         wanted: apex_proto::SessionState,
     ) {
-        let mut events = manager.subscribe();
-        let seen = timeout(Duration::from_secs(10), async {
+        let settled = timeout(Duration::from_secs(10), async {
             loop {
-                match events.recv().await {
-                    Ok(apex_proto::Event::SessionStateChanged { id: got, state })
-                        if got == id && state == wanted =>
-                    {
-                        return;
-                    }
-                    Ok(_) => continue,
-                    Err(_) => return,
+                let sessions = manager.list_sessions().await;
+                let session = sessions.iter().find(|candidate| candidate.id == id);
+                if session.map(|session| session.state) == Some(wanted) {
+                    return;
                 }
+                tokio::time::sleep(Duration::from_millis(25)).await;
             }
         })
         .await;
-        assert!(seen.is_ok(), "nunca llego el estado {wanted:?}");
-
-        let sessions = manager.list_sessions().await;
-        let session = sessions.iter().find(|candidate| candidate.id == id).expect("sesion");
-        assert_eq!(session.state, wanted);
+        assert!(settled.is_ok(), "la sesion nunca llego a {wanted:?}");
     }
 
     #[tokio::test]
     async fn a_prompt_moves_the_session_to_blocked() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let session = harness
             .manager
-            .create("prompted", Some("/tmp".into()), TerminalSize::default())
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
             .await
             .expect("crear");
 
@@ -549,10 +558,38 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_state_change_is_announced_as_an_event() {
+        let harness = Harness::start().await;
+        let mut events = harness.manager.subscribe();
+
+        let session = harness
+            .manager
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
+            .await
+            .expect("crear");
+
+        let announced = timeout(Duration::from_secs(10), async {
+            loop {
+                match events.recv().await {
+                    Ok(apex_proto::Event::SessionStateChanged { id, state })
+                        if id == session.id && state == apex_proto::SessionState::Blocked =>
+                    {
+                        return true;
+                    }
+                    Ok(_) => continue,
+                    Err(_) => return false,
+                }
+            }
+        })
+        .await;
+        assert_eq!(announced, Ok(true), "nunca se anuncio el cambio de estado");
+    }
+
+    #[tokio::test]
     async fn a_quiet_session_without_patterns_settles_on_idle() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
-        let session = client.create_shell().await;
+        let session = client.create_shell(harness.project).await;
         client
             .request(Command::SessionInput { id: session.id, data: "echo tranquilo\n".into() })
             .await;
@@ -562,10 +599,10 @@ mod tests {
 
     #[tokio::test]
     async fn answering_the_prompt_moves_the_session_back_to_working() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let session = harness
             .manager
-            .create("prompted", Some("/tmp".into()), TerminalSize::default())
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
             .await
             .expect("crear");
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
@@ -575,10 +612,108 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn closing_a_session_removes_it() {
-        let harness = Harness::start();
+    async fn a_project_is_opened_and_listed() {
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
-        let session = client.create_shell().await;
+
+        let Reply::Projects { projects } = client.request(Command::ListProjects).await else {
+            panic!("se esperaba la lista de proyectos");
+        };
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].id, harness.project);
+        assert!(!projects[0].is_git);
+    }
+
+    #[tokio::test]
+    async fn opening_a_folder_that_is_not_a_directory_fails() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        client.next += 1;
+        let id = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request {
+                id,
+                command: Command::ProjectOpen { root: "/no/existe/carpeta".into() },
+            })
+            .await
+            .expect("request");
+
+        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
+            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
+                assert_eq!(error.code, ErrorCode::NotFound);
+            }
+            other => panic!("se esperaba un error, llego {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_layout_round_trips_through_the_protocol() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+
+        let Reply::Layout { payload } =
+            client.request(Command::LayoutLoad { project: harness.project }).await
+        else {
+            panic!("se esperaba un layout");
+        };
+        assert_eq!(payload, None);
+
+        client
+            .request(Command::LayoutSave {
+                project: harness.project,
+                payload: "{\"tabs\":[]}".into(),
+            })
+            .await;
+
+        let Reply::Layout { payload } =
+            client.request(Command::LayoutLoad { project: harness.project }).await
+        else {
+            panic!("se esperaba un layout");
+        };
+        assert_eq!(payload.as_deref(), Some("{\"tabs\":[]}"));
+    }
+
+    #[tokio::test]
+    async fn a_session_carries_the_project_it_belongs_to() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        let session = client.create_shell(harness.project).await;
+        assert_eq!(session.project_id, harness.project);
+
+        let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
+            panic!("se esperaba la lista de sesiones");
+        };
+        assert_eq!(sessions[0].project_id, harness.project);
+    }
+
+    #[tokio::test]
+    async fn a_session_defaults_to_the_project_root_as_its_cwd() {
+        let harness = Harness::start().await;
+        let session = harness
+            .manager
+            .create(harness.project, "sh", None, TerminalSize::default())
+            .await
+            .expect("crear");
+
+        let root = harness
+            .manager
+            .list_projects()
+            .await
+            .expect("proyectos")
+            .into_iter()
+            .find(|project| project.id == harness.project)
+            .expect("proyecto")
+            .root;
+        assert_eq!(session.cwd, root);
+    }
+
+    #[tokio::test]
+    async fn closing_a_session_removes_it() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        let session = client.create_shell(harness.project).await;
 
         client.request(Command::SessionClose { id: session.id }).await;
         assert!(harness.manager.list_sessions().await.is_empty());
@@ -586,7 +721,7 @@ mod tests {
 
     #[tokio::test]
     async fn creating_a_session_for_an_unknown_agent_fails() {
-        let harness = Harness::start();
+        let harness = Harness::start().await;
         let mut client = harness.client().await;
         client.next += 1;
         let id = RequestId(client.next);
@@ -595,6 +730,7 @@ mod tests {
             .send_control(&ClientMessage::Request {
                 id,
                 command: Command::SessionCreate {
+                    project: harness.project,
                     agent: "no-existe".into(),
                     cwd: None,
                     size: TerminalSize::default(),
