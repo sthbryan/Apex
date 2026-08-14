@@ -84,7 +84,7 @@ impl Sampler {
                 })
             })
             .collect();
-        processes.sort_by(|left, right| right.memory.cmp(&left.memory));
+        processes.sort_by_key(|entry| std::cmp::Reverse(entry.memory));
 
         TreeUsage {
             cpu_percent: processes.iter().map(|entry| entry.cpu_percent).sum(),
