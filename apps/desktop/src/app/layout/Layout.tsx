@@ -1,8 +1,9 @@
 import { useRef } from "preact/hooks";
+import { revealPanel } from "@/app/layout/actions";
 import { Dock } from "@/app/layout/Dock";
 import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
-import { dockHover, dockOpen, setDockHover, setDockPanel, toggleDock } from "@/app/layout/state";
+import { dockHover, dockOpen, setDockHover, toggleDock } from "@/app/layout/state";
 import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
@@ -89,7 +90,7 @@ export function Layout({ onNewSession }: Props) {
         )}
       </div>
 
-      <StatusBar lead={<GitChip onOpen={() => setDockPanel("git")} />}>
+      <StatusBar lead={<GitChip onOpen={() => revealPanel("git")} />}>
         <ResourcesSummary />
       </StatusBar>
     </div>
