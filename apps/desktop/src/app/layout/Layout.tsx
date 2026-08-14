@@ -90,9 +90,7 @@ export function Layout({ onNewSession }: Props) {
         )}
       </div>
 
-      <StatusBar lead={<GitChip onOpen={() => revealPanel("git")} />}>
-        <ResourcesSummary />
-      </StatusBar>
+      <StatusBar />
     </div>
   );
 }

@@ -1,15 +1,13 @@
-import type { ComponentChildren } from "preact";
+import { GitChip } from "@/features/git/GitChip";
+import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
+import { revealPanel } from "./actions";
 
-type Props = {
-  lead?: ComponentChildren;
-  children?: ComponentChildren;
-};
 
-export function StatusBar({ lead, children }: Props) {
+export function StatusBar() {
   return (
-    <div class="flex h-6 shrink-0 items-center gap-3 border-t border-border bg-bg px-2 text-faint">
-      {lead}
-      <div class="ml-auto flex items-center gap-3">{children}</div>
+    <div class="flex h-6 shrink-0 items-center justify-between gap-3 border-t border-border bg-bg px-2 text-faint">
+      <GitChip onOpen={() => revealPanel("git")} />
+      <ResourcesSummary />
     </div>
   );
 }
