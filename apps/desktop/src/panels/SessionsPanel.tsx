@@ -1,10 +1,16 @@
+import { useState } from "preact/hooks";
+
+import type { ProjectSummary } from "../bindings/ProjectSummary";
 import type { SessionSummary } from "../bindings/SessionSummary";
 import { t } from "../i18n";
+import { switchTo } from "../projects";
 import { closeSession } from "../sessions";
 import { activeSessionId, dropSession, focusSession, openInNewTab } from "../shell/workspace";
 
 type Props = {
   sessions: SessionSummary[];
+  elsewhere: SessionSummary[];
+  projects: ProjectSummary[];
 };
 
 const STATE_STYLES: Record<string, string> = {
@@ -14,7 +20,7 @@ const STATE_STYLES: Record<string, string> = {
   done: "bg-state-done",
 };
 
-export function SessionsPanel({ sessions }: Props) {
+export function SessionsPanel({ sessions, elsewhere, projects }: Props) {
   const live = sessions.filter((session) => session.exit_code === null);
   const finished = sessions.filter((session) => session.exit_code !== null);
 
@@ -57,7 +63,64 @@ export function SessionsPanel({ sessions }: Props) {
           </ul>
         </section>
       )}
+
+      {elsewhere.length > 0 && <Elsewhere sessions={elsewhere} projects={projects} />}
     </div>
+  );
+}
+
+function Elsewhere({ sessions, projects }: { sessions: SessionSummary[]; projects: ProjectSummary[] }) {
+  const [open, setOpen] = useState(false);
+  const waiting = sessions.filter((session) => session.state === "blocked").length;
+
+  const grouped = new Map<string, SessionSummary[]>();
+  for (const session of sessions) {
+    const bucket = grouped.get(session.project_id) ?? [];
+    bucket.push(session);
+    grouped.set(session.project_id, bucket);
+  }
+
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={() => setOpen((shown) => !shown)}
+        class="mb-1 flex w-full items-center gap-2 px-1 uppercase tracking-wider text-faint hover:text-muted"
+      >
+        <span>{open ? "▾" : "▸"}</span>
+        <span>{t("projects.elsewhere")}</span>
+        <span class="ml-auto normal-case">
+          {waiting > 0 ? <span class="text-state-blocked">{waiting}</span> : sessions.length}
+        </span>
+      </button>
+
+      {open &&
+        [...grouped.entries()].map(([projectId, group]) => (
+          <div key={projectId} class="mb-2">
+            <button
+              type="button"
+              onClick={() => void switchTo(projectId)}
+              class="w-full truncate px-1 text-left text-faint hover:text-text"
+            >
+              {projects.find((project) => project.id === projectId)?.name ?? projectId.slice(0, 8)}
+            </button>
+            <ul class="flex flex-col">
+              {group.map((session) => (
+                <li key={session.id}>
+                  <button
+                    type="button"
+                    onClick={() => void switchTo(session.project_id)}
+                    class="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-muted hover:bg-raised"
+                  >
+                    <span class={`size-2 shrink-0 rounded-full ${dotStyle(session)}`} />
+                    <span class="truncate">{session.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+    </section>
   );
 }
 

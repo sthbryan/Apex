@@ -25,16 +25,17 @@ type Props = {
   onClose: () => void;
   agents: AgentSummary[];
   sessions: SessionSummary[];
+  project: string | null;
 };
 
-export function CommandPalette({ open, onClose, agents, sessions }: Props) {
+export function CommandPalette({ open, onClose, agents, sessions, project }: Props) {
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const field = useRef<HTMLInputElement>(null);
 
   const actions = useMemo(
-    () => buildActions(agents, sessions, onClose),
-    [agents, sessions, onClose],
+    () => buildActions(agents, sessions, project, onClose),
+    [agents, sessions, project, onClose],
   );
 
   const matches = useMemo(() => {
@@ -131,17 +132,20 @@ export function CommandPalette({ open, onClose, agents, sessions }: Props) {
 function buildActions(
   agents: AgentSummary[],
   sessions: SessionSummary[],
+  project: string | null,
   onClose: () => void,
 ): Action[] {
   const actions: Action[] = [];
 
-  for (const agent of agents.filter((candidate) => candidate.resolved_path !== null)) {
+  for (const agent of project ? agents.filter((candidate) => candidate.resolved_path !== null) : []) {
     actions.push({
       id: `new:${agent.name}`,
       label: t("palette.newSession", { agent: agent.name }),
       run: () => {
         onClose();
-        void createSession(agent.name, { rows: 24, cols: 80 }).then(openInNewTab);
+        void createSession(project as string, agent.name, { rows: 24, cols: 80 }).then(
+          openInNewTab,
+        );
       },
     });
   }
@@ -170,7 +174,7 @@ function buildActions(
         label: t("palette.splitRight"),
         run: () => {
           onClose();
-          void splitWithNewSession(currentSession.agent, "row");
+          void splitWithNewSession(currentSession.project_id, currentSession.agent, "row");
         },
       });
       actions.push({
@@ -178,7 +182,7 @@ function buildActions(
         label: t("palette.splitDown"),
         run: () => {
           onClose();
-          void splitWithNewSession(currentSession.agent, "column");
+          void splitWithNewSession(currentSession.project_id, currentSession.agent, "column");
         },
       });
     }

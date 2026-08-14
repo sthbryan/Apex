@@ -1,12 +1,15 @@
 import { useEffect, useState } from "preact/hooks";
 
 import { agents, connect, daemonVersion, failure, platform, status } from "./daemon";
+import { activeProject, foreignSessions, loadProjects, projectSessions } from "./projects";
 import { locale, t } from "./i18n";
 import { SessionsPanel } from "./panels/SessionsPanel";
 import { sessions } from "./sessions";
+import { projects } from "./projects";
 import { CommandPalette } from "./shell/CommandPalette";
 import { PaneTree } from "./shell/PaneTree";
 import { TabBar } from "./shell/TabBar";
+import { ProjectPicker } from "./shell/ProjectPicker";
 import { TitleBar } from "./shell/TitleBar";
 import { Toolbar } from "./shell/Toolbar";
 import { findLeaf } from "./shell/tree";
@@ -28,7 +31,7 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
-    void connect();
+    void connect().then(loadProjects);
     return startThemeWatcher();
   }, []);
 
@@ -76,7 +79,11 @@ export function App() {
         const pane = tab ? findLeaf(tab.root, tab.activeLeafId) : null;
         const session = sessions.value.find((candidate) => candidate.id === pane?.sessionId);
         if (session) {
-          void splitWithNewSession(session.agent, event.shiftKey ? "column" : "row");
+          void splitWithNewSession(
+            session.project_id,
+            session.agent,
+            event.shiftKey ? "column" : "row",
+          );
         }
         return;
       }
@@ -127,7 +134,7 @@ export function App() {
 
   return (
     <div class="flex h-full flex-col bg-bg text-text">
-      <TitleBar title={t("app.name")}>
+      <TitleBar title={t("app.name")} lead={<ProjectPicker />}>
         <Toolbar
           onNewSession={() => setPaletteOpen(true)}
           status={
@@ -139,7 +146,11 @@ export function App() {
       <div class="flex min-h-0 flex-1">
         {dockOpen && (
           <aside class="w-56 shrink-0 border-r border-border bg-surface">
-            <SessionsPanel sessions={sessions.value} />
+            <SessionsPanel
+              sessions={projectSessions.value}
+              elsewhere={foreignSessions.value}
+              projects={projects.value}
+            />
           </aside>
         )}
 
@@ -148,8 +159,8 @@ export function App() {
           <div class="relative min-h-0 flex-1">
             {tabs.value.length === 0 ? (
               <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
-                <p>{t("workspace.empty")}</p>
-                <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>
+                <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
+                {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
               </div>
             ) : (
               tabs.value.map((tab) => {
@@ -179,6 +190,7 @@ export function App() {
         onClose={() => setPaletteOpen(false)}
         agents={agents.value}
         sessions={sessions.value}
+        project={activeProject.value?.id ?? null}
       />
     </div>
   );
