@@ -1,3 +1,4 @@
+pub mod context;
 pub mod discovery;
 pub mod editors;
 pub mod files;
