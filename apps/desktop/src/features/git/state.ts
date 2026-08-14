@@ -13,7 +13,6 @@ import { t } from "@/shared/i18n";
 
 const INTERVAL = 5000;
 
-export const gitTab = signal<"changes" | "history">("changes");
 export const commits = signal<GitCommit[]>([]);
 export const gitTarget = signal<GitTarget>({ type: "project" });
 export const gitStatus = signal<GitStatus | null>(null);
@@ -46,9 +45,7 @@ export function sameTarget(left: GitTarget, right: GitTarget): boolean {
 export function selectTarget(target: GitTarget): void {
   gitTarget.value = target;
   void refreshGit();
-  if (gitTab.value === "history") {
-    void readLog();
-  }
+  void readLog();
 }
 
 export async function refreshGit(): Promise<void> {
@@ -136,9 +133,7 @@ export async function commitStaged(message: string): Promise<GitCommit> {
     message,
   });
   await refreshGit();
-  if (gitTab.value === "history") {
-    await readLog();
-  }
+  await readLog();
   return commit;
 }
 
@@ -158,13 +153,6 @@ export async function readLog(): Promise<void> {
   } catch (error) {
     commits.value = [];
     gitFailure.value = String(error);
-  }
-}
-
-export function showTab(tab: "changes" | "history"): void {
-  gitTab.value = tab;
-  if (tab === "history") {
-    void readLog();
   }
 }
 

@@ -1,5 +1,6 @@
 import cn from "cnfast";
 import { useState } from "preact/hooks";
+
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { GitChange } from "@/bindings/GitChange";
 import type { GitStatus } from "@/bindings/GitStatus";
@@ -7,21 +8,14 @@ import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
 import { CommitBox } from "@/features/git/CommitBox";
 import {
-  commits,
   gitFailure,
   gitStatus,
-  gitTab,
   gitTarget,
   mergeWorktree,
-  readLog,
   refreshGit,
-  selectTarget,
-  sessionOfWorktree,
   setStaged,
-  showTab,
-  since,
-  worktrees,
 } from "@/features/git/state";
+import { TargetList } from "@/features/git/TargetList";
 import { activeProject } from "@/features/projects/state";
 import { openDiff } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -36,7 +30,7 @@ const MARKS: Record<string, string> = {
   conflicted: "!",
 };
 
-export function GitPanel() {
+export function ChangesPanel() {
   const project = activeProject.value;
   const status = gitStatus.value;
   const target = gitTarget.value;
@@ -51,65 +45,26 @@ export function GitPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <PanelHeader title={t("dock.git")}>
-        {(["changes", "history"] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => showTab(tab)}
-            class={cn(
-              "text-micro uppercase tracking-wider transition-colors",
-              gitTab.value === tab ? "text-text" : "text-faint hover:text-muted",
-            )}
-          >
-            {t(`git.${tab}`)}
-          </button>
-        ))}
+      <PanelHeader title={t("git.changes")}>
         <button
           type="button"
           title={t("git.refresh")}
-          onClick={() => {
-            void refreshGit();
-            if (gitTab.value === "history") {
-              void readLog();
-            }
-          }}
+          onClick={() => void refreshGit()}
           class="shrink-0 text-faint transition-colors hover:text-text"
         >
           <Icon name="refresh" size={12} />
         </button>
       </PanelHeader>
 
-      <ul class="shrink-0 border-b border-border pb-1">
-        <Target
-          target={{ type: "project" }}
-          label={project.name}
-          branch={target.type === "project" ? (status?.branch ?? "") : ""}
-          selected={target.type === "project"}
-        />
-        {worktrees.value.map((tree) => (
-          <Target
-            key={tree.path}
-            target={{ type: "worktree", path: tree.path }}
-            label={sessionOfWorktree.value.get(tree.path) ?? shortName(tree.path)}
-            branch={tree.branch}
-            selected={target.type === "worktree" && target.path === tree.path}
-            live={sessionOfWorktree.value.has(tree.path)}
-          />
-        ))}
-      </ul>
+      <TargetList project={project} />
 
       {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
 
-      {gitTab.value === "history" ? (
-        <History target={target} />
-      ) : (
-        <Changes status={status} target={target} />
-      )}
+      <Changes status={status} target={target} />
 
-      {status && gitTab.value === "changes" && <CommitBox status={status} />}
+      {status && <CommitBox status={status} />}
 
-      {status?.isolated && gitTab.value === "changes" && (
+      {status?.isolated && (
         <div class="shrink-0 border-t border-border p-2">
           <button
             type="button"
@@ -168,74 +123,6 @@ function Changes({ status, target }: { status: GitStatus | null; target: GitTarg
       />
     </div>
   );
-}
-
-function History({ target }: { target: GitTarget }) {
-  if (commits.value.length === 0) {
-    return <p class="px-2 py-1 text-faint">{t("git.noHistory")}</p>;
-  }
-  return (
-    <ul class="min-h-0 flex-1 overflow-auto py-1">
-      {commits.value.map((commit) => (
-        <li key={commit.id}>
-          <button
-            type="button"
-            onClick={() => openDiff(target, "", commit.id)}
-            class="flex w-full flex-col gap-0.5 px-2 py-1 text-left transition-colors hover:bg-raised"
-          >
-            <span class="flex w-full items-baseline gap-2">
-              <span class="truncate text-muted">{commit.summary}</span>
-              <span class="ml-auto shrink-0 tabular-nums text-faint">{since(commit.when)}</span>
-            </span>
-            <span class="flex w-full items-baseline gap-2 text-faint">
-              <span class="shrink-0 font-mono tabular-nums">{commit.short}</span>
-              <span class="truncate">{commit.author}</span>
-              {commit.refs && (
-                <span class="ml-auto shrink-0 truncate text-state-working">
-                  {commit.refs.split(", ")[0]}
-                </span>
-              )}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-type TargetProps = {
-  target: GitTarget;
-  label: string;
-  branch: string;
-  selected: boolean;
-  live?: boolean;
-};
-
-function Target({ target, label, branch, selected, live }: TargetProps) {
-  return (
-    <li>
-      <button
-        type="button"
-        onClick={() => selectTarget(target)}
-        class={cn(
-          "flex w-full items-center gap-2 px-2 py-px text-left transition-colors hover:bg-raised",
-          selected ? "bg-raised text-text" : "text-muted",
-        )}
-      >
-        <Icon
-          name={target.type === "project" ? "files" : "branch"}
-          size={12}
-          class={cn("shrink-0", live ? "text-state-working" : "text-faint")}
-        />
-        <span class="truncate">{label}</span>
-        {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
-      </button>
-    </li>
-  );
-}
-
-function shortName(path: string): string {
-  return path.split("/").at(-1) ?? path;
 }
 
 function Section({
