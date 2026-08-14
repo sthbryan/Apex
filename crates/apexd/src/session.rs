@@ -124,6 +124,13 @@ impl Client {
             Command::ListProjects => Ok(Reply::Projects {
                 projects: self.manager.list_projects().await.map_err(internal_error)?,
             }),
+            Command::ReadMetrics { refresh_quota } => Ok(Reply::Metrics {
+                snapshot: self.manager.read_metrics(refresh_quota).await,
+            }),
+            Command::KillProcess { pid } => {
+                self.manager.kill_process(pid).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
             Command::ListHistory { project } => Ok(Reply::History {
                 entries: self.manager.list_history(project).await.map_err(not_found_error)?,
             }),
@@ -766,6 +773,71 @@ mod tests {
             .expect("proyecto")
             .root;
         assert_eq!(session.cwd, root);
+    }
+
+    #[tokio::test]
+    async fn metrics_report_the_system_and_the_live_sessions() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        let session = client.create_shell(harness.project).await;
+        tokio::time::sleep(Duration::from_millis(400)).await;
+
+        let Reply::Metrics { snapshot } =
+            client.request(Command::ReadMetrics { refresh_quota: false }).await
+        else {
+            panic!("se esperaban metricas");
+        };
+
+        assert!(snapshot.system.memory_total > 0.0, "sin memoria total");
+        assert!(snapshot.system.cores >= 1);
+
+        let mine = snapshot
+            .sessions
+            .iter()
+            .find(|usage| usage.id == session.id)
+            .expect("la sesion no aparecio en las metricas");
+        assert!(mine.memory > 0.0, "la sesion no reporta memoria");
+        assert!(!mine.processes.is_empty());
+        assert_eq!(mine.title, session.title);
+    }
+
+    #[tokio::test]
+    async fn a_closed_session_disappears_from_the_metrics() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        let session = client.create_shell(harness.project).await;
+        client.request(Command::SessionClose { id: session.id }).await;
+
+        let Reply::Metrics { snapshot } =
+            client.request(Command::ReadMetrics { refresh_quota: false }).await
+        else {
+            panic!("se esperaban metricas");
+        };
+        assert!(snapshot.sessions.iter().all(|usage| usage.id != session.id));
+    }
+
+    #[tokio::test]
+    async fn killing_an_unknown_process_fails() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        client.next += 1;
+        let id = RequestId(client.next);
+        client
+            .connection
+            .send_control(&ClientMessage::Request {
+                id,
+                command: Command::KillProcess { pid: u32::MAX },
+            })
+            .await
+            .expect("request");
+
+        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
+            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
+                assert_eq!(error.code, ErrorCode::NotFound);
+            }
+            other => panic!("se esperaba un error, llego {other:?}"),
+        }
     }
 
     #[tokio::test]

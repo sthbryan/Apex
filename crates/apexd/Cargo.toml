@@ -6,7 +6,9 @@ license.workspace = true
 
 [dependencies]
 apex-core.workspace = true
+apex-metrics.workspace = true
 apex-pty.workspace = true
+apex-quota.workspace = true
 apex-proto.workspace = true
 
 anyhow.workspace = true
