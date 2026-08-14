@@ -12,6 +12,7 @@ import { locale, t } from "./i18n";
 import { sessions } from "./sessions";
 import { projects } from "./projects";
 import { type DockPanel, Dock } from "./shell/Dock";
+import { StatusBar } from "./shell/StatusBar";
 import { CommandPalette } from "./shell/CommandPalette";
 import { PaneTree } from "./shell/PaneTree";
 import { TabBar } from "./shell/TabBar";
@@ -209,6 +210,8 @@ export function App() {
           </div>
         </div>
       </div>
+
+      <StatusBar />
 
       <CommandPalette
         open={paletteOpen}

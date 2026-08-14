@@ -1,6 +1,6 @@
 import type { MetricsSnapshot } from "../bindings/MetricsSnapshot";
 import { t } from "../i18n";
-import { formatBytes, killProcess, percentOf, refreshQuota } from "../metrics";
+import { formatBytes, killProcess, percentOf } from "../metrics";
 import { focusSession } from "../shell/workspace";
 
 type Props = {
@@ -12,7 +12,7 @@ export function ResourcesPanel({ snapshot }: Props) {
     return <p class="p-2 text-faint">{t("resources.sampling")}</p>;
   }
 
-  const { system, sessions, quotas } = snapshot;
+  const { system, sessions } = snapshot;
 
   return (
     <div class="flex h-full flex-col gap-4 overflow-y-auto p-2">
@@ -80,38 +80,6 @@ export function ResourcesPanel({ snapshot }: Props) {
         )}
       </section>
 
-      <section>
-        <div class="mb-1 flex items-center gap-2 px-1">
-          <h2 class="uppercase tracking-wider text-faint">{t("resources.quota")}</h2>
-          <button
-            type="button"
-            title={t("resources.refresh")}
-            onClick={() => void refreshQuota()}
-            class="ml-auto text-faint hover:text-text"
-          >
-            ↻
-          </button>
-        </div>
-        {quotas.length === 0 ? (
-          <p class="px-1 text-faint">{t("resources.noQuota")}</p>
-        ) : (
-          <ul class="flex flex-col gap-2">
-            {quotas.map((report) => (
-              <li key={report.agent}>
-                <p class="px-1">{report.agent}</p>
-                {report.windows.map((window) => (
-                  <Meter
-                    key={window.label}
-                    label={window.label}
-                    percent={window.used_percent}
-                    detail={window.reset_description ?? undefined}
-                  />
-                ))}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }

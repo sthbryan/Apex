@@ -5,11 +5,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { MetricsSnapshot } from "./bindings/MetricsSnapshot";
 
 const POLL_MS = 2000;
-const HISTORY_POINTS = 40;
 
 export const metrics = signal<MetricsSnapshot | null>(null);
-export const cpuHistory = signal<number[]>([]);
-export const memoryHistory = signal<number[]>([]);
 
 export async function startMetrics(): Promise<() => void> {
   let focused = true;
@@ -24,11 +21,6 @@ export async function startMetrics(): Promise<() => void> {
       try {
         const snapshot = await invoke<MetricsSnapshot>("read_metrics", { refreshQuota });
         metrics.value = snapshot;
-        cpuHistory.value = push(cpuHistory.value, snapshot.system.cpu_percent);
-        memoryHistory.value = push(
-          memoryHistory.value,
-          percentOf(snapshot.system.memory_used, snapshot.system.memory_total),
-        );
       } catch {
         // el daemon puede estar reiniciando; el siguiente tick reintenta
       }
@@ -77,9 +69,4 @@ export function formatBytes(bytes: number): string {
     unit += 1;
   }
   return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
-function push(series: number[], value: number): number[] {
-  const next = [...series, value];
-  return next.length > HISTORY_POINTS ? next.slice(next.length - HISTORY_POINTS) : next;
 }
