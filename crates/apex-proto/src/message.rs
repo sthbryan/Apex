@@ -221,6 +221,16 @@ pub enum DiffScope {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct ContextEntry {
+    pub key: String,
+    #[ts(type = "number")]
+    pub bytes: u64,
+    #[ts(type = "number")]
+    pub updated_at: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct GitCommit {
     pub id: String,
     pub short: String,
@@ -438,6 +448,33 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    ContextList {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
+    ContextRead {
+        #[ts(type = "string")]
+        project: Uuid,
+        key: String,
+    },
+    ContextWrite {
+        #[ts(type = "string")]
+        project: Uuid,
+        key: String,
+        contents: String,
+    },
+    ContextNote {
+        #[ts(type = "string")]
+        project: Uuid,
+        from: String,
+        to: Option<String>,
+        message: String,
+    },
+    SessionTranscript {
+        #[ts(type = "string")]
+        id: Uuid,
+        tail: u32,
+    },
     GitDiff {
         #[ts(type = "string")]
         project: Uuid,
@@ -507,6 +544,8 @@ pub enum Reply {
     Committed { commit: GitCommit },
     Hunks { patches: Vec<String> },
     Worktrees { worktrees: Vec<WorktreeInfo> },
+    Context { entries: Vec<ContextEntry> },
+    Text { text: String },
     Diff { patch: String },
     Merge { report: MergeReport },
     File { contents: FileContents },

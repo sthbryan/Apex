@@ -226,6 +226,29 @@ impl Client {
                     .await
                     .map_err(not_found_error)?,
             }),
+            Command::ContextList { project } => Ok(Reply::Context {
+                entries: self.manager.context_list(project).await.map_err(not_found_error)?,
+            }),
+            Command::ContextRead { project, key } => Ok(Reply::Text {
+                text: self.manager.context_read(project, &key).await.map_err(not_found_error)?,
+            }),
+            Command::ContextWrite { project, key, contents } => {
+                self.manager
+                    .context_write(project, &key, &contents)
+                    .await
+                    .map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::ContextNote { project, from, to, message } => {
+                self.manager
+                    .context_note(project, &from, to.as_deref(), &message)
+                    .await
+                    .map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::SessionTranscript { id, tail } => Ok(Reply::Text {
+                text: self.manager.transcript(id, tail as usize).await.map_err(not_found_error)?,
+            }),
             Command::ListEditors => {
                 Ok(Reply::Editors { editors: self.manager.list_editors().await })
             }
@@ -355,6 +378,11 @@ fn runs_detached(command: &Command) -> bool {
             | Command::GitLog { .. }
             | Command::GitHunks { .. }
             | Command::WorktreeList { .. }
+            | Command::ContextList { .. }
+            | Command::ContextRead { .. }
+            | Command::ContextWrite { .. }
+            | Command::ContextNote { .. }
+            | Command::SessionTranscript { .. }
             | Command::GitStage { .. }
             | Command::GitStageHunk { .. }
             | Command::GitCommitStaged { .. }
@@ -1043,6 +1071,69 @@ mod tests {
             .expect("staged");
         assert!(staged.contains("+line 2 touched"));
         assert!(!staged.contains("+line 19 touched"));
+    }
+
+    #[tokio::test]
+    async fn context_round_trips_and_notes_pile_up() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+
+        client
+            .request(Command::ContextWrite {
+                project: harness.project,
+                key: "architecture".into(),
+                contents: "# Layers\n".into(),
+            })
+            .await;
+
+        let Reply::Text { text } = client
+            .request(Command::ContextRead { project: harness.project, key: "architecture".into() })
+            .await
+        else {
+            panic!("expected the entry back");
+        };
+        assert_eq!(text, "# Layers\n");
+
+        client
+            .request(Command::ContextNote {
+                project: harness.project,
+                from: "codex".into(),
+                to: Some("claude".into()),
+                message: "the parser lives in lib.rs".into(),
+            })
+            .await;
+
+        let Reply::Context { entries } =
+            client.request(Command::ContextList { project: harness.project }).await
+        else {
+            panic!("expected the listing");
+        };
+        let keys: Vec<&str> = entries.iter().map(|entry| entry.key.as_str()).collect();
+        assert_eq!(keys, vec!["architecture", "notes"]);
+        assert!(harness.root.path().join(".apex/context/notes.md").is_file());
+    }
+
+    #[tokio::test]
+    async fn a_transcript_returns_the_tail_of_what_an_agent_printed() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        let session = client.create_shell(harness.project).await;
+
+        client
+            .request(Command::SessionInput {
+                id: session.id,
+                data: "echo marca-para-el-otro\n".into(),
+            })
+            .await;
+        client.collect_output(session.id, "marca-para-el-otro").await;
+
+        let Reply::Text { text } =
+            client.request(Command::SessionTranscript { id: session.id, tail: 4096 }).await
+        else {
+            panic!("expected a transcript");
+        };
+        assert!(text.contains("marca-para-el-otro"));
+        assert!(text.len() <= 4096);
     }
 
     #[tokio::test]
