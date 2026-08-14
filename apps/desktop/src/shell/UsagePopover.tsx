@@ -1,3 +1,5 @@
+import { useState } from "preact/hooks";
+
 import type { QuotaReport } from "../bindings/QuotaReport";
 import type { QuotaWindow } from "../bindings/QuotaWindow";
 import { Icon } from "../components/Icon";
@@ -10,6 +12,8 @@ type Props = {
 };
 
 export function UsagePopover({ reports, onClose }: Props) {
+  const [refreshing, setRefreshing] = useState(false);
+
   return (
     <div class="w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl">
       <header class="flex items-center gap-2 border-b border-border px-2.5 py-1.5">
@@ -17,10 +21,13 @@ export function UsagePopover({ reports, onClose }: Props) {
         <button
           type="button"
           title={t("resources.refresh")}
-          onClick={() => void refreshQuota()}
-          class="ml-auto text-faint hover:text-text"
+          onClick={() => {
+            setRefreshing(true);
+            void refreshQuota().finally(() => setRefreshing(false));
+          }}
+          class="ml-auto text-faint transition-colors hover:text-text"
         >
-          <Icon name="refresh" />
+          <Icon name="refresh" class={refreshing ? "animate-spin" : ""} />
         </button>
         <button type="button" onClick={onClose} class="text-faint hover:text-text">
           <Icon name="close" />
@@ -56,7 +63,10 @@ function Row({ window }: { window: QuotaWindow }) {
       <span class={`w-9 shrink-0 text-right ${level.text}`}>{percent}%</span>
 
       <span class="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
-        <span class={`block h-full rounded-full ${level.bar}`} style={{ width: `${percent}%` }} />
+        <span
+          class={`block h-full origin-left rounded-full transition-transform duration-500 ease-out ${level.bar}`}
+          style={{ transform: `scaleX(${percent / 100})` }}
+        />
         {window.expected_percent !== null && (
           <span
             class="absolute top-0 h-full w-px bg-text/40"
@@ -65,7 +75,7 @@ function Row({ window }: { window: QuotaWindow }) {
         )}
       </span>
 
-      {pace && <span class={`shrink-0 ${pace.tone}`}>{pace.text}</span>}
+      <span class={`w-12 shrink-0 truncate text-right ${pace?.tone ?? ""}`}>{pace?.text ?? ""}</span>
     </div>
   );
 }
