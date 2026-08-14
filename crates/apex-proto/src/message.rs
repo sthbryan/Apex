@@ -151,6 +151,63 @@ impl SessionSummary {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct SystemUsage {
+    pub cpu_percent: f32,
+    pub gpu_percent: Option<f32>,
+    pub memory_used: f64,
+    pub memory_total: f64,
+    pub swap_used: f64,
+    pub swap_total: f64,
+    pub cores: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ProcessUsage {
+    pub pid: u32,
+    pub name: String,
+    pub cpu_percent: f32,
+    pub memory: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct SessionUsage {
+    #[ts(type = "string")]
+    pub id: Uuid,
+    pub title: String,
+    pub cpu_percent: f32,
+    pub memory: f64,
+    pub processes: Vec<ProcessUsage>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct QuotaWindow {
+    pub label: String,
+    pub used_percent: u8,
+    pub resets_at: Option<String>,
+    pub reset_description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct QuotaReport {
+    pub agent: String,
+    pub windows: Vec<QuotaWindow>,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct MetricsSnapshot {
+    pub system: SystemUsage,
+    pub sessions: Vec<SessionUsage>,
+    pub quotas: Vec<QuotaReport>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -161,6 +218,13 @@ pub enum Command {
     ListProjects,
     ProjectOpen {
         root: String,
+    },
+    ReadMetrics {
+        #[serde(default)]
+        refresh_quota: bool,
+    },
+    KillProcess {
+        pid: u32,
     },
     ListHistory {
         #[ts(type = "string")]
@@ -213,7 +277,7 @@ pub enum Command {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[ts(export)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Reply {
@@ -225,10 +289,11 @@ pub enum Reply {
     Project { project: ProjectSummary },
     Layout { payload: Option<String> },
     History { entries: Vec<HistoryEntry> },
+    Metrics { snapshot: MetricsSnapshot },
     Done,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[ts(export)]
 #[serde(rename_all = "snake_case")]
 pub enum CommandOutcome {
@@ -268,7 +333,7 @@ pub enum ClientMessage {
     Request { id: RequestId, command: Command },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[ts(export)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ServerMessage {
