@@ -314,6 +314,9 @@ mod tests {
     use std::time::Duration;
     use tokio::time::timeout;
 
+    const QUOTA_SAMPLE: &str =
+        r#"[{"provider":"answering","usage":{"primary":{"windowMinutes":300,"usedPercent":42}}}]"#;
+
     fn manager() -> Arc<SessionManager> {
         let mut profiles = ProfileSet::builtin().expect("profiles");
         profiles.upsert(
@@ -331,7 +334,32 @@ mod tests {
         );
         let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
             PathBuf::from("/bin"),
+            PathBuf::from("/usr/bin"),
         ]));
+        let answering = format!(
+            "name = \"answering\"\n\
+             command = \"sh\"\n\
+             [quota]\n\
+             source = \"command\"\n\
+             format = \"codexbar\"\n\
+             command = \"echo\"\n\
+             args = ['{QUOTA_SAMPLE}']\n\
+             cache_ttl_secs = 60\n"
+        );
+        profiles.upsert(AgentProfile::parse(&answering).expect("answering profile"));
+        profiles.upsert(
+            AgentProfile::parse(
+                "name = \"unreachable\"\n\
+                 command = \"sh\"\n\
+                 [quota]\n\
+                 source = \"command\"\n\
+                 format = \"codexbar\"\n\
+                 command = \"false\"\n\
+                 cache_ttl_secs = 60\n",
+            )
+            .expect("unreachable profile"),
+        );
+
         Arc::new(SessionManager::new(profiles, resolver, Store::in_memory().expect("store")))
     }
 
@@ -814,6 +842,32 @@ mod tests {
             panic!("expected metrics");
         };
         assert!(snapshot.sessions.iter().all(|usage| usage.id != session.id));
+    }
+
+    #[tokio::test]
+    async fn a_provider_that_cannot_be_reached_does_not_hide_the_others() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+
+        let Reply::Metrics { snapshot } =
+            client.request(Command::ReadMetrics { refresh_quota: true }).await
+        else {
+            panic!("expected metrics");
+        };
+
+        let reported: Vec<&str> = snapshot.quotas.iter().map(|q| q.agent.as_str()).collect();
+        assert!(reported.contains(&"answering"), "the working provider went missing");
+        assert!(!reported.contains(&"unreachable"), "the failing provider should report nothing");
+
+        let answering = snapshot
+            .quotas
+            .iter()
+            .find(|report| report.agent == "answering")
+            .expect("answering report");
+        assert_eq!(answering.windows[0].used_percent, 42);
+        assert_eq!(answering.windows[0].label.as_deref(), Some("5h"));
+
+        assert!(snapshot.system.memory_total > 0.0, "system metrics broke alongside quota");
     }
 
     #[tokio::test]
