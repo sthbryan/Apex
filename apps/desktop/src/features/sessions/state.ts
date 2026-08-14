@@ -67,6 +67,15 @@ export function onSessionOutput(id: string, listener: OutputListener): () => voi
   };
 }
 
+const exitHandlers = new Set<(id: string, code: number) => void>();
+
+export function onSessionExited(handler: (id: string, code: number) => void): () => void {
+  exitHandlers.add(handler);
+  return () => {
+    exitHandlers.delete(handler);
+  };
+}
+
 function applyEvent(event: Event): void {
   switch (event.type) {
     case "session_opened":
@@ -81,6 +90,9 @@ function applyEvent(event: Event): void {
       sessions.value = sessions.value.map((session) =>
         session.id === event.id ? { ...session, exit_code: event.code, state: "done" } : session,
       );
+      for (const handler of exitHandlers) {
+        handler(event.id, event.code);
+      }
       break;
     case "session_closed":
       sessions.value = sessions.value.filter((session) => session.id !== event.id);

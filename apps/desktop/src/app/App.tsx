@@ -24,6 +24,7 @@ import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
 import { dockOpen, toggleDock, toggleSettings } from "@/features/settings/state";
 import { UsageChip } from "@/features/usage/UsageChip";
+import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
@@ -53,10 +54,12 @@ export function App() {
       stopMetrics = stop;
     });
 
+    const stopCleanup = startPaneCleanup();
     const stopTheme = startThemeWatcher();
     return () => {
       stopNotifications?.();
       stopMetrics?.();
+      stopCleanup();
       stopTheme();
     };
   }, []);
