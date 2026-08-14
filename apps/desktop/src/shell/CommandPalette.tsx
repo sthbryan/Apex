@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { AgentSummary } from "../bindings/AgentSummary";
 import type { HistoryEntry } from "../bindings/HistoryEntry";
 import type { SessionSummary } from "../bindings/SessionSummary";
+import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { createSession, resumeSession } from "../sessions";
 import { toggleSettings } from "./Settings";
@@ -35,6 +36,7 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const field = useRef<HTMLInputElement>(null);
+  const overlay = usePresence<HTMLDivElement>(open);
 
   const actions = useMemo(
     () => buildActions(agents, sessions, history, project, onClose),
@@ -66,7 +68,7 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
     setCursor((current) => Math.min(current, Math.max(matches.length - 1, 0)));
   }, [matches.length]);
 
-  if (!open) {
+  if (!overlay.mounted) {
     return null;
   }
 
@@ -88,11 +90,16 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
 
   return (
     <div
-      class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24"
+      ref={overlay.holder}
+      class={`fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24 ${
+        overlay.leaving ? "animate-veil-out" : "animate-veil-in"
+      }`}
       onMouseDown={onClose}
     >
       <div
-        class="w-[32rem] max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl"
+        class={`w-[32rem] max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl ${
+          overlay.leaving ? "animate-pop-out" : "animate-pop-in"
+        }`}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <input
@@ -118,7 +125,7 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
                   onMouseEnter={() => setCursor(index)}
                   onClick={action.run}
                   title={action.label}
-                  class={`w-full truncate px-3 py-1.5 text-left ${
+                  class={`w-full truncate px-3 py-1.5 text-left transition-colors ${
                     index === cursor ? "bg-raised text-text" : "text-muted"
                   }`}
                 >

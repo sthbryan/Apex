@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import { Icon } from "../components/Icon";
+import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { activeProject, pickProject, projects, switchTo } from "../projects";
 import { sessions } from "../sessions";
@@ -8,6 +9,7 @@ import { sessions } from "../sessions";
 export function ProjectPicker() {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
+  const menu = usePresence<HTMLDivElement>(open);
 
   useEffect(() => {
     if (!open) {
@@ -30,15 +32,26 @@ export function ProjectPicker() {
         type="button"
         onClick={() => setOpen((shown) => !shown)}
         title={current?.root ?? t("projects.none")}
-        class="flex max-w-56 items-center gap-1.5 rounded px-1.5 py-0.5 hover:bg-raised"
+        class="flex max-w-56 items-center gap-1.5 rounded px-1.5 py-0.5 transition-colors hover:bg-raised"
       >
         <span class="truncate">{current?.name ?? t("projects.none")}</span>
-        {waitingElsewhere() > 0 && <span class="size-1.5 rounded-full bg-state-blocked" />}
-        <Icon name="chevron" size={12} class="text-faint" />
+        {waitingElsewhere() > 0 && (
+          <span class="size-1.5 animate-breathe rounded-full bg-state-blocked" />
+        )}
+        <Icon
+          name="chevron"
+          size={12}
+          class={`text-faint transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
-      {open && (
-        <div class="absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl">
+      {menu.mounted && (
+        <div
+          ref={menu.holder}
+          class={`absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl ${
+            menu.leaving ? "animate-drop-out" : "animate-drop-in"
+          }`}
+        >
           <ul class="max-h-72 overflow-y-auto py-1">
             {projects.value.map((project) => (
               <li key={project.id}>
@@ -48,7 +61,7 @@ export function ProjectPicker() {
                     setOpen(false);
                     void switchTo(project.id);
                   }}
-                  class={`flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-raised ${
+                  class={`flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised ${
                     project.id === current?.id ? "text-text" : "text-muted"
                   }`}
                 >
@@ -67,7 +80,7 @@ export function ProjectPicker() {
               setOpen(false);
               void pickProject();
             }}
-            class="w-full border-t border-border px-3 py-2 text-left text-muted hover:bg-raised hover:text-text"
+            class="w-full border-t border-border px-3 py-2 text-left text-muted transition-colors hover:bg-raised hover:text-text"
           >
             {t("projects.open")}
           </button>

@@ -2,6 +2,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 
 import { Icon, type IconName } from "../components/Icon";
+import { usePresence } from "../components/presence";
 import { type Locale, locale, setLocale, t } from "../i18n";
 import { type ThemeMode, setThemeMode, themeMode } from "../theme/mode";
 
@@ -24,6 +25,7 @@ const LANGUAGES: { value: Locale; label: string }[] = [
 
 export function Settings() {
   const panel = useRef<HTMLDivElement>(null);
+  const overlay = usePresence<HTMLDivElement>(settingsOpen.value);
 
   useEffect(() => {
     if (!settingsOpen.value) {
@@ -40,13 +42,18 @@ export function Settings() {
     return () => window.removeEventListener("keydown", escape);
   }, [settingsOpen.value]);
 
-  if (!settingsOpen.value) {
+  if (!overlay.mounted) {
     return null;
   }
 
+  const leaving = overlay.leaving;
+
   return (
     <div
-      class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-20"
+      ref={overlay.holder}
+      class={`fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-20 ${
+        leaving ? "animate-veil-out" : "animate-veil-in"
+      }`}
       onMouseDown={() => {
         settingsOpen.value = false;
       }}
@@ -57,7 +64,9 @@ export function Settings() {
         role="dialog"
         aria-label={t("settings.title")}
         onMouseDown={(event) => event.stopPropagation()}
-        class="w-[30rem] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl outline-none"
+        class={`w-[30rem] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl outline-none ${
+          leaving ? "animate-pop-out" : "animate-pop-in"
+        }`}
       >
         <header class="flex items-center gap-2 border-b border-border px-4 py-2.5">
           <span class="text-text">{t("settings.title")}</span>
@@ -67,7 +76,7 @@ export function Settings() {
             onClick={() => {
               settingsOpen.value = false;
             }}
-            class="ml-auto flex size-6 items-center justify-center rounded text-faint hover:bg-raised hover:text-text"
+            class="ml-auto flex size-6 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
           >
             <Icon name="close" />
           </button>
@@ -152,7 +161,7 @@ function Choice({
       type="button"
       aria-pressed={selected}
       onClick={onSelect}
-      class={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition-colors ${
+      class={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97] ${
         selected ? "bg-raised text-text" : "text-muted hover:text-text"
       }`}
     >

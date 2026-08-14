@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 
 import { Icon, type IconName } from "../components/Icon";
+import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { metrics } from "../metrics";
 import { UsagePopover } from "./UsagePopover";
@@ -14,6 +15,7 @@ type Props = {
 
 export function Toolbar({ onNewSession, status }: Props) {
   const holder = useRef<HTMLDivElement>(null);
+  const popover = usePresence<HTMLDivElement>(usageOpen.value);
 
   useEffect(() => {
     if (!usageOpen.value) {
@@ -38,14 +40,19 @@ export function Toolbar({ onNewSession, status }: Props) {
             type="button"
             title={t("usage.title")}
             onClick={toggleUsagePopover}
-            class={`flex h-6 items-center rounded px-1.5 hover:bg-raised ${usageTone()}`}
+            class={`flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised ${usageTone()}`}
           >
-            {anyOverPace.value && <Icon name="activity" class="mr-1" />}
+            {anyOverPace.value && <Icon name="activity" class="mr-1 animate-breathe" />}
             {tightestUsage.value}%
           </button>
 
-          {usageOpen.value && (
-            <div class="absolute right-0 top-full z-50 mt-1">
+          {popover.mounted && (
+            <div
+              ref={popover.holder}
+              class={`absolute right-0 top-full z-50 mt-1 origin-top-right ${
+                popover.leaving ? "animate-drop-out" : "animate-drop-in"
+              }`}
+            >
               <UsagePopover
                 reports={metrics.value?.quotas ?? []}
                 onClose={() => {
@@ -86,7 +93,7 @@ function ToolbarButton({
       title={label}
       aria-label={label}
       onClick={onClick}
-      class="flex size-6 items-center justify-center rounded text-faint hover:bg-raised hover:text-text"
+      class="flex size-6 items-center justify-center rounded text-faint transition hover:bg-raised hover:text-text active:scale-90"
     >
       <Icon name={icon} />
     </button>

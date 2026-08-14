@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { compactBytes, metrics } from "../metrics";
 import { ResourcesPanel } from "../panels/ResourcesPanel";
@@ -7,6 +8,7 @@ import { ResourcesPanel } from "../panels/ResourcesPanel";
 export function StatusBar() {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
+  const popover = usePresence<HTMLDivElement>(open);
 
   useEffect(() => {
     if (!open) {
@@ -40,8 +42,13 @@ export function StatusBar() {
       ref={holder}
       class="relative flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-2 text-faint"
     >
-      {open && (
-        <div class="absolute bottom-full right-1 z-50 mb-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl">
+      {popover.mounted && (
+        <div
+          ref={popover.holder}
+          class={`absolute bottom-full right-1 z-50 mb-1 w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl ${
+            popover.leaving ? "animate-rise-out" : "animate-rise-in"
+          }`}
+        >
           <ResourcesPanel snapshot={snapshot} />
         </div>
       )}
@@ -49,7 +56,7 @@ export function StatusBar() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        class="flex items-center gap-2.5 rounded px-1 hover:bg-raised hover:text-muted"
+        class="flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted"
       >
         <span title={t("resources.memory")}>{compactBytes(snapshot.system.memory_used)}</span>
         <span title={t("resources.cpu")}>{snapshot.system.cpu_percent.toFixed(0)}% cpu</span>
