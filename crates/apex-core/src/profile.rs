@@ -11,6 +11,7 @@ const BUILTIN_PROFILES: &[(&str, &str)] = &[
     ("claude", include_str!("../../../agents/claude.toml")),
     ("codex", include_str!("../../../agents/codex.toml")),
     ("gemini", include_str!("../../../agents/gemini.toml")),
+    ("grok", include_str!("../../../agents/grok.toml")),
     ("copilot", include_str!("../../../agents/copilot.toml")),
     ("opencode", include_str!("../../../agents/opencode.toml")),
     ("shell", include_str!("../../../agents/shell.toml")),
@@ -55,12 +56,32 @@ pub enum HistorySource {
     Command,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HistoryEntries {
+    #[default]
+    Files,
+    Dirs,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HistoryConfig {
     pub source: HistorySource,
     pub path: String,
     #[serde(default)]
+    pub entries: HistoryEntries,
+    #[serde(default = "default_label_key")]
+    pub label_key: String,
+    #[serde(default)]
+    pub label_file: Option<String>,
+    #[serde(default)]
+    pub label_id_key: Option<String>,
+    #[serde(default)]
     pub resume_args: Vec<String>,
+}
+
+fn default_label_key() -> String {
+    "content".to_string()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
-use crate::profile::{AgentProfile, HistorySource};
+use std::collections::HashMap;
+
+use crate::profile::{AgentProfile, HistoryEntries, HistorySource};
 
 const LABEL_LIMIT: usize = 120;
 const LABEL_SCAN_BYTES: usize = 64 * 1024;
@@ -28,18 +30,39 @@ pub fn read_history(profile: &AgentProfile, project_root: &Path, home: &Path) ->
         return Vec::new();
     };
 
+    let wants_dirs = config.entries == HistoryEntries::Dirs;
+    let index = config
+        .label_file
+        .as_ref()
+        .zip(config.label_id_key.as_ref())
+        .map(|(file, id_key)| read_label_index(&dir.join(file), id_key, &config.label_key))
+        .unwrap_or_default();
+
     let mut found: Vec<HistoryEntry> = entries
         .flatten()
         .filter_map(|entry| {
             let path = entry.path();
-            let session_id = path.file_stem()?.to_string_lossy().to_string();
-            if session_id.is_empty() || path.is_dir() {
+            if path.is_dir() != wants_dirs {
                 return None;
             }
+            let session_id = if wants_dirs {
+                path.file_name()?.to_string_lossy().to_string()
+            } else {
+                path.file_stem()?.to_string_lossy().to_string()
+            };
+            if session_id.is_empty() {
+                return None;
+            }
+
+            let label = match index.get(&session_id) {
+                Some(found) => Some(found.clone()),
+                None if wants_dirs => None,
+                None => read_label(&path, &config.label_key),
+            };
             Some(HistoryEntry {
                 agent: profile.name.clone(),
                 session_id,
-                label: read_label(&path),
+                label,
                 updated_at: modified_seconds(&path),
             })
         })
@@ -68,9 +91,29 @@ pub fn project_slug(root: &Path) -> String {
     root.display().to_string().replace(['/', '.'], "-")
 }
 
+pub fn project_encoded(root: &Path) -> String {
+    root.display()
+        .to_string()
+        .chars()
+        .map(|character| {
+            if character.is_ascii_alphanumeric() || "-._~".contains(character) {
+                character.to_string()
+            } else {
+                let mut encoded = String::new();
+                let mut buffer = [0u8; 4];
+                for byte in character.encode_utf8(&mut buffer).as_bytes() {
+                    encoded.push_str(&format!("%{byte:02X}"));
+                }
+                encoded
+            }
+        })
+        .collect()
+}
+
 fn expand_path(template: &str, project_root: &Path, home: &Path) -> PathBuf {
     let filled = template
         .replace("{project_slug}", &project_slug(project_root))
+        .replace("{project_encoded}", &project_encoded(project_root))
         .replace("{project_root}", &project_root.display().to_string());
 
     match filled.strip_prefix("~/") {
@@ -88,7 +131,7 @@ fn modified_seconds(path: &Path) -> u64 {
         .unwrap_or(0)
 }
 
-fn read_label(path: &Path) -> Option<String> {
+fn read_label(path: &Path, key: &str) -> Option<String> {
     let raw = std::fs::read(path).ok()?;
     let head = &raw[..raw.len().min(LABEL_SCAN_BYTES)];
 
@@ -96,7 +139,7 @@ fn read_label(path: &Path) -> Option<String> {
         let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
             continue;
         };
-        if let Some(text) = value.get("content").and_then(|content| content.as_str()) {
+        if let Some(text) = value.get(key).and_then(|content| content.as_str()) {
             let trimmed = text.trim();
             if !trimmed.is_empty() {
                 return Some(shorten(trimmed));
@@ -104,6 +147,29 @@ fn read_label(path: &Path) -> Option<String> {
         }
     }
     None
+}
+
+fn read_label_index(path: &Path, id_key: &str, text_key: &str) -> HashMap<String, String> {
+    let Ok(raw) = std::fs::read(path) else {
+        return HashMap::new();
+    };
+
+    let mut index = HashMap::new();
+    for line in raw.split(|byte| *byte == b'\n') {
+        let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
+            continue;
+        };
+        let (Some(id), Some(text)) = (
+            value.get(id_key).and_then(|entry| entry.as_str()),
+            value.get(text_key).and_then(|entry| entry.as_str()),
+        ) else {
+            continue;
+        };
+        if !text.trim().is_empty() {
+            index.entry(id.to_string()).or_insert_with(|| shorten(text.trim()));
+        }
+    }
+    index
 }
 
 fn shorten(text: &str) -> String {
@@ -183,6 +249,49 @@ mod tests {
         let long = "palabra ".repeat(80);
         assert!(shorten(&long).chars().count() <= LABEL_LIMIT + 1);
         assert_eq!(shorten("  varias\n  lineas  "), "varias lineas");
+    }
+
+    #[test]
+    fn sessions_stored_as_directories_take_their_label_from_a_shared_index() {
+        let home = tempfile::tempdir().expect("home");
+        let dir = home.path().join("sessions").join(project_encoded(Path::new("/Users/x/code")));
+        std::fs::create_dir_all(dir.join("019fba90-7acb")).expect("mkdir");
+        std::fs::create_dir_all(dir.join("019fba91-0000")).expect("mkdir");
+        std::fs::write(
+            dir.join("prompt_history.jsonl"),
+            "{\"session_id\":\"019fba90-7acb\",\"prompt\":\"arregla el saludo\"}\n\
+             {\"session_id\":\"019fba90-7acb\",\"prompt\":\"y ahora otra cosa\"}\n",
+        )
+        .expect("escribir");
+
+        let profile = AgentProfile::parse(
+            "name = \"grok\"\ncommand = \"grok\"\n\
+             [history]\nsource = \"dir\"\n\
+             path = \"~/sessions/{project_encoded}\"\n\
+             entries = \"dirs\"\n\
+             label_file = \"prompt_history.jsonl\"\n\
+             label_id_key = \"session_id\"\n\
+             label_key = \"prompt\"\n\
+             resume_args = [\"--resume\", \"{session_id}\"]\n",
+        )
+        .expect("perfil");
+
+        let found = read_history(&profile, Path::new("/Users/x/code"), home.path());
+        assert_eq!(found.len(), 2, "deberian verse las dos carpetas de sesion");
+
+        let labelled = found.iter().find(|entry| entry.session_id == "019fba90-7acb").expect("sesion");
+        assert_eq!(labelled.label.as_deref(), Some("arregla el saludo"));
+
+        let bare = found.iter().find(|entry| entry.session_id == "019fba91-0000").expect("sesion");
+        assert_eq!(bare.label, None);
+    }
+
+    #[test]
+    fn the_encoded_project_path_matches_the_grok_layout() {
+        assert_eq!(
+            project_encoded(Path::new("/Users/sthbryan/Documents/Codes/Kakebo")),
+            "%2FUsers%2Fsthbryan%2FDocuments%2FCodes%2FKakebo"
+        );
     }
 
     #[test]

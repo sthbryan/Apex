@@ -8,6 +8,7 @@ pub use discovery::{BinaryResolver, ProbeSource, ShellEnvironment};
 pub use history::{HistoryEntry, project_slug, read_history, resume_args};
 pub use paths::ApexPaths;
 pub use profile::{
-    AgentProfile, HistoryConfig, ProfileSet, QuotaConfig, QuotaFormat, QuotaSource, StatePatterns,
+    AgentProfile, HistoryConfig, HistoryEntries, ProfileSet, QuotaConfig, QuotaFormat,
+    QuotaSource, StatePatterns,
 };
 pub use store::{Project, Session, Store};
