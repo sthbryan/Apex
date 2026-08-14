@@ -1,5 +1,5 @@
 import { openPath } from "@tauri-apps/plugin-opener";
-import { useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { FileContents } from "@/bindings/FileContents";
 import { highlight } from "@/features/files/highlight";
@@ -18,32 +18,31 @@ export function FileView({ path }: { path: string }) {
   const projectId = project?.id ?? null;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const ticket = useRef(0);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!projectId) {
       return;
     }
-    let cancelled = false;
+    const mine = ++ticket.current;
     setLoaded(null);
     setFailure(null);
 
     void readFile(projectId, path)
       .then(async (contents) => {
         const markup = contents.text ? await highlight(path, contents.text) : null;
-        if (!cancelled) {
+        if (mine === ticket.current) {
           setLoaded({ contents, markup });
         }
       })
       .catch((error: unknown) => {
-        if (!cancelled) {
+        if (mine === ticket.current) {
           setFailure(String(error));
         }
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [projectId, path]);
+
+  useEffect(load, [load]);
 
   const contents = loaded?.contents ?? null;
   const text = contents?.text ?? null;
@@ -56,6 +55,14 @@ export function FileView({ path }: { path: string }) {
         <span class="truncate text-text">{fileName(path)}</span>
         <span class="truncate text-faint">{path}</span>
         <span class="ml-auto shrink-0 text-faint">{contents ? formatSize(contents.size) : ""}</span>
+        <button
+          type="button"
+          title={t("files.reload")}
+          onClick={load}
+          class="shrink-0 text-faint transition-colors hover:text-text"
+        >
+          <Icon name="refresh" size={12} />
+        </button>
         {project && (
           <button
             type="button"

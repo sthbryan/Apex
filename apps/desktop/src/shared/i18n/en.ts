@@ -22,6 +22,7 @@ export const en = {
     binary: "Binary file.",
     truncated: "Showing the first megabyte.",
     openExternally: "Open in the default app",
+    reload: "Reload the file",
     findPlaceholder: "Find a file…",
     refresh: "Reload the tree",
   },
