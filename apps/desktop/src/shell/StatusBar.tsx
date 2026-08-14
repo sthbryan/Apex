@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { signal } from "@preact/signals";
+import { useEffect, useRef } from "preact/hooks";
 
 import { t } from "../i18n";
 import { formatBytes, metrics, percentOf } from "../metrics";
@@ -7,8 +8,17 @@ import { UsagePopover } from "./UsagePopover";
 
 type Popover = "usage" | "resources" | null;
 
+const popover = signal<Popover>(null);
+
+export function toggleUsagePopover(): void {
+  popover.value = popover.value === "usage" ? null : "usage";
+}
+
 export function StatusBar() {
-  const [open, setOpen] = useState<Popover>(null);
+  const open = popover.value;
+  const setOpen = (next: Popover | ((current: Popover) => Popover)) => {
+    popover.value = typeof next === "function" ? next(popover.value) : next;
+  };
   const holder = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

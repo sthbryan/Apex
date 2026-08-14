@@ -12,7 +12,7 @@ import { locale, t } from "./i18n";
 import { sessions } from "./sessions";
 import { projects } from "./projects";
 import { type DockPanel, Dock } from "./shell/Dock";
-import { StatusBar } from "./shell/StatusBar";
+import { StatusBar, toggleUsagePopover } from "./shell/StatusBar";
 import { CommandPalette } from "./shell/CommandPalette";
 import { PaneTree } from "./shell/PaneTree";
 import { TabBar } from "./shell/TabBar";
@@ -92,6 +92,11 @@ export function App() {
       if (key === "k") {
         event.preventDefault();
         setPaletteOpen((open) => !open);
+        return;
+      }
+      if (key === "u") {
+        event.preventDefault();
+        toggleUsagePopover();
         return;
       }
       if (key === "b") {
