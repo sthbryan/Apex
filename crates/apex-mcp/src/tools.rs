@@ -238,7 +238,7 @@ mod tests {
         assert!(text.contains(&mate.id.to_string()));
 
         assert_eq!(
-            describe_sessions(&me, &[me.summary.clone()]),
+            describe_sessions(&me, std::slice::from_ref(&me.summary)),
             "No other agents are running on this project."
         );
     }

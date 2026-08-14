@@ -45,14 +45,9 @@ async fn handle<D: Daemon>(daemon: &mut D, caller: &Caller, line: &str) -> Optio
         }
     };
 
-    let id = request.get("id").cloned();
+    let id = request.get("id").cloned()?;
     let method = request.get("method").and_then(Value::as_str).unwrap_or_default();
     let params = request.get("params").cloned().unwrap_or_else(|| json!({}));
-
-    if id.is_none() {
-        return None;
-    }
-    let id = id.unwrap_or(Value::Null);
 
     match method {
         "initialize" => Some(result_body(id, initialize())),
