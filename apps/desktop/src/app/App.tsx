@@ -28,7 +28,7 @@ import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
-import { dockOpen, toggleDock, toggleSettings } from "@/features/settings/state";
+import { dockOpen, settingsOpen, toggleDock, toggleSettings } from "@/features/settings/state";
 import { startPeeking } from "@/features/tasks/state";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
@@ -187,38 +187,52 @@ export function App() {
                 icon="plus"
                 onClick={() => setPaletteOpen(true)}
               />
-              <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
+              <ToolbarButton
+                label={t("settings.title")}
+                icon="settings"
+                pressed={settingsOpen.value}
+                onClick={toggleSettings}
+              />
             </Toolbar>
           </TitleBar>
 
-          <TabBar tabs={tabs.value} sessions={sessions.value} />
+          {settingsOpen.value ? (
+            <Settings />
+          ) : (
+            <>
+              <TabBar tabs={tabs.value} sessions={sessions.value} />
 
-          <div class="relative min-h-0 flex-1">
-            {tabs.value.length === 0 ? (
-              <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
-                <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
-                {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
-              </div>
-            ) : (
-              tabs.value.map((tab) => {
-                const active = tab.id === activeTabId.value;
-                return (
-                  <div
-                    key={tab.id}
-                    class="absolute inset-0"
-                    style={{ visibility: active ? "visible" : "hidden", zIndex: active ? 1 : 0 }}
-                  >
-                    <PaneTree
-                      tabId={tab.id}
-                      node={tab.root}
-                      activeLeafId={tab.activeLeafId}
-                      tabActive={active}
-                    />
+              <div class="relative min-h-0 flex-1">
+                {tabs.value.length === 0 ? (
+                  <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
+                    <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
+                    {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
                   </div>
-                );
-              })
-            )}
-          </div>
+                ) : (
+                  tabs.value.map((tab) => {
+                    const active = tab.id === activeTabId.value;
+                    return (
+                      <div
+                        key={tab.id}
+                        class="absolute inset-0"
+                        style={{
+                          visibility: active ? "visible" : "hidden",
+                          zIndex: active ? 1 : 0,
+                        }}
+                      >
+                        <PaneTree
+                          tabId={tab.id}
+                          node={tab.root}
+                          activeLeafId={tab.activeLeafId}
+                          tabActive={active}
+                        />
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {!dockVisible && (
@@ -233,8 +247,6 @@ export function App() {
       <NewSession />
 
       <CloseSession />
-
-      <Settings />
 
       <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
 
