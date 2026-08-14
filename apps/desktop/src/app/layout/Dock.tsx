@@ -2,7 +2,6 @@ import cn from "cnfast";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { SessionsPanel } from "@/features/sessions/SessionsPanel";
-import { dockMode } from "@/features/settings/state";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
@@ -22,14 +21,7 @@ type Props = {
 
 export function Dock({ panel, onPanel, sessions, elsewhere, projects }: Props) {
   return (
-    <aside
-      class={cn(
-        "flex w-(--apex-dock-width) flex-col",
-        dockMode.value === "floating"
-          ? "h-full overflow-hidden rounded-xl border border-border bg-raised shadow-2xl"
-          : "shrink-0 border-r border-border bg-surface",
-      )}
-    >
+    <aside class="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
       {PANELS.length > 1 && (
         <nav class="flex shrink-0 gap-1 border-b border-border px-1 py-1">
           {PANELS.map((entry) => (

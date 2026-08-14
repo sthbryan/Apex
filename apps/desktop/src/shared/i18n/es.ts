@@ -15,8 +15,6 @@ export const es: Messages = {
   },
   dock: {
     toggle: "Mostrar u ocultar la barra lateral",
-    pinned: "Fijo",
-    floating: "Flotante",
     sessions: "Sesiones",
   },
   projects: {
@@ -53,8 +51,6 @@ export const es: Messages = {
     themeHint: "Sigue al sistema.",
     language: "Idioma",
     languageHint: "Se aplica al momento.",
-    dock: "Barra lateral",
-    dockHint: "Flotante se superpone en vez de redimensionar los paneles.",
     agentsHint: "Los agentes son archivos TOML en {path} — suelta uno para añadir un CLI.",
   },
   theme: {

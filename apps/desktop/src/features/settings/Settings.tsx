@@ -1,13 +1,7 @@
 import cn from "cnfast";
 import { useEffect, useRef } from "preact/hooks";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import {
-  closeSettings,
-  type DockMode,
-  dockMode,
-  setDockMode,
-  settingsOpen,
-} from "@/features/settings/state";
+import { closeSettings, settingsOpen } from "@/features/settings/state";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
@@ -19,11 +13,6 @@ const THEMES: { value: ThemeMode; icon: IconName }[] = [
   { value: "system", icon: "monitor" },
   { value: "light", icon: "sun" },
   { value: "dark", icon: "moon" },
-];
-
-const DOCK_MODES: { value: DockMode; icon: IconName }[] = [
-  { value: "pinned", icon: "panel" },
-  { value: "floating", icon: "layers" },
 ];
 
 const LANGUAGES: { value: Locale; label: string }[] = [
@@ -102,21 +91,6 @@ export function Settings() {
                 >
                   <Icon name={option.icon} />
                   {t(`theme.${option.value}`)}
-                </Choice>
-              ))}
-            </Segmented>
-          </SettingsRow>
-
-          <SettingsRow label={t("settings.dock")} hint={t("settings.dockHint")}>
-            <Segmented>
-              {DOCK_MODES.map((option) => (
-                <Choice
-                  key={option.value}
-                  selected={dockMode.value === option.value}
-                  onSelect={() => setDockMode(option.value)}
-                >
-                  <Icon name={option.icon} />
-                  {t(`dock.${option.value}`)}
                 </Choice>
               ))}
             </Segmented>
