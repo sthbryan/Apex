@@ -11,7 +11,7 @@ type Props = {
 export function Meter({ icon, label, percent, detail }: Props) {
   const clamped = Math.min(100, Math.max(0, percent));
   return (
-    <div class="flex items-center gap-2 py-0.5" title={label}>
+    <div class="flex items-center gap-2 py-0.5 text-xs" title={label}>
       <Icon name={icon} class="shrink-0 text-muted" />
       <span class="w-20 shrink-0 text-muted">{label}</span>
       <span class={cn("w-9 shrink-0 text-right", toneText(clamped))}>{clamped.toFixed(0)}%</span>

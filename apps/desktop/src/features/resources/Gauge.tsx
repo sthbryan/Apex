@@ -9,7 +9,7 @@ type Props = {
 export function Gauge({ icon, label, value }: Props) {
   return (
     <span class="flex items-center gap-1" title={label}>
-      <Icon name={icon} size={12} />
+      <Icon name={icon} size={11} />
       {value}
     </span>
   );

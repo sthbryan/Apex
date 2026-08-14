@@ -22,7 +22,7 @@ export function ResourcesPanel({ snapshot }: Props) {
     <div class="flex max-h-96 flex-col overflow-y-auto">
       <section class="px-2 py-1.5">
         <header class="mb-0.5 flex items-baseline gap-1">
-          <h2 class="uppercase tracking-wider text-faint">{t("resources.system")}</h2>
+          <h3 class="uppercase tracking-wider text-faint">{t("resources.system")}</h3>
           <span class="text-faint">·</span>
           <span class="text-faint">{t("resources.cores", { count: String(system.cores) })}</span>
         </header>
@@ -48,7 +48,7 @@ export function ResourcesPanel({ snapshot }: Props) {
 
       <section class="border-t border-border px-2 py-1.5">
         <header class="mb-0.5 flex items-baseline gap-1">
-          <h2 class="uppercase tracking-wider text-faint">{t("resources.bySession")}</h2>
+          <h3 class="uppercase tracking-wider text-faint">{t("resources.bySession")}</h3>
           {sessions.length > 0 && (
             <span class="truncate text-faint">
               ·{" "}
@@ -63,7 +63,7 @@ export function ResourcesPanel({ snapshot }: Props) {
         {sessions.length === 0 ? (
           <p class="text-faint">{t("resources.noSessions")}</p>
         ) : (
-          <ul class="flex flex-col">
+          <ul class="flex flex-col text-xs">
             {sessions.map((usage) => (
               <li key={usage.id} class="animate-row-in">
                 <button
