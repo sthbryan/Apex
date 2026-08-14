@@ -1,6 +1,7 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
 
+import { DockResize } from "@/app/layout/DockResize";
 import { type DockPanel, dockPanel, setDockPanel } from "@/app/layout/state";
 import { ContextPanel } from "@/features/context/ContextPanel";
 import { FilesPanel } from "@/features/files/FilesPanel";
@@ -65,6 +66,8 @@ export function Dock({ header, floating = false }: Props) {
           ))}
         </nav>
       )}
+
+      <DockResize />
 
       <div class="min-h-0 flex-1">
         {panel === "tasks" ? (

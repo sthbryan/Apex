@@ -15,6 +15,7 @@ export const es: Messages = {
   },
   dock: {
     toggle: "Mostrar u ocultar la barra lateral",
+    resize: "Cambiar el ancho de la barra lateral",
     sessions: "Sesiones",
     files: "Archivos",
     git: "Git",

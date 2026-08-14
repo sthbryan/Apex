@@ -13,6 +13,7 @@ export const en = {
   },
   dock: {
     toggle: "Toggle sidebar",
+    resize: "Resize sidebar",
     sessions: "Sessions",
     files: "Files",
     git: "Git",
