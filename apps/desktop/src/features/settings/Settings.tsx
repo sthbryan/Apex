@@ -1,7 +1,7 @@
 import { useEffect } from "preact/hooks";
+import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import { closeSettings } from "@/features/settings/state";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
@@ -25,7 +25,7 @@ export function Settings() {
     const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        closeSettings();
+        closePage();
       }
     };
     window.addEventListener("keydown", onEscape);
@@ -39,7 +39,7 @@ export function Settings() {
         <button
           type="button"
           title={t("settings.close")}
-          onClick={closeSettings}
+          onClick={closePage}
           class="ml-auto flex size-6 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
         >
           <Icon name="close" />

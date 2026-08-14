@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { togglePage } from "@/app/view";
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { requestSession } from "@/features/sessions/pending";
 import { resumeSession } from "@/features/sessions/state";
-import { toggleSettings } from "@/features/settings/state";
 import {
   activeTab,
   closePane,
@@ -131,7 +131,7 @@ function buildActions(
     label: t("palette.settings"),
     run: () => {
       onClose();
-      toggleSettings();
+      togglePage("settings");
     },
   });
 

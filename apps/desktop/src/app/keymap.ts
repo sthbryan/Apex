@@ -1,7 +1,8 @@
 import { useEffect } from "preact/hooks";
 
+import { togglePage } from "@/app/view";
 import { splitWithShell } from "@/features/sessions/pending";
-import { toggleDock, toggleSettings } from "@/features/settings/state";
+import { toggleDock } from "@/features/settings/state";
 import { toggleUsagePopover } from "@/features/usage/state";
 import { activeTab, activeTabId, closePane, tabs } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";
@@ -44,7 +45,7 @@ type Context = Toggles & { event: KeyboardEvent };
 const BINDINGS: Record<string, (context: Context) => void> = {
   k: ({ togglePalette }) => togglePalette(),
   p: ({ toggleFinder }) => toggleFinder(),
-  ",": () => toggleSettings(),
+  ",": () => togglePage("settings"),
   u: () => toggleUsagePopover(),
   b: () => toggleDock(),
   d: ({ event }) => {
