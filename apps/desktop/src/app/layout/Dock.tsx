@@ -3,7 +3,7 @@ import type { ComponentChildren } from "preact";
 
 import { dockPanelAt, popPanelToTab } from "@/app/layout/actions";
 import { DockResize } from "@/app/layout/DockResize";
-import { hasPanelDrag, readPanelDrag, writePanelDrag } from "@/app/layout/dnd";
+import { clearPanelDrag, hasPanelDrag, readPanelDrag, writePanelDrag } from "@/app/layout/dnd";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { dockOrder, dockPanel, setDockPanel } from "@/app/layout/state";
 import { t } from "@/shared/i18n";
@@ -21,7 +21,7 @@ export function Dock({ header, floating = false }: Props) {
 
   const dropOn = (before: typeof active | undefined, event: DragEvent) => {
     event.preventDefault();
-    const id = readPanelDrag(event);
+    const id = readPanelDrag();
     if (!id || id === before) {
       return;
     }
@@ -37,7 +37,7 @@ export function Dock({ header, floating = false }: Props) {
           : "rounded-none bg-surface shadow-none",
       )}
       onDragOver={(event) => {
-        if (hasPanelDrag(event)) {
+        if (hasPanelDrag()) {
           event.preventDefault();
         }
       }}
@@ -58,10 +58,8 @@ export function Dock({ header, floating = false }: Props) {
             return (
               <div
                 key={id}
-                draggable
-                onDragStart={(event) => writePanelDrag(event, id)}
                 onDragOver={(event) => {
-                  if (hasPanelDrag(event)) {
+                  if (hasPanelDrag()) {
                     event.preventDefault();
                     event.stopPropagation();
                   }
@@ -74,6 +72,9 @@ export function Dock({ header, floating = false }: Props) {
                 <button
                   type="button"
                   title={entry.label()}
+                  draggable
+                  onDragStart={(event) => writePanelDrag(event, id)}
+                  onDragEnd={() => clearPanelDrag()}
                   onClick={() => setDockPanel(id)}
                   onDblClick={() => popPanelToTab(id)}
                   class={cn(

@@ -47,7 +47,7 @@ export function TabBar({ tabs, sessions }: Props) {
       moveTab(tabId, before);
       return;
     }
-    const panel = readPanelDrag(event);
+    const panel = readPanelDrag();
     if (panel) {
       event.preventDefault();
       popPanelToTab(panel);
@@ -58,7 +58,7 @@ export function TabBar({ tabs, sessions }: Props) {
     <div
       class="flex h-8 min-h-8.5 shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface"
       onDragOver={(event) => {
-        if (hasPaneDrag(event) || hasTabDrag(event) || hasPanelDrag(event)) {
+        if (hasPaneDrag(event) || hasTabDrag(event) || hasPanelDrag()) {
           event.preventDefault();
         }
       }}
@@ -73,7 +73,7 @@ export function TabBar({ tabs, sessions }: Props) {
             draggable
             onDragStart={(event) => writeTabDrag(event, tab.id)}
             onDragOver={(event) => {
-              if (hasPaneDrag(event) || hasTabDrag(event) || hasPanelDrag(event)) {
+              if (hasPaneDrag(event) || hasTabDrag(event) || hasPanelDrag()) {
                 event.preventDefault();
                 event.stopPropagation();
               }

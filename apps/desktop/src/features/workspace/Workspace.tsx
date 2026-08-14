@@ -9,12 +9,12 @@ import { t } from "@/shared/i18n";
 
 export function Workspace() {
   const acceptPanel = (event: DragEvent) => {
-    if (hasPanelDrag(event)) {
+    if (hasPanelDrag()) {
       event.preventDefault();
     }
   };
   const dropPanel = (event: DragEvent) => {
-    const id = readPanelDrag(event);
+    const id = readPanelDrag();
     if (id) {
       event.preventDefault();
       popPanelToTab(id);
