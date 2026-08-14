@@ -18,7 +18,6 @@ export const en = {
   "usage.resetsIn": "resets in {away} · {when}",
   "usage.resetsAt": "resets {when}",
 
-  "status.sessions": "{count} live",
 
   "resources.sampling": "Sampling…",
   "resources.cpu": "CPU",

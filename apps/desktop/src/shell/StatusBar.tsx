@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import { Icon, type IconName } from "../components/Icon";
 import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { compactBytes, metrics } from "../metrics";
@@ -60,15 +61,30 @@ export function StatusBar() {
         onClick={() => setOpen((current) => !current)}
         class={cn("flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted")}
       >
-        <span title={t("resources.memory")}>{compactBytes(snapshot.system.memory_used)}</span>
-        <span title={t("resources.cpu")}>{snapshot.system.cpu_percent.toFixed(0)}% cpu</span>
+        <Gauge icon="cpu" label={t("resources.cpu")} value={`${snapshot.system.cpu_percent.toFixed(0)}%`} />
         {snapshot.system.gpu_percent !== null && (
-          <span title={t("resources.gpu")}>{snapshot.system.gpu_percent.toFixed(0)}% gpu</span>
+          <Gauge icon="gpu" label={t("resources.gpu")} value={`${snapshot.system.gpu_percent.toFixed(0)}%`} />
         )}
-        <span title={t("resources.bySession")}>
-          {t("status.sessions", { count: String(snapshot.sessions.length) })}
-        </span>
+        <Gauge
+          icon="memory"
+          label={t("resources.memory")}
+          value={compactBytes(snapshot.system.memory_used)}
+        />
+        <Gauge
+          icon="sessions"
+          label={t("resources.bySession")}
+          value={String(snapshot.sessions.length)}
+        />
       </button>
     </div>
+  );
+}
+
+function Gauge({ icon, label, value }: { icon: IconName; label: string; value: string }) {
+  return (
+    <span class="flex items-center gap-1" title={label}>
+      <Icon name={icon} size={12} />
+      {value}
+    </span>
   );
 }
