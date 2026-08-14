@@ -2,6 +2,7 @@ import cn from "cnfast";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { SessionsPanel } from "@/features/sessions/SessionsPanel";
+import { dockMode } from "@/features/settings/state";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
@@ -21,7 +22,14 @@ type Props = {
 
 export function Dock({ panel, onPanel, sessions, elsewhere, projects }: Props) {
   return (
-    <aside class="flex w-56 shrink-0 flex-col border-r border-border bg-surface">
+    <aside
+      class={cn(
+        "flex w-56 flex-col bg-surface",
+        dockMode.value === "floating"
+          ? "h-full overflow-hidden rounded-xl border border-border shadow-2xl"
+          : "shrink-0 border-r border-border",
+      )}
+    >
       {PANELS.length > 1 && (
         <nav class="flex shrink-0 gap-1 border-b border-border px-1 py-1">
           {PANELS.map((entry) => (

@@ -46,10 +46,13 @@ export function DockSlot({ open, onDismiss, children }: Props) {
   }
 
   return (
-    <div ref={holder} class="absolute inset-y-0 left-0 z-40 flex">
+    <div ref={holder} class="pointer-events-none absolute inset-y-0 left-0 z-40 flex p-2">
       <div
         ref={panel.holder}
-        class={cn("flex shadow-2xl", panel.leaving ? "animate-slide-out" : "animate-slide-in")}
+        class={cn(
+          "pointer-events-auto flex",
+          panel.leaving ? "animate-slide-out" : "animate-slide-in",
+        )}
       >
         {children}
       </div>
