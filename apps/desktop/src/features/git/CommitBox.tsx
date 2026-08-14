@@ -26,9 +26,9 @@ export function CommitBox({ status }: { status: GitStatus }) {
   };
 
   return (
-    <div class="shrink-0 border-t border-border p-2">
+    <div class="shrink-0 border-t border-border bg-surface">
       <textarea
-        rows={4}
+        rows={5}
         value={message}
         placeholder={t("git.messagePlaceholder")}
         spellcheck={false}
@@ -42,17 +42,24 @@ export function CommitBox({ status }: { status: GitStatus }) {
             commit();
           }
         }}
-        class="field-sizing-content max-h-40 min-h-16 w-full resize-none rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
+        class="field-sizing-content max-h-56 min-h-20 w-full resize-none border-0 bg-transparent px-2 py-1.5 text-text outline-none placeholder:text-faint"
       />
-      <button
-        type="button"
-        disabled={!ready}
-        onClick={commit}
-        class="mt-1 w-full truncate rounded border border-border py-1 text-muted transition-colors enabled:hover:bg-raised enabled:hover:text-text disabled:opacity-50"
-      >
-        {t("git.commit", { count: String(staged.length), branch: status.branch })}
-      </button>
-      {landed && <p class="mt-1 text-state-done">{t("git.committed", { commit: landed })}</p>}
+      <div class="flex items-center gap-2 px-2 pb-1.5">
+        <span class="min-w-0 flex-1 truncate text-faint">
+          {landed
+            ? t("git.committed", { commit: landed })
+            : t("git.onBranch", { count: String(staged.length), branch: status.branch })}
+        </span>
+        <button
+          type="button"
+          disabled={!ready}
+          onClick={commit}
+          title={t("git.commitHint")}
+          class="shrink-0 rounded border border-border px-2 py-0.5 text-muted transition-colors enabled:hover:bg-raised enabled:hover:text-text disabled:opacity-40"
+        >
+          {t("git.commit")}
+        </button>
+      </div>
     </div>
   );
 }
