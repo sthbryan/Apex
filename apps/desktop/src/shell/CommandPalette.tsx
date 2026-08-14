@@ -116,7 +116,8 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
                   type="button"
                   onMouseEnter={() => setCursor(index)}
                   onClick={action.run}
-                  class={`w-full px-3 py-1.5 text-left ${
+                  title={action.label}
+                  class={`w-full truncate px-3 py-1.5 text-left ${
                     index === cursor ? "bg-raised text-text" : "text-muted"
                   }`}
                 >
