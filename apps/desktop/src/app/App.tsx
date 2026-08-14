@@ -1,4 +1,6 @@
-import { useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
+
+import { useKeymap } from "@/app/keymap";
 
 import { agents, connect, daemonVersion, failure, platform, status } from "@/shared/daemon";
 import {
@@ -12,34 +14,28 @@ import { locale, t } from "@/shared/i18n";
 import { sessions } from "@/features/sessions/state";
 import { projects } from "@/features/projects/state";
 import { type DockPanel, Dock } from "@/shell/Dock";
-import { Settings, toggleSettings } from "@/features/settings/Settings";
+import { Settings } from "@/features/settings/Settings";
 import { StatusBar } from "@/shell/StatusBar";
-import { toggleUsagePopover } from "@/features/usage/state";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { TabBar } from "@/features/workspace/TabBar";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { TitleBar } from "@/shell/TitleBar";
 import { Toolbar } from "@/shell/Toolbar";
-import { findLeaf } from "@/features/workspace/tree";
 import { startMetrics } from "@/shared/telemetry";
 import { startNotifications } from "@/features/notifications/state";
 import { startThemeWatcher } from "@/shared/theme/mode";
 import { watchFullscreen } from "@/shell/windowControls";
-import {
-  activeSessionId,
-  activeTab,
-  activeTabId,
-  closePane,
-  splitWithNewSession,
-  tabs,
-} from "@/features/workspace/state";
+import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
 import { focusTerminal } from "@/features/sessions/registry";
 
 export function App() {
   const [dockOpen, setDockOpen] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
+
+  const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
+  const toggleDock = useCallback(() => setDockOpen((open) => !open), []);
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
@@ -84,70 +80,7 @@ export function App() {
     }
   }, [paletteOpen]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!event.metaKey && !event.ctrlKey) {
-        return;
-      }
-      const key = event.key.toLowerCase();
-
-      if (key === "k") {
-        event.preventDefault();
-        setPaletteOpen((open) => !open);
-        return;
-      }
-      if (event.key === ",") {
-        event.preventDefault();
-        toggleSettings();
-        return;
-      }
-      if (key === "u") {
-        event.preventDefault();
-        toggleUsagePopover();
-        return;
-      }
-      if (key === "b") {
-        event.preventDefault();
-        setDockOpen((open) => !open);
-        return;
-      }
-      if (key === "d") {
-        event.preventDefault();
-        const tab = activeTab.value;
-        const pane = tab ? findLeaf(tab.root, tab.activeLeafId) : null;
-        const session = sessions.value.find((candidate) => candidate.id === pane?.sessionId);
-        if (session) {
-          void splitWithNewSession(
-            session.project_id,
-            session.agent,
-            event.shiftKey ? "column" : "row",
-          );
-        }
-        return;
-      }
-      if (key === "w") {
-        event.preventDefault();
-        const tab = activeTab.value;
-        const pane = tab ? findLeaf(tab.root, tab.activeLeafId) : null;
-        if (tab && pane) {
-          closePane(tab.id, pane, true);
-        }
-        return;
-      }
-
-      const index = Number.parseInt(event.key, 10);
-      if (Number.isInteger(index) && index >= 1 && index <= 9) {
-        const target = tabs.value[index - 1];
-        if (target) {
-          event.preventDefault();
-          activeTabId.value = target.id;
-        }
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, []);
+  useKeymap({ togglePalette, toggleDock });
 
   if (status.value === "failed") {
     return (
