@@ -25,6 +25,22 @@ export const es: Messages = {
   "projects.elsewhere": "Otros proyectos",
   "dock.toggle": "Mostrar u ocultar el panel",
 
+  "dock.resources": "Recursos",
+
+  "resources.sampling": "Midiendo…",
+  "resources.system": "Sistema",
+  "resources.cpu": "CPU",
+  "resources.gpu": "GPU",
+  "resources.memory": "Memoria",
+  "resources.swap": "Swap",
+  "resources.cores": "núcleos",
+  "resources.bySession": "Por sesión",
+  "resources.noSessions": "No hay sesiones corriendo.",
+  "resources.quota": "Suscripción",
+  "resources.noQuota": "Sin datos.",
+  "resources.refresh": "Actualizar ahora",
+  "resources.kill": "Matar el proceso {pid}",
+
   "toolbar.newSession": "Nueva sesión",
   "toolbar.theme.system": "Tema: sistema",
   "toolbar.theme.light": "Tema: claro",

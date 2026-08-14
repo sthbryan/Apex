@@ -23,6 +23,22 @@ export const en = {
   "projects.elsewhere": "Other projects",
   "dock.toggle": "Toggle sidebar",
 
+  "dock.resources": "Resources",
+
+  "resources.sampling": "Sampling…",
+  "resources.system": "System",
+  "resources.cpu": "CPU",
+  "resources.gpu": "GPU",
+  "resources.memory": "Memory",
+  "resources.swap": "Swap",
+  "resources.cores": "cores",
+  "resources.bySession": "By session",
+  "resources.noSessions": "No sessions running.",
+  "resources.quota": "Subscription",
+  "resources.noQuota": "No data.",
+  "resources.refresh": "Refresh now",
+  "resources.kill": "Kill process {pid}",
+
   "toolbar.newSession": "New session",
   "toolbar.theme.system": "Theme: system",
   "toolbar.theme.light": "Theme: light",
