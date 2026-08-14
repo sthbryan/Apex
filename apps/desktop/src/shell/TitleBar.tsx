@@ -2,10 +2,11 @@ import type { ComponentChildren } from "preact";
 
 type Props = {
   title: string;
+  lead?: ComponentChildren;
   children?: ComponentChildren;
 };
 
-export function TitleBar({ title, children }: Props) {
+export function TitleBar({ title, lead, children }: Props) {
   return (
     <header
       data-tauri-drag-region
@@ -15,9 +16,12 @@ export function TitleBar({ title, children }: Props) {
         paddingRight: "max(var(--apex-controls-end, 0px), 12px)",
       }}
     >
-      <span data-tauri-drag-region class="font-semibold tracking-wide">
-        {title}
-      </span>
+      <div class="flex min-w-0 items-center gap-3">
+        <span data-tauri-drag-region class="shrink-0 font-semibold tracking-wide">
+          {title}
+        </span>
+        {lead}
+      </div>
       <div class="flex items-center gap-3">{children}</div>
     </header>
   );

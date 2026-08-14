@@ -16,6 +16,11 @@ export const en = {
   "daemon.retry": "Retry",
 
   "dock.sessions": "Sessions",
+
+  "projects.none": "No project",
+  "projects.open": "Open project…",
+  "projects.empty": "Open a project to get started.",
+  "projects.elsewhere": "Other projects",
   "dock.toggle": "Toggle sidebar",
 
   "toolbar.newSession": "New session",

@@ -18,6 +18,11 @@ export const es: Messages = {
   "daemon.retry": "Reintentar",
 
   "dock.sessions": "Sesiones",
+
+  "projects.none": "Sin proyecto",
+  "projects.open": "Abrir proyecto…",
+  "projects.empty": "Abre un proyecto para empezar.",
+  "projects.elsewhere": "Otros proyectos",
   "dock.toggle": "Mostrar u ocultar el panel",
 
   "toolbar.newSession": "Nueva sesión",
