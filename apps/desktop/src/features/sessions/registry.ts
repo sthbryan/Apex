@@ -15,9 +15,11 @@ type Entry = {
   terminal: Terminal;
   fit: FitAddon;
   teardown: () => void;
+  sent?: { rows: number; cols: number };
 };
 
 const registry = new Map<string, Entry>();
+const scheduled = new Map<string, number>();
 
 export function mountTerminal(id: string, host: HTMLElement): Entry {
   const existing = registry.get(id);
@@ -78,15 +80,29 @@ export function disposeTerminal(id: string): void {
   if (!entry) {
     return;
   }
+  const frame = scheduled.get(id);
+  if (frame !== undefined) {
+    cancelAnimationFrame(frame);
+    scheduled.delete(id);
+  }
   registry.delete(id);
   entry.teardown();
 }
 
 export function refitTerminal(id: string): void {
-  const entry = registry.get(id);
-  if (entry) {
-    resize(entry, id);
+  if (scheduled.has(id)) {
+    return;
   }
+  scheduled.set(
+    id,
+    requestAnimationFrame(() => {
+      scheduled.delete(id);
+      const entry = registry.get(id);
+      if (entry) {
+        resize(entry, id);
+      }
+    }),
+  );
 }
 
 export function focusTerminal(id: string): void {
@@ -105,5 +121,11 @@ function resize(entry: Entry, id: string): void {
     return;
   }
   entry.fit.fit();
-  void resizeSession(id, { rows: entry.terminal.rows, cols: entry.terminal.cols });
+
+  const { rows, cols } = entry.terminal;
+  if (entry.sent?.rows === rows && entry.sent.cols === cols) {
+    return;
+  }
+  entry.sent = { rows, cols };
+  void resizeSession(id, { rows, cols });
 }
