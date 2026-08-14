@@ -21,11 +21,19 @@ export function setLocale(next: Locale): void {
   } catch {}
 }
 
-export function t(key: MessageKey, params?: Record<string, string>): string {
-  const template = catalog.value[key];
-  if (!params) {
-    return template;
+function lookup(tree: unknown, path: string): string | undefined {
+  const parts = path.split(".");
+  let node: unknown = tree;
+  for (const part of parts) {
+    if (typeof node !== "object" || node === null || !(part in node)) return undefined;
+    node = (node as Record<string, unknown>)[part];
   }
+  return typeof node === "string" ? node : undefined;
+}
+
+export function t(key: MessageKey, params?: Record<string, string>): string {
+  const template = lookup(catalog.value, key) ?? lookup(en, key) ?? key;
+  if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) => params[name] ?? match);
 }
 
