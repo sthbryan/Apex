@@ -58,6 +58,7 @@ pub struct SessionManager {
     git: crate::services::git::GitService,
     context: crate::services::context::ContextService,
     projects: crate::services::projects::ProjectsService,
+    tasks: crate::services::tasks::TasksService,
 }
 
 impl SessionManager {
@@ -77,6 +78,7 @@ impl SessionManager {
         let files = crate::services::files::FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
         let context = crate::services::context::ContextService::new(Arc::clone(&store));
         let projects = crate::services::projects::ProjectsService::new(Arc::clone(&store));
+        let tasks = crate::services::tasks::TasksService::new(Arc::clone(&store));
         Self {
             paths,
             profiles,
@@ -91,6 +93,7 @@ impl SessionManager {
             git: crate::services::git::GitService,
             context,
             projects,
+            tasks,
         }
     }
 
@@ -339,16 +342,7 @@ impl SessionManager {
     }
 
     pub async fn list_tasks(&self, project: Uuid) -> Result<Vec<TaskSummary>> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let found = tokio::task::spawn_blocking(move || apex_tasks::discover(&root)).await?;
-        Ok(found
-            .into_iter()
-            .map(|task| TaskSummary {
-                name: task.name,
-                command: task.command,
-                source: task.source.as_str().to_owned(),
-            })
-            .collect())
+        self.tasks.list(project).await
     }
 
     pub async fn run_task(
