@@ -1,6 +1,7 @@
 import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
+import type { DiffScope } from "@/bindings/DiffScope";
 import type { GitCommit } from "@/bindings/GitCommit";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { MergeReport } from "@/bindings/MergeReport";
@@ -61,13 +62,48 @@ export async function readDiff(
   session: string | null,
   path: string,
   commit: string | null,
+  scope: DiffScope = "both",
 ): Promise<string> {
   return invoke<string>("git_diff", {
     project: activeProjectId.value,
     session,
     path,
     commit,
+    scope,
   });
+}
+
+export async function setStaged(paths: string[], staged: boolean): Promise<void> {
+  await invoke("git_stage", {
+    project: activeProjectId.value,
+    session: gitTarget.value,
+    paths,
+    staged,
+  });
+  await refreshGit();
+}
+
+export async function stageHunk(patch: string, staged: boolean): Promise<void> {
+  await invoke("git_stage_hunk", {
+    project: activeProjectId.value,
+    session: gitTarget.value,
+    patch,
+    staged,
+  });
+  await refreshGit();
+}
+
+export async function commitStaged(message: string): Promise<GitCommit> {
+  const commit = await invoke<GitCommit>("git_commit", {
+    project: activeProjectId.value,
+    session: gitTarget.value,
+    message,
+  });
+  await refreshGit();
+  if (gitTab.value === "history") {
+    await readLog();
+  }
+  return commit;
 }
 
 export async function readLog(): Promise<void> {

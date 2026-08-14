@@ -4,6 +4,7 @@ import { useState } from "preact/hooks";
 import type { GitChange } from "@/bindings/GitChange";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { MergeReport } from "@/bindings/MergeReport";
+import { CommitBox } from "@/features/git/CommitBox";
 import {
   commits,
   gitFailure,
@@ -14,6 +15,7 @@ import {
   readLog,
   refreshGit,
   selectTarget,
+  setStaged,
   showTab,
   since,
   worktrees,
@@ -102,6 +104,8 @@ export function GitPanel() {
         <Changes status={status} session={target} />
       )}
 
+      {status && gitTab.value === "changes" && <CommitBox status={status} />}
+
       {status?.isolated && target && gitTab.value === "changes" && (
         <div class="shrink-0 border-t border-border p-2">
           <button
@@ -143,6 +147,7 @@ function Changes({ status, session }: { status: GitStatus | null; session: strin
         label={t("git.staged")}
         changes={status?.changes.filter((change) => change.staged) ?? []}
         session={session}
+        staged
       />
       <Section
         label={t("git.tracked")}
@@ -150,11 +155,13 @@ function Changes({ status, session }: { status: GitStatus | null; session: strin
           status?.changes.filter((change) => !change.staged && change.kind !== "untracked") ?? []
         }
         session={session}
+        staged={false}
       />
       <Section
         label={t("git.untracked")}
         changes={status?.changes.filter((change) => change.kind === "untracked") ?? []}
         session={session}
+        staged={false}
       />
     </div>
   );
@@ -223,10 +230,12 @@ function Section({
   label,
   changes,
   session,
+  staged,
 }: {
   label: string;
   changes: GitChange[];
   session: string | null;
+  staged: boolean;
 }) {
   if (changes.length === 0) {
     return null;
@@ -237,7 +246,21 @@ function Section({
   return (
     <section class="mb-1">
       <h3 class="flex items-center gap-2 px-2 uppercase tracking-wider text-faint">
-        {label}
+        <button
+          type="button"
+          title={staged ? t("git.unstageAll") : t("git.stageAll")}
+          onClick={() =>
+            void setStaged(
+              changes.map((change) => change.path),
+              !staged,
+            ).catch((error: unknown) => {
+              gitFailure.value = String(error);
+            })
+          }
+          class="transition-colors hover:text-text"
+        >
+          {label}
+        </button>
         <span class="ml-auto shrink-0 tabular-nums">
           <span class="text-state-done">+{added}</span>{" "}
           <span class="text-state-failed">−{removed}</span>
@@ -254,11 +277,28 @@ function Section({
 
 function Row({ change, session }: { change: GitChange; session: string | null }) {
   return (
-    <li>
+    <li class="group flex items-center gap-1 px-2 transition-colors hover:bg-raised">
+      <button
+        type="button"
+        title={change.staged ? t("git.unstage") : t("git.stage")}
+        onClick={() =>
+          void setStaged([change.path], !change.staged).catch((error: unknown) => {
+            gitFailure.value = String(error);
+          })
+        }
+        class={cn(
+          "flex size-3.5 shrink-0 items-center justify-center rounded-xs border transition-colors",
+          change.staged
+            ? "border-accent bg-accent text-bg"
+            : "border-border text-transparent hover:border-muted",
+        )}
+      >
+        <Icon name="check" size={10} />
+      </button>
       <button
         type="button"
         onClick={() => openDiff(session, change.path)}
-        class="flex w-full items-center gap-2 px-2 py-px text-left text-muted transition-colors hover:bg-raised hover:text-text"
+        class="flex min-w-0 flex-1 items-center gap-2 py-px text-left text-muted transition-colors group-hover:text-text"
       >
         <span
           class={cn("w-3 shrink-0 text-center", {
