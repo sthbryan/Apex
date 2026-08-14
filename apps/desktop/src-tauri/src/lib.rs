@@ -4,7 +4,8 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus, HistoryEntry,
+    AgentSummary, Command, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit,
+    GitStatus, HistoryEntry,
     Isolation, MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TerminalSize,
     WorktreeDisposal,
 };
@@ -286,10 +287,11 @@ async fn git_diff(
     session: Option<Uuid>,
     path: String,
     commit: Option<String>,
+    scope: DiffScope,
 ) -> Answer<String> {
     match state
         .daemon
-        .request(Command::GitDiff { project, session, path, commit })
+        .request(Command::GitDiff { project, session, path, commit, scope })
         .await
         .map_err(failed)?
     {
@@ -312,6 +314,56 @@ async fn git_log(
         .map_err(failed)?
     {
         Reply::Log { commits } => Ok(commits),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn git_stage(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    session: Option<Uuid>,
+    paths: Vec<String>,
+    staged: bool,
+) -> Answer<()> {
+    state
+        .daemon
+        .request(Command::GitStage { project, session, paths, staged })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn git_stage_hunk(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    session: Option<Uuid>,
+    patch: String,
+    staged: bool,
+) -> Answer<()> {
+    state
+        .daemon
+        .request(Command::GitStageHunk { project, session, patch, staged })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn git_commit(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    session: Option<Uuid>,
+    message: String,
+) -> Answer<GitCommit> {
+    match state
+        .daemon
+        .request(Command::GitCommitStaged { project, session, message })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Committed { commit } => Ok(commit),
         other => Err(format!("unexpected reply: {other:?}")),
     }
 }
@@ -373,6 +425,9 @@ pub fn run() {
             git_status,
             git_diff,
             git_log,
+            git_stage,
+            git_stage_hunk,
+            git_commit,
             merge_worktree
         ])
         .run(tauri::generate_context!())

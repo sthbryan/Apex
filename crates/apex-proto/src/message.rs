@@ -195,6 +195,16 @@ pub struct GitChange {
     pub removed: u32,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum DiffScope {
+    Unstaged,
+    Staged,
+    #[default]
+    Both,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct GitCommit {
@@ -414,6 +424,31 @@ pub enum Command {
         path: String,
         #[serde(default)]
         commit: Option<String>,
+        #[serde(default)]
+        scope: DiffScope,
+    },
+    GitStage {
+        #[ts(type = "string")]
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
+        paths: Vec<String>,
+        staged: bool,
+    },
+    GitStageHunk {
+        #[ts(type = "string")]
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
+        patch: String,
+        staged: bool,
+    },
+    GitCommitStaged {
+        #[ts(type = "string")]
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
+        message: String,
     },
     GitLog {
         #[ts(type = "string")]
@@ -444,6 +479,7 @@ pub enum Reply {
     Editors { editors: Vec<EditorSummary> },
     Git { status: GitStatus },
     Log { commits: Vec<GitCommit> },
+    Committed { commit: GitCommit },
     Diff { patch: String },
     Merge { report: MergeReport },
     File { contents: FileContents },

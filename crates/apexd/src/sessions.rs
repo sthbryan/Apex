@@ -7,7 +7,7 @@ use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, editors, files,
 use std::collections::BTreeMap;
 use apex_proto::{
     EditorSummary, Event, FileContents, FileEntry, HistoryEntry, Isolation, MetricsSnapshot,
-    GitChange, GitCommit, GitStatus, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
+    DiffScope, GitChange, GitCommit, GitStatus, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
     SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize, WorktreeDisposal,
     WorktreeInfo,
 };
@@ -508,6 +508,7 @@ impl SessionManager {
         session: Option<Uuid>,
         path: &str,
         commit: Option<String>,
+        scope: DiffScope,
     ) -> Result<String> {
         let dir = self.git_dir(project, session).await?;
         let path = path.to_owned();
@@ -515,9 +516,56 @@ impl SessionManager {
             Some(commit) => {
                 apex_git::show(&dir, &commit, (!path.is_empty()).then_some(path.as_str()))
             }
-            None => apex_git::diff(&dir, &path),
+            None => apex_git::diff_scoped(&dir, &path, scope_of(scope)),
         })
         .await?
+    }
+
+    pub async fn git_stage(
+        &self,
+        project: Uuid,
+        session: Option<Uuid>,
+        paths: Vec<String>,
+        staged: bool,
+    ) -> Result<()> {
+        let dir = self.git_dir(project, session).await?;
+        tokio::task::spawn_blocking(move || {
+            if staged {
+                apex_git::stage(&dir, &paths)
+            } else {
+                apex_git::unstage(&dir, &paths)
+            }
+        })
+        .await?
+    }
+
+    pub async fn git_stage_hunk(
+        &self,
+        project: Uuid,
+        session: Option<Uuid>,
+        patch: String,
+        staged: bool,
+    ) -> Result<()> {
+        let dir = self.git_dir(project, session).await?;
+        tokio::task::spawn_blocking(move || apex_git::apply_to_index(&dir, &patch, !staged)).await?
+    }
+
+    pub async fn git_commit(
+        &self,
+        project: Uuid,
+        session: Option<Uuid>,
+        message: String,
+    ) -> Result<GitCommit> {
+        let dir = self.git_dir(project, session).await?;
+        let commit = tokio::task::spawn_blocking(move || apex_git::commit(&dir, &message)).await??;
+        Ok(GitCommit {
+            id: commit.id,
+            short: commit.short,
+            author: commit.author,
+            when: commit.when,
+            summary: commit.summary,
+            refs: commit.refs,
+        })
     }
 
     pub async fn git_log(
@@ -700,5 +748,13 @@ fn kind_name(kind: apex_git::ChangeKind) -> &'static str {
         apex_git::ChangeKind::Renamed => "renamed",
         apex_git::ChangeKind::Untracked => "untracked",
         apex_git::ChangeKind::Conflicted => "conflicted",
+    }
+}
+
+fn scope_of(scope: DiffScope) -> apex_git::Scope {
+    match scope {
+        DiffScope::Unstaged => apex_git::Scope::Unstaged,
+        DiffScope::Staged => apex_git::Scope::Staged,
+        DiffScope::Both => apex_git::Scope::Both,
     }
 }

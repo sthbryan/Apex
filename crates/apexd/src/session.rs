@@ -174,10 +174,31 @@ impl Client {
             Command::GitRead { project, session } => Ok(Reply::Git {
                 status: self.manager.git_status(project, session).await.map_err(not_found_error)?,
             }),
-            Command::GitDiff { project, session, path, commit } => Ok(Reply::Diff {
+            Command::GitDiff { project, session, path, commit, scope } => Ok(Reply::Diff {
                 patch: self
                     .manager
-                    .git_diff(project, session, &path, commit)
+                    .git_diff(project, session, &path, commit, scope)
+                    .await
+                    .map_err(not_found_error)?,
+            }),
+            Command::GitStage { project, session, paths, staged } => {
+                self.manager
+                    .git_stage(project, session, paths, staged)
+                    .await
+                    .map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::GitStageHunk { project, session, patch, staged } => {
+                self.manager
+                    .git_stage_hunk(project, session, patch, staged)
+                    .await
+                    .map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::GitCommitStaged { project, session, message } => Ok(Reply::Committed {
+                commit: self
+                    .manager
+                    .git_commit(project, session, message)
                     .await
                     .map_err(not_found_error)?,
             }),
@@ -318,6 +339,9 @@ fn runs_detached(command: &Command) -> bool {
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
             | Command::GitLog { .. }
+            | Command::GitStage { .. }
+            | Command::GitStageHunk { .. }
+            | Command::GitCommitStaged { .. }
             | Command::WorktreeMerge { .. }
     )
 }
@@ -392,7 +416,7 @@ mod tests {
     use super::*;
     use apex_core::{AgentProfile, BinaryResolver, ProfileSet, ShellEnvironment, Store};
     use apex_proto::{
-        CommandOutcome, Isolation, Listener, SessionSummary, TerminalSize, UnixTransport,
+        CommandOutcome, DiffScope, Isolation, Listener, SessionSummary, TerminalSize, UnixTransport,
         WorktreeDisposal, connect_unix,
     };
     use std::path::PathBuf;
@@ -861,7 +885,7 @@ mod tests {
         assert!(
             harness
                 .manager
-                .git_diff(harness.project, Some(session.id), "README.md", None)
+                .git_diff(harness.project, Some(session.id), "README.md", None, DiffScope::Both)
                 .await
                 .expect("diff")
                 .contains("+# agent")
@@ -881,11 +905,72 @@ mod tests {
         assert!(
             harness
                 .manager
-                .git_diff(harness.project, None, "README.md", None)
+                .git_diff(harness.project, None, "README.md", None, DiffScope::Both)
                 .await
                 .expect("diff")
                 .contains("+# edited")
         );
+    }
+
+    #[tokio::test]
+    async fn a_partial_commit_leaves_the_rest_alone() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+        std::fs::write(harness.root.path().join("README.md"), "# picked\n").expect("write");
+        std::fs::write(harness.root.path().join("left.txt"), "not this one\n").expect("write");
+
+        harness
+            .manager
+            .git_stage(harness.project, None, vec!["README.md".to_owned()], true)
+            .await
+            .expect("stage");
+
+        let commit = harness
+            .manager
+            .git_commit(harness.project, None, "docs: solo el readme".to_owned())
+            .await
+            .expect("commit");
+        assert_eq!(commit.summary, "docs: solo el readme");
+
+        let shown = harness
+            .manager
+            .git_diff(harness.project, None, "", Some(commit.id), DiffScope::Both)
+            .await
+            .expect("show");
+        assert!(shown.contains("README.md"));
+        assert!(!shown.contains("left.txt"));
+
+        let status = harness.manager.git_status(harness.project, None).await.expect("status");
+        assert_eq!(status.changes.len(), 1);
+        assert_eq!(status.changes[0].path, "left.txt");
+    }
+
+    #[tokio::test]
+    async fn a_worktree_commit_never_touches_the_project() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+        let session = harness
+            .manager
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .await
+            .expect("session");
+        let tree = std::path::PathBuf::from(&session.worktree.expect("worktree").path);
+
+        std::fs::write(tree.join("README.md"), "# from the agent\n").expect("write");
+        harness
+            .manager
+            .git_stage(harness.project, Some(session.id), vec!["README.md".to_owned()], true)
+            .await
+            .expect("stage");
+        harness
+            .manager
+            .git_commit(harness.project, Some(session.id), "feat: agent work".to_owned())
+            .await
+            .expect("commit");
+
+        let project = harness.manager.git_log(harness.project, None, 10).await.expect("log");
+        assert_eq!(project[0].summary, "first");
+        assert!(harness.manager.git_status(harness.project, None).await.expect("status").changes.is_empty());
     }
 
     #[tokio::test]
@@ -907,7 +992,7 @@ mod tests {
 
         let patch = harness
             .manager
-            .git_diff(harness.project, None, "", Some(commits[0].id.clone()))
+            .git_diff(harness.project, None, "", Some(commits[0].id.clone()), DiffScope::Both)
             .await
             .expect("show");
         assert!(patch.contains("+later"));
