@@ -1,3 +1,4 @@
+import cn from "cnfast";
 import type { ComponentChildren } from "preact";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
@@ -14,18 +15,24 @@ export function ToolbarButton({
   label,
   icon,
   onClick,
+  pressed,
 }: {
   label: string;
   icon: IconName;
   onClick: () => void;
+  pressed?: boolean;
 }) {
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
+      aria-pressed={pressed}
       onClick={onClick}
-      class="flex size-6 items-center justify-center rounded text-faint transition hover:bg-raised hover:text-text active:scale-90"
+      class={cn(
+        "flex size-6 items-center justify-center rounded transition hover:bg-raised hover:text-text active:scale-90",
+        pressed ? "text-text" : "text-faint",
+      )}
     >
       <Icon name={icon} />
     </button>

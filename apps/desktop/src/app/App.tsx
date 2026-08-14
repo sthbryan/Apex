@@ -22,7 +22,7 @@ import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
-import { closeDock, dockOpen, toggleSettings } from "@/features/settings/state";
+import { closeDock, dockOpen, toggleDock, toggleSettings } from "@/features/settings/state";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
@@ -116,7 +116,20 @@ export function App() {
 
   return (
     <div class="flex h-full flex-col bg-bg text-text">
-      <TitleBar title={t("app.name")} lead={<ProjectPicker />}>
+      <TitleBar
+        title={t("app.name")}
+        lead={
+          <>
+            <ToolbarButton
+              label={t("dock.toggle")}
+              icon="panel"
+              pressed={dockOpen.value}
+              onClick={toggleDock}
+            />
+            <ProjectPicker />
+          </>
+        }
+      >
         <Toolbar
           status={
             status.value === "ready" ? `apexd ${daemonVersion.value ?? ""}` : t("status.connecting")

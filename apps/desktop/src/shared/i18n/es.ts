@@ -14,6 +14,7 @@ export const es: Messages = {
     retry: "Reintentar",
   },
   dock: {
+    toggle: "Mostrar u ocultar la barra lateral",
     pinned: "Fijo",
     floating: "Flotante",
     sessions: "Sesiones",

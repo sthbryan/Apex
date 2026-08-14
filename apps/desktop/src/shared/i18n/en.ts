@@ -12,6 +12,7 @@ export const en = {
     retry: "Retry",
   },
   dock: {
+    toggle: "Toggle sidebar",
     pinned: "Pinned",
     floating: "Floating",
     sessions: "Sessions",
