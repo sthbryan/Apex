@@ -15,7 +15,7 @@ export function TabBar({ tabs, sessions }: Props) {
   }
 
   return (
-    <div class="flex h-8 shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface">
+    <div class="flex h-8 shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface min-h-8.5">
       {tabs.map((tab) => {
         const active = tab.id === activeTabId.value;
         return (
