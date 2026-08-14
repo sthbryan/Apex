@@ -43,6 +43,7 @@
   --animate-dock-out: apex-slide-out var(--apex-dock) var(--apex-ease) both;
   --animate-dock-veil-in: apex-veil-in var(--apex-dock) var(--apex-ease) both;
   --animate-dock-veil-out: apex-veil-out var(--apex-dock) var(--apex-ease) both;
+  --animate-dock-view: apex-dock-view var(--apex-view) var(--apex-ease) both;
   --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
 
   @keyframes apex-veil-in {
@@ -115,6 +116,12 @@
   @keyframes apex-push-out {
     to {
       margin-left: calc(var(--apex-dock-width) * -1);
+    }
+  }
+  @keyframes apex-dock-view {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
     }
   }
   @keyframes apex-breathe {

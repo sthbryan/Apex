@@ -60,8 +60,10 @@ export function Dock({ header, floating = false }: Props) {
 
       <DockResize />
 
-      <div class="min-h-0 flex-1">
-        <View />
+      <div class="min-h-0 flex-1 overflow-hidden">
+        <div key={active} class="h-full animate-dock-view">
+          <View />
+        </div>
       </div>
     </aside>
   );

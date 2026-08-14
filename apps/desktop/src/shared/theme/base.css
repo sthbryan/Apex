@@ -45,6 +45,7 @@ code {
     --apex-swift: 1ms;
     --apex-exit: 1ms;
     --apex-dock: 1ms;
+    --apex-view: 1ms;
   }
 
   *,
