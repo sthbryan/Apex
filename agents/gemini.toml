@@ -6,3 +6,10 @@ acp_args = ["--experimental-acp"]
 
 [state_patterns]
 blocked = ["\\(y/n\\)", "Apply this change"]
+
+[quota]
+source = "command"
+format = "codexbar"
+command = "codexbar"
+args = ["usage", "--json", "--provider", "gemini"]
+cache_ttl_secs = 900

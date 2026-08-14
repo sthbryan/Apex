@@ -15,5 +15,8 @@ path = "~/.claude/projects/{project_slug}"
 resume_args = ["--resume", "{session_id}"]
 
 [quota]
-provider = "anthropic_oauth"
+source = "command"
+format = "codexbar"
+command = "codexbar"
+args = ["usage", "--json", "--provider", "claude"]
 cache_ttl_secs = 900

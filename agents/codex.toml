@@ -6,3 +6,10 @@ acp_args = ["@zed-industries/codex-acp"]
 
 [state_patterns]
 blocked = ["\\(y/n\\)", "Allow command"]
+
+[quota]
+source = "command"
+format = "codexbar"
+command = "codexbar"
+args = ["usage", "--json", "--provider", "codex"]
+cache_ttl_secs = 900

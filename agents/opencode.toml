@@ -4,3 +4,10 @@ mode = "pty"
 
 [state_patterns]
 blocked = ["\\(y/n\\)"]
+
+[quota]
+source = "command"
+format = "codexbar"
+command = "codexbar"
+args = ["usage", "--json", "--provider", "opencode"]
+cache_ttl_secs = 900

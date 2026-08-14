@@ -63,9 +63,25 @@ pub struct HistoryConfig {
     pub resume_args: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum QuotaSource {
+    Command,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum QuotaFormat {
+    Codexbar,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct QuotaConfig {
-    pub provider: String,
+    pub source: QuotaSource,
+    pub format: QuotaFormat,
+    pub command: String,
+    #[serde(default)]
+    pub args: Vec<String>,
     #[serde(default = "default_quota_ttl")]
     pub cache_ttl_secs: u64,
 }

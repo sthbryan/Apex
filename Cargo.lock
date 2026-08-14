@@ -123,6 +123,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "apex-quota"
+version = "0.1.0"
+dependencies = [
+ "apex-core",
+ "serde_json",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "apexd"
 version = "0.1.0"
 dependencies = [
