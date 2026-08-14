@@ -1,6 +1,6 @@
 import cn from "cnfast";
 import { useState } from "preact/hooks";
-
+import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { GitChange } from "@/bindings/GitChange";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitTarget } from "@/bindings/GitTarget";
@@ -51,7 +51,7 @@ export function GitPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <div class="flex shrink-0 items-center gap-3 px-2 py-1">
+      <PanelHeader title={t("dock.git")}>
         {(["changes", "history"] as const).map((tab) => (
           <button
             key={tab}
@@ -74,11 +74,11 @@ export function GitPanel() {
               void readLog();
             }
           }}
-          class="ml-auto shrink-0 text-faint transition-colors hover:text-text"
+          class="shrink-0 text-faint transition-colors hover:text-text"
         >
           <Icon name="refresh" size={12} />
         </button>
-      </div>
+      </PanelHeader>
 
       <ul class="shrink-0 border-b border-border pb-1">
         <Target
