@@ -8,6 +8,7 @@ import { waiting } from "../notifications";
 import { switchTo } from "../projects";
 import { closeSession } from "../sessions";
 import { activeSessionId, dropSession, focusSession, openInNewTab } from "../shell/workspace";
+import { cn } from "cnfast";
 
 type Props = {
   sessions: SessionSummary[];
@@ -128,7 +129,7 @@ function Elsewhere({ sessions, projects }: { sessions: SessionSummary[]; project
         onClick={() => setOpen((shown) => !shown)}
         class="mb-1 flex w-full items-center gap-2 px-1 uppercase tracking-wider text-faint hover:text-muted"
       >
-        <Icon name="chevron" size={12} class={`transition-transform ${open ? "" : "-rotate-90"}`} />
+        <Icon name="chevron" size={12} class={cn("transition-transform", open ? "" : "-rotate-90")} />
         <span>{t("projects.elsewhere")}</span>
         <span class="ml-auto normal-case">
           {waiting > 0 ? <span class="text-state-blocked">{waiting}</span> : sessions.length}
@@ -170,9 +171,10 @@ function Row({ session }: { session: SessionSummary }) {
 
   return (
     <li
-      class={`group flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised ${
+      class={cn(
+        "group flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised",
         activeSessionId.value === session.id ? "bg-raised" : ""
-      }`}
+      )}
     >
       <button
         type="button"
@@ -181,9 +183,10 @@ function Row({ session }: { session: SessionSummary }) {
             openInNewTab(session);
           }
         }}
-        class={`flex min-w-0 flex-1 items-center gap-2 py-1 text-left ${
+        class={cn(
+          "flex min-w-0 flex-1 items-center gap-2 py-1 text-left",
           finished ? "text-muted" : ""
-        }`}
+        )}
       >
         <StateDot session={session} />
         <span class="truncate">{session.title}</span>
@@ -212,7 +215,7 @@ function StateDot({ session }: { session: SessionSummary }) {
       {live && session.state === "working" && (
         <span class="absolute inset-0 animate-ping rounded-full bg-state-working opacity-60" />
       )}
-      <span class={`relative size-2 rounded-full ${dotStyle(session)}`} />
+      <span class={cn("relative size-2 rounded-full", dotStyle(session))} />
     </span>
   );
 }

@@ -1,3 +1,4 @@
+import cn from "cnfast";
 import type { MetricsSnapshot } from "../bindings/MetricsSnapshot";
 import { Icon, type IconName } from "../components/Icon";
 import { t } from "../i18n";
@@ -98,10 +99,13 @@ function Meter({
   return (
     <div class="flex items-center gap-2 py-0.5" title={label}>
       <Icon name={icon} class="shrink-0 text-muted" />
-      <span class={`w-9 shrink-0 text-right ${toneText(clamped)}`}>{clamped.toFixed(0)}%</span>
+      <span class={cn("w-9 shrink-0 text-right", toneText(clamped))}>{clamped.toFixed(0)}%</span>
       <span class="h-1 flex-1 overflow-hidden rounded-full bg-border">
         <span
-          class={`block h-full origin-left rounded-full transition-transform duration-500 ease-out ${toneBar(clamped)}`}
+          class={cn(
+            "block h-full origin-left rounded-full transition-transform duration-500 ease-out",
+            toneBar(clamped)
+          )}
           style={{ transform: `scaleX(${clamped / 100})` }}
         />
       </span>
