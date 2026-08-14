@@ -1,3 +1,4 @@
+import { useSignalEffect } from "@preact/signals";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { useKeymap } from "@/app/keymap";
@@ -61,16 +62,25 @@ export function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!platform.value) {
+  useSignalEffect(() => {
+    const platformName = platform.value;
+    if (!platformName) {
       return;
     }
+    let cancelled = false;
     let dispose: (() => void) | undefined;
-    void watchFullscreen(platform.value).then((stop) => {
-      dispose = stop;
+    void watchFullscreen(platformName).then((stop) => {
+      if (cancelled) {
+        stop();
+      } else {
+        dispose = stop;
+      }
     });
-    return () => dispose?.();
-  }, []);
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  });
 
   useEffect(() => {
     if (paletteOpen) {
