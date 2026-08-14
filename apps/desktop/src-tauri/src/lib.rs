@@ -32,6 +32,12 @@ fn host_platform() -> &'static str {
 }
 
 #[tauri::command]
+fn set_badge(window: tauri::WebviewWindow, count: u32) -> Answer<()> {
+    let value = (count > 0).then_some(i64::from(count));
+    window.set_badge_count(value).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 async fn subscribe_output(
     state: tauri::State<'_, AppState>,
     channel: Channel<InvokeResponseBody>,
@@ -156,6 +162,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             let paths = ApexPaths::discover()?;
             let daemon = tauri::async_runtime::block_on(DaemonClient::attach(&paths.socket))?;
@@ -165,6 +172,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             daemon_version,
             host_platform,
+            set_badge,
             subscribe_output,
             subscribe_events,
             list_agents,
