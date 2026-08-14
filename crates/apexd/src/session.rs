@@ -401,7 +401,7 @@ mod tests {
         async fn create_shell(&mut self, project: Uuid) -> SessionSummary {
             let reply = self
                 .request(Command::SessionCreate {
-                    project: project,
+                    project,
                     agent: "sh".into(),
                     cwd: Some("/tmp".into()),
                     size: TerminalSize { rows: 24, cols: 80 },

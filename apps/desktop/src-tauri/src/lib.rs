@@ -3,7 +3,9 @@ mod client;
 use std::sync::Arc;
 
 use apex_core::ApexPaths;
-use apex_proto::{AgentSummary, Command, Event, Reply, SessionSummary, TerminalSize};
+use apex_proto::{
+    AgentSummary, Command, Event, ProjectSummary, Reply, SessionSummary, TerminalSize,
+};
 use client::DaemonClient;
 use tauri::Manager;
 use tauri::ipc::{Channel, InvokeResponseBody};
@@ -64,15 +66,50 @@ async fn list_sessions(state: tauri::State<'_, AppState>) -> Answer<Vec<SessionS
 }
 
 #[tauri::command]
+async fn list_projects(state: tauri::State<'_, AppState>) -> Answer<Vec<ProjectSummary>> {
+    match state.daemon.request(Command::ListProjects).await.map_err(failed)? {
+        Reply::Projects { projects } => Ok(projects),
+        other => Err(format!("respuesta inesperada: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn open_project(state: tauri::State<'_, AppState>, root: String) -> Answer<ProjectSummary> {
+    match state.daemon.request(Command::ProjectOpen { root }).await.map_err(failed)? {
+        Reply::Project { project } => Ok(project),
+        other => Err(format!("respuesta inesperada: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn save_layout(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    payload: String,
+) -> Answer<()> {
+    state.daemon.request(Command::LayoutSave { project, payload }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn load_layout(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Option<String>> {
+    match state.daemon.request(Command::LayoutLoad { project }).await.map_err(failed)? {
+        Reply::Layout { payload } => Ok(payload),
+        other => Err(format!("respuesta inesperada: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn create_session(
     state: tauri::State<'_, AppState>,
+    project: Uuid,
     agent: String,
     cwd: Option<String>,
     size: TerminalSize,
 ) -> Answer<SessionSummary> {
     match state
         .daemon
-        .request(Command::SessionCreate { agent, cwd, size })
+        .request(Command::SessionCreate { project, agent, cwd, size })
         .await
         .map_err(failed)?
     {
@@ -118,6 +155,7 @@ pub fn run() {
         .init();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let paths = ApexPaths::discover()?;
             let daemon = tauri::async_runtime::block_on(DaemonClient::attach(&paths.socket))?;
@@ -131,6 +169,10 @@ pub fn run() {
             subscribe_events,
             list_agents,
             list_sessions,
+            list_projects,
+            open_project,
+            save_layout,
+            load_layout,
             create_session,
             attach_session,
             send_input,
