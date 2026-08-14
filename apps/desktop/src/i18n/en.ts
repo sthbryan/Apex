@@ -33,10 +33,21 @@ export const en = {
   "resources.refresh": "Refresh now",
   "resources.kill": "Kill process {pid}",
 
+  "settings.title": "Settings",
+  "settings.close": "Close settings",
+  "settings.theme": "Theme",
+  "settings.themeHint": "Follows your system.",
+  "settings.language": "Language",
+  "settings.languageHint": "Applies instantly.",
+  "settings.agentsHint": "Agents are TOML files in {path} — drop one in to add a CLI.",
+
+  "theme.system": "System",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+
+  "usage.overPace": "over pace",
+
   "toolbar.newSession": "New session",
-  "toolbar.theme.system": "Theme: system",
-  "toolbar.theme.light": "Theme: light",
-  "toolbar.theme.dark": "Theme: dark",
 
   "notify.blocked": "An agent is waiting for you",
   "notify.done": "An agent finished",
@@ -61,6 +72,7 @@ export const en = {
   "palette.splitDown": "Split down",
   "palette.closePane": "Close pane",
   "palette.closeTab": "Close tab",
+  "palette.settings": "Settings",
 
   "error.unsupported_version": "The daemon speaks a different protocol version.",
   "error.unauthorized": "This client is not allowed to run that command.",

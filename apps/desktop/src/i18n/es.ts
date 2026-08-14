@@ -35,10 +35,21 @@ export const es: Messages = {
   "resources.refresh": "Actualizar ahora",
   "resources.kill": "Matar el proceso {pid}",
 
+  "settings.title": "Preferencias",
+  "settings.close": "Cerrar preferencias",
+  "settings.theme": "Tema",
+  "settings.themeHint": "Sigue al sistema.",
+  "settings.language": "Idioma",
+  "settings.languageHint": "Se aplica al momento.",
+  "settings.agentsHint": "Los agentes son archivos TOML en {path} — suelta uno para añadir un CLI.",
+
+  "theme.system": "Sistema",
+  "theme.light": "Claro",
+  "theme.dark": "Oscuro",
+
+  "usage.overPace": "acelerado",
+
   "toolbar.newSession": "Nueva sesión",
-  "toolbar.theme.system": "Tema: sistema",
-  "toolbar.theme.light": "Tema: claro",
-  "toolbar.theme.dark": "Tema: oscuro",
 
   "notify.blocked": "Un agente te está esperando",
   "notify.done": "Un agente terminó",
@@ -63,6 +74,7 @@ export const es: Messages = {
   "palette.splitDown": "Dividir abajo",
   "palette.closePane": "Cerrar panel",
   "palette.closeTab": "Cerrar pestaña",
+  "palette.settings": "Preferencias",
 
   "error.unsupported_version": "El daemon habla otra versión del protocolo.",
   "error.unauthorized": "Este cliente no puede ejecutar ese comando.",
