@@ -21,9 +21,7 @@ export async function startMetrics(): Promise<() => void> {
       try {
         const snapshot = await invoke<MetricsSnapshot>("read_metrics", { refreshQuota });
         metrics.value = snapshot;
-      } catch {
-        // el daemon puede estar reiniciando; el siguiente tick reintenta
-      }
+      } catch {}
     }
     timer = setTimeout(() => void tick(false), POLL_MS);
   };

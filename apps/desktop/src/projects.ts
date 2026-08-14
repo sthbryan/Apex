@@ -108,7 +108,5 @@ function readStored(): string | null {
 function writeStored(id: string): void {
   try {
     localStorage.setItem(STORAGE_KEY, id);
-  } catch {
-    // el almacenamiento puede estar bloqueado; la eleccion vive en memoria
-  }
+  } catch {}
 }

@@ -5,7 +5,7 @@ import "./theme/tokens.css";
 
 const root = document.getElementById("root");
 if (!root) {
-  throw new Error("falta el nodo #root");
+  throw new Error("missing #root node");
 }
 
 render(<App />, root);

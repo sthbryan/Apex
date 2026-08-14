@@ -43,7 +43,7 @@ pub enum TransportError {
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
 
-    #[error("frame malformada: {0}")]
+    #[error("malformed frame: {0}")]
     MalformedFrame(String),
 
     #[error("json: {0}")]

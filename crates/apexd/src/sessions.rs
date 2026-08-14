@@ -106,7 +106,7 @@ impl SessionManager {
     pub async fn open_project(&self, root: &str) -> Result<ProjectSummary> {
         let path = PathBuf::from(root);
         if !path.is_dir() {
-            bail!("{root} no es una carpeta")
+            bail!("{root} is not a folder")
         }
         let canonical = path.canonicalize().unwrap_or(path);
 
@@ -184,7 +184,7 @@ impl SessionManager {
     pub async fn kill_process(&self, pid: u32) -> Result<()> {
         let sampler = self.sampler.lock().await;
         if !sampler.kill(pid) {
-            bail!("no se pudo terminar el proceso {pid}")
+            bail!("failed to kill process {pid}")
         }
         Ok(())
     }
@@ -266,9 +266,9 @@ impl SessionManager {
         let profile = self
             .profiles
             .get(agent)
-            .with_context(|| format!("no existe el perfil {agent}"))?;
+            .with_context(|| format!("unknown profile {agent}"))?;
         let args = history::resume_args(profile, session_id)
-            .with_context(|| format!("{agent} no sabe reanudar sesiones"))?;
+            .with_context(|| format!("{agent} cannot resume sessions"))?;
 
         self.spawn(project, agent, None, size, Some(args)).await
     }
@@ -295,7 +295,7 @@ impl SessionManager {
             .profiles
             .get(agent)
             .cloned()
-            .with_context(|| format!("no existe el perfil {agent}"))?;
+            .with_context(|| format!("unknown profile {agent}"))?;
         let binary = self.resolve_binary(&profile).await?;
         let project_root = self.project_root(project).await?;
         let cwd = cwd.map(PathBuf::from).unwrap_or_else(|| PathBuf::from(project_root));
@@ -353,7 +353,7 @@ impl SessionManager {
 
     pub async fn close(&self, id: Uuid) -> Result<()> {
         let Some(session) = self.sessions.write().await.remove(&id) else {
-            bail!("la sesion {id} no existe")
+            bail!("session {id} does not exist")
         };
         let _ = session.process.kill();
         let store = self.store.lock().await;
@@ -366,19 +366,19 @@ impl SessionManager {
         let store = self.store.lock().await;
         Ok(store
             .project(project)?
-            .with_context(|| format!("no existe el proyecto {project}"))?
+            .with_context(|| format!("unknown project {project}"))?
             .root)
     }
 
     async fn require(&self, id: Uuid) -> Result<Arc<LiveSession>> {
-        self.get(id).await.with_context(|| format!("la sesion {id} no existe"))
+        self.get(id).await.with_context(|| format!("session {id} does not exist"))
     }
 
     async fn resolve_binary(&self, profile: &AgentProfile) -> Result<PathBuf> {
         let mut resolver = self.resolver.lock().await;
         resolver
             .resolve(&profile.command)
-            .with_context(|| format!("no se encontro \"{}\" en el PATH", profile.command))
+            .with_context(|| format!("\"{}\" was not found in PATH", profile.command))
     }
 
     async fn next_title(&self, agent: &str) -> String {

@@ -68,7 +68,7 @@ impl PtyProcess {
             pixel_width: 0,
             pixel_height: 0,
         };
-        let pair = native_pty_system().openpty(size).context("abriendo el pty")?;
+        let pair = native_pty_system().openpty(size).context("opening pty")?;
 
         let mut builder = CommandBuilder::new(&spec.command);
         builder.args(&spec.args);
@@ -83,13 +83,13 @@ impl PtyProcess {
         let mut child = pair
             .slave
             .spawn_command(builder)
-            .with_context(|| format!("lanzando {}", spec.command.display()))?;
+            .with_context(|| format!("spawning {}", spec.command.display()))?;
         drop(pair.slave);
 
         let pid = child.process_id();
         let killer = child.clone_killer();
-        let reader = pair.master.try_clone_reader().context("clonando el lector del pty")?;
-        let writer = pair.master.take_writer().context("tomando el escritor del pty")?;
+        let reader = pair.master.try_clone_reader().context("cloning pty reader")?;
+        let writer = pair.master.take_writer().context("taking pty writer")?;
 
         let buffer = Arc::new(Mutex::new(RingBuffer::new(DEFAULT_CAPACITY)));
         let (output, _) = broadcast::channel(OUTPUT_CHANNEL_DEPTH);
@@ -119,11 +119,11 @@ impl PtyProcess {
     }
 
     pub fn write(&self, data: Bytes) -> Result<()> {
-        self.input.send(data).context("el pty ya no acepta entrada")
+        self.input.send(data).context("pty no longer accepts input")
     }
 
     pub fn resize(&self, rows: u16, cols: u16) -> Result<()> {
-        let master = self.master.lock().expect("master envenenado");
+        let master = self.master.lock().expect("master poisoned");
         master
             .resize(PtySize {
                 rows: rows.max(1),
@@ -131,7 +131,7 @@ impl PtyProcess {
                 pixel_width: 0,
                 pixel_height: 0,
             })
-            .context("redimensionando el pty")
+            .context("resizing pty")
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<Bytes> {
@@ -139,7 +139,7 @@ impl PtyProcess {
     }
 
     pub fn snapshot(&self) -> Bytes {
-        self.buffer.lock().expect("buffer envenenado").snapshot()
+        self.buffer.lock().expect("buffer poisoned").snapshot()
     }
 
     pub fn exit_status(&self) -> Option<ExitStatus> {
@@ -159,8 +159,8 @@ impl PtyProcess {
     }
 
     pub fn kill(&self) -> Result<()> {
-        let mut killer = self.killer.lock().expect("killer envenenado");
-        killer.kill().context("matando el proceso del pty")
+        let mut killer = self.killer.lock().expect("killer poisoned");
+        killer.kill().context("killing pty process")
     }
 }
 
@@ -176,7 +176,7 @@ fn spawn_reader(
                 Ok(0) | Err(_) => return,
                 Ok(read) => {
                     let slice = &chunk[..read];
-                    buffer.lock().expect("buffer envenenado").push(slice);
+                    buffer.lock().expect("buffer poisoned").push(slice);
                     let _ = output.send(Bytes::copy_from_slice(slice));
                 }
             }
@@ -219,7 +219,7 @@ mod tests {
         .await;
         found.unwrap_or_else(|_| {
             panic!(
-                "nunca aparecio {needle:?}; se vio {:?}",
+                "never saw {needle:?}; got {:?}",
                 String::from_utf8_lossy(&process.snapshot())
             )
         })
@@ -227,37 +227,37 @@ mod tests {
 
     #[tokio::test]
     async fn output_reaches_the_ring_buffer() {
-        let process = PtyProcess::spawn(shell("echo hola-apex")).expect("spawn");
-        wait_for(&process, "hola-apex").await;
+        let process = PtyProcess::spawn(shell("echo hello-apex")).expect("spawn");
+        wait_for(&process, "hello-apex").await;
         assert_eq!(process.wait().await.code, 0);
     }
 
     #[tokio::test]
     async fn subscribers_receive_the_output_stream() {
-        let process = PtyProcess::spawn(shell("sleep 0.2; echo por-el-canal")).expect("spawn");
+        let process = PtyProcess::spawn(shell("sleep 0.2; echo over-the-channel")).expect("spawn");
         let mut stream = process.subscribe();
 
         let seen = timeout(Duration::from_secs(10), async {
             let mut collected = Vec::new();
             while let Ok(chunk) = stream.recv().await {
                 collected.extend_from_slice(&chunk);
-                if String::from_utf8_lossy(&collected).contains("por-el-canal") {
+                if String::from_utf8_lossy(&collected).contains("over-the-channel") {
                     return collected;
                 }
             }
             collected
         })
         .await
-        .expect("el canal nunca entrego la salida");
+        .expect("channel never delivered output");
 
-        assert!(String::from_utf8_lossy(&seen).contains("por-el-canal"));
+        assert!(String::from_utf8_lossy(&seen).contains("over-the-channel"));
     }
 
     #[tokio::test]
     async fn input_written_to_the_pty_is_processed() {
-        let process = PtyProcess::spawn(shell("read linea; echo recibi:$linea")).expect("spawn");
+        let process = PtyProcess::spawn(shell("read line; echo got:$line")).expect("spawn");
         process.write(Bytes::from_static(b"ping\n")).expect("write");
-        wait_for(&process, "recibi:ping").await;
+        wait_for(&process, "got:ping").await;
     }
 
     #[tokio::test]
@@ -287,7 +287,7 @@ mod tests {
     async fn killing_ends_a_long_running_process() {
         let process = PtyProcess::spawn(shell("sleep 30")).expect("spawn");
         process.kill().expect("kill");
-        let status = timeout(Duration::from_secs(10), process.wait()).await.expect("no murio");
+        let status = timeout(Duration::from_secs(10), process.wait()).await.expect("did not die");
         assert_ne!(status.code, 0);
     }
 
@@ -302,38 +302,38 @@ mod tests {
         };
 
         let process =
-            PtyProcess::spawn(shell(&format!("echo fuga:[${{{candidate}}}]"))).expect("spawn");
-        let text = wait_for(&process, "fuga:").await;
-        assert!(text.contains("fuga:[]"), "se filtro {candidate}: {text}");
+            PtyProcess::spawn(shell(&format!("echo leak:[${{{candidate}}}]"))).expect("spawn");
+        let text = wait_for(&process, "leak:").await;
+        assert!(text.contains("leak:[]"), "leaked {candidate}: {text}");
     }
 
     #[tokio::test]
     async fn the_spec_environment_reaches_the_child() {
-        let mut spec = shell("echo valor:[${APEX_INYECTADA}]");
-        spec.env.insert("APEX_INYECTADA".into(), "presente".into());
+        let mut spec = shell("echo value:[${APEX_INJECTED}]");
+        spec.env.insert("APEX_INJECTED".into(), "present".into());
         let process = PtyProcess::spawn(spec).expect("spawn");
-        let text = wait_for(&process, "valor:").await;
-        assert!(text.contains("valor:[presente]"), "no llego la variable: {text}");
+        let text = wait_for(&process, "value:").await;
+        assert!(text.contains("value:[present]"), "variable did not arrive: {text}");
     }
 
     #[tokio::test]
     async fn a_spawned_process_reports_its_pid() {
         let process = PtyProcess::spawn(shell("echo $$; sleep 5")).expect("spawn");
-        let pid = process.pid().expect("sin pid");
+        let pid = process.pid().expect("missing pid");
         let text = wait_for(&process, &pid.to_string()).await;
-        assert!(text.contains(&pid.to_string()), "el pid no coincide: {text}");
+        assert!(text.contains(&pid.to_string()), "pid mismatch: {text}");
     }
 
     #[tokio::test]
     async fn spawning_a_missing_binary_fails() {
-        let spec = PtySpec::new("/definitivamente/no/existe", "/tmp");
+        let spec = PtySpec::new("/definitely/does/not/exist", "/tmp");
         assert!(PtyProcess::spawn(spec).is_err());
     }
 
     #[tokio::test]
     async fn massive_output_does_not_grow_the_buffer_past_capacity() {
         let process =
-            PtyProcess::spawn(shell("for i in $(seq 1 20000); do echo linea-$i; done")).expect("spawn");
+            PtyProcess::spawn(shell("for i in $(seq 1 20000); do echo line-$i; done")).expect("spawn");
         process.wait().await;
         assert!(process.snapshot().len() <= DEFAULT_CAPACITY);
     }

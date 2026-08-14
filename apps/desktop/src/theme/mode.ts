@@ -14,9 +14,7 @@ export function setThemeMode(mode: ThemeMode): void {
   applyThemeMode(mode);
   try {
     localStorage.setItem(STORAGE_KEY, mode);
-  } catch {
-    // el almacenamiento puede estar bloqueado; la eleccion vive en memoria
-  }
+  } catch {}
 }
 
 export function cycleThemeMode(): void {

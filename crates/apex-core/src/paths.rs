@@ -15,7 +15,7 @@ pub struct ApexPaths {
 impl ApexPaths {
     pub fn discover() -> Result<Self> {
         let home = directories::UserDirs::new()
-            .context("no se pudo determinar el directorio home")?
+            .context("could not determine the home directory")?
             .home_dir()
             .to_path_buf();
         Ok(Self::rooted_at(&home))
@@ -38,12 +38,12 @@ impl ApexPaths {
 
     pub fn ensure_dirs(&self) -> Result<()> {
         std::fs::create_dir_all(&self.data_dir)
-            .with_context(|| format!("creando {}", self.data_dir.display()))?;
+            .with_context(|| format!("creating {}", self.data_dir.display()))?;
         std::fs::create_dir_all(self.agents_dir())
-            .with_context(|| format!("creando {}", self.agents_dir().display()))?;
+            .with_context(|| format!("creating {}", self.agents_dir().display()))?;
         if let Some(parent) = self.socket.parent() {
             std::fs::create_dir_all(parent)
-                .with_context(|| format!("creando {}", parent.display()))?;
+                .with_context(|| format!("creating {}", parent.display()))?;
         }
         Ok(())
     }

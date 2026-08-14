@@ -64,10 +64,10 @@ mod tests {
     #[test]
     fn a_buffer_under_capacity_replays_everything() {
         let mut ring = RingBuffer::new(64);
-        ring.push(b"hola ");
-        ring.push(b"mundo");
-        assert_eq!(ring.snapshot(), Bytes::from_static(b"hola mundo"));
-        assert_eq!(ring.len(), 10);
+        ring.push(b"hello ");
+        ring.push(b"world");
+        assert_eq!(ring.snapshot(), Bytes::from_static(b"hello world"));
+        assert_eq!(ring.len(), 11);
     }
 
     #[test]
@@ -79,10 +79,10 @@ mod tests {
     #[test]
     fn overflow_drops_the_oldest_bytes_and_starts_at_a_line_boundary() {
         let mut ring = RingBuffer::new(16);
-        ring.push(b"primera linea\nsegunda linea\ntercera");
+        ring.push(b"first line\nsecond line\nthird");
         let snapshot = ring.snapshot();
         assert!(snapshot.len() <= 16);
-        assert!(!snapshot.contains(&b'\n') || snapshot.starts_with(b"tercera"));
+        assert!(!snapshot.contains(&b'\n') || snapshot.starts_with(b"third"));
     }
 
     #[test]
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn a_buffer_that_never_overflowed_keeps_its_leading_line() {
         let mut ring = RingBuffer::new(64);
-        ring.push(b"primera\nsegunda");
-        assert_eq!(ring.snapshot(), Bytes::from_static(b"primera\nsegunda"));
+        ring.push(b"first\nsecond");
+        assert_eq!(ring.snapshot(), Bytes::from_static(b"first\nsecond"));
     }
 }

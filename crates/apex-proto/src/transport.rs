@@ -174,7 +174,7 @@ mod tests {
         let server = tokio::spawn(async move {
             let (stream, peer) = transport.accept().await.expect("accept");
             let mut connection = Connection::new(stream, peer);
-            let frame = connection.recv().await.expect("frame").expect("sin error");
+            let frame = connection.recv().await.expect("frame").expect("no error");
             let message: ClientMessage = frame.parse_control().expect("parse");
             assert_eq!(
                 message,
@@ -191,7 +191,7 @@ mod tests {
             .send_control(&ClientMessage::Request { id: RequestId(1), command: Command::Ping })
             .await
             .expect("send");
-        let frame = client.recv().await.expect("frame").expect("sin error");
+        let frame = client.recv().await.expect("frame").expect("no error");
         let reply: ServerMessage = frame.parse_control().expect("parse");
         assert_eq!(reply, ServerMessage::ok(RequestId(1), Reply::Pong));
 

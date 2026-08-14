@@ -40,7 +40,7 @@ mod tests {
 
     #[test]
     fn output_without_the_key_yields_nothing() {
-        assert_eq!(parse_utilization("sin nada util"), None);
+        assert_eq!(parse_utilization("nothing useful"), None);
         assert_eq!(parse_utilization(""), None);
     }
 

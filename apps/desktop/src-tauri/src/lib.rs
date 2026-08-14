@@ -60,7 +60,7 @@ async fn subscribe_events(
 async fn list_agents(state: tauri::State<'_, AppState>) -> Answer<Vec<AgentSummary>> {
     match state.daemon.request(Command::ListAgents).await.map_err(failed)? {
         Reply::Agents { agents } => Ok(agents),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -68,7 +68,7 @@ async fn list_agents(state: tauri::State<'_, AppState>) -> Answer<Vec<AgentSumma
 async fn list_sessions(state: tauri::State<'_, AppState>) -> Answer<Vec<SessionSummary>> {
     match state.daemon.request(Command::ListSessions).await.map_err(failed)? {
         Reply::Sessions { sessions } => Ok(sessions),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -76,7 +76,7 @@ async fn list_sessions(state: tauri::State<'_, AppState>) -> Answer<Vec<SessionS
 async fn list_projects(state: tauri::State<'_, AppState>) -> Answer<Vec<ProjectSummary>> {
     match state.daemon.request(Command::ListProjects).await.map_err(failed)? {
         Reply::Projects { projects } => Ok(projects),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -84,7 +84,7 @@ async fn list_projects(state: tauri::State<'_, AppState>) -> Answer<Vec<ProjectS
 async fn open_project(state: tauri::State<'_, AppState>, root: String) -> Answer<ProjectSummary> {
     match state.daemon.request(Command::ProjectOpen { root }).await.map_err(failed)? {
         Reply::Project { project } => Ok(project),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -102,7 +102,7 @@ async fn save_layout(
 async fn load_layout(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Option<String>> {
     match state.daemon.request(Command::LayoutLoad { project }).await.map_err(failed)? {
         Reply::Layout { payload } => Ok(payload),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -113,7 +113,7 @@ async fn read_metrics(
 ) -> Answer<MetricsSnapshot> {
     match state.daemon.request(Command::ReadMetrics { refresh_quota }).await.map_err(failed)? {
         Reply::Metrics { snapshot } => Ok(snapshot),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -130,7 +130,7 @@ async fn list_history(
 ) -> Answer<Vec<HistoryEntry>> {
     match state.daemon.request(Command::ListHistory { project }).await.map_err(failed)? {
         Reply::History { entries } => Ok(entries),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -149,7 +149,7 @@ async fn resume_session(
         .map_err(failed)?
     {
         Reply::Session { session } => Ok(session),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -168,7 +168,7 @@ async fn create_session(
         .map_err(failed)?
     {
         Reply::Session { session } => Ok(session),
-        other => Err(format!("respuesta inesperada: {other:?}")),
+        other => Err(format!("unexpected reply: {other:?}")),
     }
 }
 
@@ -240,5 +240,5 @@ pub fn run() {
             close_session
         ])
         .run(tauri::generate_context!())
-        .expect("no se pudo arrancar Apex");
+        .expect("failed to start Apex");
 }

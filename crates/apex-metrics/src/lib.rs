@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn the_system_reports_plausible_totals() {
         let usage = sampler().system_usage();
-        assert!(usage.memory_total > 0, "sin memoria total");
+        assert!(usage.memory_total > 0, "missing total memory");
         assert!(usage.memory_used > 0 && usage.memory_used <= usage.memory_total);
         assert!(usage.cores >= 1);
         assert!(usage.cpu_percent >= 0.0);
@@ -158,7 +158,7 @@ mod tests {
         assert!(sampler.is_alive(me));
 
         let usage = sampler.tree_usage(me);
-        assert!(usage.memory > 0, "el proceso de test no reporta memoria");
+        assert!(usage.memory > 0, "test process reports no memory");
         assert!(usage.processes.iter().any(|entry| entry.pid == me));
     }
 
@@ -177,7 +177,7 @@ mod tests {
 
         let _ = child.kill();
         let _ = child.wait();
-        assert!(found, "el hijo no aparecio en el arbol del padre");
+        assert!(found, "child did not appear in the parent tree");
     }
 
     #[test]
@@ -202,7 +202,7 @@ mod tests {
         let tree = sampler().tree_usage(std::process::id());
         assert!(
             tree.processes.windows(2).all(|pair| pair[0].memory >= pair[1].memory),
-            "no vinieron ordenados por memoria"
+            "not sorted by memory"
         );
     }
 }

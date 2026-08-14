@@ -25,7 +25,7 @@ impl Frame {
         match self {
             Self::Control(body) => Ok(serde_json::from_slice(body)?),
             Self::Output { .. } => {
-                Err(TransportError::MalformedFrame("se esperaba control".into()))
+                Err(TransportError::MalformedFrame("expected control frame".into()))
             }
         }
     }
@@ -75,19 +75,19 @@ impl Decoder for FrameCodec {
             return Ok(None);
         };
         if payload.is_empty() {
-            return Err(TransportError::MalformedFrame("frame vacia".into()));
+            return Err(TransportError::MalformedFrame("empty frame".into()));
         }
         match payload.get_u8() {
             KIND_CONTROL => Ok(Some(Frame::Control(payload.freeze()))),
             KIND_OUTPUT => {
                 if payload.len() < 16 {
-                    return Err(TransportError::MalformedFrame("output sin session id".into()));
+                    return Err(TransportError::MalformedFrame("output missing session id".into()));
                 }
                 let mut raw = [0u8; 16];
                 payload.copy_to_slice(&mut raw);
                 Ok(Some(Frame::Output { session: Uuid::from_bytes(raw), data: payload.freeze() }))
             }
-            other => Err(TransportError::MalformedFrame(format!("kind desconocida: {other}"))),
+            other => Err(TransportError::MalformedFrame(format!("unknown kind: {other}"))),
         }
     }
 }
@@ -101,7 +101,7 @@ mod tests {
         let mut codec = FrameCodec::default();
         let mut buf = BytesMut::new();
         codec.encode(frame, &mut buf).expect("encode");
-        codec.decode(&mut buf).expect("decode").expect("frame completa")
+        codec.decode(&mut buf).expect("decode").expect("complete frame")
     }
 
     #[test]

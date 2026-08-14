@@ -42,9 +42,7 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
 
   try {
     terminal.loadAddon(new WebglAddon());
-  } catch {
-    // sin WebGL el renderer por defecto sigue funcionando
-  }
+  } catch {}
 
   const stopOutput = onSessionOutput(id, (data) => terminal.write(data));
   const input = terminal.onData((data) => void sendInput(id, data));

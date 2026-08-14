@@ -113,7 +113,7 @@ fn default_quota_ttl() -> u64 {
 
 impl AgentProfile {
     pub fn parse(raw: &str) -> Result<Self> {
-        toml::from_str(raw).context("perfil de agente invalido")
+        toml::from_str(raw).context("invalid agent profile")
     }
 
     pub fn supports_resume(&self) -> bool {
@@ -144,7 +144,7 @@ impl ProfileSet {
         for (name, raw) in BUILTIN_PROFILES {
             profiles.push(
                 AgentProfile::parse(raw)
-                    .with_context(|| format!("perfil embebido {name} invalido"))?,
+                    .with_context(|| format!("invalid builtin profile {name}"))?,
             );
         }
         Ok(Self { profiles })
@@ -169,9 +169,9 @@ impl ProfileSet {
 
         for path in paths {
             let raw = std::fs::read_to_string(&path)
-                .with_context(|| format!("leyendo {}", path.display()))?;
+                .with_context(|| format!("reading {}", path.display()))?;
             let profile = AgentProfile::parse(&raw)
-                .with_context(|| format!("perfil invalido en {}", path.display()))?;
+                .with_context(|| format!("invalid profile in {}", path.display()))?;
             self.upsert(profile);
         }
         Ok(())
@@ -213,16 +213,16 @@ mod tests {
 
     #[test]
     fn every_builtin_profile_parses() {
-        let set = ProfileSet::builtin().expect("perfiles embebidos");
+        let set = ProfileSet::builtin().expect("builtin profiles");
         assert_eq!(set.len(), BUILTIN_PROFILES.len());
         for (name, _) in BUILTIN_PROFILES {
-            assert!(set.get(name).is_some(), "falta el perfil {name}");
+            assert!(set.get(name).is_some(), "missing profile {name}");
         }
     }
 
     #[test]
     fn claude_declares_resume_and_acp() {
-        let set = ProfileSet::builtin().expect("perfiles embebidos");
+        let set = ProfileSet::builtin().expect("builtin profiles");
         let claude = set.get("claude").expect("claude");
         assert!(claude.supports_resume());
         assert_eq!(claude.acp_command.as_deref(), Some("npx"));
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn shell_profile_has_no_agent_machinery() {
-        let set = ProfileSet::builtin().expect("perfiles embebidos");
+        let set = ProfileSet::builtin().expect("builtin profiles");
         let shell = set.get("shell").expect("shell");
         assert!(!shell.supports_resume());
         assert!(shell.quota.is_none());
@@ -242,13 +242,13 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         std::fs::write(
             dir.path().join("claude.toml"),
-            "name = \"claude\"\ncommand = \"/opt/mi-claude\"\n",
+            "name = \"claude\"\ncommand = \"/opt/my-claude\"\n",
         )
-        .expect("escribir");
+        .expect("write");
 
-        let set = ProfileSet::load(dir.path()).expect("cargar");
+        let set = ProfileSet::load(dir.path()).expect("load");
         assert_eq!(set.len(), BUILTIN_PROFILES.len());
-        assert_eq!(set.get("claude").expect("claude").command, "/opt/mi-claude");
+        assert_eq!(set.get("claude").expect("claude").command, "/opt/my-claude");
     }
 
     #[test]
@@ -258,34 +258,34 @@ mod tests {
             dir.path().join("glm.toml"),
             "name = \"glm\"\ncommand = \"glm\"\nmode = \"pty\"\n",
         )
-        .expect("escribir");
+        .expect("write");
 
-        let set = ProfileSet::load(dir.path()).expect("cargar");
+        let set = ProfileSet::load(dir.path()).expect("load");
         assert_eq!(set.len(), BUILTIN_PROFILES.len() + 1);
         assert_eq!(set.get("glm").expect("glm").mode, AgentMode::Pty);
     }
 
     #[test]
     fn a_missing_agents_dir_leaves_the_builtins_intact() {
-        let set = ProfileSet::load(Path::new("/no/existe/agents")).expect("cargar");
+        let set = ProfileSet::load(Path::new("/no/such/agents")).expect("load");
         assert_eq!(set.len(), BUILTIN_PROFILES.len());
     }
 
     #[test]
     fn an_invalid_user_profile_is_reported_with_its_path() {
         let dir = tempfile::tempdir().expect("tempdir");
-        std::fs::write(dir.path().join("roto.toml"), "esto no es toml valido = = =")
-            .expect("escribir");
+        std::fs::write(dir.path().join("broken.toml"), "this is not valid toml = = =")
+            .expect("write");
 
-        let error = ProfileSet::load(dir.path()).expect_err("deberia fallar");
-        assert!(format!("{error:#}").contains("roto.toml"));
+        let error = ProfileSet::load(dir.path()).expect_err("should fail");
+        assert!(format!("{error:#}").contains("broken.toml"));
     }
 
     #[test]
     fn summaries_mark_availability_from_the_resolver() {
         let env = ShellEnvironment::from_search_path(vec![PathBuf::from("/bin")]);
         let mut resolver = BinaryResolver::with_environment(env);
-        let profile = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil");
+        let profile = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("profile");
 
         let summary = profile.summarize(&mut resolver);
         assert!(summary.is_available());

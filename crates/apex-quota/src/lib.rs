@@ -86,11 +86,11 @@ async fn run_command(
     let output = match timeout(RUN_TIMEOUT, command.output()).await {
         Ok(Ok(output)) => output,
         Ok(Err(error)) => {
-            tracing::debug!(binary = %binary.display(), %error, "no se pudo leer la quota");
+            tracing::debug!(binary = %binary.display(), %error, "failed to read quota");
             return None;
         }
         Err(_) => {
-            tracing::debug!(binary = %binary.display(), "la lectura de quota expiro");
+            tracing::debug!(binary = %binary.display(), "quota read timed out");
             return None;
         }
     };
@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn a_codexbar_report_yields_its_windows() {
-        let report = parse(QuotaFormat::Codexbar, "claude", SAMPLE).expect("reporte");
+        let report = parse(QuotaFormat::Codexbar, "claude", SAMPLE).expect("report");
         assert_eq!(report.agent, "claude");
         assert_eq!(report.windows.len(), 2);
 
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn garbage_input_is_ignored_instead_of_panicking() {
-        assert!(parse(QuotaFormat::Codexbar, "claude", "no soy json").is_none());
+        assert!(parse(QuotaFormat::Codexbar, "claude", "not json").is_none());
         assert!(parse(QuotaFormat::Codexbar, "claude", "[]").is_none());
         assert!(parse(QuotaFormat::Codexbar, "claude", "{}").is_none());
     }
@@ -209,11 +209,11 @@ mod tests {
     #[test]
     fn percentages_are_clamped_and_rounded() {
         let odd = r#"[{"usage":{"primary":{"windowMinutes":60,"usedPercent":150.7}}}]"#;
-        let report = parse(QuotaFormat::Codexbar, "x", odd).expect("reporte");
+        let report = parse(QuotaFormat::Codexbar, "x", odd).expect("report");
         assert_eq!(report.windows[0].used_percent, 100);
 
         let low = r#"[{"usage":{"primary":{"windowMinutes":60,"usedPercent":-5}}}]"#;
-        let report = parse(QuotaFormat::Codexbar, "x", low).expect("reporte");
+        let report = parse(QuotaFormat::Codexbar, "x", low).expect("report");
         assert_eq!(report.windows[0].used_percent, 0);
     }
 
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn a_provider_without_a_declared_window_still_reports_usage() {
         let raw = r#"[{"provider":"grok","usage":{"primary":{"usedPercent":19,"resetsAt":"2026-08-18T19:25:43Z"},"secondary":null}}]"#;
-        let report = parse(QuotaFormat::Codexbar, "grok", raw).expect("reporte");
+        let report = parse(QuotaFormat::Codexbar, "grok", raw).expect("report");
         assert_eq!(report.windows.len(), 1);
         assert_eq!(report.windows[0].label, None);
         assert_eq!(report.windows[0].used_percent, 19);
@@ -238,7 +238,7 @@ mod tests {
 
     #[tokio::test]
     async fn a_profile_without_quota_reads_nothing() {
-        let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil");
+        let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("profile");
         let mut cache = QuotaCache::new();
         assert!(
             cache
@@ -253,7 +253,7 @@ mod tests {
         let profile = AgentProfile::parse(
             "name = \"x\"\ncommand = \"x\"\n[quota]\nsource = \"command\"\nformat = \"codexbar\"\ncommand = \"false\"\ncache_ttl_secs = 60\n",
         )
-        .expect("perfil");
+        .expect("profile");
 
         let mut cache = QuotaCache::new();
         assert!(
@@ -271,13 +271,13 @@ mod tests {
             "name = \"claude\"\ncommand = \"x\"\n[quota]\nsource = \"command\"\nformat = \"codexbar\"\ncommand = \"echo\"\nargs = [{:?}]\ncache_ttl_secs = 60\n",
             SAMPLE.replace('\n', "")
         ))
-        .expect("perfil");
+        .expect("profile");
 
         let mut cache = QuotaCache::new();
         let report = cache
             .read(&profile, PathBuf::from("/bin/echo"), &BTreeMap::new(), false)
             .await
-            .expect("reporte");
+            .expect("report");
         assert_eq!(report.windows.len(), 2);
     }
 }

@@ -189,18 +189,18 @@ mod tests {
             "name = \"claude\"\ncommand = \"claude\"\n\
              [history]\nsource = \"dir\"\npath = \"{path}\"\nresume_args = [\"--resume\", \"{resume}\"]\n"
         ))
-        .expect("perfil")
+        .expect("profile")
     }
 
     #[test]
     fn a_profile_without_history_yields_nothing() {
-        let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil");
+        let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("profile");
         assert!(read_history(&bare, Path::new("/tmp"), Path::new("/tmp")).is_empty());
     }
 
     #[test]
     fn a_missing_directory_yields_nothing_instead_of_failing() {
-        let profile = profile("~/no/existe/{project_slug}", "{session_id}");
+        let profile = profile("~/no/such/{project_slug}", "{session_id}");
         assert!(read_history(&profile, Path::new("/tmp/x"), Path::new("/tmp")).is_empty());
     }
 
@@ -213,21 +213,21 @@ mod tests {
 
         std::fs::write(
             dir.join("aaa-111.jsonl"),
-            "{\"type\":\"user\",\"content\":\"arregla el bug del login\"}\n",
+            "{\"type\":\"user\",\"content\":\"fix the login bug\"}\n",
         )
-        .expect("escribir");
+        .expect("write");
         std::thread::sleep(std::time::Duration::from_millis(1100));
-        std::fs::write(dir.join("bbb-222.jsonl"), "{\"content\":\"escribe tests\"}\n")
-            .expect("escribir");
+        std::fs::write(dir.join("bbb-222.jsonl"), "{\"content\":\"write tests\"}\n")
+            .expect("write");
 
         let profile = profile("~/sessions/{project_slug}", "{session_id}");
         let found = read_history(&profile, Path::new("/Users/x/code"), home.path());
 
         assert_eq!(found.len(), 2);
         assert_eq!(found[0].session_id, "bbb-222");
-        assert_eq!(found[0].label.as_deref(), Some("escribe tests"));
+        assert_eq!(found[0].label.as_deref(), Some("write tests"));
         assert_eq!(found[1].session_id, "aaa-111");
-        assert_eq!(found[1].label.as_deref(), Some("arregla el bug del login"));
+        assert_eq!(found[1].label.as_deref(), Some("fix the login bug"));
         assert_eq!(found[0].agent, "claude");
     }
 
@@ -236,7 +236,7 @@ mod tests {
         let home = tempfile::tempdir().expect("home");
         let dir = home.path().join("sessions").join(project_slug(Path::new("/p")));
         std::fs::create_dir_all(&dir).expect("mkdir");
-        std::fs::write(dir.join("ccc-333.jsonl"), "esto no es json\n").expect("escribir");
+        std::fs::write(dir.join("ccc-333.jsonl"), "this is not json\n").expect("write");
 
         let found =
             read_history(&profile("~/sessions/{project_slug}", "{session_id}"), Path::new("/p"), home.path());
@@ -246,9 +246,9 @@ mod tests {
 
     #[test]
     fn a_long_label_is_shortened_to_one_line() {
-        let long = "palabra ".repeat(80);
+        let long = "word ".repeat(80);
         assert!(shorten(&long).chars().count() <= LABEL_LIMIT + 1);
-        assert_eq!(shorten("  varias\n  lineas  "), "varias lineas");
+        assert_eq!(shorten("  several\n  lines  "), "several lines");
     }
 
     #[test]
@@ -259,10 +259,10 @@ mod tests {
         std::fs::create_dir_all(dir.join("019fba91-0000")).expect("mkdir");
         std::fs::write(
             dir.join("prompt_history.jsonl"),
-            "{\"session_id\":\"019fba90-7acb\",\"prompt\":\"arregla el saludo\"}\n\
-             {\"session_id\":\"019fba90-7acb\",\"prompt\":\"y ahora otra cosa\"}\n",
+            "{\"session_id\":\"019fba90-7acb\",\"prompt\":\"fix the greeting\"}\n\
+             {\"session_id\":\"019fba90-7acb\",\"prompt\":\"and now something else\"}\n",
         )
-        .expect("escribir");
+        .expect("write");
 
         let profile = AgentProfile::parse(
             "name = \"grok\"\ncommand = \"grok\"\n\
@@ -274,15 +274,15 @@ mod tests {
              label_key = \"prompt\"\n\
              resume_args = [\"--resume\", \"{session_id}\"]\n",
         )
-        .expect("perfil");
+        .expect("profile");
 
         let found = read_history(&profile, Path::new("/Users/x/code"), home.path());
-        assert_eq!(found.len(), 2, "deberian verse las dos carpetas de sesion");
+        assert_eq!(found.len(), 2, "both session folders should appear");
 
-        let labelled = found.iter().find(|entry| entry.session_id == "019fba90-7acb").expect("sesion");
-        assert_eq!(labelled.label.as_deref(), Some("arregla el saludo"));
+        let labelled = found.iter().find(|entry| entry.session_id == "019fba90-7acb").expect("session");
+        assert_eq!(labelled.label.as_deref(), Some("fix the greeting"));
 
-        let bare = found.iter().find(|entry| entry.session_id == "019fba91-0000").expect("sesion");
+        let bare = found.iter().find(|entry| entry.session_id == "019fba91-0000").expect("session");
         assert_eq!(bare.label, None);
     }
 
@@ -313,7 +313,7 @@ mod tests {
 
     #[test]
     fn a_profile_without_resume_args_cannot_be_resumed() {
-        let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil");
+        let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("profile");
         assert_eq!(resume_args(&bare, "abc"), None);
     }
 }

@@ -1,23 +1,23 @@
 # Apex
 
-Multiplexor de agentes de IA para escritorio. Corre Claude Code, Codex, Gemini, Copilot, opencode y cualquier otro CLI en una sola ventana, con estado visible, contexto compartido y aislamiento por git worktree.
+Desktop multiplexer for AI agent CLIs. Run Claude Code, Codex, Gemini, Copilot, opencode, and any other CLI in one window, with visible state, shared context, and isolation via git worktrees.
 
-## Arquitectura
+## Architecture
 
-- `crates/apex-proto` — protocolo de comandos y eventos sobre un trait de transporte.
-- `crates/apex-core` — proyectos, sesiones, perfiles de agente y store SQLite.
-- `crates/apexd` — daemon que posee todas las sesiones y sobrevive a la UI.
-- `apps/desktop` — cliente Tauri v2.
+- `crates/apex-proto` — command and event protocol over a transport trait.
+- `crates/apex-core` — projects, sessions, agent profiles, and the SQLite store.
+- `crates/apexd` — daemon that owns every session and outlives the UI.
+- `apps/desktop` — Tauri v2 client.
 
-El daemon es dueño de todo el estado. La app es un cliente delgado que se attachea por socket Unix.
+The daemon owns all state. The app is a thin client that attaches over a Unix socket.
 
-## Desarrollo
+## Development
 
 ```
 cargo test
 cargo run -p apexd
 ```
 
-## Licencia
+## License
 
 MIT

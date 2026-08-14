@@ -36,10 +36,10 @@ impl Store {
     pub fn open(path: &Path) -> Result<Self> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)
-                .with_context(|| format!("creando {}", parent.display()))?;
+                .with_context(|| format!("creating {}", parent.display()))?;
         }
         let connection =
-            Connection::open(path).with_context(|| format!("abriendo {}", path.display()))?;
+            Connection::open(path).with_context(|| format!("opening {}", path.display()))?;
         Self::from_connection(connection)
     }
 
@@ -63,7 +63,7 @@ impl Store {
         for (index, migration) in MIGRATIONS.iter().enumerate().skip(applied) {
             self.connection
                 .execute_batch(migration)
-                .with_context(|| format!("aplicando migracion {}", index + 1))?;
+                .with_context(|| format!("applying migration {}", index + 1))?;
             self.connection.pragma_update(None, "user_version", (index + 1) as i64)?;
         }
         Ok(())
@@ -268,19 +268,19 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("apex.sqlite");
         let first = Store::open(&path).expect("abrir");
-        first.open_project(dir.path()).expect("proyecto");
+        first.open_project(dir.path()).expect("project");
         drop(first);
 
-        let second = Store::open(&path).expect("reabrir");
+        let second = Store::open(&path).expect("reopen");
         assert_eq!(second.schema_version().expect("version"), MIGRATIONS.len());
-        assert_eq!(second.list_projects().expect("proyectos").len(), 1);
+        assert_eq!(second.list_projects().expect("projects").len(), 1);
     }
 
     #[test]
     fn a_project_takes_its_name_from_the_folder() {
-        let dir = project_dir("mi-repo");
-        let project = store().open_project(&dir.path().join("mi-repo")).expect("proyecto");
-        assert_eq!(project.name, "mi-repo");
+        let dir = project_dir("my-repo");
+        let project = store().open_project(&dir.path().join("my-repo")).expect("project");
+        assert_eq!(project.name, "my-repo");
         assert!(!project.is_git);
     }
 
@@ -288,27 +288,27 @@ mod tests {
     fn a_folder_with_git_is_marked_as_such() {
         let dir = tempfile::tempdir().expect("tempdir");
         std::fs::create_dir_all(dir.path().join(".git")).expect("git");
-        assert!(store().open_project(dir.path()).expect("proyecto").is_git);
+        assert!(store().open_project(dir.path()).expect("project").is_git);
     }
 
     #[test]
     fn opening_the_same_folder_twice_returns_the_same_project() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let first = store.open_project(dir.path()).expect("primero");
-        let second = store.open_project(dir.path()).expect("segundo");
+        let first = store.open_project(dir.path()).expect("first");
+        let second = store.open_project(dir.path()).expect("second");
         assert_eq!(first.id, second.id);
-        assert_eq!(store.list_projects().expect("proyectos").len(), 1);
+        assert_eq!(store.list_projects().expect("projects").len(), 1);
     }
 
     #[test]
     fn reopening_a_folder_picks_up_that_it_became_a_repo() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        assert!(!store.open_project(dir.path()).expect("primero").is_git);
+        assert!(!store.open_project(dir.path()).expect("first").is_git);
 
         std::fs::create_dir_all(dir.path().join(".git")).expect("git");
-        assert!(store.open_project(dir.path()).expect("segundo").is_git);
+        assert!(store.open_project(dir.path()).expect("second").is_git);
     }
 
     #[test]
@@ -320,9 +320,9 @@ mod tests {
         let newer = store.open_project(second.path()).expect("newer");
 
         std::thread::sleep(std::time::Duration::from_millis(10));
-        store.open_project(first.path()).expect("reabrir");
+        store.open_project(first.path()).expect("reopen");
 
-        let listed = store.list_projects().expect("proyectos");
+        let listed = store.list_projects().expect("projects");
         assert_eq!(listed.first().map(|project| project.id), Some(older.id));
         assert_eq!(listed.get(1).map(|project| project.id), Some(newer.id));
     }
@@ -331,33 +331,33 @@ mod tests {
     fn a_project_can_be_fetched_by_id() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let project = store.open_project(dir.path()).expect("proyecto");
-        assert_eq!(store.project(project.id).expect("buscar"), Some(project));
-        assert_eq!(store.project(Uuid::new_v4()).expect("buscar"), None);
+        let project = store.open_project(dir.path()).expect("project");
+        assert_eq!(store.project(project.id).expect("lookup"), Some(project));
+        assert_eq!(store.project(Uuid::new_v4()).expect("lookup"), None);
     }
 
     #[test]
     fn sessions_belong_to_a_project_and_start_idle() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let project = store.open_project(dir.path()).expect("proyecto");
+        let project = store.open_project(dir.path()).expect("project");
         let session = store
             .insert_session(project.id, "claude", "refactor", "/tmp/apex")
-            .expect("sesion");
+            .expect("session");
 
         assert_eq!(session.state, SessionState::Idle);
-        assert_eq!(store.list_open_sessions(project.id).expect("abiertas"), vec![session]);
+        assert_eq!(store.list_open_sessions(project.id).expect("open"), vec![session]);
     }
 
     #[test]
     fn session_state_survives_a_roundtrip() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let project = store.open_project(dir.path()).expect("proyecto");
-        let session = store.insert_session(project.id, "codex", "tests", "/tmp").expect("sesion");
+        let project = store.open_project(dir.path()).expect("project");
+        let session = store.insert_session(project.id, "codex", "tests", "/tmp").expect("session");
 
-        store.set_session_state(session.id, SessionState::Blocked).expect("actualizar");
-        let open = store.list_open_sessions(project.id).expect("abiertas");
+        store.set_session_state(session.id, SessionState::Blocked).expect("update");
+        let open = store.list_open_sessions(project.id).expect("open");
         assert_eq!(open[0].state, SessionState::Blocked);
     }
 
@@ -365,35 +365,35 @@ mod tests {
     fn sessions_of_other_projects_are_not_listed() {
         let store = store();
         let apex = tempfile::tempdir().expect("tempdir");
-        let otro = tempfile::tempdir().expect("tempdir");
+        let other = tempfile::tempdir().expect("tempdir");
         let apex = store.open_project(apex.path()).expect("apex");
-        let otro = store.open_project(otro.path()).expect("otro");
-        store.insert_session(apex.id, "claude", "a", "/tmp").expect("sesion");
+        let other = store.open_project(other.path()).expect("other");
+        store.insert_session(apex.id, "claude", "a", "/tmp").expect("session");
 
-        assert!(store.list_open_sessions(otro.id).expect("abiertas").is_empty());
+        assert!(store.list_open_sessions(other.id).expect("open").is_empty());
     }
 
     #[test]
     fn closing_a_session_removes_it_from_the_open_list() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let project = store.open_project(dir.path()).expect("proyecto");
-        let session = store.insert_session(project.id, "claude", "a", "/tmp").expect("sesion");
+        let project = store.open_project(dir.path()).expect("project");
+        let session = store.insert_session(project.id, "claude", "a", "/tmp").expect("session");
 
-        store.close_session(session.id).expect("cerrar");
-        assert!(store.list_open_sessions(project.id).expect("abiertas").is_empty());
+        store.close_session(session.id).expect("close");
+        assert!(store.list_open_sessions(project.id).expect("open").is_empty());
     }
 
     #[test]
     fn orphaned_sessions_from_a_previous_run_are_closed() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let project = store.open_project(dir.path()).expect("proyecto");
-        store.insert_session(project.id, "claude", "a", "/tmp").expect("sesion");
-        store.insert_session(project.id, "codex", "b", "/tmp").expect("sesion");
+        let project = store.open_project(dir.path()).expect("project");
+        store.insert_session(project.id, "claude", "a", "/tmp").expect("session");
+        store.insert_session(project.id, "codex", "b", "/tmp").expect("session");
 
-        assert_eq!(store.close_orphaned_sessions().expect("limpiar"), 2);
-        assert_eq!(store.close_orphaned_sessions().expect("limpiar"), 0);
+        assert_eq!(store.close_orphaned_sessions().expect("cleanup"), 2);
+        assert_eq!(store.close_orphaned_sessions().expect("cleanup"), 0);
     }
 
     #[test]
@@ -405,18 +405,18 @@ mod tests {
     fn a_layout_round_trips_and_overwrites() {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
-        let project = store.open_project(dir.path()).expect("proyecto");
+        let project = store.open_project(dir.path()).expect("project");
 
-        assert_eq!(store.load_layout(project.id).expect("vacio"), None);
-        store.save_layout(project.id, "{\"tabs\":[]}").expect("guardar");
+        assert_eq!(store.load_layout(project.id).expect("empty"), None);
+        store.save_layout(project.id, "{\"tabs\":[]}").expect("save");
         assert_eq!(
-            store.load_layout(project.id).expect("cargar").as_deref(),
+            store.load_layout(project.id).expect("load").as_deref(),
             Some("{\"tabs\":[]}")
         );
 
-        store.save_layout(project.id, "{\"tabs\":[1]}").expect("regrabar");
+        store.save_layout(project.id, "{\"tabs\":[1]}").expect("overwrite");
         assert_eq!(
-            store.load_layout(project.id).expect("cargar").as_deref(),
+            store.load_layout(project.id).expect("load").as_deref(),
             Some("{\"tabs\":[1]}")
         );
     }

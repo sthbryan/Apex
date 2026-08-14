@@ -196,14 +196,14 @@ mod tests {
     #[test]
     fn lookup_returns_none_for_a_missing_binary() {
         let env = ShellEnvironment::from_search_path(vec![PathBuf::from("/bin")]);
-        assert_eq!(env.lookup("definitivamente-no-existe"), None);
+        assert_eq!(env.lookup("definitely-does-not-exist"), None);
     }
 
     #[test]
     fn lookup_accepts_an_absolute_path() {
         let env = ShellEnvironment::from_search_path(vec![]);
         assert_eq!(env.lookup("/bin/sh"), Some(PathBuf::from("/bin/sh")));
-        assert_eq!(env.lookup("/bin/definitivamente-no-existe"), None);
+        assert_eq!(env.lookup("/bin/definitely-does-not-exist"), None);
     }
 
     #[test]
@@ -226,9 +226,9 @@ mod tests {
 
     #[test]
     fn env_values_may_contain_newlines_and_equals() {
-        let raw = format!("{ENV_MARKER}\0PROMPT=linea1\nlinea2\0EXPR=a=b\0");
+        let raw = format!("{ENV_MARKER}\0PROMPT=line1\nline2\0EXPR=a=b\0");
         let parsed = parse_env(raw.as_bytes());
-        assert_eq!(parsed.get("PROMPT").map(String::as_str), Some("linea1\nlinea2"));
+        assert_eq!(parsed.get("PROMPT").map(String::as_str), Some("line1\nline2"));
         assert_eq!(parsed.get("EXPR").map(String::as_str), Some("a=b"));
     }
 
@@ -244,7 +244,7 @@ mod tests {
         for key in seed.keys() {
             assert!(
                 key == "TERM" || PROBE_SEED.contains(&key.as_str()),
-                "el seed no deberia incluir {key}"
+                "seed should not include {key}"
             );
         }
     }
@@ -264,7 +264,7 @@ mod tests {
         if env.source() == ProbeSource::InheritedPath {
             return;
         }
-        assert!(!env.env().contains_key(&candidate), "el probe heredo {candidate}");
+        assert!(!env.env().contains_key(&candidate), "probe inherited {candidate}");
     }
 
     #[tokio::test]
@@ -278,7 +278,7 @@ mod tests {
 
     #[tokio::test]
     async fn probing_a_missing_shell_falls_back_to_the_inherited_environment() {
-        let env = ShellEnvironment::probe_with_shell(Path::new("/no/existe/shell")).await;
+        let env = ShellEnvironment::probe_with_shell(Path::new("/no/such/shell")).await;
         assert_eq!(env.source(), ProbeSource::InheritedPath);
         assert!(!env.env().is_empty());
     }

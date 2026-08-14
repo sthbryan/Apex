@@ -34,7 +34,7 @@ impl DaemonClient {
         ensure_running(socket).await?;
         let mut connection = connect_unix(socket)
             .await
-            .with_context(|| format!("conectando a {}", socket.display()))?;
+            .with_context(|| format!("connecting to {}", socket.display()))?;
 
         connection
             .send_control(&ClientMessage::Hello(Hello {
@@ -44,13 +44,13 @@ impl DaemonClient {
             }))
             .await?;
 
-        let frame = connection.recv().await.context("apexd cerro durante el handshake")??;
+        let frame = connection.recv().await.context("apexd closed during handshake")??;
         let daemon_version = match frame.parse_control::<ServerMessage>()? {
             ServerMessage::Welcome(welcome) => welcome.daemon_version,
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
-                bail!("apexd rechazo el handshake: {error}")
+                bail!("apexd rejected the handshake: {error}")
             }
-            other => bail!("respuesta inesperada al handshake: {other:?}"),
+            other => bail!("unexpected handshake reply: {other:?}"),
         };
 
         let (writer, reader) = connection.split();
@@ -92,13 +92,13 @@ impl DaemonClient {
             .await;
         if let Err(error) = sent {
             self.pending.lock().await.remove(&id.0);
-            return Err(error).context("enviando la peticion");
+            return Err(error).context("sending request");
         }
 
         match receiver.await {
             Ok(CommandOutcome::Ok { reply }) => Ok(reply),
             Ok(CommandOutcome::Err { error }) => bail!("{error}"),
-            Err(_) => bail!("apexd cerro la conexion"),
+            Err(_) => bail!("apexd closed the connection"),
         }
     }
 }
@@ -161,11 +161,11 @@ async fn ensure_running(socket: &Path) -> Result<()> {
     }
 
     let binary = daemon_binary()?;
-    tracing::info!(binary = %binary.display(), "levantando apexd");
+    tracing::info!(binary = %binary.display(), "starting apexd");
     tokio::process::Command::new(&binary)
         .stdin(std::process::Stdio::null())
         .spawn()
-        .with_context(|| format!("lanzando {}", binary.display()))?;
+        .with_context(|| format!("spawning {}", binary.display()))?;
 
     for _ in 0..SPAWN_ATTEMPTS {
         sleep(SPAWN_INTERVAL).await;
@@ -173,17 +173,17 @@ async fn ensure_running(socket: &Path) -> Result<()> {
             return Ok(());
         }
     }
-    bail!("apexd no respondio en {}", socket.display())
+    bail!("apexd did not respond on {}", socket.display())
 }
 
 fn daemon_binary() -> Result<PathBuf> {
-    let exe = std::env::current_exe().context("ruta del ejecutable actual")?;
-    let dir = exe.parent().context("directorio del ejecutable actual")?;
+    let exe = std::env::current_exe().context("current executable path")?;
+    let dir = exe.parent().context("current executable directory")?;
 
     for candidate in [dir.join("apexd"), dir.join("../Resources/apexd")] {
         if candidate.is_file() {
             return Ok(candidate);
         }
     }
-    bail!("no se encontro apexd junto a {}", exe.display())
+    bail!("apexd not found next to {}", exe.display())
 }

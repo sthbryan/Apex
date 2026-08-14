@@ -15,7 +15,7 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
         schema = store.schema_version()?,
         projects = store.list_projects()?.len(),
         orphaned,
-        "store listo"
+        "store ready"
     );
 
     let profiles = ProfileSet::load(&paths.agents_dir())?;
@@ -23,7 +23,7 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
     tracing::info!(
         source = ?environment.source(),
         entries = environment.search_path().len(),
-        "PATH resuelto"
+        "PATH resolved"
     );
 
     Ok(Arc::new(SessionManager::new(

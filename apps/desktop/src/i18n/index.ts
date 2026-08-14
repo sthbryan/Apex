@@ -18,9 +18,7 @@ export function setLocale(next: Locale): void {
   document.documentElement.lang = next;
   try {
     localStorage.setItem(STORAGE_KEY, next);
-  } catch {
-    // el almacenamiento puede estar bloqueado; la eleccion vive en memoria
-  }
+  } catch {}
 }
 
 export function t(key: MessageKey, params?: Record<string, string>): string {

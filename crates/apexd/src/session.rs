@@ -20,13 +20,13 @@ type Outbox = mpsc::Sender<Frame>;
 pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     let peer = connection.peer().clone();
     match handshake(&mut connection).await {
-        Ok(Some(_)) => tracing::info!(peer = %peer.label, "cliente conectado"),
+        Ok(Some(_)) => tracing::info!(peer = %peer.label, "client connected"),
         Ok(None) => {
-            tracing::debug!(peer = %peer.label, "sonda de disponibilidad");
+            tracing::debug!(peer = %peer.label, "availability probe");
             return;
         }
         Err(error) => {
-            tracing::warn!(peer = %peer.label, %error, "handshake fallido");
+            tracing::warn!(peer = %peer.label, %error, "handshake failed");
             return;
         }
     }
@@ -50,7 +50,7 @@ pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     client.detach_all();
     drop(client);
     let _ = pump.await;
-    tracing::info!(peer = %peer.label, "cliente desconectado");
+    tracing::info!(peer = %peer.label, "client disconnected");
 }
 
 struct Client {
@@ -70,7 +70,7 @@ impl Client {
             let frame = match frame {
                 Ok(frame) => frame,
                 Err(error) => {
-                    tracing::warn!(%error, "frame invalida");
+                    tracing::warn!(%error, "invalid frame");
                     return;
                 }
             };
@@ -78,7 +78,7 @@ impl Client {
             let message: ClientMessage = match frame.parse_control() {
                 Ok(message) => message,
                 Err(error) => {
-                    tracing::warn!(%error, "mensaje ilegible");
+                    tracing::warn!(%error, "unreadable message");
                     continue;
                 }
             };
@@ -104,7 +104,7 @@ impl Client {
         if !scope_allows(self.scope, &command) {
             return ServerMessage::err(
                 id,
-                ProtocolError::unauthorized("comando no permitido para clientes remotos"),
+                ProtocolError::unauthorized("command not allowed for remote clients"),
             );
         }
 
@@ -194,7 +194,7 @@ impl Client {
             .manager
             .get(id)
             .await
-            .ok_or_else(|| ProtocolError::new(ErrorCode::NotFound, format!("sesion {id}")))?;
+            .ok_or_else(|| ProtocolError::new(ErrorCode::NotFound, format!("session {id}")))?;
 
         let outbox = self.outbox.clone();
         let mut stream = session.process.subscribe();
@@ -214,7 +214,7 @@ impl Client {
                         }
                     }
                     Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
-                        tracing::warn!(%id, skipped, "el cliente se quedo atras");
+                        tracing::warn!(%id, skipped, "client fell behind");
                     }
                     Err(tokio::sync::broadcast::error::RecvError::Closed) => return,
                 }
@@ -273,13 +273,13 @@ async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, Transpo
     let hello = match frame?.parse_control::<ClientMessage>()? {
         ClientMessage::Hello(hello) => hello,
         ClientMessage::Request { .. } => {
-            return Err(TransportError::MalformedFrame("se esperaba hello".into()));
+            return Err(TransportError::MalformedFrame("expected hello".into()));
         }
     };
 
     if hello.protocol_version != PROTOCOL_VERSION {
         let error = ProtocolError::unsupported_version(format!(
-            "el daemon habla v{PROTOCOL_VERSION}, el cliente v{}",
+            "daemon speaks v{PROTOCOL_VERSION}, client speaks v{}",
             hello.protocol_version
         ));
         let _ = connection.send(Frame::control(&ServerMessage::err(RequestId(0), error))?).await;
@@ -315,9 +315,9 @@ mod tests {
     use tokio::time::timeout;
 
     fn manager() -> Arc<SessionManager> {
-        let mut profiles = ProfileSet::builtin().expect("perfiles");
+        let mut profiles = ProfileSet::builtin().expect("profiles");
         profiles.upsert(
-            AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil sh"),
+            AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("sh profile"),
         );
         profiles.upsert(
             AgentProfile::parse(
@@ -327,7 +327,7 @@ mod tests {
                  [state_patterns]\n\
                  blocked = [\"\\\\(y/n\\\\)\"]\n",
             )
-            .expect("perfil prompted"),
+            .expect("prompted profile"),
         );
         let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
             PathBuf::from("/bin"),
@@ -349,7 +349,7 @@ mod tests {
             let project = manager
                 .open_project(&root.path().display().to_string())
                 .await
-                .expect("proyecto")
+                .expect("project")
                 .id;
             let id = Uuid::new_v4().simple().to_string();
             let socket = PathBuf::from("/tmp").join(format!("apexd-s-{}.sock", &id[..8]));
@@ -374,7 +374,7 @@ mod tests {
                 }))
                 .await
                 .expect("hello");
-            let welcome = connection.recv().await.expect("frame").expect("sin error");
+            let welcome = connection.recv().await.expect("frame").expect("no error");
             assert!(matches!(
                 welcome.parse_control::<ServerMessage>().expect("parse"),
                 ServerMessage::Welcome(_)
@@ -400,7 +400,7 @@ mod tests {
             let deadline = timeout(Duration::from_secs(10), async {
                 loop {
                     let frame =
-                        self.connection.recv().await.expect("frame").expect("sin error");
+                        self.connection.recv().await.expect("frame").expect("no error");
                     if matches!(frame, Frame::Control(_))
                         && let ServerMessage::Response { id: got, outcome } =
                             frame.parse_control::<ServerMessage>().expect("parse")
@@ -414,7 +414,7 @@ mod tests {
                 }
             })
             .await;
-            deadline.expect("sin respuesta a tiempo")
+            deadline.expect("no reply in time")
         }
 
         async fn create_shell(&mut self, project: Uuid) -> SessionSummary {
@@ -428,7 +428,7 @@ mod tests {
                 .await;
             match reply {
                 Reply::Session { session } => session,
-                other => panic!("se esperaba una sesion, llego {other:?}"),
+                other => panic!("expected a session, got {other:?}"),
             }
         }
 
@@ -437,7 +437,7 @@ mod tests {
                 let mut seen = Vec::new();
                 loop {
                     let frame =
-                        self.connection.recv().await.expect("frame").expect("sin error");
+                        self.connection.recv().await.expect("frame").expect("no error");
                     if let Frame::Output { session, data } = frame
                         && session == id
                     {
@@ -450,7 +450,7 @@ mod tests {
                 }
             })
             .await;
-            found.unwrap_or_else(|_| panic!("nunca llego {needle:?}"))
+            found.unwrap_or_else(|_| panic!("never received {needle:?}"))
         }
     }
 
@@ -484,7 +484,7 @@ mod tests {
         let session = client.create_shell(harness.project).await;
 
         let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
-            panic!("se esperaba la lista de sesiones");
+            panic!("expected session list");
         };
         assert_eq!(sessions.len(), 1);
         assert_eq!(sessions[0].id, session.id);
@@ -521,10 +521,10 @@ mod tests {
             client
                 .request(Command::SessionInput {
                     id: session.id,
-                    data: "echo antes-de-cerrar\n".into(),
+                    data: "echo before-close\n".into(),
                 })
                 .await;
-            client.collect_output(session.id, "antes-de-cerrar").await;
+            client.collect_output(session.id, "before-close").await;
             session
         };
 
@@ -532,17 +532,17 @@ mod tests {
 
         let mut reconnected = harness.client().await;
         reconnected.request(Command::SessionAttach { id: session.id }).await;
-        let replayed = reconnected.collect_output(session.id, "antes-de-cerrar").await;
-        assert!(replayed.contains("antes-de-cerrar"));
+        let replayed = reconnected.collect_output(session.id, "before-close").await;
+        assert!(replayed.contains("before-close"));
 
         reconnected
             .request(Command::SessionInput {
                 id: session.id,
-                data: "echo sigue-viva\n".into(),
+                data: "echo still-alive\n".into(),
             })
             .await;
-        let text = reconnected.collect_output(session.id, "sigue-viva").await;
-        assert!(text.contains("sigue-viva"));
+        let text = reconnected.collect_output(session.id, "still-alive").await;
+        assert!(text.contains("still-alive"));
     }
 
     async fn wait_for_state(
@@ -561,7 +561,7 @@ mod tests {
             }
         })
         .await;
-        assert!(settled.is_ok(), "la sesion nunca llego a {wanted:?}");
+        assert!(settled.is_ok(), "session never reached {wanted:?}");
     }
 
     #[tokio::test]
@@ -571,7 +571,7 @@ mod tests {
             .manager
             .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
             .await
-            .expect("crear");
+            .expect("create");
 
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
     }
@@ -585,7 +585,7 @@ mod tests {
             .manager
             .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
             .await
-            .expect("crear");
+            .expect("create");
 
         let announced = timeout(Duration::from_secs(10), async {
             loop {
@@ -601,7 +601,7 @@ mod tests {
             }
         })
         .await;
-        assert_eq!(announced, Ok(true), "nunca se anuncio el cambio de estado");
+        assert_eq!(announced, Ok(true), "state change was never announced");
     }
 
     #[tokio::test]
@@ -610,7 +610,7 @@ mod tests {
         let mut client = harness.client().await;
         let session = client.create_shell(harness.project).await;
         client
-            .request(Command::SessionInput { id: session.id, data: "echo tranquilo\n".into() })
+            .request(Command::SessionInput { id: session.id, data: "echo quiet\n".into() })
             .await;
 
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Idle).await;
@@ -623,10 +623,10 @@ mod tests {
             .manager
             .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
             .await
-            .expect("crear");
+            .expect("create");
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
 
-        harness.manager.write(session.id, "sigo escribiendo\n").await.expect("input");
+        harness.manager.write(session.id, "still writing\n").await.expect("input");
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Working).await;
     }
 
@@ -636,7 +636,7 @@ mod tests {
         let mut client = harness.client().await;
 
         let Reply::Projects { projects } = client.request(Command::ListProjects).await else {
-            panic!("se esperaba la lista de proyectos");
+            panic!("expected project list");
         };
         assert_eq!(projects.len(), 1);
         assert_eq!(projects[0].id, harness.project);
@@ -653,17 +653,17 @@ mod tests {
             .connection
             .send_control(&ClientMessage::Request {
                 id,
-                command: Command::ProjectOpen { root: "/no/existe/carpeta".into() },
+                command: Command::ProjectOpen { root: "/no/such/folder".into() },
             })
             .await
             .expect("request");
 
-        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        let frame = client.connection.recv().await.expect("frame").expect("no error");
         match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
                 assert_eq!(error.code, ErrorCode::NotFound);
             }
-            other => panic!("se esperaba un error, llego {other:?}"),
+            other => panic!("expected an error, got {other:?}"),
         }
     }
 
@@ -675,12 +675,12 @@ mod tests {
         let Reply::History { entries } =
             client.request(Command::ListHistory { project: harness.project }).await
         else {
-            panic!("se esperaba historial");
+            panic!("expected history");
         };
         assert!(entries.iter().all(|entry| entry.updated_at > 0 || entry.label.is_none()));
         assert!(
             entries.windows(2).all(|pair| pair[0].updated_at >= pair[1].updated_at),
-            "el historial no vino ordenado"
+            "history was not sorted"
         );
     }
 
@@ -704,13 +704,13 @@ mod tests {
             .await
             .expect("request");
 
-        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        let frame = client.connection.recv().await.expect("frame").expect("no error");
         match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
                 assert_eq!(error.code, ErrorCode::Internal);
-                assert!(error.message.contains("reanudar"));
+                assert!(error.message.contains("resume"));
             }
-            other => panic!("se esperaba un error, llego {other:?}"),
+            other => panic!("expected an error, got {other:?}"),
         }
     }
 
@@ -722,7 +722,7 @@ mod tests {
         let Reply::Layout { payload } =
             client.request(Command::LayoutLoad { project: harness.project }).await
         else {
-            panic!("se esperaba un layout");
+            panic!("expected a layout");
         };
         assert_eq!(payload, None);
 
@@ -736,7 +736,7 @@ mod tests {
         let Reply::Layout { payload } =
             client.request(Command::LayoutLoad { project: harness.project }).await
         else {
-            panic!("se esperaba un layout");
+            panic!("expected a layout");
         };
         assert_eq!(payload.as_deref(), Some("{\"tabs\":[]}"));
     }
@@ -749,7 +749,7 @@ mod tests {
         assert_eq!(session.project_id, harness.project);
 
         let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
-            panic!("se esperaba la lista de sesiones");
+            panic!("expected session list");
         };
         assert_eq!(sessions[0].project_id, harness.project);
     }
@@ -761,16 +761,16 @@ mod tests {
             .manager
             .create(harness.project, "sh", None, TerminalSize::default())
             .await
-            .expect("crear");
+            .expect("create");
 
         let root = harness
             .manager
             .list_projects()
             .await
-            .expect("proyectos")
+            .expect("projects")
             .into_iter()
             .find(|project| project.id == harness.project)
-            .expect("proyecto")
+            .expect("project")
             .root;
         assert_eq!(session.cwd, root);
     }
@@ -785,18 +785,18 @@ mod tests {
         let Reply::Metrics { snapshot } =
             client.request(Command::ReadMetrics { refresh_quota: false }).await
         else {
-            panic!("se esperaban metricas");
+            panic!("expected metrics");
         };
 
-        assert!(snapshot.system.memory_total > 0.0, "sin memoria total");
+        assert!(snapshot.system.memory_total > 0.0, "missing total memory");
         assert!(snapshot.system.cores >= 1);
 
         let mine = snapshot
             .sessions
             .iter()
             .find(|usage| usage.id == session.id)
-            .expect("la sesion no aparecio en las metricas");
-        assert!(mine.memory > 0.0, "la sesion no reporta memoria");
+            .expect("session missing from metrics");
+        assert!(mine.memory > 0.0, "session reports no memory");
         assert!(!mine.processes.is_empty());
         assert_eq!(mine.title, session.title);
     }
@@ -811,7 +811,7 @@ mod tests {
         let Reply::Metrics { snapshot } =
             client.request(Command::ReadMetrics { refresh_quota: false }).await
         else {
-            panic!("se esperaban metricas");
+            panic!("expected metrics");
         };
         assert!(snapshot.sessions.iter().all(|usage| usage.id != session.id));
     }
@@ -831,12 +831,12 @@ mod tests {
             .await
             .expect("request");
 
-        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        let frame = client.connection.recv().await.expect("frame").expect("no error");
         match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
                 assert_eq!(error.code, ErrorCode::NotFound);
             }
-            other => panic!("se esperaba un error, llego {other:?}"),
+            other => panic!("expected an error, got {other:?}"),
         }
     }
 
@@ -862,7 +862,7 @@ mod tests {
                 id,
                 command: Command::SessionCreate {
                     project: harness.project,
-                    agent: "no-existe".into(),
+                    agent: "does-not-exist".into(),
                     cwd: None,
                     size: TerminalSize::default(),
                 },
@@ -870,12 +870,12 @@ mod tests {
             .await
             .expect("request");
 
-        let frame = client.connection.recv().await.expect("frame").expect("sin error");
+        let frame = client.connection.recv().await.expect("frame").expect("no error");
         match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
                 assert_eq!(error.code, ErrorCode::Internal);
             }
-            other => panic!("se esperaba un error, llego {other:?}"),
+            other => panic!("expected an error, got {other:?}"),
         }
     }
 }

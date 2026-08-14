@@ -19,18 +19,18 @@ async fn main() -> Result<()> {
     let manager = state::bootstrap(&paths).await?;
 
     let mut transport = UnixTransport::bind(&paths.socket)
-        .with_context(|| format!("escuchando en {}", paths.socket.display()))?;
-    tracing::info!(transport = %transport.describe(), "apexd listo");
+        .with_context(|| format!("listening on {}", paths.socket.display()))?;
+    tracing::info!(transport = %transport.describe(), "apexd ready");
 
     loop {
         tokio::select! {
             accepted = transport.accept() => {
-                let (stream, peer) = accepted.context("aceptando conexion")?;
+                let (stream, peer) = accepted.context("accepting connection")?;
                 let manager = manager.clone();
                 tokio::spawn(session::serve(manager, Connection::new(stream, peer)));
             }
             _ = tokio::signal::ctrl_c() => {
-                tracing::info!("apexd apagandose");
+                tracing::info!("apexd shutting down");
                 return Ok(());
             }
         }
