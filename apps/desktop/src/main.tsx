@@ -1,7 +1,7 @@
 import { render } from "preact";
 
 import { App } from "@/app/App";
-import "@/shared/theme/tokens.css";
+import "@/shared/theme";
 
 const root = document.getElementById("root");
 if (!root) {
