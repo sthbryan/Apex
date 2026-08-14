@@ -125,21 +125,38 @@ fn error_body(id: Value, code: i32, message: &str) -> String {
     json!({ "jsonrpc": "2.0", "id": id, "error": { "code": code, "message": message } }).to_string()
 }
 
-pub async fn caller_for<D: Daemon>(daemon: &mut D, session: Uuid) -> Result<Caller> {
+pub async fn caller_for<D: Daemon>(
+    daemon: &mut D,
+    session: Option<Uuid>,
+    cwd: &std::path::Path,
+) -> Result<Caller> {
     let Reply::Sessions { sessions } = daemon.request(Command::ListSessions).await? else {
         anyhow::bail!("the daemon did not answer with sessions")
     };
-    let summary = sessions
-        .into_iter()
-        .find(|candidate| candidate.id == session)
-        .with_context(|| format!("session {session} is not running"))?;
+
+    let summary = session
+        .and_then(|wanted| sessions.iter().find(|found| found.id == wanted).cloned())
+        .or_else(|| running_in(&sessions, cwd))
+        .with_context(|| format!("no session of this project is running in {}", cwd.display()))?;
 
     Ok(Caller {
-        session,
+        session: summary.id,
         project: summary.project_id,
         title: summary.title.clone(),
         summary,
     })
+}
+
+fn running_in(sessions: &[apex_proto::SessionSummary], cwd: &std::path::Path) -> Option<apex_proto::SessionSummary> {
+    let wanted = cwd.canonicalize().unwrap_or_else(|_| cwd.to_path_buf());
+    sessions
+        .iter()
+        .filter(|session| session.is_alive())
+        .find(|session| {
+            let theirs = std::path::Path::new(&session.cwd);
+            theirs.canonicalize().unwrap_or_else(|_| theirs.to_path_buf()) == wanted
+        })
+        .cloned()
 }
 
 #[cfg(test)]
@@ -183,6 +200,64 @@ mod tests {
         let line = request.to_string();
         let answer = handle(daemon, &caller(), &line).await.expect("a response");
         serde_json::from_str(&answer).expect("json")
+    }
+
+    fn summary_in(cwd: &str, title: &str) -> SessionSummary {
+        SessionSummary {
+            id: Uuid::new_v4(),
+            project_id: Uuid::new_v4(),
+            agent: "opencode".into(),
+            title: title.into(),
+            cwd: cwd.into(),
+            state: SessionState::Working,
+            size: TerminalSize::default(),
+            exit_code: None,
+            worktree: None,
+        }
+    }
+
+    struct Listing(Vec<SessionSummary>);
+
+    impl Daemon for Listing {
+        async fn request(&mut self, _command: Command) -> Result<Reply> {
+            Ok(Reply::Sessions { sessions: self.0.clone() })
+        }
+    }
+
+    #[tokio::test]
+    async fn a_stale_session_id_falls_back_to_whoever_runs_here() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let here = summary_in(&dir.path().display().to_string(), "opencode 2");
+        let mut daemon = Listing(vec![here.clone()]);
+
+        let caller = caller_for(&mut daemon, Some(Uuid::new_v4()), dir.path())
+            .await
+            .expect("the dead id should not sink us");
+        assert_eq!(caller.session, here.id);
+        assert_eq!(caller.title, "opencode 2");
+    }
+
+    #[tokio::test]
+    async fn without_an_id_the_folder_says_who_is_calling() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let elsewhere = summary_in("/somewhere/else", "grok");
+        let here = summary_in(&dir.path().display().to_string(), "opencode");
+        let mut daemon = Listing(vec![elsewhere, here.clone()]);
+
+        let caller = caller_for(&mut daemon, None, dir.path()).await.expect("resolved");
+        assert_eq!(caller.session, here.id);
+    }
+
+    #[tokio::test]
+    async fn a_finished_session_does_not_answer_for_the_folder() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let gone = SessionSummary {
+            exit_code: Some(0),
+            ..summary_in(&dir.path().display().to_string(), "opencode")
+        };
+        let mut daemon = Listing(vec![gone]);
+
+        assert!(caller_for(&mut daemon, None, dir.path()).await.is_err());
     }
 
     #[tokio::test]

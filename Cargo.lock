@@ -101,6 +101,7 @@ dependencies = [
  "apex-proto",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "tracing",
  "uuid",

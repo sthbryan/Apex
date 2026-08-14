@@ -1228,6 +1228,41 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn the_config_left_in_a_folder_does_not_name_a_session() {
+        let home = tempfile::tempdir().expect("tempdir");
+        let paths = ApexPaths::rooted_at(home.path());
+        let manager = manager_at(&paths);
+        let root = tempfile::tempdir().expect("project");
+        init_repo(root.path());
+        let project = manager
+            .open_project(&root.path().display().to_string())
+            .await
+            .expect("project")
+            .id;
+
+        let first = manager
+            .create(
+                project,
+                "mcp-project",
+                None,
+                TerminalSize::default(),
+                Isolation::Directory,
+                None,
+            )
+            .await
+            .expect("session");
+
+        let written: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(root.path().join("opencode.json")).expect("read"))
+                .expect("json");
+        let command = written["mcp"]["apex"]["command"].as_array().expect("command");
+        let spelled: Vec<&str> = command.iter().filter_map(|arg| arg.as_str()).collect();
+
+        assert_eq!(spelled[1..], ["mcp"], "a session id here goes stale on the next one");
+        assert!(!spelled.iter().any(|arg| arg.contains(&first.id.to_string())));
+    }
+
+    #[tokio::test]
     async fn a_config_the_project_already_has_is_never_overwritten() {
         let home = tempfile::tempdir().expect("tempdir");
         let paths = ApexPaths::rooted_at(home.path());

@@ -745,13 +745,13 @@ impl SessionManager {
     ) -> Result<Option<Vec<String>>> {
         let binary = std::env::current_exe().context("locating apexd")?;
         let launcher = binary.display().to_string();
-        let args = ["mcp", "--session", &session.to_string()].map(str::to_owned);
 
         match delivery {
             McpDelivery::Flag { flag, merge_from } => {
                 let dir = self.paths.mcp_dir();
                 std::fs::create_dir_all(&dir)
                     .with_context(|| format!("creating {}", dir.display()))?;
+                let args = vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()];
                 let path = dir.join(format!("{session}.json"));
                 let existing = merge_from
                     .as_deref()
@@ -764,6 +764,7 @@ impl SessionManager {
                 Ok(Some(vec![flag.clone(), path.display().to_string()]))
             }
             McpDelivery::Project { path, format } => {
+                let args = vec!["mcp".to_owned()];
                 let target = cwd.join(path);
                 if target.exists() && !isolated {
                     tracing::info!(
@@ -937,7 +938,7 @@ fn expand_home(path: &str, home: &Path) -> PathBuf {
 fn render_mcp(
     format: McpFormat,
     launcher: &str,
-    args: &[String; 3],
+    args: &[String],
     existing: Option<serde_json::Value>,
 ) -> Result<String> {
     Ok(match format {

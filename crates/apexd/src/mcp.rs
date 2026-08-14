@@ -4,12 +4,13 @@ use apex_proto::{
     ClientMessage, Command, CommandOutcome, Connection, Frame, Hello, PROTOCOL_VERSION, Reply,
     RequestId, ServerMessage, connect_unix,
 };
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
-pub async fn run(socket: &Path, session: Uuid) -> Result<()> {
+pub async fn run(socket: &Path, session: Option<Uuid>) -> Result<()> {
     let mut daemon = Link::connect(socket).await?;
-    let caller = apex_mcp::caller_for(&mut daemon, session).await?;
+    let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let caller = apex_mcp::caller_for(&mut daemon, session, &cwd).await?;
     apex_mcp::serve(&mut daemon, &caller, tokio::io::stdin(), tokio::io::stdout()).await
 }
 

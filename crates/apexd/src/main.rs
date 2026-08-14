@@ -10,7 +10,7 @@ use apex_proto::{Connection, Listener, UnixTransport};
 #[tokio::main]
 async fn main() -> Result<()> {
     let paths = ApexPaths::discover()?;
-    if let Some(session) = mcp_session()? {
+    if let Some(session) = mcp_request()? {
         return mcp::run(&paths.socket, session).await;
     }
 
@@ -42,15 +42,15 @@ async fn main() -> Result<()> {
     }
 }
 
-fn mcp_session() -> Result<Option<uuid::Uuid>> {
+fn mcp_request() -> Result<Option<Option<uuid::Uuid>>> {
     let mut args = std::env::args().skip(1);
     if args.next().as_deref() != Some("mcp") {
         return Ok(None);
     }
-    let raw = args
-        .next()
-        .filter(|flag| flag == "--session")
-        .and(args.next())
-        .context("apexd mcp needs --session <id>")?;
-    Ok(Some(raw.parse().with_context(|| format!("{raw} is not a session id"))?))
+    let Some(session) = args.next().filter(|flag| flag == "--session").and(args.next()) else {
+        return Ok(Some(None));
+    };
+    Ok(Some(Some(
+        session.parse().with_context(|| format!("{session} is not a session id"))?,
+    )))
 }
