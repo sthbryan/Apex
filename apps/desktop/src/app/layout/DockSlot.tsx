@@ -18,7 +18,7 @@ export function DockSlot({ open, children }: Props) {
     <div
       ref={panel.holder}
       class={cn(
-        "flex w-(--apex-dock-width) shrink-0 p-2",
+        "flex w-(--apex-dock-width) shrink-0",
         panel.leaving ? "animate-push-out" : "animate-push-in",
       )}
     >

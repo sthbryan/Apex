@@ -109,7 +109,7 @@
 }
 
 :root {
-  --apex-dock-width: 15rem;
+  --apex-dock-width: 14rem;
   --apex-ease: cubic-bezier(0.2, 0, 0, 1);
   --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --apex-ease-in: cubic-bezier(0.4, 0, 1, 1);
