@@ -1,5 +1,5 @@
 import { popPanelToTab } from "@/app/layout/actions";
-import { hasPanelDrag, readPanelDrag } from "@/app/layout/dnd";
+import { allowPanelDrop, readPanelDrag } from "@/app/layout/dnd";
 import { activeProject } from "@/features/projects/state";
 import { sessions } from "@/features/sessions/state";
 import { PaneTree } from "@/features/workspace/PaneTree";
@@ -9,9 +9,7 @@ import { t } from "@/shared/i18n";
 
 export function Workspace() {
   const acceptPanel = (event: DragEvent) => {
-    if (hasPanelDrag()) {
-      event.preventDefault();
-    }
+    allowPanelDrop(event);
   };
   const dropPanel = (event: DragEvent) => {
     const id = readPanelDrag();

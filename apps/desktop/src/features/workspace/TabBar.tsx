@@ -1,7 +1,7 @@
 import cn from "cnfast";
 
 import { dockPanelAt, popPanelToTab } from "@/app/layout/actions";
-import { hasPanelDrag, readPanelDrag } from "@/app/layout/dnd";
+import { allowPanelDrop, readPanelDrag } from "@/app/layout/dnd";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import type { SessionSummary } from "@/bindings/SessionSummary";
@@ -58,9 +58,13 @@ export function TabBar({ tabs, sessions }: Props) {
     <div
       class="flex h-8 min-h-8.5 shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface"
       onDragOver={(event) => {
-        if (hasPaneDrag(event) || hasTabDrag(event) || hasPanelDrag()) {
+        if (hasPaneDrag(event) || hasTabDrag(event)) {
           event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+          }
         }
+        allowPanelDrop(event);
       }}
       onDrop={(event) => onDrop(undefined, event)}
     >
@@ -73,8 +77,15 @@ export function TabBar({ tabs, sessions }: Props) {
             draggable
             onDragStart={(event) => writeTabDrag(event, tab.id)}
             onDragOver={(event) => {
-              if (hasPaneDrag(event) || hasTabDrag(event) || hasPanelDrag()) {
+              if (hasPaneDrag(event) || hasTabDrag(event)) {
                 event.preventDefault();
+                if (event.dataTransfer) {
+                  event.dataTransfer.dropEffect = "move";
+                }
+                event.stopPropagation();
+                return;
+              }
+              if (allowPanelDrop(event)) {
                 event.stopPropagation();
               }
             }}

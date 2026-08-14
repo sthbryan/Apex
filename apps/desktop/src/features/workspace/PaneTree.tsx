@@ -68,6 +68,9 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
       onDragOver={(event) => {
         if (hasPaneDrag(event) || hasTabDrag(event)) {
           event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+          }
         }
       }}
       onDrop={(event) => {

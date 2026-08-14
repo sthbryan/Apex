@@ -23,6 +23,17 @@ export function hasPanelDrag(): boolean {
   return dragging !== null;
 }
 
+export function allowPanelDrop(event: DragEvent): boolean {
+  if (dragging === null) {
+    return false;
+  }
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "move";
+  }
+  return true;
+}
+
 export function readPanelDrag(): DockPanel | null {
   return dragging;
 }

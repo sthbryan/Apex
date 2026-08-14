@@ -3,7 +3,7 @@ import type { ComponentChildren } from "preact";
 
 import { dockPanelAt, popPanelToTab } from "@/app/layout/actions";
 import { DockResize } from "@/app/layout/DockResize";
-import { clearPanelDrag, hasPanelDrag, readPanelDrag, writePanelDrag } from "@/app/layout/dnd";
+import { allowPanelDrop, clearPanelDrag, readPanelDrag, writePanelDrag } from "@/app/layout/dnd";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { dockOrder, dockPanel, setDockPanel } from "@/app/layout/state";
 import { t } from "@/shared/i18n";
@@ -36,11 +36,7 @@ export function Dock({ header, floating = false }: Props) {
           ? "rounded-r-xl bg-bg shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
           : "rounded-none bg-surface shadow-none",
       )}
-      onDragOver={(event) => {
-        if (hasPanelDrag()) {
-          event.preventDefault();
-        }
-      }}
+      onDragOver={allowPanelDrop}
       onDrop={(event) => dropOn(undefined, event)}
     >
       <div
@@ -59,8 +55,7 @@ export function Dock({ header, floating = false }: Props) {
               <div
                 key={id}
                 onDragOver={(event) => {
-                  if (hasPanelDrag()) {
-                    event.preventDefault();
+                  if (allowPanelDrop(event)) {
                     event.stopPropagation();
                   }
                 }}
