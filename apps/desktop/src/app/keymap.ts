@@ -1,8 +1,7 @@
 import { useEffect } from "preact/hooks";
-
+import { toggleDock } from "@/app/layout/state";
 import { togglePage } from "@/app/view";
 import { splitWithShell } from "@/features/sessions/pending";
-import { toggleDock } from "@/features/settings/state";
 import { toggleUsagePopover } from "@/features/usage/state";
 import { activeTab, activeTabId, closePane, tabs } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";

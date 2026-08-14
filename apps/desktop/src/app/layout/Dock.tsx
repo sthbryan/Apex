@@ -1,16 +1,15 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
-import type { ProjectSummary } from "@/bindings/ProjectSummary";
-import type { SessionSummary } from "@/bindings/SessionSummary";
+
+import { type DockPanel, dockPanel, setDockPanel } from "@/app/layout/state";
 import { ContextPanel } from "@/features/context/ContextPanel";
 import { FilesPanel } from "@/features/files/FilesPanel";
 import { GitPanel } from "@/features/git/GitPanel";
+import { foreignSessions, projectSessions, projects } from "@/features/projects/state";
 import { SessionsPanel } from "@/features/sessions/SessionsPanel";
 import { TasksPanel } from "@/features/tasks/TasksPanel";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-
-export type DockPanel = "sessions" | "files" | "git" | "context" | "tasks";
 
 const PANELS: { id: DockPanel; icon: IconName; label: () => string }[] = [
   { id: "sessions", icon: "sessions", label: () => t("dock.sessions") },
@@ -22,27 +21,15 @@ const PANELS: { id: DockPanel; icon: IconName; label: () => string }[] = [
 
 type Props = {
   header?: ComponentChildren;
-  panel: DockPanel;
-  onPanel: (panel: DockPanel) => void;
-  sessions: SessionSummary[];
-  elsewhere: SessionSummary[];
-  projects: ProjectSummary[];
   floating?: boolean;
 };
 
-export function Dock({
-  header,
-  panel,
-  onPanel,
-  sessions,
-  elsewhere,
-  projects,
-  floating = false,
-}: Props) {
+export function Dock({ header, floating = false }: Props) {
+  const panel = dockPanel.value;
   return (
     <aside
       class={cn(
-        "flex h-full w-full flex-col overflow-hidden border-r border-border transition-[border-radius,box-shadow,background-color] duration-[var(--apex-dock)]",
+        "relative flex h-full w-full flex-col overflow-hidden border-r border-border transition-[border-radius,box-shadow,background-color] duration-(--apex-dock)",
         floating
           ? "rounded-r-xl bg-bg shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
           : "rounded-none bg-surface shadow-none",
@@ -63,7 +50,7 @@ export function Dock({
               key={entry.id}
               type="button"
               title={entry.label()}
-              onClick={() => onPanel(entry.id)}
+              onClick={() => setDockPanel(entry.id)}
               class={cn(
                 "flex size-6 items-center justify-center rounded transition-colors",
                 panel === entry.id
@@ -89,7 +76,11 @@ export function Dock({
         ) : panel === "files" ? (
           <FilesPanel />
         ) : (
-          <SessionsPanel sessions={sessions} elsewhere={elsewhere} projects={projects} />
+          <SessionsPanel
+            sessions={projectSessions.value}
+            elsewhere={foreignSessions.value}
+            projects={projects.value}
+          />
         )}
       </div>
     </aside>

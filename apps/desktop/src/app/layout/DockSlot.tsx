@@ -1,6 +1,7 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef } from "preact/hooks";
+import { dockResizing } from "@/app/layout/state";
 import { usePresence } from "@/shared/ui/presence";
 
 type Props = {
@@ -48,14 +49,20 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
       />
       <div
         class={cn(
-          "h-full shrink-0 transition-[width] duration-[var(--apex-dock)] ease-[var(--apex-ease-out)]",
+          "h-full shrink-0",
+          !dockResizing.value &&
+            "transition-[width] duration-[var(--apex-dock)] ease-[var(--apex-ease-out)]",
           takeSpace ? "w-(--apex-dock-width)" : "w-0",
         )}
       />
       <div
         ref={panel.holder}
         onMouseEnter={() => shownAsOverlay && onHoverChange?.(true)}
-        onMouseLeave={() => onHoverChange?.(false)}
+        onMouseLeave={() => {
+          if (!dockResizing.value) {
+            onHoverChange?.(false);
+          }
+        }}
         class={cn(
           "absolute top-0 left-0 z-30 w-(--apex-dock-width) transition-[bottom] duration-[var(--apex-dock)] ease-[var(--apex-ease-out)]",
           shownAsOverlay ? "bottom-0" : "bottom-6",

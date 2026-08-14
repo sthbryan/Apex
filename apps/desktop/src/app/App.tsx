@@ -1,40 +1,24 @@
 import { useSignalEffect } from "@preact/signals";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { useKeymap } from "@/app/keymap";
-import { Dock, type DockPanel } from "@/app/layout/Dock";
-import { DockSlot } from "@/app/layout/DockSlot";
-import { StatusBar } from "@/app/layout/StatusBar";
+import { Layout } from "@/app/layout/Layout";
+import { startDockWidth } from "@/app/layout/state";
 import { TitleBar } from "@/app/layout/TitleBar";
-import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
-import { Views } from "@/app/Views";
-import { page, togglePage } from "@/app/view";
 import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
-import { GitChip } from "@/features/git/GitChip";
 import { startGitWatch } from "@/features/git/state";
 import { startNotifications } from "@/features/notifications/state";
 import { CommandPalette } from "@/features/palette/CommandPalette";
-import { ProjectPicker } from "@/features/projects/ProjectPicker";
-import {
-  activeProject,
-  foreignSessions,
-  history,
-  loadProjects,
-  projectSessions,
-  projects,
-} from "@/features/projects/state";
-import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
+import { activeProject, history, loadProjects } from "@/features/projects/state";
 import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
-import { dockHover, dockOpen, setDockHover, toggleDock } from "@/features/settings/state";
 import { startPeeking } from "@/features/tasks/state";
-import { UsageChip } from "@/features/usage/UsageChip";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { activeSessionId } from "@/features/workspace/state";
-import { agents, connect, daemonVersion, failure, platform, status } from "@/shared/daemon";
+import { agents, connect, failure, platform, status } from "@/shared/daemon";
 import { locale, t } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
@@ -43,7 +27,6 @@ import { watchFullscreen } from "@/shared/window";
 export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [finderOpen, setFinderOpen] = useState(false);
-  const [panel, setPanel] = useState<DockPanel>("sessions");
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
   const toggleFinder = useCallback(() => setFinderOpen((open) => !open), []);
@@ -66,6 +49,7 @@ export function App() {
     const stopPeeking = startPeeking();
     const stopCleanup = startPaneCleanup();
     const stopTheme = startThemeWatcher();
+    const stopDockWidth = startDockWidth();
     return () => {
       stopNotifications?.();
       stopMetrics?.();
@@ -73,6 +57,7 @@ export function App() {
       stopPeeking();
       stopCleanup();
       stopTheme();
+      stopDockWidth();
     };
   }, []);
 
@@ -109,115 +94,15 @@ export function App() {
   useKeymap({ togglePalette, toggleFinder });
 
   if (status.value === "failed") {
-    return (
-      <div class="flex h-full flex-col bg-bg text-text">
-        <TitleBar reserveControls />
-        <main class="flex-1 overflow-auto p-4">
-          <p class="text-state-blocked">{t("daemon.unreachable")}</p>
-          <pre class="mt-2 max-w-xl overflow-x-auto rounded border border-border bg-surface p-3 text-muted">
-            {failure.value}
-          </pre>
-          <button
-            type="button"
-            class="mt-3 rounded border border-border px-3 py-1 hover:bg-raised"
-            onClick={() => void connect()}
-          >
-            {t("daemon.retry")}
-          </button>
-        </main>
-      </div>
-    );
+    return <DaemonFailed />;
   }
-
-  const sidebarToggle = (
-    <ToolbarButton
-      label={t("dock.toggle")}
-      icon="panel"
-      pressed={dockOpen.value}
-      onClick={toggleDock}
-    />
-  );
-
-  const peeking = !dockOpen.value && dockHover.value;
-  const dockVisible = dockOpen.value || peeking;
-  const overlayMode = useRef(false);
-  if (dockVisible) {
-    overlayMode.current = peeking;
-  }
-  const overlay = overlayMode.current;
 
   return (
-    <div class="relative flex h-full flex-col bg-bg text-text">
-      <div class="flex min-h-0 flex-1">
-        <DockSlot open={dockVisible} overlay={overlay} onHoverChange={setDockHover}>
-          <Dock
-            floating={overlay}
-            header={
-              <>
-                <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
-                  {t("app.name")}
-                </span>
-                {!dockOpen.value && <span class="ml-auto pr-2">{sidebarToggle}</span>}
-              </>
-            }
-            panel={panel}
-            onPanel={setPanel}
-            sessions={projectSessions.value}
-            elsewhere={foreignSessions.value}
-            projects={projects.value}
-          />
-        </DockSlot>
-
-        <div class="flex min-w-0 flex-1 flex-col">
-          <TitleBar
-            reserveControls={!dockVisible}
-            lead={
-              <>
-                {sidebarToggle}
-                <ProjectPicker />
-              </>
-            }
-          >
-            <Toolbar
-              status={
-                status.value === "ready"
-                  ? `apexd ${daemonVersion.value ?? ""}`
-                  : t("status.connecting")
-              }
-            >
-              <UsageChip />
-              <ToolbarButton
-                label={t("toolbar.newSession")}
-                icon="plus"
-                onClick={() => setPaletteOpen(true)}
-              />
-              <ToolbarButton
-                label={t("settings.title")}
-                icon="settings"
-                pressed={page.value === "settings"}
-                onClick={() => togglePage("settings")}
-              />
-            </Toolbar>
-          </TitleBar>
-
-          <Views />
-        </div>
-
-        {!dockVisible && (
-          <div class="absolute inset-y-0 left-0 z-20 w-2" onMouseEnter={() => setDockHover(true)} />
-        )}
-      </div>
-
-      <StatusBar lead={<GitChip onOpen={() => setPanel("git")} />}>
-        <ResourcesSummary />
-      </StatusBar>
-
+    <>
+      <Layout onNewSession={() => setPaletteOpen(true)} />
       <NewSession />
-
       <CloseSession />
-
       <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
-
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
@@ -227,6 +112,27 @@ export function App() {
         project={activeProject.value?.id ?? null}
         isGit={activeProject.value?.is_git ?? false}
       />
+    </>
+  );
+}
+
+function DaemonFailed() {
+  return (
+    <div class="flex h-full flex-col bg-bg text-text">
+      <TitleBar reserveControls />
+      <main class="flex-1 overflow-auto p-4">
+        <p class="text-state-blocked">{t("daemon.unreachable")}</p>
+        <pre class="mt-2 max-w-xl overflow-x-auto rounded border border-border bg-surface p-3 text-muted">
+          {failure.value}
+        </pre>
+        <button
+          type="button"
+          class="mt-3 rounded border border-border px-3 py-1 hover:bg-raised"
+          onClick={() => void connect()}
+        >
+          {t("daemon.retry")}
+        </button>
+      </main>
     </div>
   );
 }
