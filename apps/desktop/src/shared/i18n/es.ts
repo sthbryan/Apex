@@ -16,6 +16,9 @@ export const es: Messages = {
   dock: {
     toggle: "Mostrar u ocultar la barra lateral",
     resize: "Cambiar el ancho de la barra lateral",
+    popOut: "Abrir como pestaña",
+    popIn: "Mover a la barra lateral",
+    empty: "Suelta un panel aquí.",
     sessions: "Sesiones",
     files: "Archivos",
     git: "Git",
@@ -71,6 +74,11 @@ export const es: Messages = {
     editorSystem: "El del sistema",
     language: "Idioma",
     languageHint: "Se aplica al momento.",
+    sidebar: "Paneles de la barra",
+    sidebarHint: "Orden de los iconos en la barra. Se aplica al momento.",
+    sidebarUp: "Subir",
+    sidebarDown: "Bajar",
+    sidebarTab: "Abierto como pestaña",
     agentsHint: "Los agentes son archivos TOML en {path} — suelta uno para añadir un CLI.",
   },
   theme: {
@@ -164,6 +172,9 @@ export const es: Messages = {
   },
   workspace: {
     closePane: "Cerrar este pane",
+    toTab: "Abrir como pestaña",
+    toSplit: "Partir en esta pestaña",
+    resize: "Cambiar el tamaño de los panes",
     empty: "No hay nada abierto.",
     emptyHint: "Pulsa {shortcut} para arrancar una sesión.",
   },
