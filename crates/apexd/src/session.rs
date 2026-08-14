@@ -1129,7 +1129,7 @@ mod tests {
             serde_json::from_slice(&std::fs::read(&config).expect("read")).expect("json");
         let server = &written["mcpServers"]["apex"];
         assert!(
-            written["mcpServers"].as_object().expect("servers").len() >= 1,
+            !written["mcpServers"].as_object().expect("servers").is_empty(),
             "apex should always be in there"
         );
         let launcher = server["command"].as_str().expect("command");
