@@ -4,7 +4,7 @@ import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { createSession, resumeSession } from "@/features/sessions/state";
-import { toggleSettings } from "@/features/settings/Settings";
+import { toggleSettings } from "@/features/settings/state";
 import {
   activeTab,
   closePane,

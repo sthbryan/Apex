@@ -1,16 +1,13 @@
-import { signal } from "@preact/signals";
 import cn from "cnfast";
 import { useEffect, useRef } from "preact/hooks";
+import { SettingsRow } from "@/features/settings/SettingsRow";
+import { closeSettings, settingsOpen } from "@/features/settings/state";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
+import { Choice } from "@/shared/ui/Choice";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
-
-export const settingsOpen = signal(false);
-
-export function toggleSettings(): void {
-  settingsOpen.value = !settingsOpen.value;
-}
+import { Segmented } from "@/shared/ui/Segmented";
 
 const THEMES: { value: ThemeMode; icon: IconName }[] = [
   { value: "system", icon: "monitor" },
@@ -34,7 +31,7 @@ export function Settings() {
     const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        settingsOpen.value = false;
+        closeSettings();
       }
     };
     window.addEventListener("keydown", onEscape);
@@ -55,9 +52,7 @@ export function Settings() {
         "animate-veil-out": leaving,
         "animate-veil-in": !leaving,
       })}
-      onMouseDown={() => {
-        settingsOpen.value = false;
-      }}
+      onMouseDown={closeSettings}
     >
       <div
         ref={panel}
@@ -78,9 +73,7 @@ export function Settings() {
           <button
             type="button"
             title={t("settings.close")}
-            onClick={() => {
-              settingsOpen.value = false;
-            }}
+            onClick={closeSettings}
             class="ml-auto flex size-6 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
           >
             <Icon name="close" />
@@ -88,7 +81,7 @@ export function Settings() {
         </header>
 
         <div class="px-4 py-1">
-          <Row label={t("settings.theme")} hint={t("settings.themeHint")}>
+          <SettingsRow label={t("settings.theme")} hint={t("settings.themeHint")}>
             <Segmented>
               {THEMES.map((option) => (
                 <Choice
@@ -101,9 +94,9 @@ export function Settings() {
                 </Choice>
               ))}
             </Segmented>
-          </Row>
+          </SettingsRow>
 
-          <Row label={t("settings.language")} hint={t("settings.languageHint")}>
+          <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>
             <Segmented>
               {LANGUAGES.map((option) => (
                 <Choice
@@ -115,7 +108,7 @@ export function Settings() {
                 </Choice>
               ))}
             </Segmented>
-          </Row>
+          </SettingsRow>
         </div>
 
         <footer class="border-t border-border px-4 py-2 text-faint">
@@ -123,55 +116,5 @@ export function Settings() {
         </footer>
       </div>
     </div>
-  );
-}
-
-function Row({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint: string;
-  children: preact.ComponentChildren;
-}) {
-  return (
-    <div class="flex items-start gap-6 border-b border-border py-3.5 last:border-0">
-      <div class="min-w-0 flex-1">
-        <p class="text-text">{label}</p>
-        <p class="mt-0.5 text-faint">{hint}</p>
-      </div>
-      <div class="shrink-0">{children}</div>
-    </div>
-  );
-}
-
-function Segmented({ children }: { children: preact.ComponentChildren }) {
-  return (
-    <div class="flex items-center gap-0.5 rounded-lg border border-border p-0.5">{children}</div>
-  );
-}
-
-function Choice({
-  selected,
-  onSelect,
-  children,
-}: {
-  selected: boolean;
-  onSelect: () => void;
-  children: preact.ComponentChildren;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onSelect}
-      class={cn(`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97]`, {
-        "bg-raised text-text": selected,
-        "text-muted hover:text-text": !selected,
-      })}
-    >
-      {children}
-    </button>
   );
 }

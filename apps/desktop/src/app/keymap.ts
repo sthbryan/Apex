@@ -1,7 +1,7 @@
 import { useEffect } from "preact/hooks";
 
 import { sessions } from "@/features/sessions/state";
-import { toggleSettings } from "@/features/settings/Settings";
+import { toggleSettings } from "@/features/settings/state";
 import { toggleUsagePopover } from "@/features/usage/state";
 import {
   activeTab,
