@@ -16,7 +16,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
     const focused = tabActive && node.id === activeLeafId;
     return (
       <div
-        class={`h-full w-full overflow-hidden border ${
+        class={`h-full w-full overflow-hidden border transition-colors ${
           focused ? "border-focus" : "border-transparent"
         }`}
         onFocusCapture={() => focusLeaf(tabId, node.id)}
@@ -93,8 +93,8 @@ function Divider({
       role="separator"
       aria-orientation={horizontal ? "vertical" : "horizontal"}
       onMouseDown={startDrag}
-      class={`shrink-0 bg-border transition-colors hover:bg-accent ${
-        horizontal ? "w-px cursor-col-resize hover:w-0.5" : "h-px cursor-row-resize hover:h-0.5"
+      class={`shrink-0 bg-border transition-[background-color,box-shadow] hover:bg-accent hover:shadow-[0_0_0_1px_var(--apex-accent)] ${
+        horizontal ? "w-px cursor-col-resize" : "h-px cursor-row-resize"
       }`}
     />
   );

@@ -1,12 +1,13 @@
 import type { ProjectSummary } from "../bindings/ProjectSummary";
 import type { SessionSummary } from "../bindings/SessionSummary";
+import { Icon, type IconName } from "../components/Icon";
 import { t } from "../i18n";
 import { SessionsPanel } from "../panels/SessionsPanel";
 
 export type DockPanel = "sessions";
 
-const PANELS: { id: DockPanel; glyph: string; label: () => string }[] = [
-  { id: "sessions", glyph: "▣", label: () => t("dock.sessions") },
+const PANELS: { id: DockPanel; icon: IconName; label: () => string }[] = [
+  { id: "sessions", icon: "sessions", label: () => t("dock.sessions") },
 ];
 
 type Props = {
@@ -28,11 +29,11 @@ export function Dock({ panel, onPanel, sessions, elsewhere, projects }: Props) {
               type="button"
               title={entry.label()}
               onClick={() => onPanel(entry.id)}
-              class={`flex size-6 items-center justify-center rounded ${
+              class={`flex size-6 items-center justify-center rounded transition-colors ${
                 panel === entry.id ? "bg-raised text-text" : "text-faint hover:text-text"
               }`}
             >
-              {entry.glyph}
+              <Icon name={entry.icon} />
             </button>
           ))}
         </nav>

@@ -1,3 +1,4 @@
+import { Icon } from "../components/Icon";
 import type { SessionSummary } from "../bindings/SessionSummary";
 import { leaves } from "./tree";
 import { type Tab, activeTabId, closeTab } from "./workspace";
@@ -19,7 +20,7 @@ export function TabBar({ tabs, sessions }: Props) {
         return (
           <div
             key={tab.id}
-            class={`group flex shrink-0 items-center gap-2 border-r border-border px-3 ${
+            class={`group flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors ${
               active ? "bg-bg text-text" : "text-muted hover:text-text"
             }`}
           >
@@ -35,10 +36,10 @@ export function TabBar({ tabs, sessions }: Props) {
             <button
               type="button"
               onClick={() => closeTab(tab.id)}
-              class="text-faint opacity-0 group-hover:opacity-100 hover:text-text"
+              class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
               aria-label="close"
             >
-              ×
+              <Icon name="close" size={12} />
             </button>
           </div>
         );
