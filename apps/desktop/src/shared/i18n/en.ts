@@ -82,8 +82,8 @@ export const en = {
     newSession: "New session: {agent}",
     resume: "Resume {agent}: {label}",
     goTo: "Go to: {title}",
-    splitRight: "Split right",
-    splitDown: "Split down",
+    splitRightWith: "Split right: {agent}",
+    splitDownWith: "Split down: {agent}",
     closePane: "Close pane",
     closeTab: "Close tab",
     settings: "Settings",
@@ -97,14 +97,10 @@ export const en = {
   },
 } as const;
 
-type WritableDeep<T> = T extends string
-  ? string
-  : { -readonly [K in keyof T]: WritableDeep<T[K]> };
+type WritableDeep<T> = T extends string ? string : { -readonly [K in keyof T]: WritableDeep<T[K]> };
 
 type DotPath<T, P extends string = ""> = {
-  [K in keyof T & string]: T[K] extends string
-    ? `${P}${K}`
-    : DotPath<T[K], `${P}${K}.`>;
+  [K in keyof T & string]: T[K] extends string ? `${P}${K}` : DotPath<T[K], `${P}${K}.`>;
 }[keyof T & string];
 
 export type Messages = WritableDeep<typeof en>;

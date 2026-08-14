@@ -152,9 +152,7 @@ function buildActions(
 ): Action[] {
   const actions: Action[] = [];
 
-  for (const agent of project
-    ? agents.filter((candidate) => candidate.resolved_path !== null)
-    : []) {
+  for (const agent of project ? installed(agents) : []) {
     actions.push({
       id: `new:${agent.name}`,
       label: t("palette.newSession", { agent: agent.name }),
@@ -209,25 +207,17 @@ function buildActions(
   const tab = activeTab.value;
   if (tab) {
     const current = findLeaf(tab.root, tab.activeLeafId);
-    const currentSession = sessions.find((session) => session.id === current?.sessionId);
-
-    if (currentSession) {
-      actions.push({
-        id: "split:right",
-        label: t("palette.splitRight"),
-        run: () => {
-          onClose();
-          void splitWithNewSession(currentSession.project_id, currentSession.agent, "row");
-        },
-      });
-      actions.push({
-        id: "split:down",
-        label: t("palette.splitDown"),
-        run: () => {
-          onClose();
-          void splitWithNewSession(currentSession.project_id, currentSession.agent, "column");
-        },
-      });
+    for (const agent of project ? installed(agents) : []) {
+      for (const split of SPLITS) {
+        actions.push({
+          id: `split:${split.direction}:${agent.name}`,
+          label: t(split.key, { agent: agent.name }),
+          run: () => {
+            onClose();
+            void splitWithNewSession(project as string, agent.name, split.direction);
+          },
+        });
+      }
     }
 
     if (current) {
@@ -252,4 +242,13 @@ function buildActions(
   }
 
   return actions;
+}
+
+const SPLITS = [
+  { direction: "row", key: "palette.splitRightWith" },
+  { direction: "column", key: "palette.splitDownWith" },
+] as const;
+
+function installed(agents: AgentSummary[]): AgentSummary[] {
+  return agents.filter((candidate) => candidate.resolved_path !== null);
 }
