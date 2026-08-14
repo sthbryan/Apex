@@ -25,6 +25,15 @@ export const en = {
 
   "dock.resources": "Resources",
 
+  "usage.title": "Subscription usage",
+  "usage.rolling": "{window} rolling window",
+  "usage.longRange": "{window} limit",
+  "usage.resets": "resets {when}",
+
+  "status.cpu": "cpu {percent}%",
+  "status.gpu": "gpu {percent}%",
+  "status.sessions": "{count} live",
+
   "resources.sampling": "Sampling…",
   "resources.system": "System",
   "resources.cpu": "CPU",

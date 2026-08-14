@@ -27,6 +27,15 @@ export const es: Messages = {
 
   "dock.resources": "Recursos",
 
+  "usage.title": "Uso de suscripción",
+  "usage.rolling": "ventana móvil de {window}",
+  "usage.longRange": "límite de {window}",
+  "usage.resets": "reinicia {when}",
+
+  "status.cpu": "cpu {percent}%",
+  "status.gpu": "gpu {percent}%",
+  "status.sessions": "{count} vivas",
+
   "resources.sampling": "Midiendo…",
   "resources.system": "Sistema",
   "resources.cpu": "CPU",
