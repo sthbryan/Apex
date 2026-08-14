@@ -99,7 +99,7 @@ export function App() {
   if (status.value === "failed") {
     return (
       <div class="flex h-full flex-col bg-bg text-text">
-        <TitleBar title={t("app.name")} />
+        <TitleBar reserveControls />
         <main class="flex-1 overflow-auto p-4">
           <p class="text-state-blocked">{t("daemon.unreachable")}</p>
           <pre class="mt-2 max-w-xl overflow-x-auto rounded border border-border bg-surface p-3 text-muted">
@@ -117,82 +117,98 @@ export function App() {
     );
   }
 
+  const sidebarToggle = (
+    <ToolbarButton
+      label={t("dock.toggle")}
+      icon="panel"
+      pressed={dockOpen.value}
+      onClick={toggleDock}
+    />
+  );
+
   return (
-    <div class="flex h-full flex-col bg-bg text-text">
-      <TitleBar
-        title={t("app.name")}
-        lead={
-          <>
-            <ToolbarButton
-              label={t("dock.toggle")}
-              icon="panel"
-              pressed={dockOpen.value}
-              onClick={toggleDock}
-            />
-            <ProjectPicker />
-          </>
-        }
-      >
-        <Toolbar
-          status={
-            status.value === "ready" ? `apexd ${daemonVersion.value ?? ""}` : t("status.connecting")
+    <div class="flex h-full bg-bg text-text">
+      <DockSlot open={dockOpen.value}>
+        <Dock
+          header={
+            <>
+              <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
+                {t("app.name")}
+              </span>
+              <span class="ml-auto pr-2">{sidebarToggle}</span>
+            </>
+          }
+          panel={panel}
+          onPanel={setPanel}
+          sessions={projectSessions.value}
+          elsewhere={foreignSessions.value}
+          projects={projects.value}
+        />
+      </DockSlot>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <TitleBar
+          reserveControls={!dockOpen.value}
+          lead={
+            <>
+              {!dockOpen.value && sidebarToggle}
+              {!dockOpen.value && (
+                <span class="shrink-0 font-semibold tracking-wide">{t("app.name")}</span>
+              )}
+              <ProjectPicker />
+            </>
           }
         >
-          <UsageChip />
-          <ToolbarButton
-            label={t("toolbar.newSession")}
-            icon="plus"
-            onClick={() => setPaletteOpen(true)}
-          />
-          <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
-        </Toolbar>
-      </TitleBar>
+          <Toolbar
+            status={
+              status.value === "ready"
+                ? `apexd ${daemonVersion.value ?? ""}`
+                : t("status.connecting")
+            }
+          >
+            <UsageChip />
+            <ToolbarButton
+              label={t("toolbar.newSession")}
+              icon="plus"
+              onClick={() => setPaletteOpen(true)}
+            />
+            <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
+          </Toolbar>
+        </TitleBar>
 
-      <div class="relative flex min-h-0 flex-1">
-        <DockSlot open={dockOpen.value}>
-          <Dock
-            panel={panel}
-            onPanel={setPanel}
-            sessions={projectSessions.value}
-            elsewhere={foreignSessions.value}
-            projects={projects.value}
-          />
-        </DockSlot>
+        <TabBar tabs={tabs.value} sessions={sessions.value} />
 
-        <div class="flex min-h-0 flex-1 flex-col">
-          <TabBar tabs={tabs.value} sessions={sessions.value} />
-          <div class="relative min-h-0 flex-1">
-            {tabs.value.length === 0 ? (
-              <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
-                <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
-                {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
-              </div>
-            ) : (
-              tabs.value.map((tab) => {
-                const active = tab.id === activeTabId.value;
-                return (
-                  <div
-                    key={tab.id}
-                    class="absolute inset-0"
-                    style={{ visibility: active ? "visible" : "hidden", zIndex: active ? 1 : 0 }}
-                  >
-                    <PaneTree
-                      tabId={tab.id}
-                      node={tab.root}
-                      activeLeafId={tab.activeLeafId}
-                      tabActive={active}
-                    />
-                  </div>
-                );
-              })
-            )}
-          </div>
+        <div class="relative min-h-0 flex-1">
+          {tabs.value.length === 0 ? (
+            <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
+              <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
+              {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
+            </div>
+          ) : (
+            tabs.value.map((tab) => {
+              const active = tab.id === activeTabId.value;
+              return (
+                <div
+                  key={tab.id}
+                  class="absolute inset-0"
+                  style={{ visibility: active ? "visible" : "hidden", zIndex: active ? 1 : 0 }}
+                >
+                  <PaneTree
+                    tabId={tab.id}
+                    node={tab.root}
+                    activeLeafId={tab.activeLeafId}
+                    tabActive={active}
+                  />
+                </div>
+              );
+            })
+          )}
         </div>
-      </div>
 
-      <StatusBar>
-        <ResourcesSummary />
-      </StatusBar>
+        <StatusBar>
+          <ResourcesSummary />
+        </StatusBar>
+      </div>
 
       <Settings />
 

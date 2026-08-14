@@ -1,4 +1,5 @@
 import cn from "cnfast";
+import type { ComponentChildren } from "preact";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { SessionsPanel } from "@/features/sessions/SessionsPanel";
@@ -12,6 +13,7 @@ const PANELS: { id: DockPanel; icon: IconName; label: () => string }[] = [
 ];
 
 type Props = {
+  header?: ComponentChildren;
   panel: DockPanel;
   onPanel: (panel: DockPanel) => void;
   sessions: SessionSummary[];
@@ -19,9 +21,17 @@ type Props = {
   projects: ProjectSummary[];
 };
 
-export function Dock({ panel, onPanel, sessions, elsewhere, projects }: Props) {
+export function Dock({ header, panel, onPanel, sessions, elsewhere, projects }: Props) {
   return (
     <aside class="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+      <div
+        data-tauri-drag-region
+        class="flex h-9 shrink-0 select-none items-center"
+        style={{ paddingLeft: "max(calc(var(--apex-controls-start, 0px) - 0.5rem), 0.5rem)" }}
+      >
+        {header}
+      </div>
+
       {PANELS.length > 1 && (
         <nav class="flex shrink-0 gap-1 border-b border-border px-1 py-1">
           {PANELS.map((entry) => (
