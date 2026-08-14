@@ -23,17 +23,26 @@ pub struct PtySpec {
     pub cols: u16,
 }
 
+const BASELINE_ENV: &[&str] = &["HOME", "PATH", "USER", "LOGNAME", "SHELL", "LANG", "TMPDIR"];
+
 impl PtySpec {
     pub fn new(command: impl Into<PathBuf>, cwd: impl Into<PathBuf>) -> Self {
         Self {
             command: command.into(),
             args: Vec::new(),
             cwd: cwd.into(),
-            env: BTreeMap::new(),
+            env: baseline_env(),
             rows: 24,
             cols: 80,
         }
     }
+}
+
+fn baseline_env() -> BTreeMap<String, String> {
+    BASELINE_ENV
+        .iter()
+        .filter_map(|key| std::env::var(key).ok().map(|value| ((*key).to_string(), value)))
+        .collect()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -63,6 +72,7 @@ impl PtyProcess {
         let mut builder = CommandBuilder::new(&spec.command);
         builder.args(&spec.args);
         builder.cwd(&spec.cwd);
+        builder.env_clear();
         builder.env("TERM", "xterm-256color");
         builder.env("COLORTERM", "truecolor");
         for (key, value) in &spec.env {
@@ -272,6 +282,31 @@ mod tests {
         process.kill().expect("kill");
         let status = timeout(Duration::from_secs(10), process.wait()).await.expect("no murio");
         assert_ne!(status.code, 0);
+    }
+
+    #[tokio::test]
+    async fn the_parent_environment_does_not_leak_into_the_child() {
+        const SET_BY_THE_SHELL: &[&str] = &["PWD", "SHLVL", "_", "TERM", "COLORTERM", "OLDPWD"];
+
+        let Some(candidate) = std::env::vars().map(|(key, _)| key).find(|key| {
+            !BASELINE_ENV.contains(&key.as_str()) && !SET_BY_THE_SHELL.contains(&key.as_str())
+        }) else {
+            return;
+        };
+
+        let process =
+            PtyProcess::spawn(shell(&format!("echo fuga:[${{{candidate}}}]"))).expect("spawn");
+        let text = wait_for(&process, "fuga:").await;
+        assert!(text.contains("fuga:[]"), "se filtro {candidate}: {text}");
+    }
+
+    #[tokio::test]
+    async fn the_spec_environment_reaches_the_child() {
+        let mut spec = shell("echo valor:[${APEX_INYECTADA}]");
+        spec.env.insert("APEX_INYECTADA".into(), "presente".into());
+        let process = PtyProcess::spawn(spec).expect("spawn");
+        let text = wait_for(&process, "valor:").await;
+        assert!(text.contains("valor:[presente]"), "no llego la variable: {text}");
     }
 
     #[tokio::test]

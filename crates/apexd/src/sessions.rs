@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store};
+use std::collections::BTreeMap;
 use apex_proto::{Event, SessionState, SessionSummary, TerminalSize};
 use apex_pty::{PtyProcess, PtySpec};
 use bytes::Bytes;
@@ -25,6 +26,7 @@ impl LiveSession {
 
 pub struct SessionManager {
     profiles: ProfileSet,
+    base_env: BTreeMap<String, String>,
     resolver: Mutex<BinaryResolver>,
     store: Mutex<Store>,
     project_id: Uuid,
@@ -42,8 +44,13 @@ impl SessionManager {
         default_cwd: PathBuf,
     ) -> Self {
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
+        let base_env = resolver
+            .environment()
+            .map(|environment| environment.env().clone())
+            .unwrap_or_default();
         Self {
             profiles,
+            base_env,
             resolver: Mutex::new(resolver),
             store: Mutex::new(store),
             project_id,
@@ -92,7 +99,8 @@ impl SessionManager {
 
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = profile.args.clone();
-        spec.env = profile.env.clone();
+        spec.env = self.base_env.clone();
+        spec.env.extend(profile.env.clone());
         spec.rows = size.rows;
         spec.cols = size.cols;
 

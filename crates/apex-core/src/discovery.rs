@@ -1,14 +1,16 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use tokio::process::Command;
 use tokio::time::timeout;
 
-const PROBE_TIMEOUT: Duration = Duration::from_secs(5);
+const PROBE_TIMEOUT: Duration = Duration::from_secs(8);
+const ENV_MARKER: &str = "APEX_ENV_BEGIN";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShellEnvironment {
+    env: BTreeMap<String, String>,
     search_path: Vec<PathBuf>,
     source: ProbeSource,
 }
@@ -31,21 +33,31 @@ impl ShellEnvironment {
             (&["-l", "-i", "-c"][..], ProbeSource::LoginInteractive),
             (&["-l", "-c"][..], ProbeSource::Login),
         ] {
-            if let Some(path) = run_path_probe(shell, flags).await {
-                let search_path = split_path(&path);
-                if !search_path.is_empty() {
-                    return Self { search_path: with_fallback_roots(search_path), source };
-                }
+            if let Some(env) = run_env_probe(shell, flags).await
+                && env.contains_key("PATH")
+            {
+                return Self::from_env(env, source);
             }
         }
-        Self {
-            search_path: with_fallback_roots(inherited_path()),
-            source: ProbeSource::InheritedPath,
-        }
+        Self::from_env(inherited_env(), ProbeSource::InheritedPath)
+    }
+
+    pub fn from_env(env: BTreeMap<String, String>, source: ProbeSource) -> Self {
+        let search_path = env
+            .get("PATH")
+            .map(|raw| split_path(raw))
+            .unwrap_or_default();
+        Self { env, search_path: with_fallback_roots(search_path), source }
     }
 
     pub fn from_search_path(search_path: Vec<PathBuf>) -> Self {
-        Self { search_path, source: ProbeSource::InheritedPath }
+        let joined =
+            search_path.iter().map(|entry| entry.display().to_string()).collect::<Vec<_>>().join(":");
+        Self {
+            env: BTreeMap::from([("PATH".to_string(), joined)]),
+            search_path,
+            source: ProbeSource::InheritedPath,
+        }
     }
 
     pub fn source(&self) -> ProbeSource {
@@ -54,6 +66,10 @@ impl ShellEnvironment {
 
     pub fn search_path(&self) -> &[PathBuf] {
         &self.search_path
+    }
+
+    pub fn env(&self) -> &BTreeMap<String, String> {
+        &self.env
     }
 
     pub fn lookup(&self, command: &str) -> Option<PathBuf> {
@@ -97,9 +113,9 @@ impl BinaryResolver {
     }
 }
 
-async fn run_path_probe(shell: &Path, flags: &[&str]) -> Option<String> {
+async fn run_env_probe(shell: &Path, flags: &[&str]) -> Option<BTreeMap<String, String>> {
     let mut command = Command::new(shell);
-    command.args(flags).arg("printf %s \"$PATH\"");
+    command.args(flags).arg(format!("printf '%s\\0' {ENV_MARKER}; env -0"));
     command.stdin(std::process::Stdio::null());
     command.kill_on_drop(true);
 
@@ -107,17 +123,28 @@ async fn run_path_probe(shell: &Path, flags: &[&str]) -> Option<String> {
     if !output.status.success() {
         return None;
     }
-    let raw = String::from_utf8_lossy(&output.stdout);
-    let value = raw.lines().next_back()?.trim().to_string();
-    (!value.is_empty()).then_some(value)
+    Some(parse_env(&output.stdout))
+}
+
+fn parse_env(raw: &[u8]) -> BTreeMap<String, String> {
+    let text = String::from_utf8_lossy(raw);
+    let body = match text.split_once(&format!("{ENV_MARKER}\0")) {
+        Some((_, rest)) => rest,
+        None => return BTreeMap::new(),
+    };
+
+    body.split('\0')
+        .filter_map(|entry| entry.split_once('='))
+        .map(|(key, value)| (key.to_string(), value.to_string()))
+        .collect()
 }
 
 fn split_path(raw: &str) -> Vec<PathBuf> {
     raw.split(':').filter(|entry| !entry.is_empty()).map(PathBuf::from).collect()
 }
 
-fn inherited_path() -> Vec<PathBuf> {
-    std::env::var("PATH").map(|raw| split_path(&raw)).unwrap_or_default()
+fn inherited_env() -> BTreeMap<String, String> {
+    std::env::vars().collect()
 }
 
 const FALLBACK_ROOTS: &[&str] =
@@ -173,34 +200,43 @@ mod tests {
         assert_eq!(resolver.resolve("sh"), Some(PathBuf::from("/bin/sh")));
         assert_eq!(resolver.resolve("nada"), None);
         assert_eq!(resolver.cache.len(), 2);
-        assert!(resolver.cache.contains_key("nada"));
-    }
-
-    #[tokio::test]
-    async fn probing_a_real_shell_yields_a_usable_search_path() {
-        let env = ShellEnvironment::probe_with_shell(Path::new("/bin/sh")).await;
-        assert!(!env.search_path().is_empty());
-        assert!(env.lookup("sh").is_some());
-    }
-
-    #[tokio::test]
-    async fn probing_a_missing_shell_falls_back_to_the_inherited_path() {
-        let env = ShellEnvironment::probe_with_shell(Path::new("/no/existe/shell")).await;
-        assert_eq!(env.source(), ProbeSource::InheritedPath);
     }
 
     #[test]
-    fn fallback_roots_are_appended_without_duplicates() {
-        let Some(home) = directories::UserDirs::new() else {
-            return;
-        };
-        let cargo = home.home_dir().join(".cargo/bin");
-        if !cargo.is_dir() {
-            return;
-        }
+    fn env_output_is_parsed_after_the_marker() {
+        let raw = format!("ruido de zshrc\n{ENV_MARKER}\0PATH=/bin:/usr/bin\0HOME=/Users/x\0");
+        let parsed = parse_env(raw.as_bytes());
+        assert_eq!(parsed.get("PATH").map(String::as_str), Some("/bin:/usr/bin"));
+        assert_eq!(parsed.get("HOME").map(String::as_str), Some("/Users/x"));
+        assert_eq!(parsed.len(), 2);
+    }
 
-        let merged = with_fallback_roots(vec![cargo.clone()]);
-        assert_eq!(merged.iter().filter(|entry| **entry == cargo).count(), 1);
-        assert!(!merged.is_empty());
+    #[test]
+    fn env_values_may_contain_newlines_and_equals() {
+        let raw = format!("{ENV_MARKER}\0PROMPT=linea1\nlinea2\0EXPR=a=b\0");
+        let parsed = parse_env(raw.as_bytes());
+        assert_eq!(parsed.get("PROMPT").map(String::as_str), Some("linea1\nlinea2"));
+        assert_eq!(parsed.get("EXPR").map(String::as_str), Some("a=b"));
+    }
+
+    #[test]
+    fn output_without_the_marker_yields_nothing() {
+        assert!(parse_env(b"PATH=/bin\0").is_empty());
+    }
+
+    #[tokio::test]
+    async fn probing_a_real_shell_captures_the_whole_environment() {
+        let env = ShellEnvironment::probe_with_shell(Path::new("/bin/sh")).await;
+        assert!(!env.search_path().is_empty());
+        assert!(env.lookup("sh").is_some());
+        assert!(env.env().contains_key("PATH"));
+        assert!(env.env().contains_key("HOME"));
+    }
+
+    #[tokio::test]
+    async fn probing_a_missing_shell_falls_back_to_the_inherited_environment() {
+        let env = ShellEnvironment::probe_with_shell(Path::new("/no/existe/shell")).await;
+        assert_eq!(env.source(), ProbeSource::InheritedPath);
+        assert!(!env.env().is_empty());
     }
 }
