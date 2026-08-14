@@ -79,6 +79,15 @@ impl Client {
                 Ok(message) => message,
                 Err(error) => {
                     tracing::warn!(%error, "unreadable message");
+                    let refused = ServerMessage::err(
+                        frame.request_id().unwrap_or(RequestId(0)),
+                        ProtocolError::new(ErrorCode::MalformedRequest, error.to_string()),
+                    );
+                    if let Ok(frame) = Frame::control(&refused)
+                        && self.outbox.send(frame).await.is_err()
+                    {
+                        return;
+                    }
                     continue;
                 }
             };
@@ -707,6 +716,32 @@ mod tests {
         match frame.parse_control::<ServerMessage>().expect("parse") {
             ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
                 assert_eq!(error.code, ErrorCode::NotFound);
+            }
+            other => panic!("expected an error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_command_the_daemon_cannot_read_is_refused_not_dropped() {
+        let harness = Harness::start().await;
+        let mut client = harness.client().await;
+        client.next += 1;
+        let id = RequestId(client.next);
+        client
+            .connection
+            .send(Frame::Control(
+                serde_json::json!({ "kind": "request", "id": id, "command": { "type": "from_the_future" } })
+                    .to_string()
+                    .into(),
+            ))
+            .await
+            .expect("request");
+
+        let frame = client.connection.recv().await.expect("frame").expect("no error");
+        match frame.parse_control::<ServerMessage>().expect("parse") {
+            ServerMessage::Response { id: answered, outcome: CommandOutcome::Err { error } } => {
+                assert_eq!(answered, id);
+                assert_eq!(error.code, ErrorCode::MalformedRequest);
             }
             other => panic!("expected an error, got {other:?}"),
         }

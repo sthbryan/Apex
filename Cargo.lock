@@ -146,6 +146,7 @@ dependencies = [
  "apex-quota",
  "bytes",
  "directories",
+ "serde_json",
  "tempfile",
  "tokio",
  "tracing",

@@ -2,7 +2,14 @@ import cn from "cnfast";
 import { useEffect } from "preact/hooks";
 
 import type { FileEntry } from "@/bindings/FileEntry";
-import { expanded, openTree, refreshTree, toggleDirectory, tree } from "@/features/files/state";
+import {
+  expanded,
+  openTree,
+  refreshTree,
+  toggleDirectory,
+  tree,
+  treeFailure,
+} from "@/features/files/state";
 import { activeProject } from "@/features/projects/state";
 import { openFile } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -36,7 +43,11 @@ export function FilesPanel() {
         </button>
       </div>
       <div class="min-h-0 flex-1 overflow-auto pb-2">
-        <Branch project={project.id} path="" depth={0} />
+        {treeFailure.value ? (
+          <p class="px-2 text-state-failed">{treeFailure.value}</p>
+        ) : (
+          <Branch project={project.id} path="" depth={0} />
+        )}
       </div>
     </div>
   );

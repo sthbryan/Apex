@@ -5,6 +5,7 @@ use tokio_util::codec::{Decoder, Encoder, LengthDelimitedCodec};
 use uuid::Uuid;
 
 use crate::error::TransportError;
+use crate::message::RequestId;
 
 const KIND_CONTROL: u8 = 0;
 const KIND_OUTPUT: u8 = 1;
@@ -28,6 +29,14 @@ impl Frame {
                 Err(TransportError::MalformedFrame("expected control frame".into()))
             }
         }
+    }
+
+    pub fn request_id(&self) -> Option<RequestId> {
+        #[derive(serde::Deserialize)]
+        struct Header {
+            id: RequestId,
+        }
+        self.parse_control::<Header>().ok().map(|header| header.id)
     }
 }
 

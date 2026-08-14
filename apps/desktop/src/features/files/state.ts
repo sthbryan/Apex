@@ -6,6 +6,7 @@ import type { FileEntry } from "@/bindings/FileEntry";
 
 export const tree = signal<Record<string, FileEntry[]>>({});
 export const expanded = signal<string[]>([]);
+export const treeFailure = signal<string | null>(null);
 
 let loadedProject: string | null = null;
 
@@ -41,8 +42,13 @@ export async function toggleDirectory(project: string, path: string): Promise<vo
 }
 
 async function loadDirectory(project: string, path: string): Promise<void> {
-  const entries = await listDirectory(project, path).catch(() => []);
-  tree.value = { ...tree.value, [path]: entries };
+  try {
+    const entries = await listDirectory(project, path);
+    treeFailure.value = null;
+    tree.value = { ...tree.value, [path]: entries };
+  } catch (error) {
+    treeFailure.value = String(error);
+  }
 }
 
 export async function searchFiles(
