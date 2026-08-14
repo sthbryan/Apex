@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, Event, HistoryEntry, ProjectSummary, Reply, SessionSummary,
-    TerminalSize,
+    AgentSummary, Command, Event, HistoryEntry, MetricsSnapshot, ProjectSummary, Reply,
+    SessionSummary, TerminalSize,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -104,6 +104,23 @@ async fn load_layout(state: tauri::State<'_, AppState>, project: Uuid) -> Answer
         Reply::Layout { payload } => Ok(payload),
         other => Err(format!("respuesta inesperada: {other:?}")),
     }
+}
+
+#[tauri::command]
+async fn read_metrics(
+    state: tauri::State<'_, AppState>,
+    refresh_quota: bool,
+) -> Answer<MetricsSnapshot> {
+    match state.daemon.request(Command::ReadMetrics { refresh_quota }).await.map_err(failed)? {
+        Reply::Metrics { snapshot } => Ok(snapshot),
+        other => Err(format!("respuesta inesperada: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn kill_process(state: tauri::State<'_, AppState>, pid: u32) -> Answer<()> {
+    state.daemon.request(Command::KillProcess { pid }).await.map_err(failed)?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -212,6 +229,8 @@ pub fn run() {
             open_project,
             save_layout,
             load_layout,
+            read_metrics,
+            kill_process,
             list_history,
             resume_session,
             create_session,
