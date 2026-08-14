@@ -1,6 +1,10 @@
 use std::collections::{HashMap, HashSet};
 
-use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
+use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, Signal, System};
+
+mod gpu;
+
+pub use gpu::read_gpu_utilization;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct SystemUsage {
@@ -97,6 +101,13 @@ impl Sampler {
         self.system.process(Pid::from_u32(pid)).is_some()
     }
 
+    pub fn kill(&self, pid: u32) -> bool {
+        self.system
+            .process(Pid::from_u32(pid))
+            .and_then(|process| process.kill_with(Signal::Term))
+            .unwrap_or(false)
+    }
+
     fn descendants(&self, root: u32) -> HashSet<u32> {
         let mut children: HashMap<u32, Vec<u32>> = HashMap::new();
         for (pid, process) in self.system.processes() {
@@ -179,6 +190,11 @@ mod tests {
     #[test]
     fn a_dead_pid_is_not_alive() {
         assert!(!sampler().is_alive(u32::MAX));
+    }
+
+    #[test]
+    fn killing_an_unknown_pid_reports_failure() {
+        assert!(!sampler().kill(u32::MAX));
     }
 
     #[test]
