@@ -1,33 +1,32 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { useKeymap } from "@/app/keymap";
-
-import { agents, connect, daemonVersion, failure, platform, status } from "@/shared/daemon";
+import { startNotifications } from "@/features/notifications/state";
+import { CommandPalette } from "@/features/palette/CommandPalette";
+import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import {
   activeProject,
   foreignSessions,
   history,
   loadProjects,
   projectSessions,
+  projects,
 } from "@/features/projects/state";
-import { locale, t } from "@/shared/i18n";
+import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
-import { projects } from "@/features/projects/state";
-import { type DockPanel, Dock } from "@/shell/Dock";
 import { Settings } from "@/features/settings/Settings";
-import { StatusBar } from "@/shell/StatusBar";
-import { CommandPalette } from "@/features/palette/CommandPalette";
 import { PaneTree } from "@/features/workspace/PaneTree";
+import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
-import { ProjectPicker } from "@/features/projects/ProjectPicker";
+import { agents, connect, daemonVersion, failure, platform, status } from "@/shared/daemon";
+import { locale, t } from "@/shared/i18n";
+import { startMetrics } from "@/shared/telemetry";
+import { startThemeWatcher } from "@/shared/theme/mode";
+import { Dock, type DockPanel } from "@/shell/Dock";
+import { StatusBar } from "@/shell/StatusBar";
 import { TitleBar } from "@/shell/TitleBar";
 import { Toolbar } from "@/shell/Toolbar";
-import { startMetrics } from "@/shared/telemetry";
-import { startNotifications } from "@/features/notifications/state";
-import { startThemeWatcher } from "@/shared/theme/mode";
 import { watchFullscreen } from "@/shell/windowControls";
-import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
-import { focusTerminal } from "@/features/sessions/registry";
 
 export function App() {
   const [dockOpen, setDockOpen] = useState(true);
@@ -68,7 +67,7 @@ export function App() {
       dispose = stop;
     });
     return () => dispose?.();
-  }, [platform.value]);
+  }, []);
 
   useEffect(() => {
     if (paletteOpen) {

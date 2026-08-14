@@ -1,8 +1,8 @@
-import { Icon } from "@/shared/ui/Icon";
-import type { SessionSummary } from "@/bindings/SessionSummary";
-import { leaves } from "@/features/workspace/tree";
-import { type Tab, activeTabId, closeTab } from "@/features/workspace/state";
 import cn from "cnfast";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import { activeTabId, closeTab, type Tab } from "@/features/workspace/state";
+import { leaves } from "@/features/workspace/tree";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   tabs: Tab[];
@@ -21,10 +21,13 @@ export function TabBar({ tabs, sessions }: Props) {
         return (
           <div
             key={tab.id}
-            class={cn("group flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors", {
-              "bg-bg text-text": active,
-              "text-muted hover:text-text": !active,
-            })}
+            class={cn(
+              "group flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors",
+              {
+                "bg-bg text-text": active,
+                "text-muted hover:text-text": !active,
+              },
+            )}
           >
             <button
               type="button"
@@ -53,7 +56,8 @@ export function TabBar({ tabs, sessions }: Props) {
 function titleOf(tab: Tab, sessions: SessionSummary[]): string {
   const titles = leaves(tab.root).map(
     (pane) =>
-      sessions.find((session) => session.id === pane.sessionId)?.title ?? pane.sessionId.slice(0, 8),
+      sessions.find((session) => session.id === pane.sessionId)?.title ??
+      pane.sessionId.slice(0, 8),
   );
   return titles.length > 1 ? `${titles[0]} +${titles.length - 1}` : (titles[0] ?? "");
 }

@@ -20,7 +20,6 @@ export const es: Messages = {
   "usage.resetsIn": "reinicia en {away} · {when}",
   "usage.resetsAt": "reinicia {when}",
 
-
   "resources.sampling": "Midiendo…",
   "resources.cpu": "CPU",
   "resources.gpu": "GPU",

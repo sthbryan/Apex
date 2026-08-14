@@ -1,14 +1,18 @@
+import { cn } from "cnfast";
 import { useState } from "preact/hooks";
-
-import { Icon } from "@/shared/ui/Icon";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { t } from "@/shared/i18n";
 import { waiting } from "@/features/notifications/state";
 import { switchTo } from "@/features/projects/state";
 import { closeSession } from "@/features/sessions/state";
-import { activeSessionId, dropSession, focusSession, openInNewTab } from "@/features/workspace/state";
-import { cn } from "cnfast";
+import {
+  activeSessionId,
+  dropSession,
+  focusSession,
+  openInNewTab,
+} from "@/features/workspace/state";
+import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   sessions: SessionSummary[];
@@ -83,9 +87,7 @@ function Waiting({
 }) {
   return (
     <section class="animate-pop-in rounded border border-state-blocked/40 bg-state-blocked/5 p-1">
-      <h2 class="mb-1 px-1 uppercase tracking-wider text-state-blocked">
-        {t("sessions.waiting")}
-      </h2>
+      <h2 class="mb-1 px-1 uppercase tracking-wider text-state-blocked">{t("sessions.waiting")}</h2>
       <ul class="flex flex-col">
         {sessions.map((session) => (
           <li key={session.id}>
@@ -111,7 +113,13 @@ function Waiting({
   );
 }
 
-function Elsewhere({ sessions, projects }: { sessions: SessionSummary[]; projects: ProjectSummary[] }) {
+function Elsewhere({
+  sessions,
+  projects,
+}: {
+  sessions: SessionSummary[];
+  projects: ProjectSummary[];
+}) {
   const [open, setOpen] = useState(false);
   const waiting = sessions.filter((session) => session.state === "blocked").length;
 
@@ -129,7 +137,11 @@ function Elsewhere({ sessions, projects }: { sessions: SessionSummary[]; project
         onClick={() => setOpen((shown) => !shown)}
         class="mb-1 flex w-full items-center gap-2 px-1 uppercase tracking-wider text-faint hover:text-muted"
       >
-        <Icon name="chevron" size={12} class={cn("transition-transform", open ? "" : "-rotate-90")} />
+        <Icon
+          name="chevron"
+          size={12}
+          class={cn("transition-transform", open ? "" : "-rotate-90")}
+        />
         <span>{t("projects.elsewhere")}</span>
         <span class="ml-auto normal-case">
           {waiting > 0 ? <span class="text-state-blocked">{waiting}</span> : sessions.length}
@@ -173,7 +185,7 @@ function Row({ session }: { session: SessionSummary }) {
     <li
       class={cn(
         "group flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised",
-        activeSessionId.value === session.id ? "bg-raised" : ""
+        activeSessionId.value === session.id ? "bg-raised" : "",
       )}
     >
       <button
@@ -185,7 +197,7 @@ function Row({ session }: { session: SessionSummary }) {
         }}
         class={cn(
           "flex min-w-0 flex-1 items-center gap-2 py-1 text-left",
-          finished ? "text-muted" : ""
+          finished ? "text-muted" : "",
         )}
       >
         <StateDot session={session} />

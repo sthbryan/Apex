@@ -1,11 +1,10 @@
+import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
-
-import { Icon, type IconName } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
+import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
 import { t } from "@/shared/i18n";
 import { compactBytes, metrics } from "@/shared/telemetry";
-import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
-import cn from "cnfast";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
 
 export function StatusBar() {
   const [open, setOpen] = useState(false);
@@ -21,16 +20,16 @@ export function StatusBar() {
         setOpen(false);
       }
     };
-    const escape = (event: KeyboardEvent) => {
+    const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
       }
     };
     window.addEventListener("mousedown", dismiss);
-    window.addEventListener("keydown", escape);
+    window.addEventListener("keydown", onEscape);
     return () => {
       window.removeEventListener("mousedown", dismiss);
-      window.removeEventListener("keydown", escape);
+      window.removeEventListener("keydown", onEscape);
     };
   }, [open]);
 
@@ -42,15 +41,20 @@ export function StatusBar() {
   return (
     <div
       ref={holder}
-      class={cn("relative flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-2 text-faint")}
+      class={cn(
+        "relative flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-2 text-faint",
+      )}
     >
       {popover.mounted && (
         <div
           ref={popover.holder}
-          class={cn("absolute bottom-full right-1 z-50 mb-1 w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl", {
-            "animate-rise-out": popover.leaving,
-            "animate-rise-in": !popover.leaving,
-          })}
+          class={cn(
+            "absolute bottom-full right-1 z-50 mb-1 w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
+            {
+              "animate-rise-out": popover.leaving,
+              "animate-rise-in": !popover.leaving,
+            },
+          )}
         >
           <ResourcesPanel snapshot={snapshot} />
         </div>
@@ -59,11 +63,21 @@ export function StatusBar() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        class={cn("flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted")}
+        class={cn(
+          "flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted",
+        )}
       >
-        <Gauge icon="cpu" label={t("resources.cpu")} value={`${snapshot.system.cpu_percent.toFixed(0)}%`} />
+        <Gauge
+          icon="cpu"
+          label={t("resources.cpu")}
+          value={`${snapshot.system.cpu_percent.toFixed(0)}%`}
+        />
         {snapshot.system.gpu_percent !== null && (
-          <Gauge icon="gpu" label={t("resources.gpu")} value={`${snapshot.system.gpu_percent.toFixed(0)}%`} />
+          <Gauge
+            icon="gpu"
+            label={t("resources.gpu")}
+            value={`${snapshot.system.gpu_percent.toFixed(0)}%`}
+          />
         )}
         <Gauge
           icon="memory"

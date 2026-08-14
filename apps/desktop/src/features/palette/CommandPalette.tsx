@@ -1,13 +1,10 @@
+import { cn } from "cnfast";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { usePresence } from "@/shared/ui/presence";
-import { t } from "@/shared/i18n";
 import { createSession, resumeSession } from "@/features/sessions/state";
 import { toggleSettings } from "@/features/settings/Settings";
-import { findLeaf } from "@/features/workspace/tree";
 import {
   activeTab,
   closePane,
@@ -16,7 +13,9 @@ import {
   openInNewTab,
   splitWithNewSession,
 } from "@/features/workspace/state";
-import { cn } from "cnfast";
+import { findLeaf } from "@/features/workspace/tree";
+import { t } from "@/shared/i18n";
+import { usePresence } from "@/shared/ui/presence";
 
 type Action = {
   id: string;
@@ -94,14 +93,14 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
       ref={overlay.holder}
       class={cn(
         "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24",
-        overlay.leaving ? "animate-veil-out" : "animate-veil-in"
+        overlay.leaving ? "animate-veil-out" : "animate-veil-in",
       )}
       onMouseDown={onClose}
     >
       <div
         class={cn(
           "w-lg max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
-          overlay.leaving ? "animate-pop-out" : "animate-pop-in"
+          overlay.leaving ? "animate-pop-out" : "animate-pop-in",
         )}
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -130,7 +129,7 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
                   title={action.label}
                   class={cn(
                     "w-full truncate px-3 py-1.5 text-left transition-colors",
-                    index === cursor ? "bg-raised text-text" : "text-muted"
+                    index === cursor ? "bg-raised text-text" : "text-muted",
                   )}
                 >
                   {action.label}
@@ -153,7 +152,9 @@ function buildActions(
 ): Action[] {
   const actions: Action[] = [];
 
-  for (const agent of project ? agents.filter((candidate) => candidate.resolved_path !== null) : []) {
+  for (const agent of project
+    ? agents.filter((candidate) => candidate.resolved_path !== null)
+    : []) {
     actions.push({
       id: `new:${agent.name}`,
       label: t("palette.newSession", { agent: agent.name }),

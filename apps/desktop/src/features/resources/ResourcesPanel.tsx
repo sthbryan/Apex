@@ -1,9 +1,9 @@
 import cn from "cnfast";
 import type { MetricsSnapshot } from "@/bindings/MetricsSnapshot";
-import { Icon, type IconName } from "@/shared/ui/Icon";
+import { focusSession } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { compactBytes, killProcess, percentOf } from "@/shared/telemetry";
-import { focusSession } from "@/features/workspace/state";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 
 type Props = {
   snapshot: MetricsSnapshot | null;
@@ -104,7 +104,7 @@ function Meter({
         <span
           class={cn(
             "block h-full origin-left rounded-full transition-transform duration-500 ease-out",
-            toneBar(clamped)
+            toneBar(clamped),
           )}
           style={{ transform: `scaleX(${clamped / 100})` }}
         />

@@ -2,7 +2,12 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { Terminal } from "@xterm/xterm";
 
-import { attachSession, onSessionOutput, resizeSession, sendInput } from "@/features/sessions/state";
+import {
+  attachSession,
+  onSessionOutput,
+  resizeSession,
+  sendInput,
+} from "@/features/sessions/state";
 import { fontFamily, readTerminalTheme } from "@/shared/theme/xterm";
 
 type Entry = {

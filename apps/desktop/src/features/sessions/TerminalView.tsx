@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "preact/hooks";
 
-import { detachTerminal, focusTerminal, mountTerminal, refitTerminal } from "@/features/sessions/registry";
+import {
+  detachTerminal,
+  focusTerminal,
+  mountTerminal,
+  refitTerminal,
+} from "@/features/sessions/registry";
 
 type Props = {
   id: string;

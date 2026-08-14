@@ -1,11 +1,10 @@
+import cn from "cnfast";
 import { useState } from "preact/hooks";
-
 import type { QuotaReport } from "@/bindings/QuotaReport";
 import type { QuotaWindow } from "@/bindings/QuotaWindow";
-import { Icon } from "@/shared/ui/Icon";
 import { t } from "@/shared/i18n";
 import { refreshQuota } from "@/shared/telemetry";
-import cn from "cnfast";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   reports: QuotaReport[];
@@ -65,7 +64,10 @@ function Row({ window }: { window: QuotaWindow }) {
 
       <span class="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
         <span
-          class={cn("block h-full origin-left rounded-full transition-transform duration-500 ease-out", level.bar)}
+          class={cn(
+            "block h-full origin-left rounded-full transition-transform duration-500 ease-out",
+            level.bar,
+          )}
           style={{ transform: `scaleX(${percent / 100})` }}
         />
         {window.expected_percent !== null && (
@@ -76,7 +78,9 @@ function Row({ window }: { window: QuotaWindow }) {
         )}
       </span>
 
-      <span class={cn("w-12 shrink-0 truncate text-right", pace?.tone ?? "")}>{pace?.text ?? ""}</span>
+      <span class={cn("w-12 shrink-0 truncate text-right", pace?.tone ?? "")}>
+        {pace?.text ?? ""}
+      </span>
     </div>
   );
 }

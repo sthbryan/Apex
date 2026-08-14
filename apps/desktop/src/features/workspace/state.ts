@@ -4,13 +4,13 @@ import type { SessionSummary } from "@/bindings/SessionSummary";
 import { closeSession, createSession } from "@/features/sessions/state";
 import {
   type Direction,
-  type Leaf,
-  type PaneNode,
   findLeaf,
+  type Leaf,
   leaf,
   leaves,
   neighbourLeaf,
   newId,
+  type PaneNode,
   removeLeaf,
   setRatio,
   splitLeaf,

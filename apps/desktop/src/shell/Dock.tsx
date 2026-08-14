@@ -1,9 +1,9 @@
 import cn from "cnfast";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { Icon, type IconName } from "@/shared/ui/Icon";
-import { t } from "@/shared/i18n";
 import { SessionsPanel } from "@/features/sessions/SessionsPanel";
+import { t } from "@/shared/i18n";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 
 export type DockPanel = "sessions";
 
@@ -32,7 +32,7 @@ export function Dock({ panel, onPanel, sessions, elsewhere, projects }: Props) {
               onClick={() => onPanel(entry.id)}
               class={cn(
                 "flex size-6 items-center justify-center rounded transition-colors",
-                panel === entry.id ? "bg-raised text-text" : "text-faint hover:text-text"
+                panel === entry.id ? "bg-raised text-text" : "text-faint hover:text-text",
               )}
             >
               <Icon name={entry.icon} />

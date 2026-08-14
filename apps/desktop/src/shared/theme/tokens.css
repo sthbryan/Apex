@@ -258,7 +258,7 @@ body {
   *,
   *::before,
   *::after {
-    animation-iteration-count: 1 !important;
+    animation-iteration-count: 1;
   }
 }
 

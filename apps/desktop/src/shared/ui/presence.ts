@@ -17,7 +17,10 @@ export function usePresence<T extends HTMLElement>(open: boolean) {
     let cancelled = false;
     const running = node
       .getAnimations({ subtree: true })
-      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY)
+      .filter(
+        (animation) =>
+          animation.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY,
+      )
       .map((animation) => animation.finished);
     void Promise.allSettled(running).then(() => {
       if (!cancelled) {

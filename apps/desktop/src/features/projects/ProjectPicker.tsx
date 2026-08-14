@@ -1,11 +1,10 @@
+import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
-
-import { Icon } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
-import { t } from "@/shared/i18n";
 import { activeProject, pickProject, projects, switchTo } from "@/features/projects/state";
 import { sessions } from "@/features/sessions/state";
-import cn from "cnfast";
+import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
 
 export function ProjectPicker() {
   const [open, setOpen] = useState(false);
@@ -51,10 +50,13 @@ export function ProjectPicker() {
       {menu.mounted && (
         <div
           ref={menu.holder}
-          class={cn(`absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl`, {
-            "animate-drop-out": menu.leaving,
-            "animate-drop-in": !menu.leaving,
-          })}
+          class={cn(
+            `absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl`,
+            {
+              "animate-drop-out": menu.leaving,
+              "animate-drop-in": !menu.leaving,
+            },
+          )}
         >
           <ul class="max-h-72 overflow-y-auto py-1">
             {projects.value.map((project) => (
@@ -65,10 +67,13 @@ export function ProjectPicker() {
                     setOpen(false);
                     void switchTo(project.id);
                   }}
-                  class={cn(`flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised`, {
-                    "text-text": project.id === current?.id,
-                    "text-muted": project.id !== current?.id,
-                  })}
+                  class={cn(
+                    `flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised`,
+                    {
+                      "text-text": project.id === current?.id,
+                      "text-muted": project.id !== current?.id,
+                    },
+                  )}
                 >
                   <span class="truncate">{project.name}</span>
                   {project.is_git && <span class="shrink-0 text-faint">git</span>}

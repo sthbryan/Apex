@@ -1,11 +1,10 @@
 import { signal } from "@preact/signals";
+import cn from "cnfast";
 import { useEffect, useRef } from "preact/hooks";
-
+import { type Locale, locale, setLocale, t } from "@/shared/i18n";
+import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
-import { type Locale, locale, setLocale, t } from "@/shared/i18n";
-import { type ThemeMode, setThemeMode, themeMode } from "@/shared/theme/mode";
-import cn from "cnfast";
 
 export const settingsOpen = signal(false);
 
@@ -32,16 +31,16 @@ export function Settings() {
     if (!settingsOpen.value) {
       return;
     }
-    const escape = (event: KeyboardEvent) => {
+    const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         settingsOpen.value = false;
       }
     };
-    window.addEventListener("keydown", escape);
+    window.addEventListener("keydown", onEscape);
     panel.current?.focus();
-    return () => window.removeEventListener("keydown", escape);
-  }, [settingsOpen.value]);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, []);
 
   if (!overlay.mounted) {
     return null;
@@ -66,10 +65,13 @@ export function Settings() {
         role="dialog"
         aria-label={t("settings.title")}
         onMouseDown={(event) => event.stopPropagation()}
-        class={cn(`w-120 max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl outline-none`, {
-          "animate-pop-out": leaving,
-          "animate-pop-in": !leaving,
-        })}
+        class={cn(
+          `w-120 max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl outline-none`,
+          {
+            "animate-pop-out": leaving,
+            "animate-pop-in": !leaving,
+          },
+        )}
       >
         <header class="flex items-center gap-2 border-b border-border px-4 py-2.5">
           <span class="text-text">{t("settings.title")}</span>
@@ -167,7 +169,8 @@ function Choice({
       class={cn(`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97]`, {
         "bg-raised text-text": selected,
         "text-muted hover:text-text": !selected,
-      })}>
+      })}
+    >
       {children}
     </button>
   );

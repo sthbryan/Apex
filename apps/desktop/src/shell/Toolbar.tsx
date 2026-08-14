@@ -1,13 +1,12 @@
+import { cn } from "cnfast";
 import { useEffect, useRef } from "preact/hooks";
-
-import { Icon, type IconName } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
-import { t } from "@/shared/i18n";
-import { metrics } from "@/shared/telemetry";
-import { UsagePopover } from "@/features/usage/UsagePopover";
 import { toggleSettings } from "@/features/settings/Settings";
 import { anyOverPace, tightestUsage, toggleUsagePopover, usageOpen } from "@/features/usage/state";
-import { cn } from "cnfast";
+import { UsagePopover } from "@/features/usage/UsagePopover";
+import { t } from "@/shared/i18n";
+import { metrics } from "@/shared/telemetry";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { usePresence } from "@/shared/ui/presence";
 
 type Props = {
   onNewSession: () => void;
@@ -29,7 +28,7 @@ export function Toolbar({ onNewSession, status }: Props) {
     };
     window.addEventListener("mousedown", dismiss);
     return () => window.removeEventListener("mousedown", dismiss);
-  }, [usageOpen.value]);
+  }, []);
 
   return (
     <div class="flex items-center gap-1">
@@ -41,7 +40,10 @@ export function Toolbar({ onNewSession, status }: Props) {
             type="button"
             title={t("usage.title")}
             onClick={toggleUsagePopover}
-            class={cn("flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised", usageTone())}
+            class={cn(
+              "flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised",
+              usageTone(),
+            )}
           >
             {anyOverPace.value && <Icon name="activity" class="mr-1 animate-breathe" />}
             {tightestUsage.value}%
