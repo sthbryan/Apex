@@ -195,8 +195,16 @@ impl SessionManager {
             let Some(config) = &profile.quota else {
                 continue;
             };
-            let Some(binary) = self.resolver.lock().await.resolve(&config.command) else {
-                continue;
+
+            let binary = {
+                let mut resolver = self.resolver.lock().await;
+                if resolver.resolve(&profile.command).is_none() {
+                    continue;
+                }
+                match resolver.resolve(&config.command) {
+                    Some(binary) => binary,
+                    None => continue,
+                }
             };
 
             let mut cache = self.quotas.lock().await;
