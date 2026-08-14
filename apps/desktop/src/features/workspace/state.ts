@@ -27,7 +27,6 @@ import {
   setRatio,
   setView,
   splitLeaf,
-  swapViews,
 } from "@/features/workspace/tree";
 
 export type Tab = {
@@ -303,72 +302,6 @@ export function extractLeafToTab(tabId: string, leafId: string): void {
   }
   closePane(tabId, pane, false, false);
   openView(pane.view);
-}
-
-export function swapLeaves(tabId: string, leftId: string, rightId: string): void {
-  if (leftId === rightId) {
-    return;
-  }
-  updateTab(tabId, (current) => ({
-    ...current,
-    root: swapViews(current.root, leftId, rightId),
-  }));
-}
-
-export function moveLeafTo(
-  fromTabId: string,
-  leafId: string,
-  toTabId: string,
-  targetLeafId: string,
-): void {
-  const from = tabs.value.find((tab) => tab.id === fromTabId);
-  const pane = from ? findLeaf(from.root, leafId) : null;
-  if (!from || !pane) {
-    return;
-  }
-  if (fromTabId === toTabId) {
-    swapLeaves(fromTabId, leafId, targetLeafId);
-    return;
-  }
-  closePane(fromTabId, pane, false, false);
-  const incoming = leaf(pane.view);
-  updateTab(toTabId, (current) => ({
-    ...current,
-    root: splitLeaf(current.root, targetLeafId, "row", incoming),
-    activeLeafId: incoming.id,
-  }));
-}
-
-export function splitWithTab(sourceTabId: string, targetTabId: string, targetLeafId: string): void {
-  if (sourceTabId === targetTabId) {
-    return;
-  }
-  const source = tabs.value.find((tab) => tab.id === sourceTabId);
-  const panes = source ? leaves(source.root) : [];
-  if (panes.length !== 1) {
-    return;
-  }
-  const incoming = leaf(panes[0].view);
-  updateTab(targetTabId, (current) => ({
-    ...current,
-    root: splitLeaf(current.root, targetLeafId, "row", incoming),
-    activeLeafId: incoming.id,
-  }));
-  closeTab(sourceTabId, false);
-}
-
-export function moveTab(tabId: string, beforeId?: string): void {
-  if (tabId === beforeId) {
-    return;
-  }
-  const rest = tabs.value.filter((tab) => tab.id !== tabId);
-  const moving = tabs.value.find((tab) => tab.id === tabId);
-  if (!moving) {
-    return;
-  }
-  const at = beforeId ? rest.findIndex((tab) => tab.id === beforeId) : rest.length;
-  const index = at === -1 ? rest.length : at;
-  tabs.value = [...rest.slice(0, index), moving, ...rest.slice(index)];
 }
 
 export function closeTab(tabId: string, restorePanels = true): void {

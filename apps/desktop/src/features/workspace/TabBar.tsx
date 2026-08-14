@@ -1,24 +1,10 @@
 import cn from "cnfast";
 
-import { dockPanelAt, popPanelToTab } from "@/app/layout/actions";
-import { allowPanelDrop, readPanelDrag } from "@/app/layout/dnd";
+import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import {
-  hasPaneDrag,
-  hasTabDrag,
-  readPaneDrag,
-  readTabDrag,
-  writeTabDrag,
-} from "@/features/workspace/dnd";
-import {
-  activeTabId,
-  closeTab,
-  extractLeafToTab,
-  moveTab,
-  type Tab,
-} from "@/features/workspace/state";
+import { activeTabId, closeTab, type Tab } from "@/features/workspace/state";
 import { paneTitle } from "@/features/workspace/title";
 import { leaves } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
@@ -34,65 +20,14 @@ export function TabBar({ tabs, sessions }: Props) {
     return null;
   }
 
-  const onDrop = (before: string | undefined, event: DragEvent) => {
-    const pane = readPaneDrag(event);
-    if (pane) {
-      event.preventDefault();
-      extractLeafToTab(pane.tabId, pane.leafId);
-      return;
-    }
-    const tabId = readTabDrag(event);
-    if (tabId) {
-      event.preventDefault();
-      moveTab(tabId, before);
-      return;
-    }
-    const panel = readPanelDrag();
-    if (panel) {
-      event.preventDefault();
-      popPanelToTab(panel);
-    }
-  };
-
   return (
-    <div
-      class="flex h-8 min-h-8.5 shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface"
-      onDragOver={(event) => {
-        if (hasPaneDrag(event) || hasTabDrag(event)) {
-          event.preventDefault();
-          if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = "move";
-          }
-        }
-        allowPanelDrop(event);
-      }}
-      onDrop={(event) => onDrop(undefined, event)}
-    >
+    <div class="flex h-8 min-h-8.5 shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface">
       {tabs.map((tab) => {
         const active = tab.id === activeTabId.value;
         const panel = panelOf(tab);
         return (
           <div
             key={tab.id}
-            draggable
-            onDragStart={(event) => writeTabDrag(event, tab.id)}
-            onDragOver={(event) => {
-              if (hasPaneDrag(event) || hasTabDrag(event)) {
-                event.preventDefault();
-                if (event.dataTransfer) {
-                  event.dataTransfer.dropEffect = "move";
-                }
-                event.stopPropagation();
-                return;
-              }
-              if (allowPanelDrop(event)) {
-                event.stopPropagation();
-              }
-            }}
-            onDrop={(event) => {
-              event.stopPropagation();
-              onDrop(tab.id, event);
-            }}
             class={cn(
               "group flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors",
               {

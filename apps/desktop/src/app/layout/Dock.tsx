@@ -1,9 +1,8 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
 
-import { dockPanelAt, popPanelToTab } from "@/app/layout/actions";
+import { popPanelToTab } from "@/app/layout/actions";
 import { DockResize } from "@/app/layout/DockResize";
-import { allowPanelDrop, clearPanelDrag, readPanelDrag, writePanelDrag } from "@/app/layout/dnd";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { dockOrder, dockPanel, setDockPanel } from "@/app/layout/state";
 import { t } from "@/shared/i18n";
@@ -19,15 +18,6 @@ export function Dock({ header, floating = false }: Props) {
   const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
   const View = active ? DOCK_PANELS[active].View : null;
 
-  const dropOn = (before: typeof active | undefined, event: DragEvent) => {
-    event.preventDefault();
-    const id = readPanelDrag();
-    if (!id || id === before) {
-      return;
-    }
-    dockPanelAt(id, before);
-  };
-
   return (
     <aside
       class={cn(
@@ -36,8 +26,6 @@ export function Dock({ header, floating = false }: Props) {
           ? "rounded-r-xl bg-bg shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
           : "rounded-none bg-surface shadow-none",
       )}
-      onDragOver={allowPanelDrop}
-      onDrop={(event) => dropOn(undefined, event)}
     >
       <div
         data-tauri-drag-region
@@ -52,24 +40,10 @@ export function Dock({ header, floating = false }: Props) {
           {order.map((id) => {
             const entry = DOCK_PANELS[id];
             return (
-              <div
-                key={id}
-                onDragOver={(event) => {
-                  if (allowPanelDrop(event)) {
-                    event.stopPropagation();
-                  }
-                }}
-                onDrop={(event) => {
-                  event.stopPropagation();
-                  dropOn(id, event);
-                }}
-              >
+              <div key={id}>
                 <button
                   type="button"
                   title={entry.label()}
-                  draggable
-                  onDragStart={(event) => writePanelDrag(event, id)}
-                  onDragEnd={() => clearPanelDrag()}
                   onClick={() => setDockPanel(id)}
                   onDblClick={() => popPanelToTab(id)}
                   class={cn(

@@ -8,10 +8,9 @@ import { FileView } from "@/features/files/FileView";
 import { DiffView } from "@/features/git/DiffView";
 import { activeProject } from "@/features/projects/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
-import { hasPaneDrag, hasTabDrag, readPaneDrag, readTabDrag } from "@/features/workspace/dnd";
 import { PaneBar } from "@/features/workspace/PaneBar";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
-import { focusLeaf, moveLeafTo, splitWithTab } from "@/features/workspace/state";
+import { focusLeaf } from "@/features/workspace/state";
 import type { Leaf, PaneNode } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -65,27 +64,6 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
       tabIndex={-1}
       onFocusCapture={() => focusLeaf(tabId, node.id)}
       onMouseDown={() => focusLeaf(tabId, node.id)}
-      onDragOver={(event) => {
-        if (hasPaneDrag(event) || hasTabDrag(event)) {
-          event.preventDefault();
-          if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = "move";
-          }
-        }
-      }}
-      onDrop={(event) => {
-        const pane = readPaneDrag(event);
-        if (pane) {
-          event.preventDefault();
-          moveLeafTo(pane.tabId, pane.leafId, tabId, node.id);
-          return;
-        }
-        const sourceTab = readTabDrag(event);
-        if (sourceTab) {
-          event.preventDefault();
-          splitWithTab(sourceTab, tabId, node.id);
-        }
-      }}
     >
       <PaneBar
         tabId={tabId}

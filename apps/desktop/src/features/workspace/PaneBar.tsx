@@ -4,7 +4,6 @@ import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import { sessions } from "@/features/sessions/state";
-import { writePaneDrag } from "@/features/workspace/dnd";
 import { closePane, extractLeafToTab, tabs } from "@/features/workspace/state";
 import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
 import type { Leaf } from "@/features/workspace/tree";
@@ -22,11 +21,7 @@ export function PaneBar({ tabId, leaf, extra }: Props) {
   const panel = leaf.view.type === "panel" && leaf.view.panel in DOCK_PANELS;
 
   return (
-    <header
-      draggable
-      onDragStart={(event) => writePaneDrag(event, tabId, leaf.id)}
-      class="flex h-7 shrink-0 cursor-grab items-center gap-2 border-b border-border px-2 active:cursor-grabbing"
-    >
+    <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
       <Icon name={paneIcon(leaf.view)} size={12} class="shrink-0 text-faint" />
       <span class="min-w-0 truncate text-text">{paneTitle(leaf.view, sessions.value)}</span>
       {paneSubtitle(leaf.view) && (
