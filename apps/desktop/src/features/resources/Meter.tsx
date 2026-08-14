@@ -13,7 +13,7 @@ export function Meter({ icon, label, percent, detail }: Props) {
   return (
     <div class="flex items-center gap-2 py-0.5" title={label}>
       <Icon name={icon} class="shrink-0 text-muted" />
-      <span class="shrink-0 text-muted">{label}</span>
+      <span class="w-20 shrink-0 text-muted">{label}</span>
       <span class={cn("w-9 shrink-0 text-right", toneText(clamped))}>{clamped.toFixed(0)}%</span>
       <span class="h-1 flex-1 overflow-hidden rounded-full bg-border">
         <span

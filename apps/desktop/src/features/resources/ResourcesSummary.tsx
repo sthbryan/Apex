@@ -44,7 +44,7 @@ export function ResourcesSummary() {
         <div
           ref={popover.holder}
           class={cn(
-            "absolute bottom-full right-1 z-50 mb-1 w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
+            "absolute bottom-full right-1 z-50 mb-1 w-80 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
             {
               "animate-rise-out": popover.leaving,
               "animate-rise-in": !popover.leaving,
