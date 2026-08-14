@@ -4,17 +4,13 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
-use apex_core::{
-    AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, context, editors, files, history,
-};
+use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, context, history};
 use apex_metrics::Sampler;
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitChange, GitCommit,
-    GitStatus,
-    GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProcessUsage, ProjectSummary,
-    QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage, SystemUsage, TaskSummary,
-    TerminalSize,
-    WorktreeDisposal, WorktreeInfo,
+    GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProcessUsage,
+    ProjectSummary, QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage,
+    SystemUsage, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
 };
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
 use apex_quota::QuotaCache;
@@ -52,12 +48,13 @@ pub struct SessionManager {
     paths: ApexPaths,
     profiles: ProfileSet,
     base_env: BTreeMap<String, String>,
-    resolver: Mutex<BinaryResolver>,
-    store: Mutex<Store>,
+    resolver: Arc<Mutex<BinaryResolver>>,
+    store: Arc<Mutex<Store>>,
     sessions: RwLock<HashMap<Uuid, Arc<LiveSession>>>,
     events: broadcast::Sender<Event>,
     sampler: Mutex<Sampler>,
     quotas: Mutex<QuotaCache>,
+    files: crate::services::files::FilesService,
 }
 
 impl SessionManager {
@@ -72,16 +69,20 @@ impl SessionManager {
             .environment()
             .map(|environment| environment.env().clone())
             .unwrap_or_default();
+        let resolver = Arc::new(Mutex::new(resolver));
+        let store = Arc::new(Mutex::new(store));
+        let files = crate::services::files::FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
         Self {
             paths,
             profiles,
             base_env,
-            resolver: Mutex::new(resolver),
-            store: Mutex::new(store),
+            resolver,
+            store,
             sessions: RwLock::new(HashMap::new()),
             events,
             sampler: Mutex::new(Sampler::new()),
             quotas: Mutex::new(QuotaCache::new()),
+            files,
         }
     }
 
@@ -274,32 +275,15 @@ impl SessionManager {
     }
 
     pub async fn list_directory(&self, project: Uuid, path: &str) -> Result<Vec<FileEntry>> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let path = path.to_owned();
-        tokio::task::spawn_blocking(move || files::list_directory(&root, &path)).await?
+        self.files.list_directory(project, path).await
     }
 
     pub async fn read_file(&self, project: Uuid, path: &str) -> Result<FileContents> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let path = path.to_owned();
-        tokio::task::spawn_blocking(move || files::read_file(&root, &path)).await?
+        self.files.read_file(project, path).await
     }
 
     pub async fn list_editors(&self) -> Vec<EditorSummary> {
-        let home = home_directory();
-        let mut resolver = self.resolver.lock().await;
-        editors::EDITORS
-            .iter()
-            .map(|editor| EditorSummary {
-                id: editor.id.to_owned(),
-                name: editor.name.to_owned(),
-                command: editor.command.to_owned(),
-                resolved_path: resolver
-                    .resolve(editor.command)
-                    .or_else(|| editors::bundle(editor, &home))
-                    .map(|path| path.display().to_string()),
-            })
-            .collect()
+        self.files.list_editors().await
     }
 
     pub async fn open_externally(
@@ -308,34 +292,7 @@ impl SessionManager {
         path: &str,
         editor: Option<&str>,
     ) -> Result<()> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let target = files::resolve(&root, path)?;
-
-        let launcher = match editor {
-            Some(id) => {
-                let spec = editors::find(id).context("unknown editor")?;
-                let mut resolver = self.resolver.lock().await;
-                resolver
-                    .resolve(spec.command)
-                    .or_else(|| editors::bundle(spec, &home_directory()))
-                    .with_context(|| format!("{} is not installed", spec.name))?
-            }
-            None => PathBuf::from(editors::system_opener()),
-        };
-
-        let mut command = if editors::is_bundle(&launcher) {
-            let mut open = tokio::process::Command::new(editors::system_opener());
-            open.arg("-a").arg(&launcher);
-            open
-        } else {
-            tokio::process::Command::new(&launcher)
-        };
-
-        command
-            .arg(&target)
-            .spawn()
-            .with_context(|| format!("spawning {}", launcher.display()))?;
-        Ok(())
+        self.files.open_externally(project, path, editor).await
     }
 
     pub async fn search_files(
@@ -344,9 +301,7 @@ impl SessionManager {
         query: &str,
         limit: usize,
     ) -> Result<Vec<FileEntry>> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let query = query.to_owned();
-        Ok(tokio::task::spawn_blocking(move || files::search_files(&root, &query, limit)).await?)
+        self.files.search_files(project, query, limit).await
     }
 
     pub async fn resume(
