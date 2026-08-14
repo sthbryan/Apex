@@ -23,7 +23,7 @@
   },
   "linter": {
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "a11y": {
         "noStaticElementInteractions": "off",
         "useSemanticElements": "off"
