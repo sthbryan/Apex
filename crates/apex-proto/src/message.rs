@@ -113,9 +113,21 @@ impl Default for TerminalSize {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct ProjectSummary {
+    #[ts(type = "string")]
+    pub id: Uuid,
+    pub name: String,
+    pub root: String,
+    pub is_git: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct SessionSummary {
     #[ts(type = "string")]
     pub id: Uuid,
+    #[ts(type = "string")]
+    pub project_id: Uuid,
     pub agent: String,
     pub title: String,
     pub cwd: String,
@@ -137,7 +149,22 @@ pub enum Command {
     Ping,
     ListAgents,
     ListSessions,
+    ListProjects,
+    ProjectOpen {
+        root: String,
+    },
+    LayoutSave {
+        #[ts(type = "string")]
+        project: Uuid,
+        payload: String,
+    },
+    LayoutLoad {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
     SessionCreate {
+        #[ts(type = "string")]
+        project: Uuid,
         agent: String,
         cwd: Option<String>,
         size: TerminalSize,
@@ -174,6 +201,9 @@ pub enum Reply {
     Agents { agents: Vec<AgentSummary> },
     Sessions { sessions: Vec<SessionSummary> },
     Session { session: SessionSummary },
+    Projects { projects: Vec<ProjectSummary> },
+    Project { project: ProjectSummary },
+    Layout { payload: Option<String> },
     Done,
 }
 
