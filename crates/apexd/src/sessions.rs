@@ -57,6 +57,7 @@ pub struct SessionManager {
     files: crate::services::files::FilesService,
     git: crate::services::git::GitService,
     context: crate::services::context::ContextService,
+    projects: crate::services::projects::ProjectsService,
 }
 
 impl SessionManager {
@@ -75,6 +76,7 @@ impl SessionManager {
         let store = Arc::new(Mutex::new(store));
         let files = crate::services::files::FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
         let context = crate::services::context::ContextService::new(Arc::clone(&store));
+        let projects = crate::services::projects::ProjectsService::new(Arc::clone(&store));
         Self {
             paths,
             profiles,
@@ -88,6 +90,7 @@ impl SessionManager {
             files,
             git: crate::services::git::GitService,
             context,
+            projects,
         }
     }
 
@@ -115,42 +118,19 @@ impl SessionManager {
     }
 
     pub async fn list_projects(&self) -> Result<Vec<ProjectSummary>> {
-        let store = self.store.lock().await;
-        Ok(store
-            .list_projects()?
-            .into_iter()
-            .map(|project| ProjectSummary {
-                id: project.id,
-                name: project.name,
-                root: project.root,
-                is_git: project.is_git,
-            })
-            .collect())
+        self.projects.list().await
     }
 
     pub async fn open_project(&self, root: &str) -> Result<ProjectSummary> {
-        let path = PathBuf::from(root);
-        if !path.is_dir() {
-            bail!("{root} is not a folder")
-        }
-        let canonical = path.canonicalize().unwrap_or(path);
-
-        let store = self.store.lock().await;
-        let project = store.open_project(&canonical)?;
-        Ok(ProjectSummary {
-            id: project.id,
-            name: project.name,
-            root: project.root,
-            is_git: project.is_git,
-        })
+        self.projects.open(root).await
     }
 
     pub async fn save_layout(&self, project: Uuid, payload: &str) -> Result<()> {
-        self.store.lock().await.save_layout(project, payload)
+        self.projects.save_layout(project, payload).await
     }
 
     pub async fn load_layout(&self, project: Uuid) -> Result<Option<String>> {
-        self.store.lock().await.load_layout(project)
+        self.projects.load_layout(project).await
     }
 
     pub async fn read_metrics(&self, refresh_quota: bool) -> MetricsSnapshot {
