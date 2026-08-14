@@ -27,23 +27,22 @@ export function CommitBox({ status }: { status: GitStatus }) {
 
   return (
     <div class="shrink-0 border-t border-border p-2">
-      <input
-        type="text"
+      <textarea
+        rows={4}
         value={message}
         placeholder={t("git.messagePlaceholder")}
-        autocomplete="off"
         spellcheck={false}
         onInput={(event) => {
           setMessage(event.currentTarget.value);
           setLanded(null);
         }}
         onKeyDown={(event) => {
-          if (event.key === "Enter") {
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
             commit();
           }
         }}
-        class="w-full rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
+        class="field-sizing-content max-h-40 min-h-16 w-full resize-none rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
       />
       <button
         type="button"

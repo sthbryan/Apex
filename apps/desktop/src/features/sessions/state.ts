@@ -138,6 +138,7 @@ export async function createSession(
   size: TerminalSize,
   isolation: Isolation = "directory",
   cwd: string | null = null,
+  slug: string | null = null,
 ): Promise<SessionSummary> {
   const session = await invoke<SessionSummary>("create_session", {
     project,
@@ -145,6 +146,7 @@ export async function createSession(
     cwd,
     size,
     isolation,
+    slug,
   });
   sessions.value = upsert(sessions.value, session);
   return session;

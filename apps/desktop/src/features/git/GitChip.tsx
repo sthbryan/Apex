@@ -19,7 +19,11 @@ export function GitChip({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      title={t("git.chip", { branch: status.branch })}
+      title={
+        status.upstream
+          ? t("git.chipTracking", { branch: status.branch, upstream: status.upstream })
+          : t("git.chip", { branch: status.branch })
+      }
       class="flex items-center gap-1.5 transition-colors hover:text-text"
     >
       <Icon name="branch" size={12} />
@@ -27,6 +31,8 @@ export function GitChip({ onOpen }: { onOpen: () => void }) {
         {status.branch}
       </span>
       {dirty > 0 && <span class="text-state-blocked">{dirty}±</span>}
+      {status.ahead > 0 && <span class="text-state-done">↑{status.ahead}</span>}
+      {status.behind > 0 && <span class="text-state-working">↓{status.behind}</span>}
       {trees > 0 && (
         <span class="flex items-center gap-0.5">
           <span class="text-border">·</span>

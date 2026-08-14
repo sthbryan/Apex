@@ -81,6 +81,7 @@ export const en = {
   git: {
     noRepo: "This project is not a git repository.",
     chip: "On {branch} — open the git panel",
+    chipTracking: "On {branch}, tracking {upstream} — open the git panel",
     trees: "{count} worktrees",
     changes: "Changes",
     history: "History",
@@ -117,6 +118,8 @@ export const en = {
   },
   isolation: {
     title: "New {agent} session",
+    name: "Name it",
+    branch: "Branch {branch}",
     worktree: "Isolated worktree",
     worktreeHint: "Its own branch and folder, so agents never collide.",
     directory: "Project folder",

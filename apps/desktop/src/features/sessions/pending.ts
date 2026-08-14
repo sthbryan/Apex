@@ -41,13 +41,19 @@ export function cancelSession(): void {
   pendingSession.value = null;
 }
 
-export async function startSession(request: PendingSession, isolation: Isolation): Promise<void> {
+export async function startSession(
+  request: PendingSession,
+  isolation: Isolation,
+  slug: string | null = null,
+): Promise<void> {
   pendingSession.value = null;
   const created = await createSession(
     request.project,
     request.agent,
     { rows: 24, cols: 80 },
     isolation,
+    null,
+    slug,
   );
   if (request.direction) {
     splitActive({ type: "session", sessionId: created.id }, request.direction);

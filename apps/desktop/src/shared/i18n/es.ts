@@ -83,6 +83,7 @@ export const es: Messages = {
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
     chip: "En {branch} — abrir el panel de git",
+    chipTracking: "En {branch}, siguiendo a {upstream} — abrir el panel de git",
     trees: "{count} worktrees",
     changes: "Cambios",
     history: "Historial",
@@ -119,6 +120,8 @@ export const es: Messages = {
   },
   isolation: {
     title: "Nueva sesión de {agent}",
+    name: "Ponle nombre",
+    branch: "Rama {branch}",
     worktree: "Worktree aislado",
     worktreeHint: "Su propia rama y carpeta, así los agentes no se pisan.",
     directory: "Carpeta del proyecto",
