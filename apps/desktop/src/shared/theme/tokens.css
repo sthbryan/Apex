@@ -34,6 +34,8 @@
   --animate-rise-in: apex-rise-in var(--apex-swift) var(--apex-ease-spring) both;
   --animate-rise-out: apex-rise-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-row-in: apex-row-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-slide-in: apex-slide-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-slide-out: apex-slide-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
 
   @keyframes apex-veil-in {
@@ -86,6 +88,18 @@
     from {
       opacity: 0;
       transform: translateX(-10px);
+    }
+  }
+  @keyframes apex-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes apex-slide-out {
+    to {
+      opacity: 0;
+      transform: translateX(-100%);
     }
   }
   @keyframes apex-breathe {

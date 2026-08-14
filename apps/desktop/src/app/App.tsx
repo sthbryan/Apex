@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { useKeymap } from "@/app/keymap";
 import { Dock, type DockPanel } from "@/app/layout/Dock";
+import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
 import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
@@ -21,7 +22,7 @@ import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
-import { toggleSettings } from "@/features/settings/state";
+import { closeDock, dockOpen, toggleSettings } from "@/features/settings/state";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
@@ -33,12 +34,10 @@ import { startThemeWatcher } from "@/shared/theme/mode";
 import { watchFullscreen } from "@/shared/window";
 
 export function App() {
-  const [dockOpen, setDockOpen] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
-  const toggleDock = useCallback(() => setDockOpen((open) => !open), []);
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
@@ -92,7 +91,7 @@ export function App() {
     }
   }, [paletteOpen]);
 
-  useKeymap({ togglePalette, toggleDock });
+  useKeymap({ togglePalette });
 
   if (status.value === "failed") {
     return (
@@ -133,8 +132,8 @@ export function App() {
         </Toolbar>
       </TitleBar>
 
-      <div class="flex min-h-0 flex-1">
-        {dockOpen && (
+      <div class="relative flex min-h-0 flex-1">
+        <DockSlot open={dockOpen.value} onDismiss={closeDock}>
           <Dock
             panel={panel}
             onPanel={setPanel}
@@ -142,7 +141,7 @@ export function App() {
             elsewhere={foreignSessions.value}
             projects={projects.value}
           />
-        )}
+        </DockSlot>
 
         <div class="flex min-h-0 flex-1 flex-col">
           <TabBar tabs={tabs.value} sessions={sessions.value} />

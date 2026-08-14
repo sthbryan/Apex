@@ -1,7 +1,7 @@
 import { useEffect } from "preact/hooks";
 
 import { sessions } from "@/features/sessions/state";
-import { toggleSettings } from "@/features/settings/state";
+import { toggleDock, toggleSettings } from "@/features/settings/state";
 import { toggleUsagePopover } from "@/features/usage/state";
 import {
   activeTab,
@@ -14,10 +14,9 @@ import { findLeaf } from "@/features/workspace/tree";
 
 type Toggles = {
   togglePalette: () => void;
-  toggleDock: () => void;
 };
 
-export function useKeymap({ togglePalette, toggleDock }: Toggles): void {
+export function useKeymap({ togglePalette }: Toggles): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) {
@@ -26,7 +25,7 @@ export function useKeymap({ togglePalette, toggleDock }: Toggles): void {
       const binding = BINDINGS[event.key.toLowerCase()];
       if (binding) {
         event.preventDefault();
-        binding({ event, togglePalette, toggleDock });
+        binding({ event, togglePalette });
         return;
       }
 
@@ -42,7 +41,7 @@ export function useKeymap({ togglePalette, toggleDock }: Toggles): void {
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [togglePalette, toggleDock]);
+  }, [togglePalette]);
 }
 
 type Context = Toggles & { event: KeyboardEvent };
@@ -51,7 +50,7 @@ const BINDINGS: Record<string, (context: Context) => void> = {
   k: ({ togglePalette }) => togglePalette(),
   ",": () => toggleSettings(),
   u: () => toggleUsagePopover(),
-  b: ({ toggleDock }) => toggleDock(),
+  b: () => toggleDock(),
   d: ({ event }) => {
     const pane = currentPane();
     const session = sessions.value.find((candidate) => candidate.id === pane?.sessionId);

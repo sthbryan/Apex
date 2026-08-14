@@ -12,6 +12,8 @@ export const en = {
     retry: "Retry",
   },
   dock: {
+    pinned: "Pinned",
+    floating: "Floating",
     sessions: "Sessions",
   },
   projects: {
@@ -48,6 +50,8 @@ export const en = {
     themeHint: "Follows your system.",
     language: "Language",
     languageHint: "Applies instantly.",
+    dock: "Sidebar",
+    dockHint: "Floating overlays the panes instead of resizing them.",
     agentsHint: "Agents are TOML files in {path} — drop one in to add a CLI.",
   },
   theme: {
