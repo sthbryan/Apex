@@ -94,6 +94,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "apex-mcp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apex-proto",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "apex-metrics"
 version = "0.1.0"
 dependencies = [
@@ -148,6 +161,7 @@ dependencies = [
  "anyhow",
  "apex-core",
  "apex-git",
+ "apex-mcp",
  "apex-metrics",
  "apex-proto",
  "apex-pty",

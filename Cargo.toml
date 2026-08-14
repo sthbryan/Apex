@@ -11,6 +11,7 @@ license = "MIT"
 apex-core = { path = "crates/apex-core" }
 apex-git = { path = "crates/apex-git" }
 apex-proto = { path = "crates/apex-proto" }
+apex-mcp = { path = "crates/apex-mcp" }
 apex-metrics = { path = "crates/apex-metrics" }
 apex-pty = { path = "crates/apex-pty" }
 apex-quota = { path = "crates/apex-quota" }

@@ -7,6 +7,7 @@ license.workspace = true
 [dependencies]
 apex-core.workspace = true
 apex-git.workspace = true
+apex-mcp.workspace = true
 apex-metrics.workspace = true
 apex-pty.workspace = true
 apex-quota.workspace = true
@@ -15,8 +16,9 @@ apex-proto.workspace = true
 anyhow.workspace = true
 directories.workspace = true
 bytes.workspace = true
+serde_json.workspace = true
 uuid.workspace = true
-tokio = { workspace = true, features = ["signal"] }
+tokio = { workspace = true, features = ["signal", "io-std"] }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 

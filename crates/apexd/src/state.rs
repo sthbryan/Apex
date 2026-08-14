@@ -27,6 +27,7 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
     );
 
     Ok(Arc::new(SessionManager::new(
+        paths.clone(),
         profiles,
         BinaryResolver::with_environment(environment),
         store,

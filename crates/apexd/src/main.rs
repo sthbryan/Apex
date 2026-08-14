@@ -1,3 +1,4 @@
+mod mcp;
 mod session;
 mod sessions;
 mod state;
@@ -8,6 +9,11 @@ use apex_proto::{Connection, Listener, UnixTransport};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let paths = ApexPaths::discover()?;
+    if let Some(session) = mcp_session()? {
+        return mcp::run(&paths.socket, session).await;
+    }
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -15,7 +21,6 @@ async fn main() -> Result<()> {
         )
         .init();
 
-    let paths = ApexPaths::discover()?;
     let manager = state::bootstrap(&paths).await?;
 
     let mut transport = UnixTransport::bind(&paths.socket)
@@ -35,4 +40,17 @@ async fn main() -> Result<()> {
             }
         }
     }
+}
+
+fn mcp_session() -> Result<Option<uuid::Uuid>> {
+    let mut args = std::env::args().skip(1);
+    if args.next().as_deref() != Some("mcp") {
+        return Ok(None);
+    }
+    let raw = args
+        .next()
+        .filter(|flag| flag == "--session")
+        .and(args.next())
+        .context("apexd mcp needs --session <id>")?;
+    Ok(Some(raw.parse().with_context(|| format!("{raw} is not a session id"))?))
 }

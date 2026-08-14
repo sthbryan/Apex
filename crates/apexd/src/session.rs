@@ -458,7 +458,7 @@ fn scope_allows(scope: Scope, command: &Command) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apex_core::{AgentProfile, BinaryResolver, ProfileSet, ShellEnvironment, Store};
+    use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, ShellEnvironment, Store};
     use apex_proto::{
         CommandOutcome, DiffScope, GitTarget, Isolation, Listener, SessionSummary, TerminalSize,
         UnixTransport, WorktreeDisposal, connect_unix,
@@ -471,6 +471,10 @@ mod tests {
         r#"[{"provider":"answering","usage":{"primary":{"windowMinutes":300,"usedPercent":42}}}]"#;
 
     fn manager() -> Arc<SessionManager> {
+        manager_at(&ApexPaths::rooted_at(&std::env::temp_dir().join("apex-test-home")))
+    }
+
+    fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         let mut profiles = ProfileSet::builtin().expect("profiles");
         profiles.upsert(
             AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("sh profile"),
@@ -502,6 +506,14 @@ mod tests {
         profiles.upsert(AgentProfile::parse(&answering).expect("answering profile"));
         profiles.upsert(
             AgentProfile::parse(
+                "name = \"mcp-aware\"\n\
+                 command = \"echo\"\n\
+                 mcp_flag = \"--mcp-config\"\n",
+            )
+            .expect("mcp profile"),
+        );
+        profiles.upsert(
+            AgentProfile::parse(
                 "name = \"unreachable\"\n\
                  command = \"sh\"\n\
                  [quota]\n\
@@ -513,7 +525,12 @@ mod tests {
             .expect("unreachable profile"),
         );
 
-        Arc::new(SessionManager::new(profiles, resolver, Store::in_memory().expect("store")))
+        Arc::new(SessionManager::new(
+            paths.clone(),
+            profiles,
+            resolver,
+            Store::in_memory().expect("store"),
+        ))
     }
 
     struct Harness {
@@ -1071,6 +1088,51 @@ mod tests {
             .expect("staged");
         assert!(staged.contains("+line 2 touched"));
         assert!(!staged.contains("+line 19 touched"));
+    }
+
+    #[tokio::test]
+    async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
+        let home = tempfile::tempdir().expect("tempdir");
+        let paths = ApexPaths::rooted_at(home.path());
+        let manager = manager_at(&paths);
+        let root = tempfile::tempdir().expect("project");
+        let project = manager
+            .open_project(&root.path().display().to_string())
+            .await
+            .expect("project")
+            .id;
+
+        let session = manager
+            .create(project, "mcp-aware", None, TerminalSize::default(), Isolation::Directory, None)
+            .await
+            .expect("session");
+
+        let config = paths.mcp_dir().join(format!("{}.json", session.id));
+        assert!(config.is_file(), "the config was never written");
+
+        let written: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&config).expect("read")).expect("json");
+        let server = &written["mcpServers"]["apex"];
+        let launcher = server["command"].as_str().expect("command");
+        assert!(std::path::Path::new(launcher).is_absolute());
+        assert!(launcher.contains("apexd"));
+        assert_eq!(
+            server["args"],
+            serde_json::json!(["mcp", "--session", session.id.to_string()])
+        );
+
+        let wanted = config.display().to_string();
+        let echoed = timeout(Duration::from_secs(10), async {
+            loop {
+                let transcript = manager.transcript(session.id, 8192).await.expect("transcript");
+                if transcript.contains(&wanted) {
+                    return transcript;
+                }
+                tokio::time::sleep(Duration::from_millis(25)).await;
+            }
+        })
+        .await;
+        assert!(echoed.is_ok(), "the flag never reached the agent");
     }
 
     #[tokio::test]

@@ -4,7 +4,9 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
-use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, context, editors, files, history};
+use apex_core::{
+    AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, context, editors, files, history,
+};
 use apex_metrics::Sampler;
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitChange, GitCommit,
@@ -45,6 +47,7 @@ struct Spawn {
 }
 
 pub struct SessionManager {
+    paths: ApexPaths,
     profiles: ProfileSet,
     base_env: BTreeMap<String, String>,
     resolver: Mutex<BinaryResolver>,
@@ -56,13 +59,19 @@ pub struct SessionManager {
 }
 
 impl SessionManager {
-    pub fn new(profiles: ProfileSet, resolver: BinaryResolver, store: Store) -> Self {
+    pub fn new(
+        paths: ApexPaths,
+        profiles: ProfileSet,
+        resolver: BinaryResolver,
+        store: Store,
+    ) -> Self {
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
         let base_env = resolver
             .environment()
             .map(|environment| environment.env().clone())
             .unwrap_or_default();
         Self {
+            paths,
             profiles,
             base_env,
             resolver: Mutex::new(resolver),
@@ -409,8 +418,28 @@ impl SessionManager {
             (None, None) => PathBuf::from(project_root),
         };
 
+        let record = {
+            let store = self.store.lock().await;
+            store.insert_session(
+                project,
+                &profile.name,
+                &title,
+                &cwd.display().to_string(),
+                worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
+            )?
+        };
+
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = override_args.unwrap_or_else(|| profile.args.clone());
+        if let Some(flag) = &profile.mcp_flag {
+            match self.write_mcp_config(record.id) {
+                Ok(config) => {
+                    spec.args.push(flag.clone());
+                    spec.args.push(config.display().to_string());
+                }
+                Err(error) => tracing::warn!(%error, "could not offer the MCP server"),
+            }
+        }
         spec.env = self.base_env.clone();
         spec.env.extend(profile.env.clone());
         spec.rows = size.rows;
@@ -418,17 +447,6 @@ impl SessionManager {
 
         let process = PtyProcess::spawn(spec)?;
         let cwd_text = cwd.display().to_string();
-
-        let record = {
-            let store = self.store.lock().await;
-            store.insert_session(
-                project,
-                &profile.name,
-                &title,
-                &cwd_text,
-                worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
-            )?
-        };
 
         let summary = SessionSummary {
             id: record.id,
@@ -717,6 +735,26 @@ impl SessionManager {
             apex_git::MergeOutcome::Merged => MergeReport::Merged,
             apex_git::MergeOutcome::Conflicted { files } => MergeReport::Conflicted { files },
         })
+    }
+
+    fn write_mcp_config(&self, session: Uuid) -> Result<PathBuf> {
+        let dir = self.paths.mcp_dir();
+        std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
+
+        let binary = std::env::current_exe().context("locating apexd")?;
+        let config = serde_json::json!({
+            "mcpServers": {
+                "apex": {
+                    "command": binary.display().to_string(),
+                    "args": ["mcp", "--session", session.to_string()],
+                }
+            }
+        });
+
+        let path = dir.join(format!("{session}.json"));
+        std::fs::write(&path, serde_json::to_vec_pretty(&config)?)
+            .with_context(|| format!("writing {}", path.display()))?;
+        Ok(path)
     }
 
     async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
