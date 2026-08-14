@@ -27,10 +27,17 @@ export const es: Messages = {
 
   "dock.resources": "Recursos",
 
-  "usage.title": "Uso de suscripción",
-  "usage.rolling": "ventana móvil de {window}",
-  "usage.longRange": "límite de {window}",
-  "usage.resets": "reinicia {when}",
+  "usage.session": "Sesión",
+  "usage.weekly": "Semanal",
+  "usage.window": "ventana de {window}",
+  "usage.resetsIn": "reinicia en {away} · {when}",
+  "usage.resetsAt": "reinicia {when}",
+  "usage.onTrack": "al ritmo",
+  "usage.emptyIn": "se acaba en {away}",
+  "usage.overPace": "vas acelerado",
+  "usage.expected": "se esperaba {percent}% a esta hora",
+  "usage.updated": "hace {when}",
+  "usage.justNow": "un momento",
 
   "status.cpu": "cpu {percent}%",
   "status.gpu": "gpu {percent}%",

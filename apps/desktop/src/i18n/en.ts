@@ -25,10 +25,17 @@ export const en = {
 
   "dock.resources": "Resources",
 
-  "usage.title": "Subscription usage",
-  "usage.rolling": "{window} rolling window",
-  "usage.longRange": "{window} limit",
-  "usage.resets": "resets {when}",
+  "usage.session": "Session",
+  "usage.weekly": "Weekly",
+  "usage.window": "{window} window",
+  "usage.resetsIn": "resets in {away} · {when}",
+  "usage.resetsAt": "resets {when}",
+  "usage.onTrack": "on track",
+  "usage.emptyIn": "empty in {away}",
+  "usage.overPace": "over pace",
+  "usage.expected": "expected {percent}% by now",
+  "usage.updated": "updated {when} ago",
+  "usage.justNow": "just now",
 
   "status.cpu": "cpu {percent}%",
   "status.gpu": "gpu {percent}%",
