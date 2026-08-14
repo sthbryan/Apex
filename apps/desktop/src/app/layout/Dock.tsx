@@ -42,8 +42,10 @@ export function Dock({
   return (
     <aside
       class={cn(
-        "flex h-full w-full flex-col overflow-hidden border-r border-border bg-surface transition-[border-radius,box-shadow] duration-[var(--apex-dock)]",
-        floating ? "rounded-r-xl shadow-[8px_0_28px_rgba(0,0,0,0.28)]" : "rounded-none shadow-none",
+        "flex h-full w-full flex-col overflow-hidden border-r border-border transition-[border-radius,box-shadow,background-color] duration-[var(--apex-dock)]",
+        floating
+          ? "rounded-r-xl bg-bg shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
+          : "rounded-none bg-surface shadow-none",
       )}
     >
       <div
