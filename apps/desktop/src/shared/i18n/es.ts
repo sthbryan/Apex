@@ -124,6 +124,7 @@ export const es: Messages = {
     clearFinished: "Limpiar terminadas",
   },
   workspace: {
+    closePane: "Cerrar este pane",
     empty: "No hay nada abierto.",
     emptyHint: "Pulsa {shortcut} para arrancar una sesión.",
   },

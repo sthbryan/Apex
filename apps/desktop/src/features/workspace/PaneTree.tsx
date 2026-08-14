@@ -3,8 +3,10 @@ import { FileView } from "@/features/files/FileView";
 import { DiffView } from "@/features/git/DiffView";
 import { TerminalView } from "@/features/sessions/TerminalView";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
-import { focusLeaf } from "@/features/workspace/state";
+import { closePane, focusLeaf } from "@/features/workspace/state";
 import type { PaneNode } from "@/features/workspace/tree";
+import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   tabId: string;
@@ -19,7 +21,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
     return (
       <div
         class={cn(
-          "h-full w-full overflow-hidden border transition-colors",
+          "group relative h-full w-full overflow-hidden border transition-colors",
           focused ? "border-focus" : "border-transparent",
         )}
         tabIndex={-1}
@@ -35,6 +37,14 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
             commit={node.view.commit}
           />
         )}
+        <button
+          type="button"
+          title={t("workspace.closePane")}
+          onClick={() => closePane(tabId, node, true)}
+          class="absolute top-1 right-1 z-10 flex size-5 items-center justify-center rounded bg-surface/90 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text focus-visible:opacity-100"
+        >
+          <Icon name="close" size={12} />
+        </button>
       </div>
     );
   }

@@ -122,6 +122,7 @@ export const en = {
     clearFinished: "Clear finished",
   },
   workspace: {
+    closePane: "Close this pane",
     empty: "Nothing open.",
     emptyHint: "Press {shortcut} to start a session.",
   },

@@ -50,7 +50,7 @@ export function FileView({ path }: { path: string }) {
 
   return (
     <div class="flex h-full flex-col bg-bg">
-      <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
+      <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
         <Icon name="file" size={12} />
         <span class="truncate text-text">{fileName(path)}</span>
         <span class="truncate text-faint">{path}</span>

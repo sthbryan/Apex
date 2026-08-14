@@ -45,7 +45,7 @@ export function DiffView({ sessionId, path, commit }: Props) {
 
   return (
     <div class="flex h-full flex-col bg-bg">
-      <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
+      <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
         <Icon name="branch" size={12} />
         <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
         <span class="truncate text-faint">{label}</span>
