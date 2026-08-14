@@ -1,9 +1,12 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
 
+import { dockPanelAt, popPanelToTab } from "@/app/layout/actions";
 import { DockResize } from "@/app/layout/DockResize";
-import { DOCK_PANEL_ORDER, DOCK_PANELS } from "@/app/layout/panels";
-import { dockPanel, setDockPanel } from "@/app/layout/state";
+import { hasPanelDrag, readPanelDrag, writePanelDrag } from "@/app/layout/dnd";
+import { DOCK_PANELS } from "@/app/layout/panels";
+import { dockOrder, dockPanel, setDockPanel } from "@/app/layout/state";
+import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
@@ -12,8 +15,18 @@ type Props = {
 };
 
 export function Dock({ header, floating = false }: Props) {
-  const active = dockPanel.value;
-  const { View } = DOCK_PANELS[active];
+  const order = dockOrder.value;
+  const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
+  const View = active ? DOCK_PANELS[active].View : null;
+
+  const dropOn = (before: typeof active | undefined, event: DragEvent) => {
+    event.preventDefault();
+    const id = readPanelDrag(event);
+    if (!id || id === before) {
+      return;
+    }
+    dockPanelAt(id, before);
+  };
 
   return (
     <aside
@@ -23,6 +36,12 @@ export function Dock({ header, floating = false }: Props) {
           ? "rounded-r-xl bg-bg shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
           : "rounded-none bg-surface shadow-none",
       )}
+      onDragOver={(event) => {
+        if (hasPanelDrag(event)) {
+          event.preventDefault();
+        }
+      }}
+      onDrop={(event) => dropOn(undefined, event)}
     >
       <div
         data-tauri-drag-region
@@ -32,27 +51,52 @@ export function Dock({ header, floating = false }: Props) {
         {header}
       </div>
 
-      {DOCK_PANEL_ORDER.length > 1 && (
+      {order.length > 0 && (
         <nav class="flex min-h-8.5 shrink-0 gap-1 border-b border-border px-1 py-1">
-          {DOCK_PANEL_ORDER.map((id) => {
+          {order.map((id) => {
             const entry = DOCK_PANELS[id];
             return (
-              <button
+              <div
                 key={id}
-                type="button"
-                title={entry.label()}
-                onClick={() => setDockPanel(id)}
-                class={cn(
-                  "flex size-6 items-center justify-center rounded transition-colors",
-                  active === id
-                    ? "bg-raised text-text"
-                    : floating
-                      ? "text-muted hover:text-text"
-                      : "text-faint hover:text-text",
-                )}
+                draggable
+                onDragStart={(event) => writePanelDrag(event, id)}
+                onDragOver={(event) => {
+                  if (hasPanelDrag(event)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }
+                }}
+                onDrop={(event) => {
+                  event.stopPropagation();
+                  dropOn(id, event);
+                }}
+                class="group relative"
               >
-                <Icon name={entry.icon} />
-              </button>
+                <button
+                  type="button"
+                  title={entry.label()}
+                  onClick={() => setDockPanel(id)}
+                  onDblClick={() => popPanelToTab(id)}
+                  class={cn(
+                    "flex size-6 items-center justify-center rounded transition-colors",
+                    active === id
+                      ? "bg-raised text-text"
+                      : floating
+                        ? "text-muted hover:text-text"
+                        : "text-faint hover:text-text",
+                  )}
+                >
+                  <Icon name={entry.icon} />
+                </button>
+                <button
+                  type="button"
+                  title={t("dock.popOut")}
+                  onClick={() => popPanelToTab(id)}
+                  class="absolute -top-0.5 -right-0.5 hidden size-3.5 items-center justify-center rounded bg-raised text-faint shadow group-hover:flex hover:text-text"
+                >
+                  <Icon name="external" size={10} />
+                </button>
+              </div>
             );
           })}
         </nav>
@@ -61,9 +105,13 @@ export function Dock({ header, floating = false }: Props) {
       <DockResize />
 
       <div class="min-h-0 flex-1 overflow-hidden">
-        <div key={active} class="h-full animate-dock-view">
-          <View />
-        </div>
+        {View && active ? (
+          <div key={active} class="h-full animate-dock-view">
+            <View />
+          </div>
+        ) : (
+          <p class="p-3 text-faint">{t("dock.empty")}</p>
+        )}
       </div>
     </aside>
   );

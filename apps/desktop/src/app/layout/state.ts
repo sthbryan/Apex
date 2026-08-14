@@ -7,12 +7,16 @@ export const DOCK_WIDTH_MAX = 480;
 export const DOCK_WIDTH_DEFAULT = 224;
 
 const WIDTH_KEY = "apex.dockWidth";
+const ORDER_KEY = "apex.dockOrder";
+
+const ALL_PANELS: DockPanel[] = ["sessions", "files", "git", "context", "tasks"];
 
 export const dockOpen = signal(true);
 export const dockHover = signal(false);
 export const dockWidth = signal(readStoredWidth());
 export const dockResizing = signal(false);
-export const dockPanel = signal<DockPanel>("sessions");
+export const dockOrder = signal<DockPanel[]>(readStoredOrder());
+export const dockPanel = signal<DockPanel>(dockOrder.value[0] ?? "sessions");
 
 applyDockWidth(dockWidth.value);
 
@@ -21,7 +25,65 @@ export function setDockHover(hovering: boolean): void {
 }
 
 export function setDockPanel(panel: DockPanel): void {
-  dockPanel.value = panel;
+  if (dockOrder.value.includes(panel)) {
+    dockPanel.value = panel;
+  }
+}
+
+export function moveDockPanel(id: DockPanel, delta: number): void {
+  const order = [...dockOrder.value];
+  const from = order.indexOf(id);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= order.length) {
+    return;
+  }
+  const [item] = order.splice(from, 1);
+  order.splice(to, 0, item);
+  dockOrder.value = order;
+  persistOrder();
+}
+
+export function placePanelInDock(id: DockPanel, before?: DockPanel): void {
+  const rest = dockOrder.value.filter((panel) => panel !== id);
+  const at = before ? rest.indexOf(before) : rest.length;
+  const index = at === -1 ? rest.length : at;
+  dockOrder.value = [...rest.slice(0, index), id, ...rest.slice(index)];
+  dockPanel.value = id;
+  persistOrder();
+}
+
+export function removePanelFromDock(id: DockPanel): void {
+  const next = dockOrder.value.filter((panel) => panel !== id);
+  if (next.length === dockOrder.value.length) {
+    return;
+  }
+  dockOrder.value = next;
+  if (dockPanel.value === id) {
+    dockPanel.value = next[0] ?? "sessions";
+  }
+  persistOrder();
+}
+
+export function returnPanelToDock(id: string): void {
+  if (!isDockPanel(id) || dockOrder.value.includes(id)) {
+    return;
+  }
+  placePanelInDock(id);
+}
+
+export function isDockPanel(id: string): id is DockPanel {
+  return ALL_PANELS.includes(id as DockPanel);
+}
+
+export function reconcileDock(claimed: Iterable<string>): void {
+  const taken = new Set(claimed);
+  const docked = new Set(dockOrder.value);
+  const missing = ALL_PANELS.filter((id) => !docked.has(id) && !taken.has(id));
+  if (missing.length === 0) {
+    return;
+  }
+  dockOrder.value = [...dockOrder.value, ...missing];
+  persistOrder();
 }
 
 export function toggleDock(): void {
@@ -56,6 +118,26 @@ function clampWidth(px: number): number {
 
 function applyDockWidth(px: number): void {
   document.documentElement.style.setProperty("--apex-dock-width", `${px}px`);
+}
+
+function persistOrder(): void {
+  try {
+    localStorage.setItem(ORDER_KEY, JSON.stringify(dockOrder.value));
+  } catch {}
+}
+
+function readStoredOrder(): DockPanel[] {
+  const known = new Set<string>(ALL_PANELS);
+  try {
+    const stored = JSON.parse(localStorage.getItem(ORDER_KEY) ?? "null") as unknown;
+    if (!Array.isArray(stored)) {
+      return ALL_PANELS;
+    }
+    const kept = stored.filter((id): id is DockPanel => known.has(id));
+    return kept.length > 0 ? kept : ALL_PANELS;
+  } catch {
+    return ALL_PANELS;
+  }
 }
 
 function readStoredWidth(): number {
