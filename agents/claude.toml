@@ -3,7 +3,10 @@ command = "claude"
 mode = "pty"
 acp_command = "npx"
 acp_args = ["@zed-industries/claude-code-acp"]
-mcp_flag = "--mcp-config"
+
+[mcp]
+kind = "flag"
+flag = "--mcp-config"
 
 [state_patterns]
 blocked = ["Do you want to proceed", "❯ 1\\. Yes", "\\? for shortcuts"]

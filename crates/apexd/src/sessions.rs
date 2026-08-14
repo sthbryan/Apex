@@ -1,11 +1,12 @@
 use std::collections::{BTreeMap, HashMap};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
 use apex_core::{
-    AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, context, editors, files, history,
+    AgentProfile, ApexPaths, BinaryResolver, McpDelivery, McpFormat, ProfileSet, Store, context,
+    editors, files, history,
 };
 use apex_metrics::Sampler;
 use apex_proto::{
@@ -431,12 +432,10 @@ impl SessionManager {
 
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = override_args.unwrap_or_else(|| profile.args.clone());
-        if let Some(flag) = &profile.mcp_flag {
-            match self.write_mcp_config(record.id) {
-                Ok(config) => {
-                    spec.args.push(flag.clone());
-                    spec.args.push(config.display().to_string());
-                }
+        if let Some(delivery) = &profile.mcp {
+            match self.offer_mcp(record.id, delivery, &cwd, worktree.is_some()) {
+                Ok(Some(flag)) => spec.args.extend(flag),
+                Ok(None) => {}
                 Err(error) => tracing::warn!(%error, "could not offer the MCP server"),
             }
         }
@@ -737,24 +736,48 @@ impl SessionManager {
         })
     }
 
-    fn write_mcp_config(&self, session: Uuid) -> Result<PathBuf> {
-        let dir = self.paths.mcp_dir();
-        std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
-
+    fn offer_mcp(
+        &self,
+        session: Uuid,
+        delivery: &McpDelivery,
+        cwd: &Path,
+        isolated: bool,
+    ) -> Result<Option<Vec<String>>> {
         let binary = std::env::current_exe().context("locating apexd")?;
-        let config = serde_json::json!({
-            "mcpServers": {
-                "apex": {
-                    "command": binary.display().to_string(),
-                    "args": ["mcp", "--session", session.to_string()],
-                }
-            }
-        });
+        let launcher = binary.display().to_string();
+        let args = ["mcp", "--session", &session.to_string()].map(str::to_owned);
 
-        let path = dir.join(format!("{session}.json"));
-        std::fs::write(&path, serde_json::to_vec_pretty(&config)?)
-            .with_context(|| format!("writing {}", path.display()))?;
-        Ok(path)
+        match delivery {
+            McpDelivery::Flag { flag } => {
+                let dir = self.paths.mcp_dir();
+                std::fs::create_dir_all(&dir)
+                    .with_context(|| format!("creating {}", dir.display()))?;
+                let path = dir.join(format!("{session}.json"));
+                std::fs::write(&path, render_mcp(McpFormat::Claude, &launcher, &args)?)
+                    .with_context(|| format!("writing {}", path.display()))?;
+                Ok(Some(vec![flag.clone(), path.display().to_string()]))
+            }
+            McpDelivery::Project { path, format } => {
+                let target = cwd.join(path);
+                if target.exists() && !isolated {
+                    tracing::info!(
+                        target = %target.display(),
+                        "left the existing config alone, so this agent gets no MCP"
+                    );
+                    return Ok(None);
+                }
+                if let Some(parent) = target.parent() {
+                    std::fs::create_dir_all(parent)
+                        .with_context(|| format!("creating {}", parent.display()))?;
+                }
+                std::fs::write(&target, render_mcp(*format, &launcher, &args)?)
+                    .with_context(|| format!("writing {}", target.display()))?;
+                if !isolated {
+                    let _ = apex_git::exclude(cwd, path);
+                }
+                Ok(None)
+            }
+        }
     }
 
     async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
@@ -896,4 +919,29 @@ fn scope_of(scope: DiffScope) -> apex_git::Scope {
         DiffScope::Staged => apex_git::Scope::Staged,
         DiffScope::Both => apex_git::Scope::Both,
     }
+}
+
+fn render_mcp(format: McpFormat, launcher: &str, args: &[String; 3]) -> Result<String> {
+    Ok(match format {
+        McpFormat::Claude => serde_json::to_string_pretty(&serde_json::json!({
+            "mcpServers": { "apex": { "command": launcher, "args": args } }
+        }))?,
+        McpFormat::Opencode => serde_json::to_string_pretty(&serde_json::json!({
+            "$schema": "https://opencode.ai/config.json",
+            "mcp": {
+                "apex": {
+                    "type": "local",
+                    "command": std::iter::once(launcher.to_owned())
+                        .chain(args.iter().cloned())
+                        .collect::<Vec<_>>(),
+                    "enabled": true,
+                }
+            }
+        }))?,
+        McpFormat::Grok => format!(
+            "[mcp_servers.apex]\ncommand = {}\nargs = {}\nenabled = true\n",
+            serde_json::to_string(launcher)?,
+            serde_json::to_string(args)?
+        ),
+    })
 }

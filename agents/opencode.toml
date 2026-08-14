@@ -2,6 +2,11 @@ name = "opencode"
 command = "opencode"
 mode = "pty"
 
+[mcp]
+kind = "project"
+path = "opencode.json"
+format = "opencode"
+
 [state_patterns]
 blocked = ["\\(y/n\\)"]
 

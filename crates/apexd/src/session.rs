@@ -506,9 +506,22 @@ mod tests {
         profiles.upsert(AgentProfile::parse(&answering).expect("answering profile"));
         profiles.upsert(
             AgentProfile::parse(
+                "name = \"mcp-project\"\n\
+                 command = \"echo\"\n\
+                 [mcp]\n\
+                 kind = \"project\"\n\
+                 path = \"opencode.json\"\n\
+                 format = \"opencode\"\n",
+            )
+            .expect("project mcp profile"),
+        );
+        profiles.upsert(
+            AgentProfile::parse(
                 "name = \"mcp-aware\"\n\
                  command = \"echo\"\n\
-                 mcp_flag = \"--mcp-config\"\n",
+                 [mcp]\n\
+                 kind = \"flag\"\n\
+                 flag = \"--mcp-config\"\n",
             )
             .expect("mcp profile"),
         );
@@ -1133,6 +1146,75 @@ mod tests {
         })
         .await;
         assert!(echoed.is_ok(), "the flag never reached the agent");
+    }
+
+    #[tokio::test]
+    async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
+        let home = tempfile::tempdir().expect("tempdir");
+        let paths = ApexPaths::rooted_at(home.path());
+        let manager = manager_at(&paths);
+        let root = tempfile::tempdir().expect("project");
+        init_repo(root.path());
+        let project = manager
+            .open_project(&root.path().display().to_string())
+            .await
+            .expect("project")
+            .id;
+
+        let session = manager
+            .create(
+                project,
+                "mcp-project",
+                None,
+                TerminalSize::default(),
+                Isolation::Directory,
+                None,
+            )
+            .await
+            .expect("session");
+        assert!(session.worktree.is_none());
+
+        let written = root.path().join("opencode.json");
+        let config: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&written).expect("read")).expect("json");
+        let launcher = config["mcp"]["apex"]["command"][0].as_str().expect("command");
+        assert!(launcher.contains("apexd"));
+        assert_eq!(config["mcp"]["apex"]["enabled"], true);
+
+        let exclude = std::fs::read_to_string(root.path().join(".git/info/exclude")).expect("read");
+        assert!(exclude.contains("/opencode.json"), "the repo would have been dirtied");
+
+        let status = manager.git_status(project, GitTarget::Project).await.expect("status");
+        assert!(status.changes.is_empty(), "the project should still look clean");
+    }
+
+    #[tokio::test]
+    async fn a_config_the_project_already_has_is_never_overwritten() {
+        let home = tempfile::tempdir().expect("tempdir");
+        let paths = ApexPaths::rooted_at(home.path());
+        let manager = manager_at(&paths);
+        let root = tempfile::tempdir().expect("project");
+        std::fs::write(root.path().join("opencode.json"), "{\"mine\": true}").expect("write");
+        let project = manager
+            .open_project(&root.path().display().to_string())
+            .await
+            .expect("project")
+            .id;
+
+        manager
+            .create(
+                project,
+                "mcp-project",
+                None,
+                TerminalSize::default(),
+                Isolation::Directory,
+                None,
+            )
+            .await
+            .expect("session");
+
+        let kept = std::fs::read_to_string(root.path().join("opencode.json")).expect("read");
+        assert_eq!(kept, "{\"mine\": true}");
     }
 
     #[tokio::test]

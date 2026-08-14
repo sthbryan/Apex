@@ -1,0 +1,10 @@
+name = "pi"
+command = "pi"
+mode = "pty"
+
+[mcp]
+kind = "flag"
+flag = "--mcp-config"
+
+[state_patterns]
+blocked = ["\\(y/n\\)", "\\[y/N\\]", "Allow"]

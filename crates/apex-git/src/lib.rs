@@ -356,14 +356,21 @@ pub fn slugify(title: &str) -> String {
     slug.trim_matches('-').to_owned()
 }
 
+pub fn exclude(root: &Path, entry: &str) -> Result<()> {
+    write_exclude(root, &format!("/{entry}"))
+}
+
 fn exclude_worktrees(root: &Path) -> Result<()> {
+    write_exclude(root, &format!("/{WORKTREE_DIR}/"))
+}
+
+fn write_exclude(root: &Path, entry: &str) -> Result<()> {
     let git_dir = run(root, &["rev-parse", "--git-common-dir"])?;
     let info = Path::new(git_dir.trim()).to_path_buf();
     let info = if info.is_absolute() { info } else { root.join(info) };
     let exclude = info.join("info").join("exclude");
 
     let current = std::fs::read_to_string(&exclude).unwrap_or_default();
-    let entry = format!("/{WORKTREE_DIR}/");
     if current.lines().any(|line| line.trim() == entry) {
         return Ok(());
     }

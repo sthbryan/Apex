@@ -14,8 +14,24 @@ const BUILTIN_PROFILES: &[(&str, &str)] = &[
     ("grok", include_str!("../../../agents/grok.toml")),
     ("copilot", include_str!("../../../agents/copilot.toml")),
     ("opencode", include_str!("../../../agents/opencode.toml")),
+    ("pi", include_str!("../../../agents/pi.toml")),
     ("shell", include_str!("../../../agents/shell.toml")),
 ];
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum McpDelivery {
+    Flag { flag: String },
+    Project { path: String, format: McpFormat },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum McpFormat {
+    Claude,
+    Opencode,
+    Grok,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgentProfile {
@@ -30,7 +46,7 @@ pub struct AgentProfile {
     #[serde(default)]
     pub acp_args: Vec<String>,
     #[serde(default)]
-    pub mcp_flag: Option<String>,
+    pub mcp: Option<McpDelivery>,
     #[serde(default)]
     pub env: BTreeMap<String, String>,
     #[serde(default)]

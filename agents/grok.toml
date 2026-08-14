@@ -2,6 +2,11 @@ name = "grok"
 command = "grok"
 mode = "pty"
 
+[mcp]
+kind = "project"
+path = ".grok/config.toml"
+format = "grok"
+
 [state_patterns]
 blocked = ["\\(y/n\\)", "Allow this", "Approve"]
 
