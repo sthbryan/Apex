@@ -9,9 +9,9 @@ import {
   projectSessions,
 } from "./projects";
 import { locale, t } from "./i18n";
-import { SessionsPanel } from "./panels/SessionsPanel";
 import { sessions } from "./sessions";
 import { projects } from "./projects";
+import { type DockPanel, Dock } from "./shell/Dock";
 import { CommandPalette } from "./shell/CommandPalette";
 import { PaneTree } from "./shell/PaneTree";
 import { TabBar } from "./shell/TabBar";
@@ -19,6 +19,7 @@ import { ProjectPicker } from "./shell/ProjectPicker";
 import { TitleBar } from "./shell/TitleBar";
 import { Toolbar } from "./shell/Toolbar";
 import { findLeaf } from "./shell/tree";
+import { startMetrics } from "./metrics";
 import { startNotifications } from "./notifications";
 import { startThemeWatcher } from "./theme/mode";
 import { watchFullscreen } from "./shell/windowControls";
@@ -35,6 +36,7 @@ import { focusTerminal } from "./views/terminalRegistry";
 export function App() {
   const [dockOpen, setDockOpen] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [panel, setPanel] = useState<DockPanel>("sessions");
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
@@ -45,9 +47,15 @@ export function App() {
       stopNotifications = stop;
     });
 
+    let stopMetrics: (() => void) | undefined;
+    void startMetrics().then((stop) => {
+      stopMetrics = stop;
+    });
+
     const stopTheme = startThemeWatcher();
     return () => {
       stopNotifications?.();
+      stopMetrics?.();
       stopTheme();
     };
   }, []);
@@ -162,13 +170,13 @@ export function App() {
 
       <div class="flex min-h-0 flex-1">
         {dockOpen && (
-          <aside class="w-56 shrink-0 border-r border-border bg-surface">
-            <SessionsPanel
-              sessions={projectSessions.value}
-              elsewhere={foreignSessions.value}
-              projects={projects.value}
-            />
-          </aside>
+          <Dock
+            panel={panel}
+            onPanel={setPanel}
+            sessions={projectSessions.value}
+            elsewhere={foreignSessions.value}
+            projects={projects.value}
+          />
         )}
 
         <div class="flex min-h-0 flex-1 flex-col">

@@ -138,8 +138,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "apex-core",
+ "apex-metrics",
  "apex-proto",
  "apex-pty",
+ "apex-quota",
  "bytes",
  "directories",
  "tempfile",
