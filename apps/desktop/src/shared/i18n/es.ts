@@ -90,6 +90,13 @@ export const es: Messages = {
     merged: "Mergeado.",
     conflicted: "Conflictos en {files}. Resuélvelos en el worktree.",
   },
+  closing: {
+    title: "Cerrar {title}",
+    keep: "Conservar la rama",
+    keepHint: "{branch} y su worktree se quedan en disco.",
+    discard: "Descartar el worktree",
+    discardHint: "Borra {branch} y todo lo que no esté commiteado.",
+  },
   isolation: {
     title: "Nueva sesión de {agent}",
     worktree: "Worktree aislado",

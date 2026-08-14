@@ -2,10 +2,9 @@ import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { waiting } from "@/features/notifications/state";
 import { ElsewhereList } from "@/features/sessions/ElsewhereList";
+import { requestClose } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
-import { closeSession } from "@/features/sessions/state";
 import { WaitingList } from "@/features/sessions/WaitingList";
-import { dropSession } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -45,7 +44,7 @@ export function SessionsPanel({ sessions, elsewhere, projects }: Props) {
               title={t("sessions.clearFinished")}
               onClick={() => {
                 for (const session of finished) {
-                  dismiss(session.id);
+                  requestClose(session);
                 }
               }}
               class="ml-auto text-faint transition-colors hover:text-text"
@@ -64,9 +63,4 @@ export function SessionsPanel({ sessions, elsewhere, projects }: Props) {
       {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects} />}
     </div>
   );
-}
-
-function dismiss(id: string): void {
-  dropSession(id);
-  void closeSession(id);
 }

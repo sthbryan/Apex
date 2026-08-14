@@ -21,6 +21,7 @@ import {
   projects,
 } from "@/features/projects/state";
 import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
+import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
@@ -219,6 +220,8 @@ export function App() {
       </div>
 
       <NewSession />
+
+      <CloseSession />
 
       <Settings />
 

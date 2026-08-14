@@ -88,6 +88,13 @@ export const en = {
     merged: "Merged.",
     conflicted: "Conflicts in {files}. Resolve them in the worktree.",
   },
+  closing: {
+    title: "Close {title}",
+    keep: "Keep the branch",
+    keepHint: "{branch} and its worktree stay on disk.",
+    discard: "Discard the worktree",
+    discardHint: "Deletes {branch} and everything uncommitted in it.",
+  },
   isolation: {
     title: "New {agent} session",
     worktree: "Isolated worktree",

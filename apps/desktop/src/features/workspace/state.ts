@@ -1,7 +1,13 @@
 import { computed, signal } from "@preact/signals";
 
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { closeSession } from "@/features/sessions/state";
+
+let onCloseRequest: ((sessionId: string) => void) | null = null;
+
+export function whenClosingSession(handler: (sessionId: string) => void): void {
+  onCloseRequest = handler;
+}
+
 import {
   type Direction,
   findLeaf,
@@ -223,7 +229,7 @@ export function closePane(tabId: string, target: Leaf, terminate: boolean): void
   }
   const session = sessionOf(target);
   if (terminate && session) {
-    void closeSession(session);
+    onCloseRequest?.(session);
   }
 
   const fallback = neighbourLeaf(tab.root, target.id);

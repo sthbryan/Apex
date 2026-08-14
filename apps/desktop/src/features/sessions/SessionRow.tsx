@@ -1,13 +1,8 @@
 import cn from "cnfast";
 import type { SessionSummary } from "@/bindings/SessionSummary";
+import { requestClose } from "@/features/sessions/pending";
 import { SessionStateDot } from "@/features/sessions/SessionStateDot";
-import { closeSession } from "@/features/sessions/state";
-import {
-  activeSessionId,
-  dropSession,
-  focusSession,
-  openInNewTab,
-} from "@/features/workspace/state";
+import { activeSessionId, focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -48,16 +43,11 @@ export function SessionRow({ session }: Props) {
       <button
         type="button"
         title={finished ? t("sessions.dismiss") : t("sessions.close")}
-        onClick={() => dismiss(session.id)}
+        onClick={() => requestClose(session)}
         class="shrink-0 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
       >
         <Icon name="close" size={12} />
       </button>
     </li>
   );
-}
-
-function dismiss(id: string): void {
-  dropSession(id);
-  void closeSession(id);
 }

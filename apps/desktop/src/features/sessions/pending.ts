@@ -1,8 +1,15 @@
 import { signal } from "@preact/signals";
 
 import type { Isolation } from "@/bindings/Isolation";
-import { createSession } from "@/features/sessions/state";
-import { openInNewTab, splitActive } from "@/features/workspace/state";
+import type { SessionSummary } from "@/bindings/SessionSummary";
+import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
+import { closeSession, createSession, sessions } from "@/features/sessions/state";
+import {
+  dropSession,
+  openInNewTab,
+  splitActive,
+  whenClosingSession,
+} from "@/features/workspace/state";
 import type { Direction } from "@/features/workspace/tree";
 
 export type PendingSession = {
@@ -44,3 +51,45 @@ export async function startSession(request: PendingSession, isolation: Isolation
     openInNewTab(created);
   }
 }
+
+export type PendingClose = {
+  id: number;
+  sessionId: string;
+  title: string;
+  branch: string;
+};
+
+export const pendingClose = signal<PendingClose | null>(null);
+
+export function requestClose(session: SessionSummary): void {
+  if (!session.worktree) {
+    void finishClose(session.id, "keep");
+    return;
+  }
+  requests += 1;
+  pendingClose.value = {
+    id: requests,
+    sessionId: session.id,
+    title: session.title,
+    branch: session.worktree.branch,
+  };
+}
+
+export function cancelClose(): void {
+  pendingClose.value = null;
+}
+
+export async function finishClose(sessionId: string, disposal: WorktreeDisposal): Promise<void> {
+  pendingClose.value = null;
+  dropSession(sessionId);
+  await closeSession(sessionId, disposal);
+}
+
+whenClosingSession((sessionId) => {
+  const session = sessions.value.find((candidate) => candidate.id === sessionId);
+  if (session) {
+    requestClose(session);
+  } else {
+    void closeSession(sessionId);
+  }
+});
