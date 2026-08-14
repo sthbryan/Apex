@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
-use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, context, history};
+use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, history};
 use apex_metrics::Sampler;
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
@@ -56,6 +56,7 @@ pub struct SessionManager {
     quotas: Mutex<QuotaCache>,
     files: crate::services::files::FilesService,
     git: crate::services::git::GitService,
+    context: crate::services::context::ContextService,
 }
 
 impl SessionManager {
@@ -73,6 +74,7 @@ impl SessionManager {
         let resolver = Arc::new(Mutex::new(resolver));
         let store = Arc::new(Mutex::new(store));
         let files = crate::services::files::FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
+        let context = crate::services::context::ContextService::new(Arc::clone(&store));
         Self {
             paths,
             profiles,
@@ -85,6 +87,7 @@ impl SessionManager {
             quotas: Mutex::new(QuotaCache::new()),
             files,
             git: crate::services::git::GitService,
+            context,
         }
     }
 
@@ -605,29 +608,15 @@ impl SessionManager {
     }
 
     pub async fn context_list(&self, project: Uuid) -> Result<Vec<ContextEntry>> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let entries = tokio::task::spawn_blocking(move || context::list(&root)).await??;
-        Ok(entries
-            .into_iter()
-            .map(|entry| ContextEntry {
-                key: entry.key,
-                bytes: entry.bytes,
-                updated_at: entry.updated_at,
-            })
-            .collect())
+        self.context.list(project).await
     }
 
     pub async fn context_read(&self, project: Uuid, key: &str) -> Result<String> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let key = key.to_owned();
-        tokio::task::spawn_blocking(move || context::read(&root, &key)).await?
+        self.context.read(project, key).await
     }
 
     pub async fn context_write(&self, project: Uuid, key: &str, contents: &str) -> Result<()> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let key = key.to_owned();
-        let contents = contents.to_owned();
-        tokio::task::spawn_blocking(move || context::write(&root, &key, &contents)).await?
+        self.context.write(project, key, contents).await
     }
 
     pub async fn context_note(
@@ -637,14 +626,7 @@ impl SessionManager {
         to: Option<&str>,
         message: &str,
     ) -> Result<()> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let from = from.to_owned();
-        let to = to.map(str::to_owned);
-        let message = message.to_owned();
-        tokio::task::spawn_blocking(move || {
-            context::append_note(&root, &from, to.as_deref(), &message)
-        })
-        .await?
+        self.context.note(project, from, to, message).await
     }
 
     pub async fn transcript(&self, id: Uuid, tail: usize) -> Result<String> {
