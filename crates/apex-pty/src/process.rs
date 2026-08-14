@@ -51,6 +51,7 @@ pub struct ExitStatus {
 }
 
 pub struct PtyProcess {
+    pid: Option<u32>,
     master: Arc<Mutex<Box<dyn MasterPty + Send>>>,
     input: mpsc::Sender<Bytes>,
     output: broadcast::Sender<Bytes>,
@@ -85,6 +86,7 @@ impl PtyProcess {
             .with_context(|| format!("lanzando {}", spec.command.display()))?;
         drop(pair.slave);
 
+        let pid = child.process_id();
         let killer = child.clone_killer();
         let reader = pair.master.try_clone_reader().context("clonando el lector del pty")?;
         let writer = pair.master.take_writer().context("tomando el escritor del pty")?;
@@ -102,6 +104,7 @@ impl PtyProcess {
         });
 
         Ok(Self {
+            pid,
             master: Arc::new(Mutex::new(pair.master)),
             input,
             output,
@@ -109,6 +112,10 @@ impl PtyProcess {
             exit,
             killer: Arc::new(Mutex::new(killer)),
         })
+    }
+
+    pub fn pid(&self) -> Option<u32> {
+        self.pid
     }
 
     pub fn write(&self, data: Bytes) -> Result<()> {
@@ -307,6 +314,14 @@ mod tests {
         let process = PtyProcess::spawn(spec).expect("spawn");
         let text = wait_for(&process, "valor:").await;
         assert!(text.contains("valor:[presente]"), "no llego la variable: {text}");
+    }
+
+    #[tokio::test]
+    async fn a_spawned_process_reports_its_pid() {
+        let process = PtyProcess::spawn(shell("echo $$; sleep 5")).expect("spawn");
+        let pid = process.pid().expect("sin pid");
+        let text = wait_for(&process, &pid.to_string()).await;
+        assert!(text.contains(&pid.to_string()), "el pid no coincide: {text}");
     }
 
     #[tokio::test]
