@@ -79,7 +79,9 @@ export const en = {
     done: "An agent finished",
   },
   git: {
-    noSession: "Pick a session to see its changes.",
+    noRepo: "This project is not a git repository.",
+    chip: "On {branch} — open the git panel",
+    trees: "{count} worktrees",
     clean: "Nothing changed yet.",
     refresh: "Reload the changes",
     reload: "Reload the diff",

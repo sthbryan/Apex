@@ -1,0 +1,38 @@
+import cn from "cnfast";
+
+import { gitStatus, worktrees } from "@/features/git/state";
+import { activeProject } from "@/features/projects/state";
+import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
+
+export function GitChip({ onOpen }: { onOpen: () => void }) {
+  const project = activeProject.value;
+  const status = gitStatus.value;
+  if (!project?.is_git || !status) {
+    return null;
+  }
+
+  const trees = worktrees.value.length;
+  const dirty = status.changes.length;
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      title={t("git.chip", { branch: status.branch })}
+      class="flex items-center gap-1.5 transition-colors hover:text-text"
+    >
+      <Icon name="branch" size={12} />
+      <span class={cn("truncate", status.isolated ? "text-state-working" : "")}>
+        {status.branch}
+      </span>
+      {dirty > 0 && <span class="text-state-blocked">{dirty}±</span>}
+      {trees > 0 && (
+        <span class="flex items-center gap-0.5">
+          <span class="text-border">·</span>
+          {t("git.trees", { count: String(trees) })}
+        </span>
+      )}
+    </button>
+  );
+}

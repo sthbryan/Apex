@@ -171,11 +171,15 @@ impl Client {
                     .await
                     .map_err(not_found_error)?,
             }),
-            Command::GitRead { session } => Ok(Reply::Git {
-                status: self.manager.git_status(session).await.map_err(not_found_error)?,
+            Command::GitRead { project, session } => Ok(Reply::Git {
+                status: self.manager.git_status(project, session).await.map_err(not_found_error)?,
             }),
-            Command::GitDiff { session, path } => Ok(Reply::Diff {
-                patch: self.manager.git_diff(session, &path).await.map_err(not_found_error)?,
+            Command::GitDiff { project, session, path } => Ok(Reply::Diff {
+                patch: self
+                    .manager
+                    .git_diff(project, session, &path)
+                    .await
+                    .map_err(not_found_error)?,
             }),
             Command::WorktreeMerge { session } => Ok(Reply::Merge {
                 report: self.manager.merge_worktree(session).await.map_err(not_found_error)?,
@@ -833,7 +837,8 @@ mod tests {
         assert_eq!(session.cwd, tree.path);
         assert!(std::path::Path::new(&tree.path).join("README.md").is_file());
 
-        let status = harness.manager.git_status(session.id).await.expect("status");
+        let status =
+            harness.manager.git_status(harness.project, Some(session.id)).await.expect("status");
         assert_eq!(status.branch, tree.branch);
         assert_eq!(status.base, "main");
         assert!(status.isolated);
@@ -841,10 +846,38 @@ mod tests {
 
         std::fs::write(std::path::Path::new(&tree.path).join("README.md"), "# agent\n")
             .expect("write");
-        let status = harness.manager.git_status(session.id).await.expect("status");
+        let status =
+            harness.manager.git_status(harness.project, Some(session.id)).await.expect("status");
         assert_eq!(status.changes.len(), 1);
         assert_eq!(status.changes[0].kind, "modified");
-        assert!(harness.manager.git_diff(session.id, "README.md").await.expect("diff").contains("+# agent"));
+        assert!(
+            harness
+                .manager
+                .git_diff(harness.project, Some(session.id), "README.md")
+                .await
+                .expect("diff")
+                .contains("+# agent")
+        );
+    }
+
+    #[tokio::test]
+    async fn the_project_itself_reports_its_changes_without_a_session() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+        std::fs::write(harness.root.path().join("README.md"), "# edited\n").expect("write");
+
+        let status = harness.manager.git_status(harness.project, None).await.expect("status");
+        assert_eq!(status.branch, "main");
+        assert!(!status.isolated);
+        assert_eq!(status.changes.len(), 1);
+        assert!(
+            harness
+                .manager
+                .git_diff(harness.project, None, "README.md")
+                .await
+                .expect("diff")
+                .contains("+# edited")
+        );
     }
 
     #[tokio::test]

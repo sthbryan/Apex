@@ -1,12 +1,19 @@
 import cn from "cnfast";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 
 import type { GitChange } from "@/bindings/GitChange";
-import type { GitStatus } from "@/bindings/GitStatus";
 import type { MergeReport } from "@/bindings/MergeReport";
-import { mergeWorktree, readStatus } from "@/features/git/state";
-import { sessions } from "@/features/sessions/state";
-import { activeSessionId, openDiff } from "@/features/workspace/state";
+import {
+  gitFailure,
+  gitStatus,
+  gitTarget,
+  mergeWorktree,
+  refreshGit,
+  selectTarget,
+  worktrees,
+} from "@/features/git/state";
+import { activeProject } from "@/features/projects/state";
+import { openDiff } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -20,68 +27,76 @@ const MARKS: Record<string, string> = {
 };
 
 export function GitPanel() {
-  const sessionId = activeSessionId.value;
-  const session = sessions.value.find((candidate) => candidate.id === sessionId);
-  const [status, setStatus] = useState<GitStatus | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
+  const project = activeProject.value;
+  const status = gitStatus.value;
+  const target = gitTarget.value;
   const [report, setReport] = useState<MergeReport | null>(null);
 
-  const refresh = useCallback(() => {
-    if (!sessionId) {
-      setStatus(null);
-      return;
-    }
-    void readStatus(sessionId)
-      .then((next) => {
-        setStatus(next);
-        setFailure(null);
-      })
-      .catch((error: unknown) => {
-        setStatus(null);
-        setFailure(String(error));
-      });
-  }, [sessionId]);
-
-  useEffect(refresh, [refresh]);
-
-  if (!sessionId) {
-    return <p class="p-2 text-faint">{t("git.noSession")}</p>;
+  if (!project) {
+    return <p class="p-2 text-faint">{t("files.noProject")}</p>;
+  }
+  if (!project.is_git) {
+    return <p class="p-2 text-faint">{t("git.noRepo")}</p>;
   }
 
   return (
     <div class="flex h-full flex-col">
       <div class="flex shrink-0 items-center gap-2 px-2 py-1">
-        <Icon name="branch" size={12} class="shrink-0 text-faint" />
-        <h2 class="truncate text-muted">{status?.branch ?? session?.title ?? ""}</h2>
+        <h2 class="uppercase tracking-wider text-faint">{t("dock.git")}</h2>
         <button
           type="button"
           title={t("git.refresh")}
-          onClick={refresh}
+          onClick={() => void refreshGit()}
           class="ml-auto shrink-0 text-faint transition-colors hover:text-text"
         >
           <Icon name="refresh" size={12} />
         </button>
       </div>
 
-      {failure && <p class="px-2 text-state-failed">{failure}</p>}
-
-      {status && status.changes.length === 0 && <p class="px-2 text-faint">{t("git.clean")}</p>}
-
-      <ul class="min-h-0 flex-1 overflow-auto">
-        {status?.changes.map((change) => (
-          <Row key={change.path} change={change} sessionId={sessionId} />
+      <ul class="shrink-0 border-b border-border pb-1">
+        <Target
+          id={null}
+          label={project.name}
+          branch={target === null ? (status?.branch ?? "") : ""}
+          selected={target === null}
+        />
+        {worktrees.value.map((session) => (
+          <Target
+            key={session.id}
+            id={session.id}
+            label={session.title}
+            branch={session.worktree?.branch ?? ""}
+            selected={target === session.id}
+          />
         ))}
       </ul>
 
-      {status?.isolated && (
+      {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
+
+      {status && status.changes.length === 0 && (
+        <p class="px-2 py-1 text-faint">{t("git.clean")}</p>
+      )}
+
+      <ul class="min-h-0 flex-1 overflow-auto py-1">
+        {status?.changes.map((change) => (
+          <Row key={change.path} change={change} session={target} />
+        ))}
+      </ul>
+
+      {status?.isolated && target && (
         <div class="shrink-0 border-t border-border p-2">
           <button
             type="button"
             onClick={() => {
               setReport(null);
-              void mergeWorktree(sessionId)
-                .then(setReport)
-                .catch((error: unknown) => setFailure(String(error)));
+              void mergeWorktree(target)
+                .then((outcome) => {
+                  setReport(outcome);
+                  void refreshGit();
+                })
+                .catch((error: unknown) => {
+                  gitFailure.value = String(error);
+                });
             }}
             class="w-full rounded border border-border py-1 text-muted transition-colors hover:bg-raised hover:text-text"
           >
@@ -99,12 +114,38 @@ export function GitPanel() {
   );
 }
 
-function Row({ change, sessionId }: { change: GitChange; sessionId: string }) {
+type TargetProps = {
+  id: string | null;
+  label: string;
+  branch: string;
+  selected: boolean;
+};
+
+function Target({ id, label, branch, selected }: TargetProps) {
   return (
     <li>
       <button
         type="button"
-        onClick={() => openDiff(sessionId, change.path)}
+        onClick={() => selectTarget(id)}
+        class={cn(
+          "flex w-full items-center gap-2 px-2 py-px text-left transition-colors hover:bg-raised",
+          selected ? "bg-raised text-text" : "text-muted",
+        )}
+      >
+        <Icon name={id === null ? "files" : "branch"} size={12} class="shrink-0 text-faint" />
+        <span class="truncate">{label}</span>
+        {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
+      </button>
+    </li>
+  );
+}
+
+function Row({ change, session }: { change: GitChange; session: string | null }) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => openDiff(session, change.path)}
         class="flex w-full items-center gap-2 px-2 py-px text-left text-muted transition-colors hover:bg-raised hover:text-text"
       >
         <span

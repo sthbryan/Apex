@@ -268,8 +268,12 @@ async fn close_session(
 }
 
 #[tauri::command]
-async fn git_status(state: tauri::State<'_, AppState>, session: Uuid) -> Answer<GitStatus> {
-    match state.daemon.request(Command::GitRead { session }).await.map_err(failed)? {
+async fn git_status(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    session: Option<Uuid>,
+) -> Answer<GitStatus> {
+    match state.daemon.request(Command::GitRead { project, session }).await.map_err(failed)? {
         Reply::Git { status } => Ok(status),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -278,10 +282,11 @@ async fn git_status(state: tauri::State<'_, AppState>, session: Uuid) -> Answer<
 #[tauri::command]
 async fn git_diff(
     state: tauri::State<'_, AppState>,
-    session: Uuid,
+    project: Uuid,
+    session: Option<Uuid>,
     path: String,
 ) -> Answer<String> {
-    match state.daemon.request(Command::GitDiff { session, path }).await.map_err(failed)? {
+    match state.daemon.request(Command::GitDiff { project, session, path }).await.map_err(failed)? {
         Reply::Diff { patch } => Ok(patch),
         other => Err(format!("unexpected reply: {other:?}")),
     }

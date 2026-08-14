@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { highlight } from "@/features/files/highlight";
-import { readDiff } from "@/features/git/state";
+import { gitStatus, readDiff } from "@/features/git/state";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
-  sessionId: string;
+  sessionId: string | null;
   path: string;
 };
 
@@ -18,6 +18,7 @@ export function DiffView({ sessionId, path }: Props) {
   const ticket = useRef(0);
 
   const session = sessions.value.find((candidate) => candidate.id === sessionId);
+  const label = session?.worktree?.branch ?? session?.title ?? gitStatus.value?.branch ?? "";
 
   const load = useCallback(() => {
     const mine = ++ticket.current;
@@ -46,7 +47,7 @@ export function DiffView({ sessionId, path }: Props) {
       <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
         <Icon name="branch" size={12} />
         <span class="truncate text-text">{path}</span>
-        <span class="truncate text-faint">{session?.worktree?.branch ?? session?.title ?? ""}</span>
+        <span class="truncate text-faint">{label}</span>
         <button
           type="button"
           title={t("git.reload")}

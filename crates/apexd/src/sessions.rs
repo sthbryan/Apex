@@ -471,14 +471,12 @@ impl SessionManager {
         Ok(())
     }
 
-    pub async fn git_status(&self, session: Uuid) -> Result<GitStatus> {
-        let summary = self.require(session).await?.snapshot_summary().await;
-        let root = PathBuf::from(self.project_root(summary.project_id).await?);
-        let isolated = summary.worktree.is_some();
-        let dir = summary
-            .worktree
-            .as_ref()
-            .map(|tree| PathBuf::from(&tree.path))
+    pub async fn git_status(&self, project: Uuid, session: Option<Uuid>) -> Result<GitStatus> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let worktree = self.worktree_of(session).await?;
+        let isolated = worktree.is_some();
+        let dir = worktree
+            .map(|tree| PathBuf::from(tree.path))
             .unwrap_or_else(|| root.clone());
 
         tokio::task::spawn_blocking(move || {
@@ -502,10 +500,20 @@ impl SessionManager {
         .await?
     }
 
-    pub async fn git_diff(&self, session: Uuid, path: &str) -> Result<String> {
-        let dir = self.session_dir(session).await?;
+    pub async fn git_diff(&self, project: Uuid, session: Option<Uuid>, path: &str) -> Result<String> {
+        let dir = match self.worktree_of(session).await? {
+            Some(tree) => PathBuf::from(tree.path),
+            None => PathBuf::from(self.project_root(project).await?),
+        };
         let path = path.to_owned();
         tokio::task::spawn_blocking(move || apex_git::diff(&dir, &path)).await?
+    }
+
+    async fn worktree_of(&self, session: Option<Uuid>) -> Result<Option<WorktreeInfo>> {
+        let Some(session) = session else {
+            return Ok(None);
+        };
+        Ok(self.require(session).await?.snapshot_summary().await.worktree)
     }
 
     pub async fn merge_worktree(&self, session: Uuid) -> Result<MergeReport> {
@@ -519,14 +527,6 @@ impl SessionManager {
             apex_git::MergeOutcome::Merged => MergeReport::Merged,
             apex_git::MergeOutcome::Conflicted { files } => MergeReport::Conflicted { files },
         })
-    }
-
-    async fn session_dir(&self, session: Uuid) -> Result<PathBuf> {
-        let summary = self.require(session).await?.snapshot_summary().await;
-        match summary.worktree {
-            Some(tree) => Ok(PathBuf::from(tree.path)),
-            None => Ok(PathBuf::from(self.project_root(summary.project_id).await?)),
-        }
     }
 
     async fn open_worktree(&self, project_root: &str, title: &str) -> Result<WorktreeInfo> {

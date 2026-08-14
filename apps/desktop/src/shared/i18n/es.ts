@@ -81,7 +81,9 @@ export const es: Messages = {
     done: "Un agente terminó",
   },
   git: {
-    noSession: "Elige una sesión para ver sus cambios.",
+    noRepo: "Este proyecto no es un repositorio git.",
+    chip: "En {branch} — abrir el panel de git",
+    trees: "{count} worktrees",
     clean: "Todavía no hay cambios.",
     refresh: "Recargar los cambios",
     reload: "Recargar el diff",

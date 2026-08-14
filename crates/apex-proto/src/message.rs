@@ -388,11 +388,15 @@ pub enum Command {
     },
     GitRead {
         #[ts(type = "string")]
-        session: Uuid,
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
     },
     GitDiff {
         #[ts(type = "string")]
-        session: Uuid,
+        project: Uuid,
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
         path: String,
     },
     WorktreeMerge {

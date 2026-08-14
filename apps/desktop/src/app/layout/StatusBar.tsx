@@ -1,9 +1,15 @@
 import type { ComponentChildren } from "preact";
 
-export function StatusBar({ children }: { children?: ComponentChildren }) {
+type Props = {
+  lead?: ComponentChildren;
+  children?: ComponentChildren;
+};
+
+export function StatusBar({ lead, children }: Props) {
   return (
-    <div class="flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border px-2 text-faint">
-      {children}
+    <div class="flex h-6 shrink-0 items-center gap-3 border-t border-border px-2 text-faint">
+      {lead}
+      <div class="ml-auto flex items-center gap-3">{children}</div>
     </div>
   );
 }

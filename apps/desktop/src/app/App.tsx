@@ -9,6 +9,8 @@ import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
+import { GitChip } from "@/features/git/GitChip";
+import { startGitWatch } from "@/features/git/state";
 import { startNotifications } from "@/features/notifications/state";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
@@ -61,11 +63,13 @@ export function App() {
       stopMetrics = stop;
     });
 
+    const stopGit = startGitWatch();
     const stopCleanup = startPaneCleanup();
     const stopTheme = startThemeWatcher();
     return () => {
       stopNotifications?.();
       stopMetrics?.();
+      stopGit();
       stopCleanup();
       stopTheme();
     };
@@ -214,7 +218,7 @@ export function App() {
           )}
         </div>
 
-        <StatusBar>
+        <StatusBar lead={<GitChip onOpen={() => setPanel("git")} />}>
           <ResourcesSummary />
         </StatusBar>
       </div>

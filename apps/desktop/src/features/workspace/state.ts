@@ -52,7 +52,7 @@ export function openInNewTab(session: SessionSummary): void {
   openView({ type: "session", sessionId: session.id });
 }
 
-export function openDiff(sessionId: string, path: string): void {
+export function openDiff(sessionId: string | null, path: string): void {
   openBeside({ type: "diff", sessionId, path }, (view) => view.type === "diff");
 }
 
