@@ -42,8 +42,8 @@ export function Dock({
   return (
     <aside
       class={cn(
-        "flex h-full w-full flex-col overflow-hidden bg-surface",
-        floating ? "m-2 rounded-r-xl shadow-2xl" : "border-r border-border",
+        "flex h-full w-full flex-col overflow-hidden border-r border-border bg-surface transition-[border-radius,box-shadow] duration-[var(--apex-dock)]",
+        floating ? "rounded-r-xl shadow-[8px_0_28px_rgba(0,0,0,0.28)]" : "rounded-none shadow-none",
       )}
     >
       <div
@@ -64,7 +64,11 @@ export function Dock({
               onClick={() => onPanel(entry.id)}
               class={cn(
                 "flex size-6 items-center justify-center rounded transition-colors",
-                panel === entry.id ? "bg-raised text-text" : "text-faint hover:text-text",
+                panel === entry.id
+                  ? "bg-raised text-text"
+                  : floating
+                    ? "text-muted hover:text-text"
+                    : "text-faint hover:text-text",
               )}
             >
               <Icon name={entry.icon} />
