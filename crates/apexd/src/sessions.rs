@@ -800,7 +800,7 @@ impl SessionManager {
         cwd: &Path,
         isolated: bool,
     ) -> Result<Option<Vec<String>>> {
-        let binary = std::env::current_exe().context("locating apexd")?;
+        let binary = locate_apexd()?;
         let launcher = binary.display().to_string();
 
         match delivery {
@@ -964,6 +964,13 @@ fn home_directory() -> PathBuf {
     directories::UserDirs::new()
         .map(|dirs| dirs.home_dir().to_path_buf())
         .unwrap_or_else(|| PathBuf::from("/"))
+}
+
+fn locate_apexd() -> Result<PathBuf> {
+    if let Some(path) = std::env::var_os("CARGO_BIN_EXE_apexd") {
+        return Ok(PathBuf::from(path));
+    }
+    std::env::current_exe().context("locating apexd")
 }
 
 fn kind_name(kind: apex_git::ChangeKind) -> &'static str {

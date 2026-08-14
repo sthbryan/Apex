@@ -1,9 +1,6 @@
-mod mcp;
-mod session;
-mod sessions;
-mod state;
-
 use anyhow::{Context, Result};
+use apexd::session;
+use apexd::state;
 use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
 
@@ -11,7 +8,7 @@ use apex_proto::{Connection, Listener, UnixTransport};
 async fn main() -> Result<()> {
     let paths = ApexPaths::discover()?;
     if let Some(session) = mcp_request()? {
-        return mcp::run(&paths.socket, session).await;
+        return apexd::mcp::run(&paths.socket, session).await;
     }
 
     tracing_subscriber::fmt()
