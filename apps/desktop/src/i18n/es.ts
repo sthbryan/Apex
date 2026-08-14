@@ -48,6 +48,7 @@ export const es: Messages = {
   "palette.placeholder": "Escribe un comando…",
   "palette.empty": "Nada coincide.",
   "palette.newSession": "Nueva sesión: {agent}",
+  "palette.resume": "Reanudar {agent}: {label}",
   "palette.goTo": "Ir a: {title}",
   "palette.splitRight": "Dividir a la derecha",
   "palette.splitDown": "Dividir abajo",

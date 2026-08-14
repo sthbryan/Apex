@@ -4,7 +4,8 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, Event, ProjectSummary, Reply, SessionSummary, TerminalSize,
+    AgentSummary, Command, Event, HistoryEntry, ProjectSummary, Reply, SessionSummary,
+    TerminalSize,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -106,6 +107,36 @@ async fn load_layout(state: tauri::State<'_, AppState>, project: Uuid) -> Answer
 }
 
 #[tauri::command]
+async fn list_history(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Vec<HistoryEntry>> {
+    match state.daemon.request(Command::ListHistory { project }).await.map_err(failed)? {
+        Reply::History { entries } => Ok(entries),
+        other => Err(format!("respuesta inesperada: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn resume_session(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    agent: String,
+    session_id: String,
+    size: TerminalSize,
+) -> Answer<SessionSummary> {
+    match state
+        .daemon
+        .request(Command::SessionResume { project, agent, session_id, size })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Session { session } => Ok(session),
+        other => Err(format!("respuesta inesperada: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn create_session(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -181,6 +212,8 @@ pub fn run() {
             open_project,
             save_layout,
             load_layout,
+            list_history,
+            resume_session,
             create_session,
             attach_session,
             send_input,

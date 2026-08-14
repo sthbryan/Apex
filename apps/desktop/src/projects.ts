@@ -2,6 +2,7 @@ import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
+import type { HistoryEntry } from "./bindings/HistoryEntry";
 import type { ProjectSummary } from "./bindings/ProjectSummary";
 import { sessions } from "./sessions";
 import {
@@ -14,6 +15,7 @@ import {
 const STORAGE_KEY = "apex.project";
 
 export const projects = signal<ProjectSummary[]>([]);
+export const history = signal<HistoryEntry[]>([]);
 export const activeProjectId = signal<string | null>(null);
 
 export const activeProject = computed(
@@ -73,6 +75,8 @@ async function activate(id: string): Promise<void> {
   const payload = await invoke<string | null>("load_layout", { project: id });
   const live = new Set(sessions.value.map((session) => session.id));
   restoreLayout(payload, live);
+
+  history.value = await invoke<HistoryEntry[]>("list_history", { project: id }).catch(() => []);
 }
 
 export function scheduleLayoutSave(): void {

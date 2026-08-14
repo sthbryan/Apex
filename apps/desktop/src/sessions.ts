@@ -133,6 +133,22 @@ export async function createSession(
   return session;
 }
 
+export async function resumeSession(
+  project: string,
+  agent: string,
+  sessionId: string,
+  size: TerminalSize,
+): Promise<SessionSummary> {
+  const session = await invoke<SessionSummary>("resume_session", {
+    project,
+    agent,
+    sessionId,
+    size,
+  });
+  sessions.value = upsert(sessions.value, session);
+  return session;
+}
+
 export async function attachSession(id: string): Promise<void> {
   await invoke("attach_session", { id });
 }

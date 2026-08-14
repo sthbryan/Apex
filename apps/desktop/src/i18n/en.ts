@@ -46,6 +46,7 @@ export const en = {
   "palette.placeholder": "Type a command…",
   "palette.empty": "Nothing matches.",
   "palette.newSession": "New session: {agent}",
+  "palette.resume": "Resume {agent}: {label}",
   "palette.goTo": "Go to: {title}",
   "palette.splitRight": "Split right",
   "palette.splitDown": "Split down",

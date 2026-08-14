@@ -1,7 +1,13 @@
 import { useEffect, useState } from "preact/hooks";
 
 import { agents, connect, daemonVersion, failure, platform, status } from "./daemon";
-import { activeProject, foreignSessions, loadProjects, projectSessions } from "./projects";
+import {
+  activeProject,
+  foreignSessions,
+  history,
+  loadProjects,
+  projectSessions,
+} from "./projects";
 import { locale, t } from "./i18n";
 import { SessionsPanel } from "./panels/SessionsPanel";
 import { sessions } from "./sessions";
@@ -201,6 +207,7 @@ export function App() {
         onClose={() => setPaletteOpen(false)}
         agents={agents.value}
         sessions={sessions.value}
+        history={history.value}
         project={activeProject.value?.id ?? null}
       />
     </div>

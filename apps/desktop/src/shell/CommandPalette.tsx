@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import type { AgentSummary } from "../bindings/AgentSummary";
+import type { HistoryEntry } from "../bindings/HistoryEntry";
 import type { SessionSummary } from "../bindings/SessionSummary";
 import { t } from "../i18n";
-import { createSession } from "../sessions";
+import { createSession, resumeSession } from "../sessions";
 import { findLeaf } from "./tree";
 import {
   activeTab,
@@ -25,17 +26,18 @@ type Props = {
   onClose: () => void;
   agents: AgentSummary[];
   sessions: SessionSummary[];
+  history: HistoryEntry[];
   project: string | null;
 };
 
-export function CommandPalette({ open, onClose, agents, sessions, project }: Props) {
+export function CommandPalette({ open, onClose, agents, sessions, history, project }: Props) {
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const field = useRef<HTMLInputElement>(null);
 
   const actions = useMemo(
-    () => buildActions(agents, sessions, project, onClose),
-    [agents, sessions, project, onClose],
+    () => buildActions(agents, sessions, history, project, onClose),
+    [agents, sessions, history, project, onClose],
   );
 
   const matches = useMemo(() => {
@@ -132,6 +134,7 @@ export function CommandPalette({ open, onClose, agents, sessions, project }: Pro
 function buildActions(
   agents: AgentSummary[],
   sessions: SessionSummary[],
+  history: HistoryEntry[],
   project: string | null,
   onClose: () => void,
 ): Action[] {
@@ -159,6 +162,23 @@ function buildActions(
         if (!focusSession(session.id)) {
           openInNewTab(session);
         }
+      },
+    });
+  }
+
+  for (const entry of project ? history : []) {
+    actions.push({
+      id: `resume:${entry.agent}:${entry.session_id}`,
+      label: t("palette.resume", {
+        agent: entry.agent,
+        label: entry.label ?? entry.session_id.slice(0, 8),
+      }),
+      run: () => {
+        onClose();
+        void resumeSession(project as string, entry.agent, entry.session_id, {
+          rows: 24,
+          cols: 80,
+        }).then(openInNewTab);
       },
     });
   }
