@@ -1,5 +1,5 @@
 import { useSignalEffect } from "@preact/signals";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { useKeymap } from "@/app/keymap";
 import { Dock, type DockPanel } from "@/app/layout/Dock";
@@ -29,7 +29,7 @@ import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
-import { dockOpen, toggleDock } from "@/features/settings/state";
+import { dockHover, dockOpen, setDockHover, toggleDock } from "@/features/settings/state";
 import { startPeeking } from "@/features/tasks/state";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
@@ -44,7 +44,6 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [finderOpen, setFinderOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
-  const [dockHover, setDockHover] = useState(false);
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
   const toggleFinder = useCallback(() => setFinderOpen((open) => !open), []);
@@ -139,14 +138,20 @@ export function App() {
     />
   );
 
-  const dockVisible = dockOpen.value || dockHover;
+  const peeking = !dockOpen.value && dockHover.value;
+  const dockVisible = dockOpen.value || peeking;
+  const overlayMode = useRef(false);
+  if (dockVisible) {
+    overlayMode.current = peeking;
+  }
+  const overlay = overlayMode.current;
 
   return (
-    <div class="flex h-full flex-col bg-bg text-text">
-      <div class="relative flex min-h-0 flex-1">
-        <DockSlot open={dockVisible} overlay={!dockOpen.value} onHoverChange={setDockHover}>
+    <div class="relative flex h-full flex-col bg-bg text-text">
+      <div class="flex min-h-0 flex-1">
+        <DockSlot open={dockVisible} overlay={overlay} onHoverChange={setDockHover}>
           <Dock
-            floating={!dockOpen.value}
+            floating={overlay}
             header={
               <>
                 <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
