@@ -29,6 +29,7 @@ export const es: Messages = {
 
   "usage.session": "Sesión",
   "usage.weekly": "Semanal",
+  "usage.limit": "Límite",
   "usage.window": "ventana de {window}",
   "usage.resetsIn": "reinicia en {away} · {when}",
   "usage.resetsAt": "reinicia {when}",

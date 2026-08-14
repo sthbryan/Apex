@@ -77,7 +77,9 @@ export function StatusBar() {
           <Bar percent={report.windows[0]?.used_percent ?? 0} />
           <span>
             {report.windows
-              .map((window) => `${window.used_percent}% ${window.label}`)
+              .map((window) =>
+                window.label ? `${window.used_percent}% ${window.label}` : `${window.used_percent}%`,
+              )
               .join(" · ")}
           </span>
         </button>

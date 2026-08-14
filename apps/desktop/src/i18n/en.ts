@@ -27,6 +27,7 @@ export const en = {
 
   "usage.session": "Session",
   "usage.weekly": "Weekly",
+  "usage.limit": "Limit",
   "usage.window": "{window} window",
   "usage.resetsIn": "resets in {away} · {when}",
   "usage.resetsAt": "resets {when}",

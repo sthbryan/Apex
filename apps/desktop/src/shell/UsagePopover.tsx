@@ -33,7 +33,7 @@ export function UsagePopover({ reports, onClose }: Props) {
 
             <div class="flex flex-col gap-2 p-3">
               {report.windows.map((window, index) => (
-                <Card key={window.label} window={window} primary={index === 0} />
+                <Card key={window.label ?? index} window={window} />
               ))}
             </div>
 
@@ -49,7 +49,7 @@ export function UsagePopover({ reports, onClose }: Props) {
   );
 }
 
-function Card({ window, primary }: { window: QuotaWindow; primary: boolean }) {
+function Card({ window }: { window: QuotaWindow }) {
   const percent = Math.min(100, Math.max(0, window.used_percent));
   const level = tone(percent);
   const pace = pacing(window);
@@ -58,8 +58,10 @@ function Card({ window, primary }: { window: QuotaWindow; primary: boolean }) {
     <div class="rounded-lg bg-raised p-3">
       <div class="flex items-start gap-2">
         <div class="min-w-0">
-          <p class="text-text">{primary ? t("usage.session") : t("usage.weekly")}</p>
-          <p class="text-faint">{t("usage.window", { window: window.label })}</p>
+          <p class="text-text">{title(window.label)}</p>
+          {window.label && (
+            <p class="text-faint">{t("usage.window", { window: window.label })}</p>
+          )}
         </div>
         <span class={`ml-auto shrink-0 text-2xl leading-none ${level.text}`}>{percent}%</span>
       </div>
@@ -79,6 +81,14 @@ function Card({ window, primary }: { window: QuotaWindow; primary: boolean }) {
       {pace && <p class={`mt-0.5 ${pace.tone}`}>{pace.text}</p>}
     </div>
   );
+}
+
+function title(label: string | null): string {
+  if (!label) {
+    return t("usage.limit");
+  }
+  const hours = label.endsWith("h") ? Number.parseInt(label, 10) : Number.NaN;
+  return Number.isFinite(hours) && hours <= 6 ? t("usage.session") : t("usage.weekly");
 }
 
 export function resetText(window: QuotaWindow): string {

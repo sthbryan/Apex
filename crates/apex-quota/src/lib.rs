@@ -11,7 +11,7 @@ const RUN_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QuotaWindow {
-    pub label: String,
+    pub label: Option<String>,
     pub used_percent: u8,
     pub expected_percent: Option<u8>,
     pub lasts_to_reset: Option<bool>,
@@ -151,14 +151,14 @@ fn read_window(value: &serde_json::Value, pace: Option<&serde_json::Value>) -> O
     })
 }
 
-fn window_label(minutes: Option<u64>) -> String {
-    match minutes {
-        Some(value) if value % 10080 == 0 => format!("{}w", value / 10080),
-        Some(value) if value % 1440 == 0 => format!("{}d", value / 1440),
-        Some(value) if value % 60 == 0 => format!("{}h", value / 60),
-        Some(value) => format!("{value}m"),
-        None => "ventana".to_string(),
-    }
+fn window_label(minutes: Option<u64>) -> Option<String> {
+    let value = minutes?;
+    Some(match value {
+        value if value % 10080 == 0 => format!("{}w", value / 10080),
+        value if value % 1440 == 0 => format!("{}d", value / 1440),
+        value if value % 60 == 0 => format!("{}h", value / 60),
+        value => format!("{value}m"),
+    })
 }
 
 #[cfg(test)]
@@ -179,7 +179,7 @@ mod tests {
         assert_eq!(report.agent, "claude");
         assert_eq!(report.windows.len(), 2);
 
-        assert_eq!(report.windows[0].label, "5h");
+        assert_eq!(report.windows[0].label.as_deref(), Some("5h"));
         assert_eq!(report.windows[0].used_percent, 65);
         assert_eq!(report.windows[0].reset_description.as_deref(), Some("Resets 11:40pm"));
 
@@ -187,7 +187,7 @@ mod tests {
         assert_eq!(report.windows[0].lasts_to_reset, Some(false));
         assert_eq!(report.windows[0].eta_seconds, Some(1919));
 
-        assert_eq!(report.windows[1].label, "1w");
+        assert_eq!(report.windows[1].label.as_deref(), Some("1w"));
         assert_eq!(report.windows[1].used_percent, 50);
         assert_eq!(report.windows[1].expected_percent, None);
         assert_eq!(report.updated_at.as_deref(), Some("2026-08-14T01:54:46Z"));
@@ -219,11 +219,21 @@ mod tests {
 
     #[test]
     fn window_labels_read_naturally() {
-        assert_eq!(window_label(Some(300)), "5h");
-        assert_eq!(window_label(Some(1440)), "1d");
-        assert_eq!(window_label(Some(10080)), "1w");
-        assert_eq!(window_label(Some(45)), "45m");
-        assert_eq!(window_label(None), "ventana");
+        assert_eq!(window_label(Some(300)).as_deref(), Some("5h"));
+        assert_eq!(window_label(Some(1440)).as_deref(), Some("1d"));
+        assert_eq!(window_label(Some(10080)).as_deref(), Some("1w"));
+        assert_eq!(window_label(Some(45)).as_deref(), Some("45m"));
+        assert_eq!(window_label(None), None);
+    }
+
+    #[test]
+    fn a_provider_without_a_declared_window_still_reports_usage() {
+        let raw = r#"[{"provider":"grok","usage":{"primary":{"usedPercent":19,"resetsAt":"2026-08-18T19:25:43Z"},"secondary":null}}]"#;
+        let report = parse(QuotaFormat::Codexbar, "grok", raw).expect("reporte");
+        assert_eq!(report.windows.len(), 1);
+        assert_eq!(report.windows[0].label, None);
+        assert_eq!(report.windows[0].used_percent, 19);
+        assert_eq!(report.windows[0].resets_at.as_deref(), Some("2026-08-18T19:25:43Z"));
     }
 
     #[tokio::test]

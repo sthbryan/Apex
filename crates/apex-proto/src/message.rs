@@ -186,7 +186,7 @@ pub struct SessionUsage {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct QuotaWindow {
-    pub label: String,
+    pub label: Option<String>,
     pub used_percent: u8,
     pub expected_percent: Option<u8>,
     pub lasts_to_reset: Option<bool>,
