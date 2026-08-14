@@ -137,11 +137,12 @@ export async function createSession(
   agent: string,
   size: TerminalSize,
   isolation: Isolation = "directory",
+  cwd: string | null = null,
 ): Promise<SessionSummary> {
   const session = await invoke<SessionSummary>("create_session", {
     project,
     agent,
-    cwd: null,
+    cwd,
     size,
     isolation,
   });

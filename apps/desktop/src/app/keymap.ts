@@ -1,12 +1,10 @@
 import { useEffect } from "preact/hooks";
 
-import { activeProject } from "@/features/projects/state";
-import { requestSession } from "@/features/sessions/pending";
-import { sessions } from "@/features/sessions/state";
+import { splitWithShell } from "@/features/sessions/pending";
 import { toggleDock, toggleSettings } from "@/features/settings/state";
 import { toggleUsagePopover } from "@/features/usage/state";
 import { activeTab, activeTabId, closePane, tabs } from "@/features/workspace/state";
-import { findLeaf, sessionOf } from "@/features/workspace/tree";
+import { findLeaf } from "@/features/workspace/tree";
 
 type Toggles = {
   togglePalette: () => void;
@@ -50,17 +48,7 @@ const BINDINGS: Record<string, (context: Context) => void> = {
   u: () => toggleUsagePopover(),
   b: () => toggleDock(),
   d: ({ event }) => {
-    const pane = currentPane();
-    const current = pane ? sessionOf(pane) : null;
-    const session = sessions.value.find((candidate) => candidate.id === current);
-    if (session) {
-      requestSession({
-        project: session.project_id,
-        agent: session.agent,
-        direction: event.shiftKey ? "column" : "row",
-        isGit: activeProject.value?.is_git ?? false,
-      });
-    }
+    void splitWithShell(event.shiftKey ? "column" : "row");
   },
   w: () => {
     const tab = activeTab.value;

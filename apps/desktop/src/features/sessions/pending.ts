@@ -3,8 +3,10 @@ import { signal } from "@preact/signals";
 import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
+import { activeProjectId } from "@/features/projects/state";
 import { closeSession, createSession, sessions } from "@/features/sessions/state";
 import {
+  activeSessionId,
   dropSession,
   openInNewTab,
   splitActive,
@@ -19,6 +21,8 @@ export type PendingSession = {
   direction: Direction | null;
   isGit: boolean;
 };
+
+const SHELL = "shell";
 
 export const pendingSession = signal<PendingSession | null>(null);
 
@@ -83,6 +87,22 @@ export async function finishClose(sessionId: string, disposal: WorktreeDisposal)
   pendingClose.value = null;
   dropSession(sessionId);
   await closeSession(sessionId, disposal);
+}
+
+export async function splitWithShell(direction: Direction): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  const beside = sessions.value.find((candidate) => candidate.id === activeSessionId.value);
+  const created = await createSession(
+    project,
+    SHELL,
+    { rows: 24, cols: 80 },
+    "directory",
+    beside?.cwd ?? null,
+  );
+  splitActive({ type: "session", sessionId: created.id }, direction);
 }
 
 whenClosingSession((sessionId) => {
