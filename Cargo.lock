@@ -178,6 +178,7 @@ dependencies = [
  "apex-proto",
  "apex-pty",
  "apex-quota",
+ "apex-tasks",
  "bytes",
  "directories",
  "serde_json",

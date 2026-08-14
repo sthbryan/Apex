@@ -221,6 +221,14 @@ pub enum DiffScope {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct TaskSummary {
+    pub name: String,
+    pub command: String,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ContextEntry {
     pub key: String,
     #[ts(type = "number")]
@@ -275,6 +283,7 @@ pub struct SessionSummary {
     pub size: TerminalSize,
     pub exit_code: Option<u32>,
     pub worktree: Option<WorktreeInfo>,
+    pub task: Option<String>,
 }
 
 impl SessionSummary {
@@ -448,6 +457,17 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    ListTasks {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
+    TaskRun {
+        #[ts(type = "string")]
+        project: Uuid,
+        task: String,
+        command: String,
+        size: TerminalSize,
+    },
     ContextList {
         #[ts(type = "string")]
         project: Uuid,
@@ -545,6 +565,7 @@ pub enum Reply {
     Hunks { patches: Vec<String> },
     Worktrees { worktrees: Vec<WorktreeInfo> },
     Context { entries: Vec<ContextEntry> },
+    Tasks { tasks: Vec<TaskSummary> },
     Text { text: String },
     Diff { patch: String },
     Merge { report: MergeReport },

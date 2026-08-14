@@ -13,7 +13,8 @@ use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitChange, GitCommit,
     GitStatus,
     GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProcessUsage, ProjectSummary,
-    QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize,
+    QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage, SystemUsage, TaskSummary,
+    TerminalSize,
     WorktreeDisposal, WorktreeInfo,
 };
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
@@ -45,6 +46,7 @@ struct Spawn {
     override_args: Option<Vec<String>>,
     isolation: Isolation,
     slug: Option<String>,
+    task: Option<String>,
 }
 
 pub struct SessionManager {
@@ -370,6 +372,7 @@ impl SessionManager {
             override_args: Some(args),
             isolation: Isolation::Directory,
             slug: None,
+            task: None,
         })
         .await
     }
@@ -391,12 +394,62 @@ impl SessionManager {
             override_args: None,
             isolation,
             slug,
+            task: None,
         })
         .await
     }
 
+    pub async fn list_tasks(&self, project: Uuid) -> Result<Vec<TaskSummary>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let found = tokio::task::spawn_blocking(move || apex_tasks::discover(&root)).await?;
+        Ok(found
+            .into_iter()
+            .map(|task| TaskSummary {
+                name: task.name,
+                command: task.command,
+                source: task.source.as_str().to_owned(),
+            })
+            .collect())
+    }
+
+    pub async fn run_task(
+        self: &Arc<Self>,
+        project: Uuid,
+        task: &str,
+        command: &str,
+        size: TerminalSize,
+    ) -> Result<SessionSummary> {
+        if self.task_running(project, task).await {
+            bail!("{task} is already running")
+        }
+        self.spawn(Spawn {
+            project,
+            agent: "shell".to_owned(),
+            cwd: None,
+            size,
+            override_args: Some(vec!["-lc".to_owned(), command.to_owned()]),
+            isolation: Isolation::Directory,
+            slug: None,
+            task: Some(task.to_owned()),
+        })
+        .await
+    }
+
+    async fn task_running(&self, project: Uuid, task: &str) -> bool {
+        for session in self.sessions.read().await.values() {
+            let summary = session.summary.lock().await;
+            if summary.project_id == project
+                && summary.task.as_deref() == Some(task)
+                && summary.exit_code.is_none()
+            {
+                return true;
+            }
+        }
+        false
+    }
+
     async fn spawn(self: &Arc<Self>, request: Spawn) -> Result<SessionSummary> {
-        let Spawn { project, agent, cwd, size, override_args, isolation, slug } = request;
+        let Spawn { project, agent, cwd, size, override_args, isolation, slug, task } = request;
         let profile = self
             .profiles
             .get(&agent)
@@ -404,7 +457,10 @@ impl SessionManager {
             .with_context(|| format!("unknown profile {agent}"))?;
         let binary = self.resolve_binary(&profile).await?;
         let project_root = self.project_root(project).await?;
-        let title = self.next_title(&profile.name).await;
+        let title = match &task {
+            Some(name) => name.clone(),
+            None => self.next_title(&profile.name).await,
+        };
 
         let worktree = match isolation {
             Isolation::Worktree => {
@@ -457,6 +513,7 @@ impl SessionManager {
             size,
             exit_code: None,
             worktree: worktree.clone(),
+            task: task.clone(),
         };
 
         let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });

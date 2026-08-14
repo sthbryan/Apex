@@ -6,7 +6,7 @@ use apex_core::ApexPaths;
 use apex_proto::{
     AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry,
     GitCommit,
-    GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
+    GitStatus, GitTarget, HistoryEntry, TaskSummary, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
     Reply, SessionSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
 };
 use client::DaemonClient;
@@ -400,6 +400,45 @@ async fn git_commit(
 }
 
 #[tauri::command]
+async fn list_tasks(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Vec<TaskSummary>> {
+    match state.daemon.request(Command::ListTasks { project }).await.map_err(failed)? {
+        Reply::Tasks { tasks } => Ok(tasks),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn run_task(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    task: String,
+    command: String,
+    size: TerminalSize,
+) -> Answer<SessionSummary> {
+    match state
+        .daemon
+        .request(Command::TaskRun { project, task, command, size })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Session { session } => Ok(session),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn session_transcript(
+    state: tauri::State<'_, AppState>,
+    id: Uuid,
+    tail: u32,
+) -> Answer<String> {
+    match state.daemon.request(Command::SessionTranscript { id, tail }).await.map_err(failed)? {
+        Reply::Text { text } => Ok(text),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn context_list(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -501,6 +540,9 @@ pub fn run() {
             git_stage_hunk,
             git_commit,
             merge_worktree,
+            list_tasks,
+            run_task,
+            session_transcript,
             context_list,
             context_read,
             context_write
