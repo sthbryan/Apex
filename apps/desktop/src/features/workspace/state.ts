@@ -1,5 +1,6 @@
 import { computed, signal } from "@preact/signals";
 
+import { reconcileDock, returnPanelToDock } from "@/app/layout/state";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { sameTarget } from "@/features/git/state";
@@ -26,6 +27,7 @@ import {
   setRatio,
   setView,
   splitLeaf,
+  swapViews,
 } from "@/features/workspace/tree";
 
 export type Tab = {
@@ -96,7 +98,43 @@ function same(left: PaneView, right: PaneView): boolean {
       sameTarget(left.target, right.target)
     );
   }
+  if (left.type === "panel" && right.type === "panel") {
+    return left.panel === right.panel;
+  }
   return false;
+}
+
+export function openPanel(panel: string): void {
+  if (focusPane((view) => view.type === "panel" && view.panel === panel)) {
+    return;
+  }
+  openView({ type: "panel", panel });
+}
+
+export function closePanelViews(panel: string): void {
+  const hits: { tabId: string; pane: Leaf }[] = [];
+  for (const tab of tabs.value) {
+    for (const pane of leaves(tab.root)) {
+      if (pane.view.type === "panel" && pane.view.panel === panel) {
+        hits.push({ tabId: tab.id, pane });
+      }
+    }
+  }
+  for (const hit of hits) {
+    closePane(hit.tabId, hit.pane, false);
+  }
+}
+
+export function panelIdsInWorkspace(): string[] {
+  const ids: string[] = [];
+  for (const tab of tabs.value) {
+    for (const pane of leaves(tab.root)) {
+      if (pane.view.type === "panel") {
+        ids.push(pane.view.panel);
+      }
+    }
+  }
+  return ids;
 }
 
 export function focusSession(sessionId: string): boolean {
@@ -156,11 +194,13 @@ export function restoreLayout(raw: string | null, liveSessionIds: Set<string>): 
   activeTabId.value = surviving.some((tab) => tab.id === parsed.activeTabId)
     ? parsed.activeTabId
     : (surviving.at(-1)?.id ?? null);
+  reconcileDock(panelIdsInWorkspace());
 }
 
 export function clearWorkspace(): void {
   tabs.value = [];
   activeTabId.value = null;
+  reconcileDock([]);
 }
 
 function parseLayout(raw: string | null): LayoutPayload {
@@ -228,10 +268,18 @@ export function resizeSplit(tabId: string, splitId: string, ratio: number): void
   updateTab(tabId, (current) => ({ ...current, root: setRatio(current.root, splitId, ratio) }));
 }
 
-export function closePane(tabId: string, target: Leaf, terminate: boolean): void {
+export function closePane(
+  tabId: string,
+  target: Leaf,
+  terminate: boolean,
+  restoreToDock = true,
+): void {
   const tab = tabs.value.find((candidate) => candidate.id === tabId);
   if (!tab) {
     return;
+  }
+  if (restoreToDock && target.view.type === "panel") {
+    returnPanelToDock(target.view.panel);
   }
   const session = sessionOf(target);
   if (terminate && session) {
@@ -247,8 +295,92 @@ export function closePane(tabId: string, target: Leaf, terminate: boolean): void
   updateTab(tabId, (current) => ({ ...current, root, activeLeafId: fallback.id }));
 }
 
-export function closeTab(tabId: string): void {
-  const remaining = tabs.value.filter((tab) => tab.id !== tabId);
+export function extractLeafToTab(tabId: string, leafId: string): void {
+  const tab = tabs.value.find((candidate) => candidate.id === tabId);
+  const pane = tab ? findLeaf(tab.root, leafId) : null;
+  if (!tab || !pane || leaves(tab.root).length < 2) {
+    return;
+  }
+  closePane(tabId, pane, false, false);
+  openView(pane.view);
+}
+
+export function swapLeaves(tabId: string, leftId: string, rightId: string): void {
+  if (leftId === rightId) {
+    return;
+  }
+  updateTab(tabId, (current) => ({
+    ...current,
+    root: swapViews(current.root, leftId, rightId),
+  }));
+}
+
+export function moveLeafTo(
+  fromTabId: string,
+  leafId: string,
+  toTabId: string,
+  targetLeafId: string,
+): void {
+  const from = tabs.value.find((tab) => tab.id === fromTabId);
+  const pane = from ? findLeaf(from.root, leafId) : null;
+  if (!from || !pane) {
+    return;
+  }
+  if (fromTabId === toTabId) {
+    swapLeaves(fromTabId, leafId, targetLeafId);
+    return;
+  }
+  closePane(fromTabId, pane, false, false);
+  const incoming = leaf(pane.view);
+  updateTab(toTabId, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, targetLeafId, "row", incoming),
+    activeLeafId: incoming.id,
+  }));
+}
+
+export function splitWithTab(sourceTabId: string, targetTabId: string, targetLeafId: string): void {
+  if (sourceTabId === targetTabId) {
+    return;
+  }
+  const source = tabs.value.find((tab) => tab.id === sourceTabId);
+  const panes = source ? leaves(source.root) : [];
+  if (panes.length !== 1) {
+    return;
+  }
+  const incoming = leaf(panes[0].view);
+  updateTab(targetTabId, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, targetLeafId, "row", incoming),
+    activeLeafId: incoming.id,
+  }));
+  closeTab(sourceTabId, false);
+}
+
+export function moveTab(tabId: string, beforeId?: string): void {
+  if (tabId === beforeId) {
+    return;
+  }
+  const rest = tabs.value.filter((tab) => tab.id !== tabId);
+  const moving = tabs.value.find((tab) => tab.id === tabId);
+  if (!moving) {
+    return;
+  }
+  const at = beforeId ? rest.findIndex((tab) => tab.id === beforeId) : rest.length;
+  const index = at === -1 ? rest.length : at;
+  tabs.value = [...rest.slice(0, index), moving, ...rest.slice(index)];
+}
+
+export function closeTab(tabId: string, restorePanels = true): void {
+  const tab = tabs.value.find((candidate) => candidate.id === tabId);
+  if (restorePanels && tab) {
+    for (const pane of leaves(tab.root)) {
+      if (pane.view.type === "panel") {
+        returnPanelToDock(pane.view.panel);
+      }
+    }
+  }
+  const remaining = tabs.value.filter((candidate) => candidate.id !== tabId);
   tabs.value = remaining;
   if (activeTabId.value === tabId) {
     activeTabId.value = remaining.at(-1)?.id ?? null;

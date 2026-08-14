@@ -1,7 +1,9 @@
 import cn from "cnfast";
 import { useRef } from "preact/hooks";
+
 import { resizeSplit } from "@/features/workspace/state";
 import { clampRatio } from "@/features/workspace/tree";
+import { t } from "@/shared/i18n";
 
 type Props = {
   tabId: string;
@@ -52,17 +54,27 @@ export function SplitDivider({ tabId, splitId, horizontal, ratio }: Props) {
       ref={handle}
       role="separator"
       tabIndex={0}
+      aria-label={t("workspace.resize")}
       aria-orientation={horizontal ? "vertical" : "horizontal"}
       aria-valuenow={Math.round(ratio * 100)}
-      aria-valuemin={0}
-      aria-valuemax={100}
+      aria-valuemin={10}
+      aria-valuemax={90}
       onKeyDown={nudge}
       onMouseDown={startDrag}
       class={cn(
-        "shrink-0 bg-border transition-[background-color,box-shadow] hover:bg-accent hover:shadow-[0_0_0_1px_var(--apex-accent)]",
-        horizontal ? "w-px cursor-col-resize" : "h-px cursor-row-resize",
+        "relative z-10 shrink-0",
+        horizontal ? "w-1.5 cursor-col-resize" : "h-1.5 cursor-row-resize",
       )}
-    />
+    >
+      <div
+        class={cn(
+          "absolute bg-border transition-colors hover:bg-accent",
+          horizontal
+            ? "inset-y-0 left-1/2 w-px -translate-x-1/2 hover:w-0.5"
+            : "inset-x-0 top-1/2 h-px -translate-y-1/2 hover:h-0.5",
+        )}
+      />
+    </div>
   );
 }
 
