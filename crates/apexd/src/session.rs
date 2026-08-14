@@ -47,7 +47,7 @@ pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     client.run(reader).await;
 
     events.abort();
-    client.detach_all().await;
+    client.subscriptions.detach_all().await;
     drop(client);
     let _ = pump.await;
     tracing::info!(peer = %peer.label, "client disconnected");
@@ -58,12 +58,13 @@ struct Client {
     manager: Arc<SessionManager>,
     outbox: Outbox,
     scope: Scope,
-    attached: Arc<Mutex<HashMap<Uuid, JoinHandle<()>>>>,
+    subscriptions: Subscriptions,
 }
 
 impl Client {
     fn new(manager: Arc<SessionManager>, outbox: Outbox, scope: Scope) -> Self {
-        Self { manager, outbox, scope, attached: Arc::new(Mutex::new(HashMap::new())) }
+        let subscriptions = Subscriptions::new(Arc::clone(&manager), outbox.clone());
+        Self { manager, outbox, scope, subscriptions }
     }
 
     async fn run(&mut self, mut reader: ConnectionReader) {
@@ -235,7 +236,7 @@ impl Client {
                     .run_task(project, &task, &command, size)
                     .await
                     .map_err(internal_error)?;
-                self.attach(session.id).await?;
+                self.subscriptions.attach(session.id).await?;
                 Ok(Reply::Session { session })
             }
             Command::ContextList { project } => Ok(Reply::Context {
@@ -277,7 +278,7 @@ impl Client {
                     .resume(project, &agent, &session_id, size)
                     .await
                     .map_err(internal_error)?;
-                self.attach(session.id).await?;
+                self.subscriptions.attach(session.id).await?;
                 Ok(Reply::Session { session })
             }
             Command::ProjectOpen { root } => Ok(Reply::Project {
@@ -296,15 +297,15 @@ impl Client {
                     .create(project, &agent, cwd, size, isolation, slug)
                     .await
                     .map_err(internal_error)?;
-                self.attach(session.id).await?;
+                self.subscriptions.attach(session.id).await?;
                 Ok(Reply::Session { session })
             }
             Command::SessionAttach { id } => {
-                self.attach(id).await?;
+                self.subscriptions.attach(id).await?;
                 Ok(Reply::Done)
             }
             Command::SessionDetach { id } => {
-                self.detach(id).await;
+                self.subscriptions.detach(id).await;
                 Ok(Reply::Done)
             }
             Command::SessionInput { id, data } => {
@@ -316,11 +317,24 @@ impl Client {
                 Ok(Reply::Done)
             }
             Command::SessionClose { id, worktree } => {
-                self.detach(id).await;
+                self.subscriptions.detach(id).await;
                 self.manager.close(id, worktree).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
         }
+    }
+}
+
+#[derive(Clone)]
+struct Subscriptions {
+    manager: Arc<SessionManager>,
+    outbox: Outbox,
+    attached: Arc<Mutex<HashMap<Uuid, JoinHandle<()>>>>,
+}
+
+impl Subscriptions {
+    fn new(manager: Arc<SessionManager>, outbox: Outbox) -> Self {
+        Self { manager, outbox, attached: Arc::new(Mutex::new(HashMap::new())) }
     }
 
     async fn attach(&self, id: Uuid) -> Result<(), ProtocolError> {
