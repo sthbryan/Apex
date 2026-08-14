@@ -1,14 +1,20 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
+import { useEffect } from "preact/hooks";
 import { usePresence } from "@/shared/ui/presence";
 
 type Props = {
   open: boolean;
+  onMountedChange: (mounted: boolean) => void;
   children: ComponentChildren;
 };
 
-export function DockSlot({ open, children }: Props) {
+export function DockSlot({ open, onMountedChange, children }: Props) {
   const panel = usePresence<HTMLDivElement>(open);
+
+  useEffect(() => {
+    onMountedChange(panel.mounted);
+  }, [panel.mounted, onMountedChange]);
 
   if (!panel.mounted) {
     return null;

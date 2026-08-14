@@ -37,6 +37,7 @@ import { watchFullscreen } from "@/shared/window";
 export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
+  const [dockMounted, setDockMounted] = useState(dockOpen.value);
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
 
@@ -128,7 +129,7 @@ export function App() {
 
   return (
     <div class="flex h-full bg-bg text-text">
-      <DockSlot open={dockOpen.value}>
+      <DockSlot open={dockOpen.value} onMountedChange={setDockMounted}>
         <Dock
           header={
             <>
@@ -148,12 +149,14 @@ export function App() {
 
       <div class="flex min-w-0 flex-1 flex-col">
         <TitleBar
-          reserveControls={!dockOpen.value}
+          reserveControls={!dockMounted}
           lead={
             <>
-              {!dockOpen.value && sidebarToggle}
-              {!dockOpen.value && (
-                <span class="shrink-0 font-semibold tracking-wide">{t("app.name")}</span>
+              {!dockMounted && (
+                <div class="flex animate-veil-in items-center gap-3">
+                  {sidebarToggle}
+                  <span class="shrink-0 font-semibold tracking-wide">{t("app.name")}</span>
+                </div>
               )}
               <ProjectPicker />
             </>
