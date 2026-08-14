@@ -17,7 +17,6 @@ export function ResourcesPanel({ snapshot }: Props) {
   const { system, sessions } = snapshot;
   const sessionMemory = sessions.reduce((total, session) => total + session.memory, 0);
   const sessionCpu = sessions.reduce((total, session) => total + session.cpu_percent, 0);
-  const sessionProcesses = sessions.reduce((total, session) => total + session.processes.length, 0);
 
   return (
     <div class="flex max-h-96 flex-col overflow-y-auto">
@@ -57,16 +56,12 @@ export function ResourcesPanel({ snapshot }: Props) {
                 count: String(sessions.length),
                 memory: compactBytes(sessionMemory),
                 cpu: sessionCpu.toFixed(0),
-                processes: String(sessionProcesses),
               })}
             </span>
           )}
         </header>
         {sessions.length === 0 ? (
-          <div class="flex flex-col gap-0.5 text-faint">
-            <span>{t("resources.noSessions")}</span>
-            <span class="text-faint">{t("resources.noSessionsHint")}</span>
-          </div>
+          <p class="text-faint">{t("resources.noSessions")}</p>
         ) : (
           <ul class="flex flex-col">
             {sessions.map((usage) => (
@@ -77,9 +72,6 @@ export function ResourcesPanel({ snapshot }: Props) {
                   class="flex w-full items-center gap-2 rounded px-1 text-left transition-colors hover:bg-raised"
                 >
                   <span class="truncate">{usage.title}</span>
-                  <span class="shrink-0 text-faint">
-                    {t("resources.processCount", { count: String(usage.processes.length) })}
-                  </span>
                   <span class="ml-auto shrink-0 text-muted">{compactBytes(usage.memory)}</span>
                   <span class="w-8 shrink-0 text-right text-faint">
                     {usage.cpu_percent.toFixed(0)}%
@@ -102,11 +94,6 @@ export function ResourcesPanel({ snapshot }: Props) {
                     </button>
                   </div>
                 ))}
-                {usage.processes.length > 3 && (
-                  <div class="rounded px-1 pl-3 text-faint">
-                    {t("resources.moreProcesses", { count: String(usage.processes.length - 3) })}
-                  </div>
-                )}
               </li>
             ))}
           </ul>
