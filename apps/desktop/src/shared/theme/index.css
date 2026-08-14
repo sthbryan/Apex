@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@xterm/xterm/css/xterm.css";
+
+@import "./tokens.css";
+@import "./theme.css";
+@import "./base.css";
+@import "./vendor.css";
+@import "./syntax.css";

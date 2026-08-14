@@ -1,0 +1,126 @@
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --text-micro: 0.6875rem;
+  --text-code: 0.8125rem;
+
+  --color-bg: var(--apex-bg);
+  --color-surface: var(--apex-surface);
+  --color-raised: var(--apex-raised);
+  --color-border: var(--apex-border);
+  --color-text: var(--apex-text);
+  --color-muted: var(--apex-muted);
+  --color-faint: var(--apex-faint);
+  --color-accent: var(--apex-accent);
+  --color-focus: var(--apex-focus);
+
+  --color-state-idle: var(--apex-state-idle);
+  --color-state-working: var(--apex-state-working);
+  --color-state-blocked: var(--apex-state-blocked);
+  --color-state-done: var(--apex-state-done);
+  --color-state-failed: var(--apex-state-failed);
+
+  --default-transition-duration: var(--apex-quick);
+  --default-transition-timing-function: var(--apex-ease);
+
+  --animate-veil-in: apex-veil-in var(--apex-quick) var(--apex-ease) both;
+  --animate-veil-out: apex-veil-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-pop-in: apex-pop-in var(--apex-swift) var(--apex-ease-spring) both;
+  --animate-pop-out: apex-pop-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-drop-in: apex-drop-in var(--apex-swift) var(--apex-ease-spring) both;
+  --animate-drop-out: apex-drop-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-rise-in: apex-rise-in var(--apex-swift) var(--apex-ease-spring) both;
+  --animate-rise-out: apex-rise-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-row-in: apex-row-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-slide-in: apex-slide-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-slide-out: apex-slide-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-push-in: apex-push-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-push-out: apex-push-out var(--apex-exit) var(--apex-ease-in) both;
+  --animate-dock-in: apex-slide-in var(--apex-dock) var(--apex-ease) both;
+  --animate-dock-out: apex-slide-out var(--apex-dock) var(--apex-ease) both;
+  --animate-dock-veil-in: apex-veil-in var(--apex-dock) var(--apex-ease) both;
+  --animate-dock-veil-out: apex-veil-out var(--apex-dock) var(--apex-ease) both;
+  --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
+
+  @keyframes apex-veil-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes apex-veil-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes apex-pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-16px) scale(0.94);
+    }
+  }
+  @keyframes apex-pop-out {
+    to {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.97);
+    }
+  }
+  @keyframes apex-drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.96);
+    }
+  }
+  @keyframes apex-drop-out {
+    to {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+    }
+  }
+  @keyframes apex-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+  @keyframes apex-rise-out {
+    to {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+  @keyframes apex-row-in {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+  }
+  @keyframes apex-slide-in {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes apex-slide-out {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes apex-push-in {
+    from {
+      margin-left: calc(var(--apex-dock-width) * -1);
+    }
+  }
+  @keyframes apex-push-out {
+    to {
+      margin-left: calc(var(--apex-dock-width) * -1);
+    }
+  }
+  @keyframes apex-breathe {
+    50% {
+      opacity: 0.35;
+      transform: scale(0.8);
+    }
+  }
+}

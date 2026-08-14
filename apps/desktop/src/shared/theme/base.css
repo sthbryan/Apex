@@ -1,0 +1,55 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+button:not(:disabled),
+select:not(:disabled),
+summary,
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+html {
+  --apex-window-radius: 10px;
+  background: transparent;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--apex-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+pre,
+code {
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+}
+
+#root {
+  background: var(--apex-bg);
+  border-radius: var(--apex-window-radius);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --apex-quick: 1ms;
+    --apex-swift: 1ms;
+    --apex-exit: 1ms;
+    --apex-dock: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1;
+  }
+}

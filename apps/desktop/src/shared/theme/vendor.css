@@ -1,0 +1,4 @@
+.xterm .xterm-viewport {
+  scrollbar-width: thin;
+  scrollbar-color: var(--apex-border) transparent;
+}
