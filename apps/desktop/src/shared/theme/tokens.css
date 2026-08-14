@@ -239,6 +239,13 @@ body,
   height: 100%;
 }
 
+button:not(:disabled),
+select:not(:disabled),
+summary,
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 html {
   --apex-window-radius: 10px;
   background: transparent;
