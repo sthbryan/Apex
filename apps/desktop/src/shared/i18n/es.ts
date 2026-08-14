@@ -17,6 +17,7 @@ export const es: Messages = {
     toggle: "Mostrar u ocultar la barra lateral",
     sessions: "Sesiones",
     files: "Archivos",
+    git: "Git",
   },
   files: {
     empty: "Esta carpeta está vacía.",
@@ -78,6 +79,16 @@ export const es: Messages = {
   notify: {
     blocked: "Un agente te está esperando",
     done: "Un agente terminó",
+  },
+  git: {
+    noSession: "Elige una sesión para ver sus cambios.",
+    clean: "Todavía no hay cambios.",
+    refresh: "Recargar los cambios",
+    reload: "Recargar el diff",
+    noDiff: "Sin cambios en este archivo.",
+    merge: "Mergear en {base}",
+    merged: "Mergeado.",
+    conflicted: "Conflictos en {files}. Resuélvelos en el worktree.",
   },
   isolation: {
     title: "Nueva sesión de {agent}",

@@ -29,7 +29,10 @@
         "useSemanticElements": "off"
       },
       "correctness": {
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": {
+          "level": "warn",
+          "options": { "reportUnnecessaryDependencies": false }
+        }
       },
       "style": {
         "noNonNullAssertion": "error",

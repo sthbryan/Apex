@@ -1,7 +1,7 @@
 import { computed, signal } from "@preact/signals";
 
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { closeSession, createSession } from "@/features/sessions/state";
+import { closeSession } from "@/features/sessions/state";
 import {
   type Direction,
   findLeaf,
@@ -12,6 +12,7 @@ import {
   newId,
   type PaneNode,
   type PaneView,
+  referencedSession,
   removeLeaf,
   sessionOf,
   setRatio,
@@ -45,23 +46,45 @@ export function openInNewTab(session: SessionSummary): void {
   openView({ type: "session", sessionId: session.id });
 }
 
+export function openDiff(sessionId: string, path: string): void {
+  openBeside({ type: "diff", sessionId, path }, (view) => view.type === "diff");
+}
+
 export function openFile(path: string): void {
-  if (focusPane((view) => view.type === "file" && view.path === path)) {
+  openBeside({ type: "file", path }, (view) => view.type === "file");
+}
+
+function openBeside(view: PaneView, replaceable: (view: PaneView) => boolean): void {
+  if (focusPane((candidate) => same(candidate, view))) {
     return;
   }
   const tab = activeTab.value;
   if (!tab) {
-    openView({ type: "file", path });
+    openView(view);
     return;
   }
-  if (findLeaf(tab.root, tab.activeLeafId)?.view.type === "file") {
-    updateTab(tab.id, (current) => ({
-      ...current,
-      root: setView(current.root, current.activeLeafId, { type: "file", path }),
+  const current = findLeaf(tab.root, tab.activeLeafId);
+  if (current && replaceable(current.view)) {
+    updateTab(tab.id, (state) => ({
+      ...state,
+      root: setView(state.root, state.activeLeafId, view),
     }));
     return;
   }
-  splitActive({ type: "file", path }, "row");
+  splitActive(view, "row");
+}
+
+function same(left: PaneView, right: PaneView): boolean {
+  if (left.type !== right.type) {
+    return false;
+  }
+  if (left.type === "file" && right.type === "file") {
+    return left.path === right.path;
+  }
+  if (left.type === "diff" && right.type === "diff") {
+    return left.path === right.path && left.sessionId === right.sessionId;
+  }
+  return false;
 }
 
 export function focusSession(sessionId: string): boolean {
@@ -99,15 +122,6 @@ function focusPane(matches: (view: PaneView) => boolean): boolean {
     }
   }
   return false;
-}
-
-export async function splitWithNewSession(
-  project: string,
-  agent: string,
-  direction: Direction,
-): Promise<void> {
-  const created = await createSession(project, agent, { rows: 24, cols: 80 });
-  splitActive({ type: "session", sessionId: created.id }, direction);
 }
 
 export type LayoutPayload = {
@@ -179,7 +193,7 @@ function pruneTab(tab: Tab, liveSessionIds: Set<string>): Tab | null {
 
 function pruneNode(node: PaneNode, liveSessionIds: Set<string>): PaneNode | null {
   if (node.kind === "leaf") {
-    const session = sessionOf(node);
+    const session = referencedSession(node);
     return session === null || liveSessionIds.has(session) ? node : null;
   }
   const first = pruneNode(node.first, liveSessionIds);

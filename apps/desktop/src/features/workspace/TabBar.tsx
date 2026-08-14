@@ -58,6 +58,9 @@ function titleOf(tab: Tab, sessions: SessionSummary[]): string {
     if (pane.view.type === "file") {
       return pane.view.path.split("/").at(-1) ?? pane.view.path;
     }
+    if (pane.view.type === "diff") {
+      return `± ${pane.view.path.split("/").at(-1) ?? pane.view.path}`;
+    }
     const { sessionId } = pane.view;
     return sessions.find((session) => session.id === sessionId)?.title ?? sessionId.slice(0, 8);
   });

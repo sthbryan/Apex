@@ -1,6 +1,9 @@
 export type Direction = "row" | "column";
 
-export type PaneView = { type: "session"; sessionId: string } | { type: "file"; path: string };
+export type PaneView =
+  | { type: "session"; sessionId: string }
+  | { type: "file"; path: string }
+  | { type: "diff"; sessionId: string; path: string };
 
 export type Leaf = {
   kind: "leaf";
@@ -32,6 +35,10 @@ export function leaf(view: PaneView): Leaf {
 
 export function sessionOf(node: Leaf): string | null {
   return node.view.type === "session" ? node.view.sessionId : null;
+}
+
+export function referencedSession(node: Leaf): string | null {
+  return node.view.type === "file" ? null : node.view.sessionId;
 }
 
 export function leaves(node: PaneNode): Leaf[] {

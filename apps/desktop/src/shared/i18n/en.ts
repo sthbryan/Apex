@@ -15,6 +15,7 @@ export const en = {
     toggle: "Toggle sidebar",
     sessions: "Sessions",
     files: "Files",
+    git: "Git",
   },
   files: {
     empty: "This folder is empty.",
@@ -76,6 +77,16 @@ export const en = {
   notify: {
     blocked: "An agent is waiting for you",
     done: "An agent finished",
+  },
+  git: {
+    noSession: "Pick a session to see its changes.",
+    clean: "Nothing changed yet.",
+    refresh: "Reload the changes",
+    reload: "Reload the diff",
+    noDiff: "No changes in this file.",
+    merge: "Merge into {base}",
+    merged: "Merged.",
+    conflicted: "Conflicts in {files}. Resolve them in the worktree.",
   },
   isolation: {
     title: "New {agent} session",
