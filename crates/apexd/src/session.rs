@@ -255,10 +255,10 @@ impl Client {
             Command::LayoutLoad { project } => Ok(Reply::Layout {
                 payload: self.manager.load_layout(project).await.map_err(not_found_error)?,
             }),
-            Command::SessionCreate { project, agent, cwd, size, isolation } => {
+            Command::SessionCreate { project, agent, cwd, size, isolation, slug } => {
                 let session = self
                     .manager
-                    .create(project, &agent, cwd, size, isolation)
+                    .create(project, &agent, cwd, size, isolation, slug)
                     .await
                     .map_err(internal_error)?;
                 self.attach(session.id).await?;
@@ -574,6 +574,7 @@ mod tests {
             let reply = self
                 .request(Command::SessionCreate {
                     isolation: Isolation::Directory,
+                    slug: None,
                     project,
                     agent: "sh".into(),
                     cwd: Some("/tmp".into()),
@@ -723,7 +724,7 @@ mod tests {
         let harness = Harness::start().await;
         let session = harness
             .manager
-            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory)
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory, None)
             .await
             .expect("create");
 
@@ -737,7 +738,7 @@ mod tests {
 
         let session = harness
             .manager
-            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory)
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory, None)
             .await
             .expect("create");
 
@@ -775,7 +776,7 @@ mod tests {
         let harness = Harness::start().await;
         let session = harness
             .manager
-            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory)
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory, None)
             .await
             .expect("create");
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
@@ -876,7 +877,7 @@ mod tests {
 
         let session = harness
             .manager
-            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree, None)
             .await
             .expect("session");
 
@@ -1010,7 +1011,7 @@ mod tests {
         init_repo(harness.root.path());
         let session = harness
             .manager
-            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree, None)
             .await
             .expect("session");
         let tree = session.worktree.clone().expect("worktree");
@@ -1051,7 +1052,7 @@ mod tests {
         init_repo(harness.root.path());
         let session = harness
             .manager
-            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree, None)
             .await
             .expect("session");
         let tree = std::path::PathBuf::from(&session.worktree.expect("worktree").path);
@@ -1105,7 +1106,7 @@ mod tests {
 
         let session = harness
             .manager
-            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree, None)
             .await
             .expect("session");
         let path = std::path::PathBuf::from(&session.worktree.expect("worktree").path);
@@ -1120,7 +1121,7 @@ mod tests {
         assert!(
             harness
                 .manager
-                .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+                .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree, None)
                 .await
                 .is_err()
         );
@@ -1307,7 +1308,7 @@ mod tests {
         let harness = Harness::start().await;
         let session = harness
             .manager
-            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Directory)
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Directory, None)
             .await
             .expect("create");
 
@@ -1436,6 +1437,7 @@ mod tests {
                 id,
                 command: Command::SessionCreate {
                     isolation: Isolation::Directory,
+                    slug: None,
                     project: harness.project,
                     agent: "does-not-exist".into(),
                     cwd: None,

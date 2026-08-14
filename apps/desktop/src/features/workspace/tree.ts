@@ -1,9 +1,11 @@
+import type { GitTarget } from "@/bindings/GitTarget";
+
 export type Direction = "row" | "column";
 
 export type PaneView =
   | { type: "session"; sessionId: string }
   | { type: "file"; path: string }
-  | { type: "diff"; sessionId: string | null; path: string; commit: string | null };
+  | { type: "diff"; target: GitTarget; path: string; commit: string | null };
 
 export type Leaf = {
   kind: "leaf";
@@ -38,7 +40,13 @@ export function sessionOf(node: Leaf): string | null {
 }
 
 export function referencedSession(node: Leaf): string | null {
-  return node.view.type === "file" ? null : node.view.sessionId;
+  if (node.view.type === "session") {
+    return node.view.sessionId;
+  }
+  if (node.view.type === "diff" && node.view.target.type === "session") {
+    return node.view.target.id;
+  }
+  return null;
 }
 
 export function leaves(node: PaneNode): Leaf[] {

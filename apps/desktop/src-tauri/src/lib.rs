@@ -224,10 +224,11 @@ async fn create_session(
     cwd: Option<String>,
     size: TerminalSize,
     isolation: Isolation,
+    slug: Option<String>,
 ) -> Answer<SessionSummary> {
     match state
         .daemon
-        .request(Command::SessionCreate { project, agent, cwd, size, isolation })
+        .request(Command::SessionCreate { project, agent, cwd, size, isolation, slug })
         .await
         .map_err(failed)?
     {

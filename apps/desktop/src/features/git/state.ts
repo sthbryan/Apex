@@ -4,7 +4,9 @@ import { invoke } from "@tauri-apps/api/core";
 import type { DiffScope } from "@/bindings/DiffScope";
 import type { GitCommit } from "@/bindings/GitCommit";
 import type { GitStatus } from "@/bindings/GitStatus";
+import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
+import type { WorktreeInfo } from "@/bindings/WorktreeInfo";
 import { activeProjectId, projectSessions } from "@/features/projects/state";
 import { countdown } from "@/features/usage/format";
 import { t } from "@/shared/i18n";
@@ -13,16 +15,36 @@ const INTERVAL = 5000;
 
 export const gitTab = signal<"changes" | "history">("changes");
 export const commits = signal<GitCommit[]>([]);
-export const gitTarget = signal<string | null>(null);
+export const gitTarget = signal<GitTarget>({ type: "project" });
 export const gitStatus = signal<GitStatus | null>(null);
 export const gitFailure = signal<string | null>(null);
+export const worktrees = signal<WorktreeInfo[]>([]);
 
-export const worktrees = computed(() =>
-  projectSessions.value.filter((session) => session.worktree !== null),
-);
+export const sessionOfWorktree = computed(() => {
+  const owners = new Map<string, string>();
+  for (const session of projectSessions.value) {
+    if (session.worktree) {
+      owners.set(session.worktree.path, session.title);
+    }
+  }
+  return owners;
+});
 
-export function selectTarget(session: string | null): void {
-  gitTarget.value = session;
+export function sameTarget(left: GitTarget, right: GitTarget): boolean {
+  if (left.type !== right.type) {
+    return false;
+  }
+  if (left.type === "session" && right.type === "session") {
+    return left.id === right.id;
+  }
+  if (left.type === "worktree" && right.type === "worktree") {
+    return left.path === right.path;
+  }
+  return true;
+}
+
+export function selectTarget(target: GitTarget): void {
+  gitTarget.value = target;
   void refreshGit();
   if (gitTab.value === "history") {
     void readLog();
@@ -38,8 +60,9 @@ export async function refreshGit(): Promise<void> {
   try {
     gitStatus.value = await invoke<GitStatus>("git_status", {
       project,
-      session: gitTarget.value,
+      target: gitTarget.value,
     });
+    worktrees.value = await invoke<WorktreeInfo[]>("list_worktrees", { project });
     gitFailure.value = null;
   } catch (error) {
     gitStatus.value = null;
@@ -59,14 +82,14 @@ export function startGitWatch(): () => void {
 }
 
 export async function readDiff(
-  session: string | null,
+  target: GitTarget,
   path: string,
   commit: string | null,
   scope: DiffScope = "both",
 ): Promise<string> {
   return invoke<string>("git_diff", {
     project: activeProjectId.value,
-    session,
+    target,
     path,
     commit,
     scope,
@@ -74,13 +97,13 @@ export async function readDiff(
 }
 
 export async function readHunks(
-  session: string | null,
+  target: GitTarget,
   path: string,
   scope: DiffScope,
 ): Promise<string[]> {
   return invoke<string[]>("git_hunks", {
     project: activeProjectId.value,
-    session,
+    target,
     path,
     scope,
   });
@@ -89,17 +112,17 @@ export async function readHunks(
 export async function setStaged(paths: string[], staged: boolean): Promise<void> {
   await invoke("git_stage", {
     project: activeProjectId.value,
-    session: gitTarget.value,
+    target: gitTarget.value,
     paths,
     staged,
   });
   await refreshGit();
 }
 
-export async function stageHunk(patch: string, staged: boolean): Promise<void> {
+export async function stageHunk(target: GitTarget, patch: string, staged: boolean): Promise<void> {
   await invoke("git_stage_hunk", {
     project: activeProjectId.value,
-    session: gitTarget.value,
+    target,
     patch,
     staged,
   });
@@ -109,7 +132,7 @@ export async function stageHunk(patch: string, staged: boolean): Promise<void> {
 export async function commitStaged(message: string): Promise<GitCommit> {
   const commit = await invoke<GitCommit>("git_commit", {
     project: activeProjectId.value,
-    session: gitTarget.value,
+    target: gitTarget.value,
     message,
   });
   await refreshGit();
@@ -128,7 +151,7 @@ export async function readLog(): Promise<void> {
   try {
     commits.value = await invoke<GitCommit[]>("git_log", {
       project,
-      session: gitTarget.value,
+      target: gitTarget.value,
       limit: 100,
     });
     gitFailure.value = null;
@@ -149,6 +172,9 @@ export function since(when: number): string {
   return countdown(Date.now() / 1000 - when) ?? t("git.now");
 }
 
-export async function mergeWorktree(session: string): Promise<MergeReport> {
-  return invoke<MergeReport>("merge_worktree", { session });
+export async function mergeWorktree(target: GitTarget): Promise<MergeReport> {
+  return invoke<MergeReport>("merge_worktree", {
+    project: activeProjectId.value,
+    target,
+  });
 }

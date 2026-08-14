@@ -31,11 +31,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
         {node.view.type === "session" && <TerminalView id={node.view.sessionId} active={focused} />}
         {node.view.type === "file" && <FileView path={node.view.path} />}
         {node.view.type === "diff" && (
-          <DiffView
-            sessionId={node.view.sessionId}
-            path={node.view.path}
-            commit={node.view.commit}
-          />
+          <DiffView target={node.view.target} path={node.view.path} commit={node.view.commit} />
         )}
         <button
           type="button"

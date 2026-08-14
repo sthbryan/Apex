@@ -3,6 +3,7 @@ import { useState } from "preact/hooks";
 
 import type { GitChange } from "@/bindings/GitChange";
 import type { GitStatus } from "@/bindings/GitStatus";
+import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
 import { CommitBox } from "@/features/git/CommitBox";
 import {
@@ -15,6 +16,7 @@ import {
   readLog,
   refreshGit,
   selectTarget,
+  sessionOfWorktree,
   setStaged,
   showTab,
   since,
@@ -80,18 +82,19 @@ export function GitPanel() {
 
       <ul class="shrink-0 border-b border-border pb-1">
         <Target
-          id={null}
+          target={{ type: "project" }}
           label={project.name}
-          branch={target === null ? (status?.branch ?? "") : ""}
-          selected={target === null}
+          branch={target.type === "project" ? (status?.branch ?? "") : ""}
+          selected={target.type === "project"}
         />
-        {worktrees.value.map((session) => (
+        {worktrees.value.map((tree) => (
           <Target
-            key={session.id}
-            id={session.id}
-            label={session.title}
-            branch={session.worktree?.branch ?? ""}
-            selected={target === session.id}
+            key={tree.path}
+            target={{ type: "worktree", path: tree.path }}
+            label={sessionOfWorktree.value.get(tree.path) ?? shortName(tree.path)}
+            branch={tree.branch}
+            selected={target.type === "worktree" && target.path === tree.path}
+            live={sessionOfWorktree.value.has(tree.path)}
           />
         ))}
       </ul>
@@ -99,14 +102,14 @@ export function GitPanel() {
       {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
 
       {gitTab.value === "history" ? (
-        <History session={target} />
+        <History target={target} />
       ) : (
-        <Changes status={status} session={target} />
+        <Changes status={status} target={target} />
       )}
 
       {status && gitTab.value === "changes" && <CommitBox status={status} />}
 
-      {status?.isolated && target && gitTab.value === "changes" && (
+      {status?.isolated && gitTab.value === "changes" && (
         <div class="shrink-0 border-t border-border p-2">
           <button
             type="button"
@@ -137,7 +140,7 @@ export function GitPanel() {
   );
 }
 
-function Changes({ status, session }: { status: GitStatus | null; session: string | null }) {
+function Changes({ status, target }: { status: GitStatus | null; target: GitTarget }) {
   if (status && status.changes.length === 0) {
     return <p class="px-2 py-1 text-faint">{t("git.clean")}</p>;
   }
@@ -146,7 +149,7 @@ function Changes({ status, session }: { status: GitStatus | null; session: strin
       <Section
         label={t("git.staged")}
         changes={status?.changes.filter((change) => change.staged) ?? []}
-        session={session}
+        target={target}
         staged
       />
       <Section
@@ -154,20 +157,20 @@ function Changes({ status, session }: { status: GitStatus | null; session: strin
         changes={
           status?.changes.filter((change) => !change.staged && change.kind !== "untracked") ?? []
         }
-        session={session}
+        target={target}
         staged={false}
       />
       <Section
         label={t("git.untracked")}
         changes={status?.changes.filter((change) => change.kind === "untracked") ?? []}
-        session={session}
+        target={target}
         staged={false}
       />
     </div>
   );
 }
 
-function History({ session }: { session: string | null }) {
+function History({ target }: { target: GitTarget }) {
   if (commits.value.length === 0) {
     return <p class="px-2 py-1 text-faint">{t("git.noHistory")}</p>;
   }
@@ -177,7 +180,7 @@ function History({ session }: { session: string | null }) {
         <li key={commit.id}>
           <button
             type="button"
-            onClick={() => openDiff(session, "", commit.id)}
+            onClick={() => openDiff(target, "", commit.id)}
             class="flex w-full flex-col gap-0.5 px-2 py-1 text-left transition-colors hover:bg-raised"
           >
             <span class="flex w-full items-baseline gap-2">
@@ -201,24 +204,29 @@ function History({ session }: { session: string | null }) {
 }
 
 type TargetProps = {
-  id: string | null;
+  target: GitTarget;
   label: string;
   branch: string;
   selected: boolean;
+  live?: boolean;
 };
 
-function Target({ id, label, branch, selected }: TargetProps) {
+function Target({ target, label, branch, selected, live }: TargetProps) {
   return (
     <li>
       <button
         type="button"
-        onClick={() => selectTarget(id)}
+        onClick={() => selectTarget(target)}
         class={cn(
           "flex w-full items-center gap-2 px-2 py-px text-left transition-colors hover:bg-raised",
           selected ? "bg-raised text-text" : "text-muted",
         )}
       >
-        <Icon name={id === null ? "files" : "branch"} size={12} class="shrink-0 text-faint" />
+        <Icon
+          name={target.type === "project" ? "files" : "branch"}
+          size={12}
+          class={cn("shrink-0", live ? "text-state-working" : "text-faint")}
+        />
         <span class="truncate">{label}</span>
         {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
       </button>
@@ -226,15 +234,19 @@ function Target({ id, label, branch, selected }: TargetProps) {
   );
 }
 
+function shortName(path: string): string {
+  return path.split("/").at(-1) ?? path;
+}
+
 function Section({
   label,
   changes,
-  session,
+  target,
   staged,
 }: {
   label: string;
   changes: GitChange[];
-  session: string | null;
+  target: GitTarget;
   staged: boolean;
 }) {
   if (changes.length === 0) {
@@ -268,14 +280,14 @@ function Section({
       </h3>
       <ul>
         {changes.map((change) => (
-          <Row key={change.path} change={change} session={session} />
+          <Row key={change.path} change={change} target={target} />
         ))}
       </ul>
     </section>
   );
 }
 
-function Row({ change, session }: { change: GitChange; session: string | null }) {
+function Row({ change, target }: { change: GitChange; target: GitTarget }) {
   return (
     <li class="group flex items-center gap-1 px-2 transition-colors hover:bg-raised">
       <button
@@ -297,7 +309,7 @@ function Row({ change, session }: { change: GitChange; session: string | null })
       </button>
       <button
         type="button"
-        onClick={() => openDiff(session, change.path)}
+        onClick={() => openDiff(target, change.path)}
         class="flex min-w-0 flex-1 items-center gap-2 py-px text-left text-muted transition-colors group-hover:text-text"
       >
         <span

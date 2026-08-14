@@ -1,6 +1,8 @@
 import { computed, signal } from "@preact/signals";
 
+import type { GitTarget } from "@/bindings/GitTarget";
 import type { SessionSummary } from "@/bindings/SessionSummary";
+import { sameTarget } from "@/features/git/state";
 
 let onCloseRequest: ((sessionId: string) => void) | null = null;
 
@@ -52,12 +54,8 @@ export function openInNewTab(session: SessionSummary): void {
   openView({ type: "session", sessionId: session.id });
 }
 
-export function openDiff(
-  sessionId: string | null,
-  path: string,
-  commit: string | null = null,
-): void {
-  openBeside({ type: "diff", sessionId, path, commit }, (view) => view.type === "diff");
+export function openDiff(target: GitTarget, path: string, commit: string | null = null): void {
+  openBeside({ type: "diff", target, path, commit }, (view) => view.type === "diff");
 }
 
 export function openFile(path: string): void {
@@ -93,7 +91,9 @@ function same(left: PaneView, right: PaneView): boolean {
   }
   if (left.type === "diff" && right.type === "diff") {
     return (
-      left.path === right.path && left.sessionId === right.sessionId && left.commit === right.commit
+      left.path === right.path &&
+      left.commit === right.commit &&
+      sameTarget(left.target, right.target)
     );
   }
   return false;

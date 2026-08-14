@@ -238,6 +238,9 @@ pub struct GitStatus {
     pub base: String,
     pub changes: Vec<GitChange>,
     pub isolated: bool,
+    pub upstream: Option<String>,
+    pub ahead: u32,
+    pub behind: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -399,6 +402,8 @@ pub enum Command {
         size: TerminalSize,
         #[serde(default)]
         isolation: Isolation,
+        #[serde(default)]
+        slug: Option<String>,
     },
     SessionAttach {
         #[ts(type = "string")]

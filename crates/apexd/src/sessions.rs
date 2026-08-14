@@ -34,6 +34,16 @@ impl LiveSession {
     }
 }
 
+struct Spawn {
+    project: Uuid,
+    agent: String,
+    cwd: Option<String>,
+    size: TerminalSize,
+    override_args: Option<Vec<String>>,
+    isolation: Isolation,
+    slug: Option<String>,
+}
+
 pub struct SessionManager {
     profiles: ProfileSet,
     base_env: BTreeMap<String, String>,
@@ -346,7 +356,16 @@ impl SessionManager {
         let args = history::resume_args(profile, session_id)
             .with_context(|| format!("{agent} cannot resume sessions"))?;
 
-        self.spawn(project, agent, None, size, Some(args), Isolation::Directory).await
+        self.spawn(Spawn {
+            project,
+            agent: agent.to_owned(),
+            cwd: None,
+            size,
+            override_args: Some(args),
+            isolation: Isolation::Directory,
+            slug: None,
+        })
+        .await
     }
 
     pub async fn create(
@@ -356,22 +375,25 @@ impl SessionManager {
         cwd: Option<String>,
         size: TerminalSize,
         isolation: Isolation,
+        slug: Option<String>,
     ) -> Result<SessionSummary> {
-        self.spawn(project, agent, cwd, size, None, isolation).await
+        self.spawn(Spawn {
+            project,
+            agent: agent.to_owned(),
+            cwd,
+            size,
+            override_args: None,
+            isolation,
+            slug,
+        })
+        .await
     }
 
-    async fn spawn(
-        self: &Arc<Self>,
-        project: Uuid,
-        agent: &str,
-        cwd: Option<String>,
-        size: TerminalSize,
-        override_args: Option<Vec<String>>,
-        isolation: Isolation,
-    ) -> Result<SessionSummary> {
+    async fn spawn(self: &Arc<Self>, request: Spawn) -> Result<SessionSummary> {
+        let Spawn { project, agent, cwd, size, override_args, isolation, slug } = request;
         let profile = self
             .profiles
-            .get(agent)
+            .get(&agent)
             .cloned()
             .with_context(|| format!("unknown profile {agent}"))?;
         let binary = self.resolve_binary(&profile).await?;
@@ -379,7 +401,10 @@ impl SessionManager {
         let title = self.next_title(&profile.name).await;
 
         let worktree = match isolation {
-            Isolation::Worktree => Some(self.open_worktree(&project_root, &title).await?),
+            Isolation::Worktree => {
+                let wanted = slug.as_deref().unwrap_or(&title);
+                Some(self.open_worktree(&project_root, wanted).await?)
+            }
             Isolation::Directory => None,
         };
         let cwd = match (&worktree, cwd) {
@@ -480,7 +505,11 @@ impl SessionManager {
             if !apex_git::is_repo(&dir) {
                 bail!("{} is not a git repository", dir.display())
             }
+            let upstream = apex_git::upstream(&dir);
             Ok(GitStatus {
+                upstream: upstream.as_ref().map(|remote| remote.name.clone()),
+                ahead: upstream.as_ref().map(|remote| remote.ahead).unwrap_or_default(),
+                behind: upstream.map(|remote| remote.behind).unwrap_or_default(),
                 branch: apex_git::current_branch(&dir)?,
                 base: apex_git::current_branch(&root).unwrap_or_default(),
                 changes: apex_git::status(&dir)?
@@ -647,7 +676,7 @@ impl SessionManager {
         })
     }
 
-    async fn open_worktree(&self, project_root: &str, title: &str) -> Result<WorktreeInfo> {
+    async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
         let root = PathBuf::from(project_root);
         if !tokio::task::spawn_blocking({
             let root = root.clone();
@@ -658,7 +687,10 @@ impl SessionManager {
             bail!("{project_root} is not a git repository")
         }
 
-        let slug = apex_git::slugify(title);
+        let slug = apex_git::slugify(wanted);
+        if slug.is_empty() {
+            bail!("the worktree name is empty")
+        }
         let created =
             tokio::task::spawn_blocking(move || apex_git::add_worktree(&root, &slug)).await??;
         Ok(WorktreeInfo {

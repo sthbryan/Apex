@@ -1,6 +1,7 @@
 import cn from "cnfast";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
+import type { GitTarget } from "@/bindings/GitTarget";
 import { highlight } from "@/features/files/highlight";
 import { gitStatus, readDiff, readHunks, stageHunk } from "@/features/git/state";
 import { sessions } from "@/features/sessions/state";
@@ -8,7 +9,7 @@ import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
-  sessionId: string | null;
+  target: GitTarget;
   path: string;
   commit: string | null;
 };
@@ -18,30 +19,35 @@ type Painted = {
   markup: string | null;
 };
 
-export function DiffView({ sessionId, path, commit }: Props) {
+export function DiffView({ target, path, commit }: Props) {
   const [unstaged, setUnstaged] = useState<Painted[]>([]);
   const [staged, setStaged] = useState<Painted[]>([]);
   const [whole, setWhole] = useState<Painted | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const ticket = useRef(0);
 
-  const session = sessions.value.find((candidate) => candidate.id === sessionId);
-  const label = session?.worktree?.branch ?? session?.title ?? gitStatus.value?.branch ?? "";
+  const session = sessions.value.find(
+    (candidate) => target.type === "session" && candidate.id === target.id,
+  );
+  const label =
+    target.type === "worktree"
+      ? (target.path.split("/").at(-1) ?? "")
+      : (session?.worktree?.branch ?? session?.title ?? gitStatus.value?.branch ?? "");
 
   const load = useCallback(() => {
     const mine = ++ticket.current;
     setFailure(null);
 
     const work = commit
-      ? readDiff(sessionId, path, commit).then(async (text) => {
+      ? readDiff(target, path, commit).then(async (text) => {
           const painted = { patch: text, markup: await paint(text) };
           if (mine === ticket.current) {
             setWhole(painted);
           }
         })
       : Promise.all([
-          readHunks(sessionId, path, "unstaged").then(paintAll),
-          readHunks(sessionId, path, "staged").then(paintAll),
+          readHunks(target, path, "unstaged").then(paintAll),
+          readHunks(target, path, "staged").then(paintAll),
         ]).then(([fresh, ready]) => {
           if (mine === ticket.current) {
             setUnstaged(fresh);
@@ -54,12 +60,12 @@ export function DiffView({ sessionId, path, commit }: Props) {
         setFailure(String(error));
       }
     });
-  }, [sessionId, path, commit]);
+  }, [target, path, commit]);
 
   useEffect(load, [load]);
 
   const apply = (patch: string, stage: boolean) => {
-    void stageHunk(patch, stage)
+    void stageHunk(target, patch, stage)
       .then(load)
       .catch((error: unknown) => setFailure(String(error)));
   };

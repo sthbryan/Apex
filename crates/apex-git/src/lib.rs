@@ -40,6 +40,27 @@ pub fn current_branch(dir: &Path) -> Result<String> {
     Ok(head.trim().to_owned())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Upstream {
+    pub name: String,
+    pub ahead: u32,
+    pub behind: u32,
+}
+
+pub fn upstream(dir: &Path) -> Option<Upstream> {
+    let name = run(dir, &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"])
+        .ok()?
+        .trim()
+        .to_owned();
+    let counts = run(dir, &["rev-list", "--left-right", "--count", "@{upstream}...HEAD"]).ok()?;
+    let mut numbers = counts.split_whitespace();
+    Some(Upstream {
+        name,
+        behind: numbers.next().and_then(|value| value.parse().ok()).unwrap_or(0),
+        ahead: numbers.next().and_then(|value| value.parse().ok()).unwrap_or(0),
+    })
+}
+
 pub fn status(dir: &Path) -> Result<Vec<Change>> {
     let raw = run(dir, &["status", "--porcelain=v1", "-z", "--untracked-files=all"])?;
     let mut fields = raw.split('\0').filter(|field| !field.is_empty());
@@ -452,6 +473,37 @@ mod tests {
         assert_eq!((changes[0].added, changes[0].removed), (1, 1));
         assert_eq!(changes[1].kind, ChangeKind::Untracked);
         assert_eq!((changes[1].added, changes[1].removed), (1, 0));
+    }
+
+    #[test]
+    fn a_branch_without_a_remote_has_no_upstream() {
+        let dir = repo();
+        assert!(upstream(dir.path()).is_none());
+    }
+
+    #[test]
+    fn the_upstream_counts_what_is_ahead_and_behind() {
+        let origin = repo();
+        let clone = tempfile::tempdir().expect("tempdir");
+        let target = clone.path().join("work");
+        run(
+            origin.path(),
+            &["clone", &origin.path().display().to_string(), &target.display().to_string()],
+        )
+        .expect("clone");
+        run(&target, &["config", "user.email", "test@apex.dev"]).expect("email");
+        run(&target, &["config", "user.name", "Apex Test"]).expect("name");
+
+        assert_eq!(upstream(&target).expect("upstream").ahead, 0);
+
+        std::fs::write(target.join("local.txt"), "mine\n").expect("write");
+        run(&target, &["add", "."]).expect("add");
+        run(&target, &["commit", "-m", "local work"]).expect("commit");
+
+        let ahead = upstream(&target).expect("upstream");
+        assert_eq!(ahead.ahead, 1);
+        assert_eq!(ahead.behind, 0);
+        assert!(ahead.name.contains("origin/"));
     }
 
     #[test]
