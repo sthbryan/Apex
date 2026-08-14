@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { useKeymap } from "@/app/keymap";
+import { Dock, type DockPanel } from "@/app/layout/Dock";
+import { StatusBar } from "@/app/layout/StatusBar";
+import { TitleBar } from "@/app/layout/TitleBar";
+import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { startNotifications } from "@/features/notifications/state";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
@@ -12,9 +16,11 @@ import {
   projectSessions,
   projects,
 } from "@/features/projects/state";
+import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
-import { Settings } from "@/features/settings/Settings";
+import { Settings, toggleSettings } from "@/features/settings/Settings";
+import { UsageChip } from "@/features/usage/UsageChip";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeSessionId, activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
@@ -22,11 +28,7 @@ import { agents, connect, daemonVersion, failure, platform, status } from "@/sha
 import { locale, t } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
-import { Dock, type DockPanel } from "@/shell/Dock";
-import { StatusBar } from "@/shell/StatusBar";
-import { TitleBar } from "@/shell/TitleBar";
-import { Toolbar } from "@/shell/Toolbar";
-import { watchFullscreen } from "@/shell/windowControls";
+import { watchFullscreen } from "@/shared/window";
 
 export function App() {
   const [dockOpen, setDockOpen] = useState(true);
@@ -106,11 +108,18 @@ export function App() {
     <div class="flex h-full flex-col bg-bg text-text">
       <TitleBar title={t("app.name")} lead={<ProjectPicker />}>
         <Toolbar
-          onNewSession={() => setPaletteOpen(true)}
           status={
             status.value === "ready" ? `apexd ${daemonVersion.value ?? ""}` : t("status.connecting")
           }
-        />
+        >
+          <UsageChip />
+          <ToolbarButton
+            label={t("toolbar.newSession")}
+            icon="plus"
+            onClick={() => setPaletteOpen(true)}
+          />
+          <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
+        </Toolbar>
       </TitleBar>
 
       <div class="flex min-h-0 flex-1">
@@ -155,7 +164,9 @@ export function App() {
         </div>
       </div>
 
-      <StatusBar />
+      <StatusBar>
+        <ResourcesSummary />
+      </StatusBar>
 
       <Settings />
 

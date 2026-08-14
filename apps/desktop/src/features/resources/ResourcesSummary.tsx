@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { cn } from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
 import { t } from "@/shared/i18n";
@@ -6,7 +6,7 @@ import { compactBytes, metrics } from "@/shared/telemetry";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
-export function StatusBar() {
+export function ResourcesSummary() {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
   const popover = usePresence<HTMLDivElement>(open);
@@ -39,12 +39,7 @@ export function StatusBar() {
   }
 
   return (
-    <div
-      ref={holder}
-      class={cn(
-        "relative flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-2 text-faint",
-      )}
-    >
+    <div ref={holder} class="relative">
       {popover.mounted && (
         <div
           ref={popover.holder}
@@ -63,9 +58,7 @@ export function StatusBar() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        class={cn(
-          "flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted",
-        )}
+        class="flex items-center gap-3 rounded px-1 transition-colors hover:bg-raised hover:text-muted"
       >
         <Gauge
           icon="cpu"
