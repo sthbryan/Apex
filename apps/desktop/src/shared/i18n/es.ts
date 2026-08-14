@@ -174,6 +174,8 @@ export const es: Messages = {
     closePane: "Cerrar este pane",
     toTab: "Abrir como pestaña",
     toSplit: "Partir en esta pestaña",
+    mergeTab: "Fusionar esta pestaña en otra",
+    swapPane: "Intercambiar con el pane hermano",
     resize: "Cambiar el tamaño de los panes",
     empty: "No hay nada abierto.",
     emptyHint: "Pulsa {shortcut} para arrancar una sesión.",

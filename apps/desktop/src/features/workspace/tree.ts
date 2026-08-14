@@ -141,3 +141,16 @@ export function neighbourLeaf(node: PaneNode, leafId: string): Leaf | null {
   }
   return all[index + 1] ?? all[index - 1] ?? null;
 }
+
+export function siblingOf(node: PaneNode, leafId: string): Leaf | null {
+  if (node.kind === "leaf") {
+    return null;
+  }
+  if (findLeaf(node.first, leafId)) {
+    return node.second.kind === "leaf" ? node.second : null;
+  }
+  if (findLeaf(node.second, leafId)) {
+    return node.first.kind === "leaf" ? node.first : null;
+  }
+  return null;
+}

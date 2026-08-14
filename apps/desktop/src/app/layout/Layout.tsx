@@ -1,5 +1,4 @@
 import { useRef } from "preact/hooks";
-import { revealPanel } from "@/app/layout/actions";
 import { Dock } from "@/app/layout/Dock";
 import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
@@ -8,9 +7,7 @@ import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
 import { page, togglePage } from "@/app/view";
-import { GitChip } from "@/features/git/GitChip";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
-import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
 import { UsageChip } from "@/features/usage/UsageChip";
 import { daemonVersion, status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";

@@ -26,7 +26,9 @@ import {
   sessionOf,
   setRatio,
   setView,
+  siblingOf,
   splitLeaf,
+  swapViews,
 } from "@/features/workspace/tree";
 
 export type Tab = {
@@ -302,6 +304,37 @@ export function extractLeafToTab(tabId: string, leafId: string): void {
   }
   closePane(tabId, pane, false, false);
   openView(pane.view);
+}
+
+export function mergeTabInto(sourceTabId: string, targetTabId: string): void {
+  if (sourceTabId === targetTabId) {
+    return;
+  }
+  const source = tabs.value.find((tab) => tab.id === sourceTabId);
+  const pane = source ? findLeaf(source.root, source.activeLeafId) : null;
+  const target = tabs.value.find((tab) => tab.id === targetTabId);
+  if (!source || !target || !pane) {
+    return;
+  }
+  const incoming = leaf(pane.view);
+  updateTab(targetTabId, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, current.activeLeafId, "row", incoming),
+    activeLeafId: incoming.id,
+  }));
+  closePane(sourceTabId, pane, false, false);
+}
+
+export function swapPaneWithSibling(tabId: string, leafId: string): void {
+  const tab = tabs.value.find((candidate) => candidate.id === tabId);
+  const sibling = tab ? siblingOf(tab.root, leafId) : null;
+  if (!tab || !sibling) {
+    return;
+  }
+  updateTab(tabId, (current) => ({
+    ...current,
+    root: swapViews(current.root, leafId, sibling.id),
+  }));
 }
 
 export function closeTab(tabId: string, restorePanels = true): void {

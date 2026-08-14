@@ -4,9 +4,10 @@ import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import { sessions } from "@/features/sessions/state";
-import { closePane, extractLeafToTab, tabs } from "@/features/workspace/state";
+import { closePane, extractLeafToTab, swapPaneWithSibling, tabs } from "@/features/workspace/state";
 import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
 import type { Leaf } from "@/features/workspace/tree";
+import { siblingOf } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -17,8 +18,10 @@ type Props = {
 };
 
 export function PaneBar({ tabId, leaf, extra }: Props) {
-  const split = (tabs.value.find((tab) => tab.id === tabId)?.root.kind ?? "leaf") === "split";
+  const currentTab = tabs.value.find((tab) => tab.id === tabId);
+  const split = (currentTab?.root.kind ?? "leaf") === "split";
   const panel = leaf.view.type === "panel" && leaf.view.panel in DOCK_PANELS;
+  const swapable = Boolean(currentTab && siblingOf(currentTab.root, leaf.id));
 
   return (
     <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
@@ -29,6 +32,16 @@ export function PaneBar({ tabId, leaf, extra }: Props) {
       )}
       <div class="ml-auto flex shrink-0 items-center gap-1">
         {extra}
+        {swapable && (
+          <button
+            type="button"
+            title={t("workspace.swapPane")}
+            onClick={() => swapPaneWithSibling(tabId, leaf.id)}
+            class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
+          >
+            <Icon name="move" size={12} />
+          </button>
+        )}
         {split && (
           <button
             type="button"

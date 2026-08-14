@@ -4,7 +4,7 @@ import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { activeTabId, closeTab, type Tab } from "@/features/workspace/state";
+import { activeTabId, closeTab, mergeTabInto, type Tab } from "@/features/workspace/state";
 import { paneTitle } from "@/features/workspace/title";
 import { leaves } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
@@ -25,6 +25,13 @@ export function TabBar({ tabs, sessions }: Props) {
       {tabs.map((tab) => {
         const active = tab.id === activeTabId.value;
         const panel = panelOf(tab);
+        const mergeTarget = (() => {
+          if (tab.id !== activeTabId.value) {
+            return activeTabId.value;
+          }
+          const index = tabs.findIndex((candidate) => candidate.id === tab.id);
+          return tabs[index + 1]?.id ?? tabs[index - 1]?.id ?? null;
+        })();
         return (
           <div
             key={tab.id}
@@ -53,6 +60,16 @@ export function TabBar({ tabs, sessions }: Props) {
                 class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
               >
                 <Icon name="panel" size={12} />
+              </button>
+            )}
+            {mergeTarget && tabs.length > 1 && (
+              <button
+                type="button"
+                title={t("workspace.mergeTab")}
+                onClick={() => mergeTabInto(tab.id, mergeTarget)}
+                class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
+              >
+                <Icon name="combine" size={12} />
               </button>
             )}
             <button

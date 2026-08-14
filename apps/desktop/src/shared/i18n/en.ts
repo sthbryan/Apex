@@ -172,6 +172,8 @@ export const en = {
     closePane: "Close this pane",
     toTab: "Open as its own tab",
     toSplit: "Split into this tab",
+    mergeTab: "Merge this tab into another",
+    swapPane: "Swap with the sibling pane",
     resize: "Resize panes",
     empty: "Nothing open.",
     emptyHint: "Press {shortcut} to start a session.",
