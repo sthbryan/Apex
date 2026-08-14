@@ -8,18 +8,19 @@ import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-type Props = {
-  target: GitTarget;
-  path: string;
-  commit: string | null;
-};
-
 type Painted = {
   patch: string;
   markup: string | null;
 };
 
-export function DiffView({ target, path, commit }: Props) {
+type Props = {
+  target: GitTarget;
+  path: string;
+  commit: string | null;
+  chrome?: boolean;
+};
+
+export function DiffView({ target, path, commit, chrome = true }: Props) {
   const [unstaged, setUnstaged] = useState<Painted[]>([]);
   const [staged, setStaged] = useState<Painted[]>([]);
   const [whole, setWhole] = useState<Painted | null>(null);
@@ -76,19 +77,21 @@ export function DiffView({ target, path, commit }: Props) {
 
   return (
     <div class="flex h-full flex-col bg-bg">
-      <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
-        <Icon name="branch" size={12} />
-        <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
-        <span class="truncate text-faint">{label}</span>
-        <button
-          type="button"
-          title={t("git.reload")}
-          onClick={load}
-          class="ml-auto shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </header>
+      {chrome && (
+        <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
+          <Icon name="branch" size={12} />
+          <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
+          <span class="truncate text-faint">{label}</span>
+          <button
+            type="button"
+            title={t("git.reload")}
+            onClick={load}
+            class="ml-auto shrink-0 text-faint transition-colors hover:text-text"
+          >
+            <Icon name="refresh" size={12} />
+          </button>
+        </header>
+      )}
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
