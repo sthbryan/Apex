@@ -6,12 +6,15 @@ use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store};
 use std::collections::BTreeMap;
 use apex_proto::{Event, SessionState, SessionSummary, TerminalSize};
-use apex_pty::{PtyProcess, PtySpec};
+use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
 use bytes::Bytes;
+use std::time::Instant;
 use tokio::sync::{Mutex, RwLock, broadcast};
+use tokio::time::{MissedTickBehavior, interval};
 use uuid::Uuid;
 
 const EVENT_CHANNEL_DEPTH: usize = 256;
+const POLL_INTERVAL: std::time::Duration = std::time::Duration::from_millis(200);
 
 pub struct LiveSession {
     pub summary: Mutex<SessionSummary>,
@@ -129,6 +132,7 @@ impl SessionManager {
         });
         self.sessions.write().await.insert(record.id, session.clone());
         let _ = self.events.send(Event::SessionOpened { session: summary.clone() });
+        self.watch_state(record.id, session.clone(), &profile);
         self.watch_exit(record.id, session);
 
         Ok(summary)
@@ -182,6 +186,38 @@ impl SessionManager {
         format!("{agent} {}", taken + 1)
     }
 
+    fn watch_state(self: &Arc<Self>, id: Uuid, session: Arc<LiveSession>, profile: &AgentProfile) {
+        let patterns = StatePatterns::compile(
+            &profile.state_patterns.blocked,
+            &profile.state_patterns.done,
+        );
+        let manager = self.clone();
+        let mut output = session.process.subscribe();
+
+        tokio::spawn(async move {
+            let mut detector = StateDetector::new(patterns, Instant::now());
+            let mut ticker = interval(POLL_INTERVAL);
+            ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
+
+            loop {
+                let change = tokio::select! {
+                    chunk = output.recv() => match chunk {
+                        Ok(data) => detector.observe(&data, Instant::now()),
+                        Err(broadcast::error::RecvError::Lagged(_)) => {
+                            detector.observe(b"", Instant::now())
+                        }
+                        Err(broadcast::error::RecvError::Closed) => return,
+                    },
+                    _ = ticker.tick() => detector.poll(Instant::now()),
+                };
+
+                if let Some(state) = change {
+                    manager.publish_state(id, &session, state).await;
+                }
+            }
+        });
+    }
+
     fn watch_exit(self: &Arc<Self>, id: Uuid, session: Arc<LiveSession>) {
         let manager = self.clone();
         tokio::spawn(async move {
@@ -193,5 +229,16 @@ impl SessionManager {
             }
             let _ = manager.events.send(Event::SessionExited { id, code: status.code });
         });
+    }
+
+    async fn publish_state(&self, id: Uuid, session: &LiveSession, state: SessionState) {
+        {
+            let mut summary = session.summary.lock().await;
+            if summary.exit_code.is_some() {
+                return;
+            }
+            summary.state = state;
+        }
+        let _ = self.events.send(Event::SessionStateChanged { id, state });
     }
 }

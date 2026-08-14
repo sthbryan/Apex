@@ -72,6 +72,11 @@ function applyEvent(event: Event): void {
     case "session_opened":
       sessions.value = upsert(sessions.value, event.session);
       break;
+    case "session_state_changed":
+      sessions.value = sessions.value.map((session) =>
+        session.id === event.id ? { ...session, state: event.state } : session,
+      );
+      break;
     case "session_exited":
       sessions.value = sessions.value.map((session) =>
         session.id === event.id ? { ...session, exit_code: event.code, state: "done" } : session,

@@ -193,6 +193,11 @@ pub enum Event {
     SessionOpened {
         session: SessionSummary,
     },
+    SessionStateChanged {
+        #[ts(type = "string")]
+        id: Uuid,
+        state: SessionState,
+    },
     SessionExited {
         #[ts(type = "string")]
         id: Uuid,

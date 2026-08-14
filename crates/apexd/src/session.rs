@@ -284,6 +284,16 @@ mod tests {
         profiles.upsert(
             AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("perfil sh"),
         );
+        profiles.upsert(
+            AgentProfile::parse(
+                "name = \"prompted\"\n\
+                 command = \"sh\"\n\
+                 args = [\"-c\", \"echo 'Seguir? (y/n)'; sleep 30\"]\n\
+                 [state_patterns]\n\
+                 blocked = [\"\\\\(y/n\\\\)\"]\n",
+            )
+            .expect("perfil prompted"),
+        );
         let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
             PathBuf::from("/bin"),
         ]));
@@ -497,6 +507,71 @@ mod tests {
             .await;
         let text = reconnected.collect_output(session.id, "sigue-viva").await;
         assert!(text.contains("sigue-viva"));
+    }
+
+    async fn wait_for_state(
+        manager: &Arc<SessionManager>,
+        id: Uuid,
+        wanted: apex_proto::SessionState,
+    ) {
+        let mut events = manager.subscribe();
+        let seen = timeout(Duration::from_secs(10), async {
+            loop {
+                match events.recv().await {
+                    Ok(apex_proto::Event::SessionStateChanged { id: got, state })
+                        if got == id && state == wanted =>
+                    {
+                        return;
+                    }
+                    Ok(_) => continue,
+                    Err(_) => return,
+                }
+            }
+        })
+        .await;
+        assert!(seen.is_ok(), "nunca llego el estado {wanted:?}");
+
+        let sessions = manager.list_sessions().await;
+        let session = sessions.iter().find(|candidate| candidate.id == id).expect("sesion");
+        assert_eq!(session.state, wanted);
+    }
+
+    #[tokio::test]
+    async fn a_prompt_moves_the_session_to_blocked() {
+        let harness = Harness::start();
+        let session = harness
+            .manager
+            .create("prompted", Some("/tmp".into()), TerminalSize::default())
+            .await
+            .expect("crear");
+
+        wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
+    }
+
+    #[tokio::test]
+    async fn a_quiet_session_without_patterns_settles_on_idle() {
+        let harness = Harness::start();
+        let mut client = harness.client().await;
+        let session = client.create_shell().await;
+        client
+            .request(Command::SessionInput { id: session.id, data: "echo tranquilo\n".into() })
+            .await;
+
+        wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Idle).await;
+    }
+
+    #[tokio::test]
+    async fn answering_the_prompt_moves_the_session_back_to_working() {
+        let harness = Harness::start();
+        let session = harness
+            .manager
+            .create("prompted", Some("/tmp".into()), TerminalSize::default())
+            .await
+            .expect("crear");
+        wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
+
+        harness.manager.write(session.id, "sigo escribiendo\n").await.expect("input");
+        wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Working).await;
     }
 
     #[tokio::test]
