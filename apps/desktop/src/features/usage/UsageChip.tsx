@@ -34,9 +34,9 @@ export function UsageChip() {
         type="button"
         title={t("usage.title")}
         onClick={toggleUsagePopover}
-        class={cn("flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised", tone())}
+        class={cn("flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised text-xs", tone())}
       >
-        {anyOverPace.value && <Icon name="activity" class="mr-1 animate-breathe" />}
+        {anyOverPace.value && <Icon size={11} name="activity" class="mr-1 animate-breathe" />}
         {tightestUsage.value}%
       </button>
 
