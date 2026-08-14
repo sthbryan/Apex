@@ -86,6 +86,71 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
     }
 }
 
+pub fn search_files(root: &Path, query: &str, limit: usize) -> Vec<FileEntry> {
+    let needle = query.trim().to_lowercase();
+    let mut found: Vec<(usize, FileEntry)> = Vec::new();
+
+    let walk = ignore::WalkBuilder::new(root)
+        .hidden(true)
+        .git_ignore(true)
+        .git_global(true)
+        .require_git(false)
+        .filter_entry(|entry| entry.file_name() != ".git")
+        .max_filesize(Some(MAX_FILE_BYTES))
+        .build();
+
+    for entry in walk.flatten() {
+        if !entry.file_type().is_some_and(|kind| kind.is_file()) {
+            continue;
+        }
+        let Ok(relative) = entry.path().strip_prefix(root) else {
+            continue;
+        };
+        let Some(path) = relative.to_str() else {
+            continue;
+        };
+        let Some(rank) = rank(path, &needle) else {
+            continue;
+        };
+
+        found.push((
+            rank,
+            FileEntry {
+                name: entry.file_name().to_string_lossy().into_owned(),
+                path: path.to_owned(),
+                is_dir: false,
+                size: entry.metadata().map(|data| data.len()).unwrap_or_default(),
+            },
+        ));
+        if needle.is_empty() && found.len() >= limit {
+            break;
+        }
+    }
+
+    found.sort_by(|left, right| left.0.cmp(&right.0).then_with(|| left.1.path.cmp(&right.1.path)));
+    found.into_iter().take(limit).map(|(_, entry)| entry).collect()
+}
+
+fn rank(path: &str, needle: &str) -> Option<usize> {
+    if needle.is_empty() {
+        return Some(path.len());
+    }
+    let haystack = path.to_lowercase();
+    let name = haystack.rsplit('/').next().unwrap_or(&haystack);
+    if name.contains(needle) {
+        return Some(path.len());
+    }
+    if haystack.contains(needle) {
+        return Some(path.len() + 1000);
+    }
+    subsequence(&haystack, needle).then(|| path.len() + 2000)
+}
+
+fn subsequence(haystack: &str, needle: &str) -> bool {
+    let mut characters = haystack.chars();
+    needle.chars().all(|wanted| characters.any(|found| found == wanted))
+}
+
 pub fn resolve(root: &Path, relative: &str) -> Result<PathBuf> {
     let root = root
         .canonicalize()
@@ -177,6 +242,30 @@ mod tests {
         let contents = read_file(dir.path(), "big.txt").expect("contents");
         assert!(contents.truncated);
         assert_eq!(contents.text.expect("text").len(), MAX_FILE_BYTES as usize);
+    }
+
+    #[test]
+    fn search_prefers_matches_on_the_file_name() {
+        let dir = sample();
+        fs::write(dir.path().join("src/main_test.rs"), "").expect("write");
+        let found = search_files(dir.path(), "main", 10);
+        assert_eq!(found[0].path, "src/main.rs");
+        assert_eq!(found.len(), 2);
+    }
+
+    #[test]
+    fn search_matches_loose_sequences_and_honours_the_limit() {
+        let dir = sample();
+        assert_eq!(search_files(dir.path(), "srmn", 10)[0].path, "src/main.rs");
+        assert_eq!(search_files(dir.path(), "", 1).len(), 1);
+    }
+
+    #[test]
+    fn search_skips_ignored_files() {
+        let dir = sample();
+        fs::write(dir.path().join(".gitignore"), "secret.txt\n").expect("gitignore");
+        fs::write(dir.path().join("secret.txt"), "").expect("secret");
+        assert!(search_files(dir.path(), "secret", 10).is_empty());
     }
 
     #[test]

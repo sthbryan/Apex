@@ -144,6 +144,13 @@ impl Client {
             Command::FileRead { project, path } => Ok(Reply::File {
                 contents: self.manager.read_file(project, &path).await.map_err(not_found_error)?,
             }),
+            Command::FileSearch { project, query, limit } => Ok(Reply::Directory {
+                entries: self
+                    .manager
+                    .search_files(project, &query, limit as usize)
+                    .await
+                    .map_err(not_found_error)?,
+            }),
             Command::SessionResume { project, agent, session_id, size } => {
                 let session = self
                     .manager

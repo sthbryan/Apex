@@ -45,6 +45,14 @@ async function loadDirectory(project: string, path: string): Promise<void> {
   tree.value = { ...tree.value, [path]: entries };
 }
 
+export async function searchFiles(
+  project: string,
+  query: string,
+  limit: number,
+): Promise<FileEntry[]> {
+  return invoke<FileEntry[]>("search_files", { project, query, limit }).catch(() => []);
+}
+
 export async function readFile(project: string, path: string): Promise<FileContents> {
   return invoke<FileContents>("read_file", { project, path });
 }

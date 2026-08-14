@@ -24,6 +24,7 @@ export const es: Messages = {
     binary: "Archivo binario.",
     truncated: "Mostrando el primer megabyte.",
     openExternally: "Abrir en la app predeterminada",
+    findPlaceholder: "Buscar un archivo…",
     refresh: "Recargar el árbol",
   },
   projects: {

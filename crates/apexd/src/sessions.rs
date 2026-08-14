@@ -269,6 +269,17 @@ impl SessionManager {
         tokio::task::spawn_blocking(move || files::read_file(&root, &path)).await?
     }
 
+    pub async fn search_files(
+        &self,
+        project: Uuid,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<FileEntry>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let query = query.to_owned();
+        Ok(tokio::task::spawn_blocking(move || files::search_files(&root, &query, limit)).await?)
+    }
+
     pub async fn resume(
         self: &Arc<Self>,
         project: Uuid,

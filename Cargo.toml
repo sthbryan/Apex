@@ -27,6 +27,7 @@ tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 toml = "1"
+ignore = "0.4"
 rusqlite = { version = "0.40", features = ["bundled"] }
 ts-rs = "12"
 uuid = { version = "1", features = ["v4", "serde"] }

@@ -159,6 +159,20 @@ async fn read_file(
 }
 
 #[tauri::command]
+async fn search_files(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    query: String,
+    limit: u32,
+) -> Answer<Vec<FileEntry>> {
+    match state.daemon.request(Command::FileSearch { project, query, limit }).await.map_err(failed)?
+    {
+        Reply::Directory { entries } => Ok(entries),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn resume_session(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -259,6 +273,7 @@ pub fn run() {
             list_history,
             list_directory,
             read_file,
+            search_files,
             resume_session,
             create_session,
             attach_session,

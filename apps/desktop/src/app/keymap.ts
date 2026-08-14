@@ -14,9 +14,10 @@ import { findLeaf, sessionOf } from "@/features/workspace/tree";
 
 type Toggles = {
   togglePalette: () => void;
+  toggleFinder: () => void;
 };
 
-export function useKeymap({ togglePalette }: Toggles): void {
+export function useKeymap({ togglePalette, toggleFinder }: Toggles): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) {
@@ -25,7 +26,7 @@ export function useKeymap({ togglePalette }: Toggles): void {
       const binding = BINDINGS[event.key.toLowerCase()];
       if (binding) {
         event.preventDefault();
-        binding({ event, togglePalette });
+        binding({ event, togglePalette, toggleFinder });
         return;
       }
 
@@ -41,13 +42,14 @@ export function useKeymap({ togglePalette }: Toggles): void {
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [togglePalette]);
+  }, [togglePalette, toggleFinder]);
 }
 
 type Context = Toggles & { event: KeyboardEvent };
 
 const BINDINGS: Record<string, (context: Context) => void> = {
   k: ({ togglePalette }) => togglePalette(),
+  p: ({ toggleFinder }) => toggleFinder(),
   ",": () => toggleSettings(),
   u: () => toggleUsagePopover(),
   b: () => toggleDock(),

@@ -264,6 +264,12 @@ pub enum Command {
         project: Uuid,
         path: String,
     },
+    FileSearch {
+        #[ts(type = "string")]
+        project: Uuid,
+        query: String,
+        limit: u32,
+    },
     SessionResume {
         #[ts(type = "string")]
         project: Uuid,

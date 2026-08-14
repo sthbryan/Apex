@@ -1,5 +1,4 @@
-import { cn } from "cnfast";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
@@ -15,13 +14,9 @@ import {
 } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
-import { usePresence } from "@/shared/ui/presence";
+import { Picker, type PickerItem } from "@/shared/ui/Picker";
 
-type Action = {
-  id: string;
-  label: string;
-  run: () => void;
-};
+type Action = PickerItem;
 
 type Props = {
   open: boolean;
@@ -34,9 +29,6 @@ type Props = {
 
 export function CommandPalette({ open, onClose, agents, sessions, history, project }: Props) {
   const [query, setQuery] = useState("");
-  const [cursor, setCursor] = useState(0);
-  const field = useRef<HTMLInputElement>(null);
-  const overlay = usePresence<HTMLDivElement>(open);
 
   const actions = useMemo(
     () => buildActions(agents, sessions, history, project, onClose),
@@ -52,94 +44,20 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
   }, [actions, query]);
 
   useEffect(() => {
-    if (!open) {
-      return;
+    if (open) {
+      setQuery("");
     }
-    setQuery("");
-    setCursor(0);
-
-    const claimFocus = () => field.current?.focus();
-    claimFocus();
-    const retry = requestAnimationFrame(claimFocus);
-    return () => cancelAnimationFrame(retry);
   }, [open]);
 
-  useEffect(() => {
-    setCursor((current) => Math.min(current, Math.max(matches.length - 1, 0)));
-  }, [matches.length]);
-
-  if (!overlay.mounted) {
-    return null;
-  }
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setCursor((current) => (current + 1) % Math.max(matches.length, 1));
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setCursor((current) => (current - 1 + matches.length) % Math.max(matches.length, 1));
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      matches[cursor]?.run();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      onClose();
-    }
-  };
-
   return (
-    <div
-      ref={overlay.holder}
-      class={cn(
-        "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24",
-        overlay.leaving ? "animate-veil-out" : "animate-veil-in",
-      )}
-      onMouseDown={onClose}
-    >
-      <div
-        class={cn(
-          "w-lg max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
-          overlay.leaving ? "animate-pop-out" : "animate-pop-in",
-        )}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <input
-          ref={field}
-          type="text"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck={false}
-          value={query}
-          placeholder={t("palette.placeholder")}
-          onInput={(event) => setQuery(event.currentTarget.value)}
-          onKeyDown={onKeyDown}
-          class="w-full border-b border-border bg-transparent px-3 py-2.5 outline-none placeholder:text-faint"
-        />
-        <ul class="max-h-80 overflow-y-auto py-1">
-          {matches.length === 0 ? (
-            <li class="px-3 py-2 text-faint">{t("palette.empty")}</li>
-          ) : (
-            matches.map((action, index) => (
-              <li key={action.id}>
-                <button
-                  type="button"
-                  onMouseEnter={() => setCursor(index)}
-                  onClick={action.run}
-                  title={action.label}
-                  class={cn(
-                    "w-full truncate px-3 py-1.5 text-left transition-colors",
-                    index === cursor ? "bg-raised text-text" : "text-muted",
-                  )}
-                >
-                  {action.label}
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
-    </div>
+    <Picker
+      open={open}
+      onClose={onClose}
+      query={query}
+      onQuery={setQuery}
+      placeholder={t("palette.placeholder")}
+      items={matches}
+    />
   );
 }
 

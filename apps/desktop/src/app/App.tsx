@@ -7,6 +7,7 @@ import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
 import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
+import { FileFinder } from "@/features/files/FileFinder";
 import { startNotifications } from "@/features/notifications/state";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
@@ -36,10 +37,12 @@ import { watchFullscreen } from "@/shared/window";
 
 export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [finderOpen, setFinderOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
   const [dockMounted, setDockMounted] = useState(dockOpen.value);
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
+  const toggleFinder = useCallback(() => setFinderOpen((open) => !open), []);
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
@@ -95,7 +98,7 @@ export function App() {
     }
   }, [paletteOpen]);
 
-  useKeymap({ togglePalette });
+  useKeymap({ togglePalette, toggleFinder });
 
   if (status.value === "failed") {
     return (
@@ -214,6 +217,8 @@ export function App() {
       </div>
 
       <Settings />
+
+      <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
 
       <CommandPalette
         open={paletteOpen}
