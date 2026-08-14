@@ -63,6 +63,8 @@ export const es: Messages = {
     close: "Cerrar preferencias",
     theme: "Tema",
     themeHint: "Sigue al sistema.",
+    themeHintLight: "Usa siempre el tema claro.",
+    themeHintDark: "Usa siempre el tema oscuro.",
     editor: "Editor externo",
     editorHint: "Dónde se abren los archivos al salir de Apex. Solo aparecen los detectados.",
     editorSystem: "El del sistema",

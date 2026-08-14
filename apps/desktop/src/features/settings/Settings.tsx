@@ -21,6 +21,12 @@ const LANGUAGES: { value: Locale; label: string }[] = [
   { value: "es", label: "Español" },
 ];
 
+const THEME_HINT = {
+  system: "settings.themeHint",
+  light: "settings.themeHintLight",
+  dark: "settings.themeHintDark",
+} as const;
+
 export function Settings() {
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
@@ -48,7 +54,7 @@ export function Settings() {
       </header>
 
       <div class="min-h-0 flex-1 overflow-y-auto px-4">
-        <SettingsRow label={t("settings.theme")} hint={t("settings.themeHint")}>
+        <SettingsRow label={t("settings.theme")} hint={t(THEME_HINT[themeMode.value])}>
           <Segmented label={t("settings.theme")}>
             {THEMES.map((option) => (
               <Choice

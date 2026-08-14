@@ -61,6 +61,8 @@ export const en = {
     close: "Close settings",
     theme: "Theme",
     themeHint: "Follows your system.",
+    themeHintLight: "Always uses the light theme.",
+    themeHintDark: "Always uses the dark theme.",
     language: "Language",
     languageHint: "Applies instantly.",
     editor: "External editor",
