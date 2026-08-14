@@ -27,11 +27,25 @@ type Props = {
   sessions: SessionSummary[];
   elsewhere: SessionSummary[];
   projects: ProjectSummary[];
+  floating?: boolean;
 };
 
-export function Dock({ header, panel, onPanel, sessions, elsewhere, projects }: Props) {
+export function Dock({
+  header,
+  panel,
+  onPanel,
+  sessions,
+  elsewhere,
+  projects,
+  floating = false,
+}: Props) {
   return (
-    <aside class="flex h-full w-full flex-col overflow-hidden border-r border-border bg-surface">
+    <aside
+      class={cn(
+        "flex h-full w-full flex-col overflow-hidden bg-surface",
+        floating ? "m-2 rounded-r-xl shadow-2xl" : "border-r border-border",
+      )}
+    >
       <div
         data-tauri-drag-region
         class="flex h-9 shrink-0 select-none items-center"

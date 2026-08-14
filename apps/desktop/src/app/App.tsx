@@ -45,6 +45,7 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [finderOpen, setFinderOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
+  const [dockHover, setDockHover] = useState(false);
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
   const toggleFinder = useCallback(() => setFinderOpen((open) => !open), []);
@@ -139,15 +140,21 @@ export function App() {
     />
   );
 
+  const dockVisible = dockOpen.value || dockHover;
+
   return (
     <div class="flex h-full flex-col bg-bg text-text">
-      <div class="flex min-h-0 flex-1">
-        <DockSlot open={dockOpen.value}>
+      <div class="relative flex min-h-0 flex-1">
+        <DockSlot open={dockVisible} overlay={!dockOpen.value} onHoverChange={setDockHover}>
           <Dock
+            floating={!dockOpen.value}
             header={
-              <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
-                {t("app.name")}
-              </span>
+              <>
+                <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
+                  {t("app.name")}
+                </span>
+                {!dockOpen.value && <span class="ml-auto pr-2">{sidebarToggle}</span>}
+              </>
             }
             panel={panel}
             onPanel={setPanel}
@@ -159,7 +166,7 @@ export function App() {
 
         <div class="flex min-w-0 flex-1 flex-col">
           <TitleBar
-            reserveControls={!dockOpen.value}
+            reserveControls={!dockVisible}
             lead={
               <>
                 {sidebarToggle}
@@ -213,6 +220,10 @@ export function App() {
             )}
           </div>
         </div>
+
+        {!dockVisible && (
+          <div class="absolute inset-y-0 left-0 z-20 w-2" onMouseEnter={() => setDockHover(true)} />
+        )}
       </div>
 
       <StatusBar lead={<GitChip onOpen={() => setPanel("git")} />}>
