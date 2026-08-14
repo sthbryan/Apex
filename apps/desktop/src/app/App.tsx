@@ -45,7 +45,6 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [finderOpen, setFinderOpen] = useState(false);
   const [panel, setPanel] = useState<DockPanel>("sessions");
-  const [dockMounted, setDockMounted] = useState(dockOpen.value);
 
   const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
   const toggleFinder = useCallback(() => setFinderOpen((open) => !open), []);
@@ -141,90 +140,84 @@ export function App() {
   );
 
   return (
-    <div class="flex h-full bg-bg text-text">
-      <DockSlot open={dockOpen.value} onMountedChange={setDockMounted}>
-        <Dock
-          header={
-            <>
+    <div class="flex h-full flex-col bg-bg text-text">
+      <div class="flex min-h-0 flex-1">
+        <DockSlot open={dockOpen.value}>
+          <Dock
+            header={
               <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
                 {t("app.name")}
               </span>
-              <span class="ml-auto pr-2">{sidebarToggle}</span>
-            </>
-          }
-          panel={panel}
-          onPanel={setPanel}
-          sessions={projectSessions.value}
-          elsewhere={foreignSessions.value}
-          projects={projects.value}
-        />
-      </DockSlot>
+            }
+            panel={panel}
+            onPanel={setPanel}
+            sessions={projectSessions.value}
+            elsewhere={foreignSessions.value}
+            projects={projects.value}
+          />
+        </DockSlot>
 
-      <div class="flex min-w-0 flex-1 flex-col">
-        <TitleBar
-          reserveControls={!dockMounted}
-          lead={
-            <>
-              {!dockMounted && (
-                <div class="flex animate-veil-in items-center gap-3">
-                  {sidebarToggle}
-                  <span class="shrink-0 font-semibold tracking-wide">{t("app.name")}</span>
-                </div>
-              )}
-              <ProjectPicker />
-            </>
-          }
-        >
-          <Toolbar
-            status={
-              status.value === "ready"
-                ? `apexd ${daemonVersion.value ?? ""}`
-                : t("status.connecting")
+        <div class="flex min-w-0 flex-1 flex-col">
+          <TitleBar
+            reserveControls={!dockOpen.value}
+            lead={
+              <>
+                {sidebarToggle}
+                <ProjectPicker />
+              </>
             }
           >
-            <UsageChip />
-            <ToolbarButton
-              label={t("toolbar.newSession")}
-              icon="plus"
-              onClick={() => setPaletteOpen(true)}
-            />
-            <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
-          </Toolbar>
-        </TitleBar>
+            <Toolbar
+              status={
+                status.value === "ready"
+                  ? `apexd ${daemonVersion.value ?? ""}`
+                  : t("status.connecting")
+              }
+            >
+              <UsageChip />
+              <ToolbarButton
+                label={t("toolbar.newSession")}
+                icon="plus"
+                onClick={() => setPaletteOpen(true)}
+              />
+              <ToolbarButton label={t("settings.title")} icon="settings" onClick={toggleSettings} />
+            </Toolbar>
+          </TitleBar>
 
-        <TabBar tabs={tabs.value} sessions={sessions.value} />
+          <TabBar tabs={tabs.value} sessions={sessions.value} />
 
-        <div class="relative min-h-0 flex-1">
-          {tabs.value.length === 0 ? (
-            <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
-              <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
-              {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
-            </div>
-          ) : (
-            tabs.value.map((tab) => {
-              const active = tab.id === activeTabId.value;
-              return (
-                <div
-                  key={tab.id}
-                  class="absolute inset-0"
-                  style={{ visibility: active ? "visible" : "hidden", zIndex: active ? 1 : 0 }}
-                >
-                  <PaneTree
-                    tabId={tab.id}
-                    node={tab.root}
-                    activeLeafId={tab.activeLeafId}
-                    tabActive={active}
-                  />
-                </div>
-              );
-            })
-          )}
+          <div class="relative min-h-0 flex-1">
+            {tabs.value.length === 0 ? (
+              <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
+                <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
+                {activeProject.value && <p>{t("workspace.emptyHint", { shortcut: "⌘K" })}</p>}
+              </div>
+            ) : (
+              tabs.value.map((tab) => {
+                const active = tab.id === activeTabId.value;
+                return (
+                  <div
+                    key={tab.id}
+                    class="absolute inset-0"
+                    style={{ visibility: active ? "visible" : "hidden", zIndex: active ? 1 : 0 }}
+                  >
+                    <PaneTree
+                      tabId={tab.id}
+                      node={tab.root}
+                      activeLeafId={tab.activeLeafId}
+                      tabActive={active}
+                    />
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
-
-        <StatusBar lead={<GitChip onOpen={() => setPanel("git")} />}>
-          <ResourcesSummary />
-        </StatusBar>
       </div>
+
+      <StatusBar lead={<GitChip onOpen={() => setPanel("git")} />}>
+        <ResourcesSummary />
+      </StatusBar>
 
       <NewSession />
 
