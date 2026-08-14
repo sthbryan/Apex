@@ -15,6 +15,7 @@ import {
   removeLeaf,
   sessionOf,
   setRatio,
+  setView,
   splitLeaf,
 } from "@/features/workspace/tree";
 
@@ -49,11 +50,18 @@ export function openFile(path: string): void {
     return;
   }
   const tab = activeTab.value;
-  if (tab) {
-    splitActive({ type: "file", path }, "row");
+  if (!tab) {
+    openView({ type: "file", path });
     return;
   }
-  openView({ type: "file", path });
+  if (findLeaf(tab.root, tab.activeLeafId)?.view.type === "file") {
+    updateTab(tab.id, (current) => ({
+      ...current,
+      root: setView(current.root, current.activeLeafId, { type: "file", path }),
+    }));
+    return;
+  }
+  splitActive({ type: "file", path }, "row");
 }
 
 export function focusSession(sessionId: string): boolean {

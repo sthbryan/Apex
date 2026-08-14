@@ -38,6 +38,17 @@ export function leaves(node: PaneNode): Leaf[] {
   return node.kind === "leaf" ? [node] : [...leaves(node.first), ...leaves(node.second)];
 }
 
+export function setView(node: PaneNode, leafId: string, view: PaneView): PaneNode {
+  if (node.kind === "leaf") {
+    return node.id === leafId ? { ...node, view } : node;
+  }
+  return {
+    ...node,
+    first: setView(node.first, leafId, view),
+    second: setView(node.second, leafId, view),
+  };
+}
+
 export function findLeaf(node: PaneNode, leafId: string): Leaf | null {
   if (node.kind === "leaf") {
     return node.id === leafId ? node : null;

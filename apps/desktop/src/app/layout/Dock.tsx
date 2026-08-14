@@ -2,14 +2,16 @@ import cn from "cnfast";
 import type { ComponentChildren } from "preact";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { SessionSummary } from "@/bindings/SessionSummary";
+import { FilesPanel } from "@/features/files/FilesPanel";
 import { SessionsPanel } from "@/features/sessions/SessionsPanel";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
-export type DockPanel = "sessions";
+export type DockPanel = "sessions" | "files";
 
 const PANELS: { id: DockPanel; icon: IconName; label: () => string }[] = [
   { id: "sessions", icon: "sessions", label: () => t("dock.sessions") },
+  { id: "files", icon: "files", label: () => t("dock.files") },
 ];
 
 type Props = {
@@ -52,7 +54,11 @@ export function Dock({ header, panel, onPanel, sessions, elsewhere, projects }: 
       )}
 
       <div class="min-h-0 flex-1">
-        <SessionsPanel sessions={sessions} elsewhere={elsewhere} projects={projects} />
+        {panel === "files" ? (
+          <FilesPanel />
+        ) : (
+          <SessionsPanel sessions={sessions} elsewhere={elsewhere} projects={projects} />
+        )}
       </div>
     </aside>
   );

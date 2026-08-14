@@ -1,10 +1,48 @@
+import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { FileContents } from "@/bindings/FileContents";
 import type { FileEntry } from "@/bindings/FileEntry";
 
+export const tree = signal<Record<string, FileEntry[]>>({});
+export const expanded = signal<string[]>([]);
+
+let loadedProject: string | null = null;
+
 export async function listDirectory(project: string, path: string): Promise<FileEntry[]> {
   return invoke<FileEntry[]>("list_directory", { project, path });
+}
+
+export async function openTree(project: string): Promise<void> {
+  if (loadedProject === project) {
+    return;
+  }
+  loadedProject = project;
+  tree.value = {};
+  expanded.value = [];
+  await loadDirectory(project, "");
+}
+
+export async function refreshTree(project: string): Promise<void> {
+  const open = expanded.value;
+  tree.value = {};
+  await Promise.all(["", ...open].map((path) => loadDirectory(project, path)));
+}
+
+export async function toggleDirectory(project: string, path: string): Promise<void> {
+  if (expanded.value.includes(path)) {
+    expanded.value = expanded.value.filter((open) => open !== path);
+    return;
+  }
+  expanded.value = [...expanded.value, path];
+  if (!tree.value[path]) {
+    await loadDirectory(project, path);
+  }
+}
+
+async function loadDirectory(project: string, path: string): Promise<void> {
+  const entries = await listDirectory(project, path).catch(() => []);
+  tree.value = { ...tree.value, [path]: entries };
 }
 
 export async function readFile(project: string, path: string): Promise<FileContents> {
