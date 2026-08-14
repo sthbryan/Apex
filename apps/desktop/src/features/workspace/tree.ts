@@ -5,7 +5,8 @@ export type Direction = "row" | "column";
 export type PaneView =
   | { type: "session"; sessionId: string }
   | { type: "file"; path: string }
-  | { type: "diff"; target: GitTarget; path: string; commit: string | null };
+  | { type: "diff"; target: GitTarget; path: string; commit: string | null }
+  | { type: "panel"; panel: string };
 
 export type Leaf = {
   kind: "leaf";
@@ -51,6 +52,15 @@ export function referencedSession(node: Leaf): string | null {
 
 export function leaves(node: PaneNode): Leaf[] {
   return node.kind === "leaf" ? [node] : [...leaves(node.first), ...leaves(node.second)];
+}
+
+export function swapViews(node: PaneNode, leftId: string, rightId: string): PaneNode {
+  const left = findLeaf(node, leftId);
+  const right = findLeaf(node, rightId);
+  if (!left || !right) {
+    return node;
+  }
+  return setView(setView(node, leftId, right.view), rightId, left.view);
 }
 
 export function setView(node: PaneNode, leafId: string, view: PaneView): PaneNode {

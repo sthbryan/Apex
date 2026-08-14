@@ -1,3 +1,5 @@
+import { popPanelToTab } from "@/app/layout/actions";
+import { hasPanelDrag, readPanelDrag } from "@/app/layout/dnd";
 import { activeProject } from "@/features/projects/state";
 import { sessions } from "@/features/sessions/state";
 import { PaneTree } from "@/features/workspace/PaneTree";
@@ -6,11 +8,24 @@ import { TabBar } from "@/features/workspace/TabBar";
 import { t } from "@/shared/i18n";
 
 export function Workspace() {
+  const acceptPanel = (event: DragEvent) => {
+    if (hasPanelDrag(event)) {
+      event.preventDefault();
+    }
+  };
+  const dropPanel = (event: DragEvent) => {
+    const id = readPanelDrag(event);
+    if (id) {
+      event.preventDefault();
+      popPanelToTab(id);
+    }
+  };
+
   return (
     <>
       <TabBar tabs={tabs.value} sessions={sessions.value} />
 
-      <div class="relative min-h-0 flex-1">
+      <div class="relative min-h-0 flex-1" onDragOver={acceptPanel} onDrop={dropPanel}>
         {tabs.value.length === 0 ? (
           <div class="flex h-full flex-col items-center justify-center gap-1 text-faint">
             <p>{activeProject.value ? t("workspace.empty") : t("projects.empty")}</p>
