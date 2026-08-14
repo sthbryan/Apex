@@ -55,7 +55,7 @@ export function Dock({
       </div>
 
       {PANELS.length > 1 && (
-        <nav class="flex shrink-0 gap-1 border-b border-border px-1 py-1">
+        <nav class="flex shrink-0 gap-1 border-b border-border px-1 py-1 min-h-8.5">
           {PANELS.map((entry) => (
             <button
               key={entry.id}
