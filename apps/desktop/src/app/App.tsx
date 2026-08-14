@@ -21,6 +21,7 @@ import {
   projects,
 } from "@/features/projects/state";
 import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
+import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { Settings } from "@/features/settings/Settings";
@@ -217,6 +218,8 @@ export function App() {
         </StatusBar>
       </div>
 
+      <NewSession />
+
       <Settings />
 
       <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
@@ -228,6 +231,7 @@ export function App() {
         sessions={sessions.value}
         history={history.value}
         project={activeProject.value?.id ?? null}
+        isGit={activeProject.value?.is_git ?? false}
       />
     </div>
   );

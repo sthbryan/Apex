@@ -160,6 +160,56 @@ pub struct HistoryEntry {
     pub updated_at: u32,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum Isolation {
+    #[default]
+    Directory,
+    Worktree,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum WorktreeDisposal {
+    #[default]
+    Keep,
+    Discard,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct WorktreeInfo {
+    pub path: String,
+    pub branch: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct GitChange {
+    pub path: String,
+    pub kind: String,
+    pub staged: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct GitStatus {
+    pub branch: String,
+    pub base: String,
+    pub changes: Vec<GitChange>,
+    pub isolated: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum MergeReport {
+    Merged,
+    Conflicted { files: Vec<String> },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct SessionSummary {
@@ -173,6 +223,7 @@ pub struct SessionSummary {
     pub state: SessionState,
     pub size: TerminalSize,
     pub exit_code: Option<u32>,
+    pub worktree: Option<WorktreeInfo>,
 }
 
 impl SessionSummary {
@@ -308,6 +359,8 @@ pub enum Command {
         agent: String,
         cwd: Option<String>,
         size: TerminalSize,
+        #[serde(default)]
+        isolation: Isolation,
     },
     SessionAttach {
         #[ts(type = "string")]
@@ -330,6 +383,21 @@ pub enum Command {
     SessionClose {
         #[ts(type = "string")]
         id: Uuid,
+        #[serde(default)]
+        worktree: WorktreeDisposal,
+    },
+    GitRead {
+        #[ts(type = "string")]
+        session: Uuid,
+    },
+    GitDiff {
+        #[ts(type = "string")]
+        session: Uuid,
+        path: String,
+    },
+    WorktreeMerge {
+        #[ts(type = "string")]
+        session: Uuid,
     },
 }
 
@@ -347,6 +415,9 @@ pub enum Reply {
     History { entries: Vec<HistoryEntry> },
     Directory { entries: Vec<FileEntry> },
     Editors { editors: Vec<EditorSummary> },
+    Git { status: GitStatus },
+    Diff { patch: String },
+    Merge { report: MergeReport },
     File { contents: FileContents },
     Metrics { snapshot: MetricsSnapshot },
     Done,

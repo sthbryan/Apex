@@ -8,6 +8,7 @@ use uuid::Uuid;
 const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0001_initial.sql"),
     include_str!("migrations/0002_projects.sql"),
+    include_str!("migrations/0003_worktrees.sql"),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,6 +27,7 @@ pub struct Session {
     pub title: String,
     pub cwd: String,
     pub state: SessionState,
+    pub worktree: Option<(String, String)>,
 }
 
 pub struct Store {
@@ -158,19 +160,23 @@ impl Store {
         agent: &str,
         title: &str,
         cwd: &str,
+        worktree: Option<(&str, &str)>,
     ) -> Result<Session> {
         let id = Uuid::new_v4();
         let state = SessionState::Idle;
         self.connection.execute(
-            "INSERT INTO sessions (id, project_id, agent, title, cwd, state, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, unixepoch())",
+            "INSERT INTO sessions
+                 (id, project_id, agent, title, cwd, state, created_at, worktree_path, worktree_branch)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, unixepoch(), ?7, ?8)",
             params![
                 id.to_string(),
                 project_id.to_string(),
                 agent,
                 title,
                 cwd,
-                state.as_str()
+                state.as_str(),
+                worktree.map(|(path, _)| path),
+                worktree.map(|(_, branch)| branch)
             ],
         )?;
         Ok(Session {
@@ -180,6 +186,7 @@ impl Store {
             title: title.to_string(),
             cwd: cwd.to_string(),
             state,
+            worktree: worktree.map(|(path, branch)| (path.to_owned(), branch.to_owned())),
         })
     }
 
@@ -208,8 +215,8 @@ impl Store {
 
     pub fn list_open_sessions(&self, project_id: Uuid) -> Result<Vec<Session>> {
         let mut statement = self.connection.prepare(
-            "SELECT id, project_id, agent, title, cwd, state FROM sessions
-             WHERE project_id = ?1 AND closed_at IS NULL ORDER BY created_at",
+            "SELECT id, project_id, agent, title, cwd, state, worktree_path, worktree_branch
+             FROM sessions WHERE project_id = ?1 AND closed_at IS NULL ORDER BY created_at",
         )?;
         let rows = statement.query_map(params![project_id.to_string()], map_session)?;
         Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
@@ -227,6 +234,8 @@ fn map_project(row: &rusqlite::Row<'_>) -> rusqlite::Result<Project> {
 
 fn map_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<Session> {
     let raw_state: String = row.get(5)?;
+    let path: Option<String> = row.get(6)?;
+    let branch: Option<String> = row.get(7)?;
     Ok(Session {
         id: parse_uuid(row, 0)?,
         project_id: parse_uuid(row, 1)?,
@@ -234,6 +243,7 @@ fn map_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<Session> {
         title: row.get(3)?,
         cwd: row.get(4)?,
         state: SessionState::parse(&raw_state).unwrap_or_default(),
+        worktree: path.zip(branch),
     })
 }
 
@@ -342,7 +352,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let project = store.open_project(dir.path()).expect("project");
         let session = store
-            .insert_session(project.id, "claude", "refactor", "/tmp/apex")
+            .insert_session(project.id, "claude", "refactor", "/tmp/apex", None)
             .expect("session");
 
         assert_eq!(session.state, SessionState::Idle);
@@ -354,7 +364,7 @@ mod tests {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
         let project = store.open_project(dir.path()).expect("project");
-        let session = store.insert_session(project.id, "codex", "tests", "/tmp").expect("session");
+        let session = store.insert_session(project.id, "codex", "tests", "/tmp", None).expect("session");
 
         store.set_session_state(session.id, SessionState::Blocked).expect("update");
         let open = store.list_open_sessions(project.id).expect("open");
@@ -368,7 +378,7 @@ mod tests {
         let other = tempfile::tempdir().expect("tempdir");
         let apex = store.open_project(apex.path()).expect("apex");
         let other = store.open_project(other.path()).expect("other");
-        store.insert_session(apex.id, "claude", "a", "/tmp").expect("session");
+        store.insert_session(apex.id, "claude", "a", "/tmp", None).expect("session");
 
         assert!(store.list_open_sessions(other.id).expect("open").is_empty());
     }
@@ -378,7 +388,7 @@ mod tests {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
         let project = store.open_project(dir.path()).expect("project");
-        let session = store.insert_session(project.id, "claude", "a", "/tmp").expect("session");
+        let session = store.insert_session(project.id, "claude", "a", "/tmp", None).expect("session");
 
         store.close_session(session.id).expect("close");
         assert!(store.list_open_sessions(project.id).expect("open").is_empty());
@@ -389,8 +399,8 @@ mod tests {
         let store = store();
         let dir = tempfile::tempdir().expect("tempdir");
         let project = store.open_project(dir.path()).expect("project");
-        store.insert_session(project.id, "claude", "a", "/tmp").expect("session");
-        store.insert_session(project.id, "codex", "b", "/tmp").expect("session");
+        store.insert_session(project.id, "claude", "a", "/tmp", None).expect("session");
+        store.insert_session(project.id, "codex", "b", "/tmp", None).expect("session");
 
         assert_eq!(store.close_orphaned_sessions().expect("cleanup"), 2);
         assert_eq!(store.close_orphaned_sessions().expect("cleanup"), 0);
@@ -398,7 +408,7 @@ mod tests {
 
     #[test]
     fn a_session_needs_an_existing_project() {
-        assert!(store().insert_session(Uuid::new_v4(), "claude", "a", "/tmp").is_err());
+        assert!(store().insert_session(Uuid::new_v4(), "claude", "a", "/tmp", None).is_err());
     }
 
     #[test]

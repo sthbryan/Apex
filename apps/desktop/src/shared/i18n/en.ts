@@ -77,6 +77,13 @@ export const en = {
     blocked: "An agent is waiting for you",
     done: "An agent finished",
   },
+  isolation: {
+    title: "New {agent} session",
+    worktree: "Isolated worktree",
+    worktreeHint: "Its own branch and folder, so agents never collide.",
+    directory: "Project folder",
+    directoryHint: "Works where you work, sharing every file.",
+  },
   sessions: {
     waiting: "Waiting for you",
     live: "Running",

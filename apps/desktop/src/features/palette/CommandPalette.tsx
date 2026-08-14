@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { createSession, resumeSession } from "@/features/sessions/state";
+import { requestSession } from "@/features/sessions/pending";
+import { resumeSession } from "@/features/sessions/state";
 import { toggleSettings } from "@/features/settings/state";
 import {
   activeTab,
@@ -10,7 +11,6 @@ import {
   closeTab,
   focusSession,
   openInNewTab,
-  splitWithNewSession,
 } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
@@ -25,14 +25,23 @@ type Props = {
   sessions: SessionSummary[];
   history: HistoryEntry[];
   project: string | null;
+  isGit: boolean;
 };
 
-export function CommandPalette({ open, onClose, agents, sessions, history, project }: Props) {
+export function CommandPalette({
+  open,
+  onClose,
+  agents,
+  sessions,
+  history,
+  project,
+  isGit,
+}: Props) {
   const [query, setQuery] = useState("");
 
   const actions = useMemo(
-    () => buildActions(agents, sessions, history, project, onClose),
-    [agents, sessions, history, project, onClose],
+    () => buildActions(agents, sessions, history, project, isGit, onClose),
+    [agents, sessions, history, project, isGit, onClose],
   );
 
   const matches = useMemo(() => {
@@ -66,6 +75,7 @@ function buildActions(
   sessions: SessionSummary[],
   history: HistoryEntry[],
   project: string | null,
+  isGit: boolean,
   onClose: () => void,
 ): Action[] {
   const actions: Action[] = [];
@@ -76,9 +86,12 @@ function buildActions(
       label: t("palette.newSession", { agent: agent.name }),
       run: () => {
         onClose();
-        void createSession(project as string, agent.name, { rows: 24, cols: 80 }).then(
-          openInNewTab,
-        );
+        requestSession({
+          project: project as string,
+          agent: agent.name,
+          direction: null,
+          isGit,
+        });
       },
     });
   }
@@ -132,7 +145,12 @@ function buildActions(
           label: t(split.key, { agent: agent.name }),
           run: () => {
             onClose();
-            void splitWithNewSession(project as string, agent.name, split.direction);
+            requestSession({
+              project: project as string,
+              agent: agent.name,
+              direction: split.direction,
+              isGit,
+            });
           },
         });
       }

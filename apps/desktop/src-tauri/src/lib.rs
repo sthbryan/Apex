@@ -4,8 +4,9 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, EditorSummary, Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot,
-    ProjectSummary, Reply, SessionSummary, TerminalSize,
+    AgentSummary, Command, EditorSummary, Event, FileContents, FileEntry, GitStatus, HistoryEntry,
+    Isolation, MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TerminalSize,
+    WorktreeDisposal,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -221,10 +222,11 @@ async fn create_session(
     agent: String,
     cwd: Option<String>,
     size: TerminalSize,
+    isolation: Isolation,
 ) -> Answer<SessionSummary> {
     match state
         .daemon
-        .request(Command::SessionCreate { project, agent, cwd, size })
+        .request(Command::SessionCreate { project, agent, cwd, size, isolation })
         .await
         .map_err(failed)?
     {
@@ -256,9 +258,44 @@ async fn resize_session(
 }
 
 #[tauri::command]
-async fn close_session(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<()> {
-    state.daemon.request(Command::SessionClose { id }).await.map_err(failed)?;
+async fn close_session(
+    state: tauri::State<'_, AppState>,
+    id: Uuid,
+    worktree: WorktreeDisposal,
+) -> Answer<()> {
+    state.daemon.request(Command::SessionClose { id, worktree }).await.map_err(failed)?;
     Ok(())
+}
+
+#[tauri::command]
+async fn git_status(state: tauri::State<'_, AppState>, session: Uuid) -> Answer<GitStatus> {
+    match state.daemon.request(Command::GitRead { session }).await.map_err(failed)? {
+        Reply::Git { status } => Ok(status),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn git_diff(
+    state: tauri::State<'_, AppState>,
+    session: Uuid,
+    path: String,
+) -> Answer<String> {
+    match state.daemon.request(Command::GitDiff { session, path }).await.map_err(failed)? {
+        Reply::Diff { patch } => Ok(patch),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn merge_worktree(
+    state: tauri::State<'_, AppState>,
+    session: Uuid,
+) -> Answer<MergeReport> {
+    match state.daemon.request(Command::WorktreeMerge { session }).await.map_err(failed)? {
+        Reply::Merge { report } => Ok(report),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
 }
 
 pub fn run() {
@@ -303,7 +340,10 @@ pub fn run() {
             attach_session,
             send_input,
             resize_session,
-            close_session
+            close_session,
+            git_status,
+            git_diff,
+            merge_worktree
         ])
         .run(tauri::generate_context!())
         .expect("failed to start Apex");

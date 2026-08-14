@@ -2,8 +2,10 @@ import { signal } from "@preact/signals";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
 import type { Event } from "@/bindings/Event";
+import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { TerminalSize } from "@/bindings/TerminalSize";
+import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { disposeTerminal } from "@/features/sessions/registry";
 
 const UUID_BYTES = 16;
@@ -134,12 +136,14 @@ export async function createSession(
   project: string,
   agent: string,
   size: TerminalSize,
+  isolation: Isolation = "directory",
 ): Promise<SessionSummary> {
   const session = await invoke<SessionSummary>("create_session", {
     project,
     agent,
     cwd: null,
     size,
+    isolation,
   });
   sessions.value = upsert(sessions.value, session);
   return session;
@@ -173,6 +177,6 @@ export async function resizeSession(id: string, size: TerminalSize): Promise<voi
   await invoke("resize_session", { id, size });
 }
 
-export async function closeSession(id: string): Promise<void> {
-  await invoke("close_session", { id });
+export async function closeSession(id: string, worktree: WorktreeDisposal = "keep"): Promise<void> {
+  await invoke("close_session", { id, worktree });
 }

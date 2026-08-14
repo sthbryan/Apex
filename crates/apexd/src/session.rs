@@ -171,6 +171,15 @@ impl Client {
                     .await
                     .map_err(not_found_error)?,
             }),
+            Command::GitRead { session } => Ok(Reply::Git {
+                status: self.manager.git_status(session).await.map_err(not_found_error)?,
+            }),
+            Command::GitDiff { session, path } => Ok(Reply::Diff {
+                patch: self.manager.git_diff(session, &path).await.map_err(not_found_error)?,
+            }),
+            Command::WorktreeMerge { session } => Ok(Reply::Merge {
+                report: self.manager.merge_worktree(session).await.map_err(not_found_error)?,
+            }),
             Command::ListEditors => {
                 Ok(Reply::Editors { editors: self.manager.list_editors().await })
             }
@@ -200,10 +209,10 @@ impl Client {
             Command::LayoutLoad { project } => Ok(Reply::Layout {
                 payload: self.manager.load_layout(project).await.map_err(not_found_error)?,
             }),
-            Command::SessionCreate { project, agent, cwd, size } => {
+            Command::SessionCreate { project, agent, cwd, size, isolation } => {
                 let session = self
                     .manager
-                    .create(project, &agent, cwd, size)
+                    .create(project, &agent, cwd, size, isolation)
                     .await
                     .map_err(internal_error)?;
                 self.attach(session.id).await?;
@@ -225,9 +234,9 @@ impl Client {
                 self.manager.resize(id, size).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
-            Command::SessionClose { id } => {
+            Command::SessionClose { id, worktree } => {
                 self.detach(id).await;
-                self.manager.close(id).await.map_err(not_found_error)?;
+                self.manager.close(id, worktree).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
         }
@@ -295,6 +304,9 @@ fn runs_detached(command: &Command) -> bool {
             | Command::FileRead { .. }
             | Command::FileSearch { .. }
             | Command::FileOpenExternal { .. }
+            | Command::GitRead { .. }
+            | Command::GitDiff { .. }
+            | Command::WorktreeMerge { .. }
     )
 }
 
@@ -368,7 +380,8 @@ mod tests {
     use super::*;
     use apex_core::{AgentProfile, BinaryResolver, ProfileSet, ShellEnvironment, Store};
     use apex_proto::{
-        CommandOutcome, Listener, SessionSummary, TerminalSize, UnixTransport, connect_unix,
+        CommandOutcome, Isolation, Listener, SessionSummary, TerminalSize, UnixTransport,
+        WorktreeDisposal, connect_unix,
     };
     use std::path::PathBuf;
     use std::time::Duration;
@@ -508,6 +521,7 @@ mod tests {
         async fn create_shell(&mut self, project: Uuid) -> SessionSummary {
             let reply = self
                 .request(Command::SessionCreate {
+                    isolation: Isolation::Directory,
                     project,
                     agent: "sh".into(),
                     cwd: Some("/tmp".into()),
@@ -657,7 +671,7 @@ mod tests {
         let harness = Harness::start().await;
         let session = harness
             .manager
-            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory)
             .await
             .expect("create");
 
@@ -671,7 +685,7 @@ mod tests {
 
         let session = harness
             .manager
-            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory)
             .await
             .expect("create");
 
@@ -709,7 +723,7 @@ mod tests {
         let harness = Harness::start().await;
         let session = harness
             .manager
-            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default())
+            .create(harness.project, "prompted", Some("/tmp".into()), TerminalSize::default(), Isolation::Directory)
             .await
             .expect("create");
         wait_for_state(&harness.manager, session.id, apex_proto::SessionState::Blocked).await;
@@ -779,6 +793,86 @@ mod tests {
             }
             other => panic!("expected an error, got {other:?}"),
         }
+    }
+
+    fn init_repo(root: &std::path::Path) {
+        for args in [
+            &["init", "--initial-branch=main"][..],
+            &["config", "user.email", "test@apex.dev"][..],
+            &["config", "user.name", "Apex Test"][..],
+        ] {
+            std::process::Command::new("git")
+                .args(args)
+                .current_dir(root)
+                .output()
+                .expect("git");
+        }
+        std::fs::write(root.join("README.md"), "# sample\n").expect("readme");
+        for args in [&["add", "."][..], &["commit", "-m", "first"][..]] {
+            std::process::Command::new("git")
+                .args(args)
+                .current_dir(root)
+                .output()
+                .expect("git");
+        }
+    }
+
+    #[tokio::test]
+    async fn an_isolated_session_runs_in_its_own_worktree() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+
+        let session = harness
+            .manager
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .await
+            .expect("session");
+
+        let tree = session.worktree.clone().expect("worktree");
+        assert!(tree.branch.starts_with("apex/"));
+        assert_eq!(session.cwd, tree.path);
+        assert!(std::path::Path::new(&tree.path).join("README.md").is_file());
+
+        let status = harness.manager.git_status(session.id).await.expect("status");
+        assert_eq!(status.branch, tree.branch);
+        assert_eq!(status.base, "main");
+        assert!(status.isolated);
+        assert!(status.changes.is_empty());
+
+        std::fs::write(std::path::Path::new(&tree.path).join("README.md"), "# agent\n")
+            .expect("write");
+        let status = harness.manager.git_status(session.id).await.expect("status");
+        assert_eq!(status.changes.len(), 1);
+        assert_eq!(status.changes[0].kind, "modified");
+        assert!(harness.manager.git_diff(session.id, "README.md").await.expect("diff").contains("+# agent"));
+    }
+
+    #[tokio::test]
+    async fn discarding_a_session_takes_its_worktree_with_it() {
+        let harness = Harness::start().await;
+        init_repo(harness.root.path());
+
+        let session = harness
+            .manager
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+            .await
+            .expect("session");
+        let path = std::path::PathBuf::from(&session.worktree.expect("worktree").path);
+
+        harness.manager.close(session.id, WorktreeDisposal::Discard).await.expect("close");
+        assert!(!path.exists());
+    }
+
+    #[tokio::test]
+    async fn a_session_in_a_plain_folder_cannot_be_isolated() {
+        let harness = Harness::start().await;
+        assert!(
+            harness
+                .manager
+                .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Worktree)
+                .await
+                .is_err()
+        );
     }
 
     #[tokio::test]
@@ -962,7 +1056,7 @@ mod tests {
         let harness = Harness::start().await;
         let session = harness
             .manager
-            .create(harness.project, "sh", None, TerminalSize::default())
+            .create(harness.project, "sh", None, TerminalSize::default(), Isolation::Directory)
             .await
             .expect("create");
 
@@ -1009,7 +1103,7 @@ mod tests {
         let harness = Harness::start().await;
         let mut client = harness.client().await;
         let session = client.create_shell(harness.project).await;
-        client.request(Command::SessionClose { id: session.id }).await;
+        client.request(Command::SessionClose { id: session.id, worktree: WorktreeDisposal::Keep }).await;
 
         let Reply::Metrics { snapshot } =
             client.request(Command::ReadMetrics { refresh_quota: false }).await
@@ -1075,7 +1169,7 @@ mod tests {
         let mut client = harness.client().await;
         let session = client.create_shell(harness.project).await;
 
-        client.request(Command::SessionClose { id: session.id }).await;
+        client.request(Command::SessionClose { id: session.id, worktree: WorktreeDisposal::Keep }).await;
         assert!(harness.manager.list_sessions().await.is_empty());
     }
 
@@ -1090,6 +1184,7 @@ mod tests {
             .send_control(&ClientMessage::Request {
                 id,
                 command: Command::SessionCreate {
+                    isolation: Isolation::Directory,
                     project: harness.project,
                     agent: "does-not-exist".into(),
                     cwd: None,

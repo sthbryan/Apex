@@ -6,9 +6,10 @@ use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, BinaryResolver, ProfileSet, Store, editors, files, history};
 use std::collections::BTreeMap;
 use apex_proto::{
-    EditorSummary, Event, FileContents, FileEntry, HistoryEntry, MetricsSnapshot, ProcessUsage,
-    ProjectSummary, QuotaReport, QuotaWindow, SessionState, SessionSummary, SessionUsage,
-    SystemUsage, TerminalSize,
+    EditorSummary, Event, FileContents, FileEntry, HistoryEntry, Isolation, MetricsSnapshot,
+    GitChange, GitStatus, MergeReport, ProcessUsage, ProjectSummary, QuotaReport, QuotaWindow,
+    SessionState, SessionSummary, SessionUsage, SystemUsage, TerminalSize, WorktreeDisposal,
+    WorktreeInfo,
 };
 use apex_metrics::Sampler;
 use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
@@ -345,7 +346,7 @@ impl SessionManager {
         let args = history::resume_args(profile, session_id)
             .with_context(|| format!("{agent} cannot resume sessions"))?;
 
-        self.spawn(project, agent, None, size, Some(args)).await
+        self.spawn(project, agent, None, size, Some(args), Isolation::Directory).await
     }
 
     pub async fn create(
@@ -354,8 +355,9 @@ impl SessionManager {
         agent: &str,
         cwd: Option<String>,
         size: TerminalSize,
+        isolation: Isolation,
     ) -> Result<SessionSummary> {
-        self.spawn(project, agent, cwd, size, None).await
+        self.spawn(project, agent, cwd, size, None, isolation).await
     }
 
     async fn spawn(
@@ -365,6 +367,7 @@ impl SessionManager {
         cwd: Option<String>,
         size: TerminalSize,
         override_args: Option<Vec<String>>,
+        isolation: Isolation,
     ) -> Result<SessionSummary> {
         let profile = self
             .profiles
@@ -373,7 +376,17 @@ impl SessionManager {
             .with_context(|| format!("unknown profile {agent}"))?;
         let binary = self.resolve_binary(&profile).await?;
         let project_root = self.project_root(project).await?;
-        let cwd = cwd.map(PathBuf::from).unwrap_or_else(|| PathBuf::from(project_root));
+        let title = self.next_title(&profile.name).await;
+
+        let worktree = match isolation {
+            Isolation::Worktree => Some(self.open_worktree(&project_root, &title).await?),
+            Isolation::Directory => None,
+        };
+        let cwd = match (&worktree, cwd) {
+            (Some(tree), _) => PathBuf::from(&tree.path),
+            (None, Some(explicit)) => PathBuf::from(explicit),
+            (None, None) => PathBuf::from(project_root),
+        };
 
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = override_args.unwrap_or_else(|| profile.args.clone());
@@ -383,12 +396,17 @@ impl SessionManager {
         spec.cols = size.cols;
 
         let process = PtyProcess::spawn(spec)?;
-        let title = self.next_title(&profile.name).await;
         let cwd_text = cwd.display().to_string();
 
         let record = {
             let store = self.store.lock().await;
-            store.insert_session(project, &profile.name, &title, &cwd_text)?
+            store.insert_session(
+                project,
+                &profile.name,
+                &title,
+                &cwd_text,
+                worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
+            )?
         };
 
         let summary = SessionSummary {
@@ -400,6 +418,7 @@ impl SessionManager {
             state: SessionState::Idle,
             size,
             exit_code: None,
+            worktree: worktree.clone(),
         };
 
         let session = Arc::new(LiveSession {
@@ -426,15 +445,108 @@ impl SessionManager {
         Ok(())
     }
 
-    pub async fn close(&self, id: Uuid) -> Result<()> {
+    pub async fn close(&self, id: Uuid, disposal: WorktreeDisposal) -> Result<()> {
         let Some(session) = self.sessions.write().await.remove(&id) else {
             bail!("session {id} does not exist")
         };
         let _ = session.process.kill();
+
+        let summary = session.snapshot_summary().await;
+        if let Some(tree) = summary.worktree.filter(|_| disposal == WorktreeDisposal::Discard) {
+            let root = PathBuf::from(self.project_root(summary.project_id).await?);
+            let path = PathBuf::from(&tree.path);
+            let branch = tree.branch.clone();
+            let removed = tokio::task::spawn_blocking(move || {
+                apex_git::remove_worktree(&root, &path, Some(&branch))
+            })
+            .await?;
+            if let Err(error) = removed {
+                tracing::warn!(%id, %error, "could not drop the worktree");
+            }
+        }
+
         let store = self.store.lock().await;
         store.close_session(id)?;
         let _ = self.events.send(Event::SessionClosed { id });
         Ok(())
+    }
+
+    pub async fn git_status(&self, session: Uuid) -> Result<GitStatus> {
+        let summary = self.require(session).await?.snapshot_summary().await;
+        let root = PathBuf::from(self.project_root(summary.project_id).await?);
+        let isolated = summary.worktree.is_some();
+        let dir = summary
+            .worktree
+            .as_ref()
+            .map(|tree| PathBuf::from(&tree.path))
+            .unwrap_or_else(|| root.clone());
+
+        tokio::task::spawn_blocking(move || {
+            if !apex_git::is_repo(&dir) {
+                bail!("{} is not a git repository", dir.display())
+            }
+            Ok(GitStatus {
+                branch: apex_git::current_branch(&dir)?,
+                base: apex_git::current_branch(&root).unwrap_or_default(),
+                changes: apex_git::status(&dir)?
+                    .into_iter()
+                    .map(|change| GitChange {
+                        path: change.path,
+                        kind: kind_name(change.kind).to_owned(),
+                        staged: change.staged,
+                    })
+                    .collect(),
+                isolated,
+            })
+        })
+        .await?
+    }
+
+    pub async fn git_diff(&self, session: Uuid, path: &str) -> Result<String> {
+        let dir = self.session_dir(session).await?;
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || apex_git::diff(&dir, &path)).await?
+    }
+
+    pub async fn merge_worktree(&self, session: Uuid) -> Result<MergeReport> {
+        let summary = self.require(session).await?.snapshot_summary().await;
+        let tree = summary.worktree.context("the session is not isolated")?;
+        let root = PathBuf::from(self.project_root(summary.project_id).await?);
+
+        let outcome =
+            tokio::task::spawn_blocking(move || apex_git::merge(&root, &tree.branch)).await??;
+        Ok(match outcome {
+            apex_git::MergeOutcome::Merged => MergeReport::Merged,
+            apex_git::MergeOutcome::Conflicted { files } => MergeReport::Conflicted { files },
+        })
+    }
+
+    async fn session_dir(&self, session: Uuid) -> Result<PathBuf> {
+        let summary = self.require(session).await?.snapshot_summary().await;
+        match summary.worktree {
+            Some(tree) => Ok(PathBuf::from(tree.path)),
+            None => Ok(PathBuf::from(self.project_root(summary.project_id).await?)),
+        }
+    }
+
+    async fn open_worktree(&self, project_root: &str, title: &str) -> Result<WorktreeInfo> {
+        let root = PathBuf::from(project_root);
+        if !tokio::task::spawn_blocking({
+            let root = root.clone();
+            move || apex_git::is_repo(&root)
+        })
+        .await?
+        {
+            bail!("{project_root} is not a git repository")
+        }
+
+        let slug = apex_git::slugify(title);
+        let created =
+            tokio::task::spawn_blocking(move || apex_git::add_worktree(&root, &slug)).await??;
+        Ok(WorktreeInfo {
+            path: created.path.display().to_string(),
+            branch: created.branch,
+        })
     }
 
     async fn project_root(&self, project: Uuid) -> Result<String> {
@@ -539,4 +651,15 @@ fn home_directory() -> PathBuf {
     directories::UserDirs::new()
         .map(|dirs| dirs.home_dir().to_path_buf())
         .unwrap_or_else(|| PathBuf::from("/"))
+}
+
+fn kind_name(kind: apex_git::ChangeKind) -> &'static str {
+    match kind {
+        apex_git::ChangeKind::Added => "added",
+        apex_git::ChangeKind::Modified => "modified",
+        apex_git::ChangeKind::Deleted => "deleted",
+        apex_git::ChangeKind::Renamed => "renamed",
+        apex_git::ChangeKind::Untracked => "untracked",
+        apex_git::ChangeKind::Conflicted => "conflicted",
+    }
 }

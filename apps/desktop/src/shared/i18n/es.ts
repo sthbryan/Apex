@@ -79,6 +79,13 @@ export const es: Messages = {
     blocked: "Un agente te está esperando",
     done: "Un agente terminó",
   },
+  isolation: {
+    title: "Nueva sesión de {agent}",
+    worktree: "Worktree aislado",
+    worktreeHint: "Su propia rama y carpeta, así los agentes no se pisan.",
+    directory: "Carpeta del proyecto",
+    directoryHint: "Trabaja donde trabajas tú, compartiendo los archivos.",
+  },
   sessions: {
     waiting: "Te esperan",
     live: "Corriendo",
