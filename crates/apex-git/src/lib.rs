@@ -112,6 +112,91 @@ fn count_lines(path: &Path) -> u32 {
         .unwrap_or_default()
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Scope {
+    Unstaged,
+    Staged,
+    Both,
+}
+
+pub fn diff_scoped(dir: &Path, path: &str, scope: Scope) -> Result<String> {
+    let tracked = run(dir, &["ls-files", "--error-unmatch", "--", path]).is_ok();
+    if !tracked {
+        return diff(dir, path);
+    }
+    match scope {
+        Scope::Unstaged => run(dir, &["diff", "--", path]),
+        Scope::Staged => run(dir, &["diff", "--cached", "--", path]),
+        Scope::Both => run(dir, &["diff", "HEAD", "--", path]),
+    }
+}
+
+pub fn stage(dir: &Path, paths: &[String]) -> Result<()> {
+    if paths.is_empty() {
+        return Ok(());
+    }
+    let mut args = vec!["add", "--"];
+    args.extend(paths.iter().map(String::as_str));
+    run(dir, &args).map(|_| ())
+}
+
+pub fn unstage(dir: &Path, paths: &[String]) -> Result<()> {
+    if paths.is_empty() {
+        return Ok(());
+    }
+    let mut args = vec!["restore", "--staged", "--"];
+    args.extend(paths.iter().map(String::as_str));
+    run(dir, &args).map(|_| ())
+}
+
+pub fn split_hunks(patch: &str) -> Vec<String> {
+    let mut header = String::new();
+    let mut hunks: Vec<String> = Vec::new();
+
+    for line in patch.lines() {
+        if line.starts_with("@@") {
+            hunks.push(String::new());
+        }
+        match hunks.last_mut() {
+            Some(current) => {
+                current.push_str(line);
+                current.push('\n');
+            }
+            None => {
+                header.push_str(line);
+                header.push('\n');
+            }
+        }
+    }
+
+    hunks.into_iter().map(|hunk| format!("{header}{hunk}")).collect()
+}
+
+pub fn apply_to_index(dir: &Path, patch: &str, reverse: bool) -> Result<()> {
+    let mut args = vec!["apply", "--cached"];
+    if reverse {
+        args.push("--reverse");
+    }
+    args.push("-");
+    run_with_input(dir, &args, patch).map(|_| ())
+}
+
+pub fn commit(dir: &Path, message: &str) -> Result<Commit> {
+    if message.trim().is_empty() {
+        bail!("the commit message is empty")
+    }
+    run(dir, &["commit", "-m", message])?;
+    log(dir, 1)?.into_iter().next().context("the commit did not land")
+}
+
+pub fn staged_paths(dir: &Path) -> Result<Vec<String>> {
+    Ok(status(dir)?
+        .into_iter()
+        .filter(|change| change.staged)
+        .map(|change| change.path)
+        .collect())
+}
+
 pub fn diff(dir: &Path, path: &str) -> Result<String> {
     let tracked = run(dir, &["ls-files", "--error-unmatch", "--", path]).is_ok();
     if tracked {
@@ -284,11 +369,40 @@ fn classify(index: char, worktree: char) -> ChangeKind {
 }
 
 fn run(dir: &Path, args: &[&str]) -> Result<String> {
-    let output = Command::new("git")
+    finish(
+        Command::new("git")
+            .args(args)
+            .current_dir(dir)
+            .output()
+            .with_context(|| format!("running git {}", args.join(" ")))?,
+        args,
+    )
+}
+
+fn run_with_input(dir: &Path, args: &[&str], input: &str) -> Result<String> {
+    use std::io::Write;
+    use std::process::Stdio;
+
+    let mut child = Command::new("git")
         .args(args)
         .current_dir(dir)
-        .output()
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .with_context(|| format!("running git {}", args.join(" ")))?;
+
+    child
+        .stdin
+        .take()
+        .context("no stdin for git")?
+        .write_all(input.as_bytes())
+        .context("writing the patch to git")?;
+
+    finish(child.wait_with_output()?, args)
+}
+
+fn finish(output: std::process::Output, args: &[&str]) -> Result<String> {
 
     if !output.status.success() {
         bail!(
@@ -389,6 +503,92 @@ mod tests {
         let single = show(dir.path(), head, Some("other.txt")).expect("show");
         assert!(single.contains("+hello"));
         assert!(!single.contains("+# changed"));
+    }
+
+    #[test]
+    fn staging_moves_a_file_in_and_out_of_the_index() {
+        let dir = repo();
+        std::fs::write(dir.path().join("README.md"), "# changed\n").expect("write");
+
+        stage(dir.path(), &["README.md".to_owned()]).expect("stage");
+        assert_eq!(staged_paths(dir.path()).expect("staged"), vec!["README.md".to_owned()]);
+
+        unstage(dir.path(), &["README.md".to_owned()]).expect("unstage");
+        assert!(staged_paths(dir.path()).expect("staged").is_empty());
+        assert_eq!(status(dir.path()).expect("status").len(), 1);
+    }
+
+    #[test]
+    fn the_diff_separates_what_is_staged_from_what_is_not() {
+        let dir = repo();
+        std::fs::write(dir.path().join("README.md"), "# staged\n").expect("write");
+        stage(dir.path(), &["README.md".to_owned()]).expect("stage");
+        std::fs::write(dir.path().join("README.md"), "# staged then edited\n").expect("write");
+
+        let staged = diff_scoped(dir.path(), "README.md", Scope::Staged).expect("staged");
+        assert!(staged.contains("+# staged"));
+        assert!(!staged.contains("then edited"));
+
+        let unstaged = diff_scoped(dir.path(), "README.md", Scope::Unstaged).expect("unstaged");
+        assert!(unstaged.contains("+# staged then edited"));
+
+        let both = diff_scoped(dir.path(), "README.md", Scope::Both).expect("both");
+        assert!(both.contains("+# staged then edited"));
+        assert!(!both.contains("-# staged\n"));
+    }
+
+    #[test]
+    fn a_commit_only_takes_what_was_staged() {
+        let dir = repo();
+        std::fs::write(dir.path().join("README.md"), "# in\n").expect("write");
+        std::fs::write(dir.path().join("left-out.txt"), "not yet\n").expect("write");
+        stage(dir.path(), &["README.md".to_owned()]).expect("stage");
+
+        let commit = commit(dir.path(), "docs: solo el readme").expect("commit");
+        assert_eq!(commit.summary, "docs: solo el readme");
+
+        let shown = show(dir.path(), &commit.id, None).expect("show");
+        assert!(shown.contains("README.md"));
+        assert!(!shown.contains("left-out.txt"));
+        assert_eq!(status(dir.path()).expect("status").len(), 1);
+    }
+
+    #[test]
+    fn an_empty_message_is_refused_before_touching_git() {
+        let dir = repo();
+        std::fs::write(dir.path().join("README.md"), "# in\n").expect("write");
+        stage(dir.path(), &["README.md".to_owned()]).expect("stage");
+
+        assert!(commit(dir.path(), "   ").is_err());
+        assert_eq!(log(dir.path(), 10).expect("log").len(), 1);
+    }
+
+    #[test]
+    fn a_single_hunk_can_be_staged_on_its_own() {
+        let dir = repo();
+        let lines: Vec<String> = (1..=20).map(|n| format!("line {n}")).collect();
+        std::fs::write(dir.path().join("many.txt"), format!("{}\n", lines.join("\n")))
+            .expect("write");
+        run(dir.path(), &["add", "."]).expect("add");
+        run(dir.path(), &["commit", "-m", "many"]).expect("commit");
+
+        let mut edited = lines.clone();
+        edited[1] = "line 2 touched".into();
+        edited[18] = "line 19 touched".into();
+        std::fs::write(dir.path().join("many.txt"), format!("{}\n", edited.join("\n")))
+            .expect("write");
+
+        let patch = diff_scoped(dir.path(), "many.txt", Scope::Unstaged).expect("diff");
+        let hunks = split_hunks(&patch);
+        assert_eq!(hunks.len(), 2);
+
+        apply_to_index(dir.path(), &hunks[0], false).expect("apply");
+        let staged = diff_scoped(dir.path(), "many.txt", Scope::Staged).expect("staged");
+        assert!(staged.contains("+line 2 touched"));
+        assert!(!staged.contains("+line 19 touched"));
+
+        apply_to_index(dir.path(), &hunks[0], true).expect("reverse");
+        assert!(staged_paths(dir.path()).expect("staged").is_empty());
     }
 
     #[test]
