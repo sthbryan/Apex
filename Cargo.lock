@@ -156,6 +156,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "apex-tasks"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "toml 1.1.4+spec-1.1.0",
+]
+
+[[package]]
 name = "apexd"
 version = "0.1.0"
 dependencies = [
