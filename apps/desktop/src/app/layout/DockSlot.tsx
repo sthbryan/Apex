@@ -54,8 +54,7 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
       <div
         class={cn(
           "h-full shrink-0",
-          !dockResizing.value &&
-            "transition-[width] duration-(--apex-dock) ease-(--apex-ease)",
+          !dockResizing.value && "transition-[width] duration-(--apex-dock) ease-(--apex-ease)",
           takeSpace ? "w-(--apex-dock-width)" : "w-0",
         )}
       />
