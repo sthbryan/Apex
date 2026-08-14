@@ -118,8 +118,17 @@ export function decodeUuid(bytes: Uint8Array): string {
   ].join("-");
 }
 
-export async function createSession(agent: string, size: TerminalSize): Promise<SessionSummary> {
-  const session = await invoke<SessionSummary>("create_session", { agent, cwd: null, size });
+export async function createSession(
+  project: string,
+  agent: string,
+  size: TerminalSize,
+): Promise<SessionSummary> {
+  const session = await invoke<SessionSummary>("create_session", {
+    project,
+    agent,
+    cwd: null,
+    size,
+  });
   sessions.value = upsert(sessions.value, session);
   return session;
 }
