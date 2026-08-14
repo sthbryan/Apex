@@ -1,14 +1,16 @@
 import { useEffect, useState } from "preact/hooks";
 
 import { agents, connect, daemonVersion, failure, platform, status } from "./daemon";
-import { locale, setLocale, t } from "./i18n";
+import { locale, t } from "./i18n";
 import { SessionsPanel } from "./panels/SessionsPanel";
 import { sessions } from "./sessions";
 import { CommandPalette } from "./shell/CommandPalette";
 import { PaneTree } from "./shell/PaneTree";
 import { TabBar } from "./shell/TabBar";
 import { TitleBar } from "./shell/TitleBar";
+import { Toolbar } from "./shell/Toolbar";
 import { findLeaf } from "./shell/tree";
+import { startThemeWatcher } from "./theme/mode";
 import { watchFullscreen } from "./shell/windowControls";
 import {
   activeSessionId,
@@ -27,6 +29,7 @@ export function App() {
   useEffect(() => {
     document.documentElement.lang = locale.value;
     void connect();
+    return startThemeWatcher();
   }, []);
 
   useEffect(() => {
@@ -125,22 +128,18 @@ export function App() {
   return (
     <div class="flex h-full flex-col bg-bg text-text">
       <TitleBar title={t("app.name")}>
-        <span class="text-faint">
-          {status.value === "ready" ? `apexd ${daemonVersion.value ?? ""}` : t("status.connecting")}
-        </span>
-        <button
-          type="button"
-          class="rounded border border-border px-1.5 uppercase text-faint hover:text-text"
-          onClick={() => setLocale(locale.value === "es" ? "en" : "es")}
-        >
-          {locale.value}
-        </button>
+        <Toolbar
+          onNewSession={() => setPaletteOpen(true)}
+          status={
+            status.value === "ready" ? `apexd ${daemonVersion.value ?? ""}` : t("status.connecting")
+          }
+        />
       </TitleBar>
 
       <div class="flex min-h-0 flex-1">
         {dockOpen && (
           <aside class="w-56 shrink-0 border-r border-border bg-surface">
-            <SessionsPanel sessions={sessions.value} agents={agents.value} />
+            <SessionsPanel sessions={sessions.value} />
           </aside>
         )}
 

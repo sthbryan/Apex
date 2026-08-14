@@ -17,7 +17,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
     return (
       <div
         class={`h-full w-full overflow-hidden border ${
-          focused ? "border-accent" : "border-transparent"
+          focused ? "border-focus" : "border-transparent"
         }`}
         onFocusCapture={() => focusLeaf(tabId, node.id)}
         onMouseDown={() => focusLeaf(tabId, node.id)}

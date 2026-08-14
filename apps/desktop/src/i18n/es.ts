@@ -18,8 +18,12 @@ export const es: Messages = {
   "daemon.retry": "Reintentar",
 
   "dock.sessions": "Sesiones",
-  "dock.agents": "Agentes",
   "dock.toggle": "Mostrar u ocultar el panel",
+
+  "toolbar.newSession": "Nueva sesión",
+  "toolbar.theme.system": "Tema: sistema",
+  "toolbar.theme.light": "Tema: claro",
+  "toolbar.theme.dark": "Tema: oscuro",
 
   "sessions.live": "Corriendo",
   "sessions.empty": "Todavía no hay sesiones.",

@@ -16,8 +16,12 @@ export const en = {
   "daemon.retry": "Retry",
 
   "dock.sessions": "Sessions",
-  "dock.agents": "Agents",
   "dock.toggle": "Toggle sidebar",
+
+  "toolbar.newSession": "New session",
+  "toolbar.theme.system": "Theme: system",
+  "toolbar.theme.light": "Theme: light",
+  "toolbar.theme.dark": "Theme: dark",
 
   "sessions.live": "Running",
   "sessions.empty": "No sessions yet.",

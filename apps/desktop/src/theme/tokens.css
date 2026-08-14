@@ -14,6 +14,7 @@
   --color-muted: var(--apex-muted);
   --color-faint: var(--apex-faint);
   --color-accent: var(--apex-accent);
+  --color-focus: var(--apex-focus);
 
   --color-state-idle: var(--apex-state-idle);
   --color-state-working: var(--apex-state-working);
@@ -30,6 +31,7 @@
   --apex-muted: #656d76;
   --apex-faint: #8c959f;
   --apex-accent: #0969da;
+  --apex-focus: #c9303e;
   --apex-selection: #0969da33;
 
   --apex-state-idle: #8c959f;
@@ -67,6 +69,7 @@
     --apex-muted: #8b919c;
     --apex-faint: #5c626d;
     --apex-accent: #4a9eff;
+    --apex-focus: #e05561;
     --apex-selection: #4a9eff40;
 
     --apex-state-idle: #6e7681;
@@ -104,6 +107,7 @@
   --apex-muted: #8b919c;
   --apex-faint: #5c626d;
   --apex-accent: #4a9eff;
+  --apex-focus: #e05561;
   --apex-selection: #4a9eff40;
 
   --apex-state-idle: #6e7681;
