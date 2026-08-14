@@ -141,14 +141,26 @@ body,
   height: 100%;
 }
 
+html {
+  --apex-window-radius: 10px;
+  background: transparent;
+}
+
 body {
   margin: 0;
-  background: var(--apex-bg);
+  background: transparent;
   color: var(--apex-text);
   font-family: var(--font-mono);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+#root {
+  background: var(--apex-bg);
+  border-radius: var(--apex-window-radius);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .xterm .xterm-viewport {
