@@ -1,9 +1,8 @@
-import { useRef } from "preact/hooks";
-
-import { TerminalView } from "@/features/sessions/TerminalView";
-import { type PaneNode, clampRatio } from "@/features/workspace/tree";
-import { focusLeaf, resizeSplit } from "@/features/workspace/state";
 import cn from "cnfast";
+import { useRef } from "preact/hooks";
+import { TerminalView } from "@/features/sessions/TerminalView";
+import { focusLeaf, resizeSplit } from "@/features/workspace/state";
+import { clampRatio, type PaneNode } from "@/features/workspace/tree";
 
 type Props = {
   tabId: string;
@@ -19,7 +18,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
       <div
         class={cn(
           "h-full w-full overflow-hidden border transition-colors",
-          focused ? "border-focus" : "border-transparent"
+          focused ? "border-focus" : "border-transparent",
         )}
         tabIndex={-1}
         onFocusCapture={() => focusLeaf(tabId, node.id)}
@@ -32,12 +31,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
 
   const horizontal = node.direction === "row";
   return (
-    <div
-      class={cn(
-        "flex h-full w-full",
-        horizontal ? "flex-row" : "flex-col"
-      )}
-    >
+    <div class={cn("flex h-full w-full", horizontal ? "flex-row" : "flex-col")}>
       <div style={{ flex: `${node.ratio} 1 0%`, minWidth: 0, minHeight: 0 }}>
         <PaneTree
           tabId={tabId}
@@ -46,7 +40,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
           tabActive={tabActive}
         />
       </div>
-      <Divider tabId={tabId} splitId={node.id} horizontal={horizontal} />
+      <Divider tabId={tabId} splitId={node.id} horizontal={horizontal} ratio={node.ratio} />
       <div style={{ flex: `${1 - node.ratio} 1 0%`, minWidth: 0, minHeight: 0 }}>
         <PaneTree
           tabId={tabId}
@@ -63,10 +57,12 @@ function Divider({
   tabId,
   splitId,
   horizontal,
+  ratio,
 }: {
   tabId: string;
   splitId: string;
   horizontal: boolean;
+  ratio: number;
 }) {
   const handle = useRef<HTMLDivElement>(null);
 
@@ -95,16 +91,37 @@ function Divider({
     window.addEventListener("mouseup", stop);
   };
 
+  const nudge = (event: KeyboardEvent) => {
+    const step = STEPS[event.key];
+    if (step === undefined || step.horizontal !== horizontal) {
+      return;
+    }
+    event.preventDefault();
+    resizeSplit(tabId, splitId, clampRatio(ratio + step.delta));
+  };
+
   return (
     <div
       ref={handle}
       role="separator"
+      tabIndex={0}
       aria-orientation={horizontal ? "vertical" : "horizontal"}
+      aria-valuenow={Math.round(ratio * 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      onKeyDown={nudge}
       onMouseDown={startDrag}
       class={cn(
         "shrink-0 bg-border transition-[background-color,box-shadow] hover:bg-accent hover:shadow-[0_0_0_1px_var(--apex-accent)]",
-        horizontal ? "w-px cursor-col-resize" : "h-px cursor-row-resize"
+        horizontal ? "w-px cursor-col-resize" : "h-px cursor-row-resize",
       )}
     />
   );
 }
+
+const STEPS: Record<string, { horizontal: boolean; delta: number }> = {
+  ArrowLeft: { horizontal: true, delta: -0.02 },
+  ArrowRight: { horizontal: true, delta: 0.02 },
+  ArrowUp: { horizontal: false, delta: -0.02 },
+  ArrowDown: { horizontal: false, delta: 0.02 },
+};
