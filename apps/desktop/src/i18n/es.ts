@@ -23,12 +23,10 @@ export const es: Messages = {
   "status.sessions": "{count} vivas",
 
   "resources.sampling": "Midiendo…",
-  "resources.system": "Sistema",
   "resources.cpu": "CPU",
   "resources.gpu": "GPU",
   "resources.memory": "Memoria",
   "resources.swap": "Swap",
-  "resources.cores": "núcleos",
   "resources.bySession": "Por sesión",
   "resources.noSessions": "No hay sesiones corriendo.",
   "resources.noQuota": "Sin datos.",

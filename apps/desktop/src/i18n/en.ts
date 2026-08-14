@@ -21,12 +21,10 @@ export const en = {
   "status.sessions": "{count} live",
 
   "resources.sampling": "Sampling…",
-  "resources.system": "System",
   "resources.cpu": "CPU",
   "resources.gpu": "GPU",
   "resources.memory": "Memory",
   "resources.swap": "Swap",
-  "resources.cores": "cores",
   "resources.bySession": "By session",
   "resources.noSessions": "No sessions running.",
   "resources.noQuota": "No data.",
