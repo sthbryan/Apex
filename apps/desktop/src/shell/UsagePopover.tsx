@@ -5,6 +5,7 @@ import type { QuotaWindow } from "../bindings/QuotaWindow";
 import { Icon } from "../components/Icon";
 import { t } from "../i18n";
 import { refreshQuota } from "../metrics";
+import cn from "cnfast";
 
 type Props = {
   reports: QuotaReport[];
@@ -60,11 +61,11 @@ function Row({ window }: { window: QuotaWindow }) {
   return (
     <div class="flex items-center gap-2 py-0.5" title={resetText(window)}>
       <span class="w-6 shrink-0 text-faint">{window.label ?? "·"}</span>
-      <span class={`w-9 shrink-0 text-right ${level.text}`}>{percent}%</span>
+      <span class={cn("w-9 shrink-0 text-right", level.text)}>{percent}%</span>
 
       <span class="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
         <span
-          class={`block h-full origin-left rounded-full transition-transform duration-500 ease-out ${level.bar}`}
+          class={cn("block h-full origin-left rounded-full transition-transform duration-500 ease-out", level.bar)}
           style={{ transform: `scaleX(${percent / 100})` }}
         />
         {window.expected_percent !== null && (
@@ -75,7 +76,7 @@ function Row({ window }: { window: QuotaWindow }) {
         )}
       </span>
 
-      <span class={`w-12 shrink-0 truncate text-right ${pace?.tone ?? ""}`}>{pace?.text ?? ""}</span>
+      <span class={cn("w-12 shrink-0 truncate text-right", pace?.tone ?? "")}>{pace?.text ?? ""}</span>
     </div>
   );
 }

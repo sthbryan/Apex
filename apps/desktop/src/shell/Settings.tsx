@@ -5,6 +5,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { usePresence } from "../components/presence";
 import { type Locale, locale, setLocale, t } from "../i18n";
 import { type ThemeMode, setThemeMode, themeMode } from "../theme/mode";
+import cn from "cnfast";
 
 export const settingsOpen = signal(false);
 
@@ -51,9 +52,10 @@ export function Settings() {
   return (
     <div
       ref={overlay.holder}
-      class={`fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-20 ${
-        leaving ? "animate-veil-out" : "animate-veil-in"
-      }`}
+      class={cn(`fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-20`, {
+        "animate-veil-out": leaving,
+        "animate-veil-in": !leaving,
+      })}
       onMouseDown={() => {
         settingsOpen.value = false;
       }}
@@ -64,9 +66,10 @@ export function Settings() {
         role="dialog"
         aria-label={t("settings.title")}
         onMouseDown={(event) => event.stopPropagation()}
-        class={`w-[30rem] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl outline-none ${
-          leaving ? "animate-pop-out" : "animate-pop-in"
-        }`}
+        class={cn(`w-120 max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl outline-none`, {
+          "animate-pop-out": leaving,
+          "animate-pop-in": !leaving,
+        })}
       >
         <header class="flex items-center gap-2 border-b border-border px-4 py-2.5">
           <span class="text-text">{t("settings.title")}</span>
@@ -161,10 +164,10 @@ function Choice({
       type="button"
       aria-pressed={selected}
       onClick={onSelect}
-      class={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97] ${
-        selected ? "bg-raised text-text" : "text-muted hover:text-text"
-      }`}
-    >
+      class={cn(`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition active:scale-[0.97]`, {
+        "bg-raised text-text": selected,
+        "text-muted hover:text-text": !selected,
+      })}>
       {children}
     </button>
   );

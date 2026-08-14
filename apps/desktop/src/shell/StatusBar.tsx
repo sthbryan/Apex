@@ -4,6 +4,7 @@ import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { compactBytes, metrics } from "../metrics";
 import { ResourcesPanel } from "../panels/ResourcesPanel";
+import cn from "cnfast";
 
 export function StatusBar() {
   const [open, setOpen] = useState(false);
@@ -40,14 +41,15 @@ export function StatusBar() {
   return (
     <div
       ref={holder}
-      class="relative flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-2 text-faint"
+      class={cn("relative flex h-6 shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-2 text-faint")}
     >
       {popover.mounted && (
         <div
           ref={popover.holder}
-          class={`absolute bottom-full right-1 z-50 mb-1 w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl ${
-            popover.leaving ? "animate-rise-out" : "animate-rise-in"
-          }`}
+          class={cn("absolute bottom-full right-1 z-50 mb-1 w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl", {
+            "animate-rise-out": popover.leaving,
+            "animate-rise-in": !popover.leaving,
+          })}
         >
           <ResourcesPanel snapshot={snapshot} />
         </div>
@@ -56,7 +58,7 @@ export function StatusBar() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        class="flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted"
+        class={cn("flex items-center gap-2.5 rounded px-1 transition-colors hover:bg-raised hover:text-muted")}
       >
         <span title={t("resources.memory")}>{compactBytes(snapshot.system.memory_used)}</span>
         <span title={t("resources.cpu")}>{snapshot.system.cpu_percent.toFixed(0)}% cpu</span>

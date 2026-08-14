@@ -16,6 +16,7 @@ import {
   openInNewTab,
   splitWithNewSession,
 } from "./workspace";
+import { cn } from "cnfast";
 
 type Action = {
   id: string;
@@ -91,15 +92,17 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
   return (
     <div
       ref={overlay.holder}
-      class={`fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24 ${
+      class={cn(
+        "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24",
         overlay.leaving ? "animate-veil-out" : "animate-veil-in"
-      }`}
+      )}
       onMouseDown={onClose}
     >
       <div
-        class={`w-[32rem] max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl ${
+        class={cn(
+          "w-lg max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
           overlay.leaving ? "animate-pop-out" : "animate-pop-in"
-        }`}
+        )}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <input
@@ -125,9 +128,10 @@ export function CommandPalette({ open, onClose, agents, sessions, history, proje
                   onMouseEnter={() => setCursor(index)}
                   onClick={action.run}
                   title={action.label}
-                  class={`w-full truncate px-3 py-1.5 text-left transition-colors ${
+                  class={cn(
+                    "w-full truncate px-3 py-1.5 text-left transition-colors",
                     index === cursor ? "bg-raised text-text" : "text-muted"
-                  }`}
+                  )}
                 >
                   {action.label}
                 </button>

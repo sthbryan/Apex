@@ -5,6 +5,7 @@ import { usePresence } from "../components/presence";
 import { t } from "../i18n";
 import { activeProject, pickProject, projects, switchTo } from "../projects";
 import { sessions } from "../sessions";
+import cn from "cnfast";
 
 export function ProjectPicker() {
   const [open, setOpen] = useState(false);
@@ -41,16 +42,19 @@ export function ProjectPicker() {
         <Icon
           name="chevron"
           size={12}
-          class={`text-faint transition-transform ${open ? "rotate-180" : ""}`}
+          class={cn("text-faint transition-transform", {
+            "rotate-180": open,
+          })}
         />
       </button>
 
       {menu.mounted && (
         <div
           ref={menu.holder}
-          class={`absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl ${
-            menu.leaving ? "animate-drop-out" : "animate-drop-in"
-          }`}
+          class={cn(`absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl`, {
+            "animate-drop-out": menu.leaving,
+            "animate-drop-in": !menu.leaving,
+          })}
         >
           <ul class="max-h-72 overflow-y-auto py-1">
             {projects.value.map((project) => (
@@ -61,9 +65,10 @@ export function ProjectPicker() {
                     setOpen(false);
                     void switchTo(project.id);
                   }}
-                  class={`flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised ${
-                    project.id === current?.id ? "text-text" : "text-muted"
-                  }`}
+                  class={cn(`flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised`, {
+                    "text-text": project.id === current?.id,
+                    "text-muted": project.id !== current?.id,
+                  })}
                 >
                   <span class="truncate">{project.name}</span>
                   {project.is_git && <span class="shrink-0 text-faint">git</span>}

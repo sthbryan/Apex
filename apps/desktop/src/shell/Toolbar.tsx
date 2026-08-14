@@ -7,6 +7,7 @@ import { metrics } from "../metrics";
 import { UsagePopover } from "./UsagePopover";
 import { toggleSettings } from "./Settings";
 import { anyOverPace, tightestUsage, toggleUsagePopover, usageOpen } from "./usageState";
+import { cn } from "cnfast";
 
 type Props = {
   onNewSession: () => void;
@@ -40,7 +41,7 @@ export function Toolbar({ onNewSession, status }: Props) {
             type="button"
             title={t("usage.title")}
             onClick={toggleUsagePopover}
-            class={`flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised ${usageTone()}`}
+            class={cn("flex h-6 items-center rounded px-1.5 transition-colors hover:bg-raised", usageTone())}
           >
             {anyOverPace.value && <Icon name="activity" class="mr-1 animate-breathe" />}
             {tightestUsage.value}%
@@ -49,9 +50,10 @@ export function Toolbar({ onNewSession, status }: Props) {
           {popover.mounted && (
             <div
               ref={popover.holder}
-              class={`absolute right-0 top-full z-50 mt-1 origin-top-right ${
-                popover.leaving ? "animate-drop-out" : "animate-drop-in"
-              }`}
+              class={cn("absolute right-0 top-full z-50 mt-1 origin-top-right", {
+                "animate-drop-out": popover.leaving,
+                "animate-drop-in": !popover.leaving,
+              })}
             >
               <UsagePopover
                 reports={metrics.value?.quotas ?? []}
