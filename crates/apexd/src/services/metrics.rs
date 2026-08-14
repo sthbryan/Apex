@@ -9,7 +9,7 @@ use apex_core::{BinaryResolver, ProfileSet};
 use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
-use crate::sessions::LiveSession;
+use crate::services::sessions::LiveSession;
 
 pub struct MetricsService {
     sampler: Arc<Mutex<Sampler>>,

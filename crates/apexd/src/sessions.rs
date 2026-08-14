@@ -1,62 +1,34 @@
-use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::Instant;
 
-use anyhow::{Context, Result, bail};
-use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, history};
-use apex_metrics::Sampler;
+use anyhow::Result;
+use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
-    GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary, SessionState,
+    GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
     SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
 };
-use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
-use apex_quota::QuotaCache;
-use bytes::Bytes;
-use tokio::sync::{Mutex, RwLock, broadcast};
-use tokio::time::{MissedTickBehavior, interval};
+use tokio::sync::Mutex;
+use tokio::sync::broadcast;
 use uuid::Uuid;
 
+use crate::services::sessions::SessionRegistry;
+use crate::services::{
+    context::ContextService, files::FilesService, git::GitService, metrics::MetricsService,
+    projects::ProjectsService, tasks::TasksService,
+};
+
 const EVENT_CHANNEL_DEPTH: usize = 256;
-const POLL_INTERVAL: std::time::Duration = std::time::Duration::from_millis(200);
-
-pub struct LiveSession {
-    pub summary: Mutex<SessionSummary>,
-    pub process: PtyProcess,
-}
-
-impl LiveSession {
-    pub async fn snapshot_summary(&self) -> SessionSummary {
-        self.summary.lock().await.clone()
-    }
-}
-
-struct Spawn {
-    project: Uuid,
-    agent: String,
-    cwd: Option<String>,
-    size: TerminalSize,
-    override_args: Option<Vec<String>>,
-    isolation: Isolation,
-    slug: Option<String>,
-    task: Option<String>,
-}
 
 pub struct SessionManager {
-    paths: ApexPaths,
     profiles: ProfileSet,
-    base_env: BTreeMap<String, String>,
-    resolver: Arc<Mutex<BinaryResolver>>,
-    store: Arc<Mutex<Store>>,
-    sessions: Arc<RwLock<HashMap<Uuid, Arc<LiveSession>>>>,
-    events: broadcast::Sender<Event>,
-    files: crate::services::files::FilesService,
-    git: crate::services::git::GitService,
-    context: crate::services::context::ContextService,
-    projects: crate::services::projects::ProjectsService,
-    tasks: crate::services::tasks::TasksService,
-    metrics: crate::services::metrics::MetricsService,
+    files: FilesService,
+    git: GitService,
+    context: ContextService,
+    projects: ProjectsService,
+    tasks: TasksService,
+    metrics: MetricsService,
+    registry: Arc<SessionRegistry>,
 }
 
 impl SessionManager {
@@ -66,80 +38,107 @@ impl SessionManager {
         resolver: BinaryResolver,
         store: Store,
     ) -> Self {
-        let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
         let base_env = resolver
             .environment()
             .map(|environment| environment.env().clone())
             .unwrap_or_default();
         let resolver = Arc::new(Mutex::new(resolver));
         let store = Arc::new(Mutex::new(store));
-        let files = crate::services::files::FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
-        let context = crate::services::context::ContextService::new(Arc::clone(&store));
-        let projects = crate::services::projects::ProjectsService::new(Arc::clone(&store));
-        let tasks = crate::services::tasks::TasksService::new(Arc::clone(&store));
-        let sessions_map = Arc::new(RwLock::new(HashMap::new()));
-        let metrics = crate::services::metrics::MetricsService::new(
-            Arc::new(Mutex::new(Sampler::new())),
-            Arc::clone(&sessions_map),
-            Arc::new(Mutex::new(QuotaCache::new())),
+        let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
+        let files = FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
+        let context = ContextService::new(Arc::clone(&store));
+        let projects = ProjectsService::new(Arc::clone(&store));
+        let tasks = TasksService::new(Arc::clone(&store));
+        let registry = Arc::new(SessionRegistry::new(
+            paths,
             profiles.clone(),
             Arc::clone(&resolver),
+            Arc::clone(&store),
             base_env.clone(),
+            events,
+        ));
+        let metrics = MetricsService::new(
+            Arc::new(Mutex::new(apex_metrics::Sampler::new())),
+            registry.sessions_map(),
+            Arc::new(Mutex::new(apex_quota::QuotaCache::new())),
+            profiles.clone(),
+            Arc::clone(&resolver),
+            base_env,
         );
         Self {
-            paths,
             profiles,
-            base_env,
-            resolver,
-            store,
-            sessions: sessions_map,
-            events,
             files,
-            git: crate::services::git::GitService,
+            git: GitService,
             context,
             projects,
             tasks,
             metrics,
+            registry,
         }
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<Event> {
-        self.events.subscribe()
+        self.registry.subscribe()
     }
 
     pub async fn list_agents(&self) -> Vec<apex_proto::AgentSummary> {
-        let mut resolver = self.resolver.lock().await;
-        self.profiles.summarize(&mut resolver)
+        self.registry.list_agents().await
     }
 
     pub async fn list_sessions(&self) -> Vec<SessionSummary> {
-        let sessions = self.sessions.read().await;
-        let mut summaries = Vec::with_capacity(sessions.len());
-        for session in sessions.values() {
-            summaries.push(session.snapshot_summary().await);
-        }
-        summaries.sort_by(|left, right| left.title.cmp(&right.title));
-        summaries
+        self.registry.list_sessions().await
     }
 
-    pub async fn get(&self, id: Uuid) -> Option<Arc<LiveSession>> {
-        self.sessions.read().await.get(&id).cloned()
+    pub async fn get(&self, id: Uuid) -> Option<Arc<crate::services::sessions::LiveSession>> {
+        self.registry.get(id).await
     }
 
-    pub async fn list_projects(&self) -> Result<Vec<ProjectSummary>> {
-        self.projects.list().await
+    pub async fn create(
+        self: &Arc<Self>,
+        project: Uuid,
+        agent: &str,
+        cwd: Option<String>,
+        size: TerminalSize,
+        isolation: Isolation,
+        slug: Option<String>,
+    ) -> Result<SessionSummary> {
+        Arc::clone(&self.registry).create(project, agent, cwd, size, isolation, slug).await
     }
 
-    pub async fn open_project(&self, root: &str) -> Result<ProjectSummary> {
-        self.projects.open(root).await
+    pub async fn resume(
+        self: &Arc<Self>,
+        project: Uuid,
+        agent: &str,
+        session_id: &str,
+        size: TerminalSize,
+    ) -> Result<SessionSummary> {
+        Arc::clone(&self.registry).resume(project, agent, session_id, size).await
     }
 
-    pub async fn save_layout(&self, project: Uuid, payload: &str) -> Result<()> {
-        self.projects.save_layout(project, payload).await
+    pub async fn run_task(
+        self: &Arc<Self>,
+        project: Uuid,
+        task: &str,
+        command: &str,
+        size: TerminalSize,
+    ) -> Result<SessionSummary> {
+        Arc::clone(&self.registry).run_task(project, task, command, size).await
     }
 
-    pub async fn load_layout(&self, project: Uuid) -> Result<Option<String>> {
-        self.projects.load_layout(project).await
+    pub async fn write(&self, id: Uuid, data: &str) -> Result<()> {
+        self.registry.write(id, data).await
+    }
+
+    pub async fn resize(&self, id: Uuid, size: TerminalSize) -> Result<()> {
+        self.registry.resize(id, size).await
+    }
+
+    pub async fn close(&self, id: Uuid, disposal: WorktreeDisposal) -> Result<()> {
+        self.registry.close(id, disposal).await
+    }
+
+    pub async fn transcript(&self, id: Uuid, tail: usize) -> Result<String> {
+        self.registry.transcript(id, tail).await
     }
 
     pub async fn read_metrics(&self, refresh_quota: bool) -> MetricsSnapshot {
@@ -148,26 +147,6 @@ impl SessionManager {
 
     pub async fn kill_process(&self, pid: u32) -> Result<()> {
         self.metrics.kill_process(pid).await
-    }
-
-    pub async fn list_history(&self, project: Uuid) -> Result<Vec<HistoryEntry>> {
-        let root = self.project_root(project).await?;
-        let home = home_directory();
-
-        let mut entries: Vec<HistoryEntry> = self
-            .profiles
-            .iter()
-            .flat_map(|profile| history::read_history(profile, &PathBuf::from(&root), &home))
-            .map(|entry| HistoryEntry {
-                agent: entry.agent,
-                session_id: entry.session_id,
-                label: entry.label,
-                updated_at: entry.updated_at.min(u64::from(u32::MAX)) as u32,
-            })
-            .collect();
-
-        entries.sort_by_key(|entry| std::cmp::Reverse(entry.updated_at));
-        Ok(entries)
     }
 
     pub async fn list_directory(&self, project: Uuid, path: &str) -> Result<Vec<FileEntry>> {
@@ -198,211 +177,6 @@ impl SessionManager {
         limit: usize,
     ) -> Result<Vec<FileEntry>> {
         self.files.search_files(project, query, limit).await
-    }
-
-    pub async fn resume(
-        self: &Arc<Self>,
-        project: Uuid,
-        agent: &str,
-        session_id: &str,
-        size: TerminalSize,
-    ) -> Result<SessionSummary> {
-        let profile = self
-            .profiles
-            .get(agent)
-            .with_context(|| format!("unknown profile {agent}"))?;
-        let args = history::resume_args(profile, session_id)
-            .with_context(|| format!("{agent} cannot resume sessions"))?;
-
-        self.spawn(Spawn {
-            project,
-            agent: agent.to_owned(),
-            cwd: None,
-            size,
-            override_args: Some(args),
-            isolation: Isolation::Directory,
-            slug: None,
-            task: None,
-        })
-        .await
-    }
-
-    pub async fn create(
-        self: &Arc<Self>,
-        project: Uuid,
-        agent: &str,
-        cwd: Option<String>,
-        size: TerminalSize,
-        isolation: Isolation,
-        slug: Option<String>,
-    ) -> Result<SessionSummary> {
-        self.spawn(Spawn {
-            project,
-            agent: agent.to_owned(),
-            cwd,
-            size,
-            override_args: None,
-            isolation,
-            slug,
-            task: None,
-        })
-        .await
-    }
-
-    pub async fn list_tasks(&self, project: Uuid) -> Result<Vec<TaskSummary>> {
-        self.tasks.list(project).await
-    }
-
-    pub async fn run_task(
-        self: &Arc<Self>,
-        project: Uuid,
-        task: &str,
-        command: &str,
-        size: TerminalSize,
-    ) -> Result<SessionSummary> {
-        if self.task_running(project, task).await {
-            bail!("{task} is already running")
-        }
-        self.spawn(Spawn {
-            project,
-            agent: "shell".to_owned(),
-            cwd: None,
-            size,
-            override_args: Some(vec!["-lc".to_owned(), command.to_owned()]),
-            isolation: Isolation::Directory,
-            slug: None,
-            task: Some(task.to_owned()),
-        })
-        .await
-    }
-
-    async fn task_running(&self, project: Uuid, task: &str) -> bool {
-        for session in self.sessions.read().await.values() {
-            let summary = session.summary.lock().await;
-            if summary.project_id == project
-                && summary.task.as_deref() == Some(task)
-                && summary.exit_code.is_none()
-            {
-                return true;
-            }
-        }
-        false
-    }
-
-    async fn spawn(self: &Arc<Self>, request: Spawn) -> Result<SessionSummary> {
-        let Spawn { project, agent, cwd, size, override_args, isolation, slug, task } = request;
-        let profile = self
-            .profiles
-            .get(&agent)
-            .cloned()
-            .with_context(|| format!("unknown profile {agent}"))?;
-        let binary = self.resolve_binary(&profile).await?;
-        let project_root = self.project_root(project).await?;
-        let title = match &task {
-            Some(name) => name.clone(),
-            None => self.next_title(&profile.name).await,
-        };
-
-        let worktree = match isolation {
-            Isolation::Worktree => {
-                let wanted = slug.as_deref().unwrap_or(&title);
-                Some(self.open_worktree(&project_root, wanted).await?)
-            }
-            Isolation::Directory => None,
-        };
-        let cwd = match (&worktree, cwd) {
-            (Some(tree), _) => PathBuf::from(&tree.path),
-            (None, Some(explicit)) => PathBuf::from(explicit),
-            (None, None) => PathBuf::from(project_root),
-        };
-
-        let record = {
-            let store = self.store.lock().await;
-            store.insert_session(
-                project,
-                &profile.name,
-                &title,
-                &cwd.display().to_string(),
-                worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
-            )?
-        };
-
-        let mut spec = PtySpec::new(binary, &cwd);
-        spec.args = override_args.unwrap_or_else(|| profile.args.clone());
-        if let Some(delivery) = &profile.mcp {
-            match crate::mcp_delivery::offer(record.id, delivery, &cwd, worktree.is_some(), &self.paths)
-            {
-                Ok(Some(flag)) => spec.args.extend(flag),
-                Ok(None) => {}
-                Err(error) => tracing::warn!(%error, "could not offer the MCP server"),
-            }
-        }
-        spec.env = self.base_env.clone();
-        spec.env.extend(profile.env.clone());
-        spec.rows = size.rows;
-        spec.cols = size.cols;
-
-        let process = PtyProcess::spawn(spec)?;
-        let cwd_text = cwd.display().to_string();
-
-        let summary = SessionSummary {
-            id: record.id,
-            project_id: project,
-            agent: profile.name.clone(),
-            title,
-            cwd: cwd_text,
-            state: SessionState::Idle,
-            size,
-            exit_code: None,
-            worktree: worktree.clone(),
-            task: task.clone(),
-        };
-
-        let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
-        self.sessions.write().await.insert(record.id, session.clone());
-        let _ = self.events.send(Event::SessionOpened { session: summary.clone() });
-        self.watch_state(record.id, session.clone(), &profile);
-        self.watch_exit(record.id, session);
-
-        Ok(summary)
-    }
-
-    pub async fn write(&self, id: Uuid, data: &str) -> Result<()> {
-        let session = self.require(id).await?;
-        session.process.write(Bytes::copy_from_slice(data.as_bytes()))
-    }
-
-    pub async fn resize(&self, id: Uuid, size: TerminalSize) -> Result<()> {
-        let session = self.require(id).await?;
-        session.process.resize(size.rows, size.cols)?;
-        session.summary.lock().await.size = size;
-        Ok(())
-    }
-
-    pub async fn close(&self, id: Uuid, disposal: WorktreeDisposal) -> Result<()> {
-        let Some(session) = self.sessions.write().await.remove(&id) else {
-            bail!("session {id} does not exist")
-        };
-        let _ = session.process.kill();
-
-        let summary = session.snapshot_summary().await;
-        if let Some(tree) = summary.worktree.filter(|_| disposal == WorktreeDisposal::Discard) {
-            let root = PathBuf::from(self.project_root(summary.project_id).await?);
-            let path = PathBuf::from(&tree.path);
-            let branch = tree.branch.clone();
-            let removed = tokio::task::spawn_blocking(move || {
-                apex_git::remove_worktree(&root, &path, Some(&branch))
-            })
-            .await?;
-            if let Err(error) = removed {
-                tracing::warn!(%id, %error, "could not drop the worktree");
-            }
-        }
-
-        let store = self.store.lock().await;
-        store.close_session(id)?;
-        let _ = self.events.send(Event::SessionClosed { id });
-        Ok(())
     }
 
     pub async fn git_status(&self, project: Uuid, target: GitTarget) -> Result<GitStatus> {
@@ -476,17 +250,15 @@ impl SessionManager {
         self.git.log(&dir, limit).await
     }
 
-    async fn git_dir(&self, project: Uuid, target: &GitTarget) -> Result<PathBuf> {
-        match target {
-            GitTarget::Project => Ok(PathBuf::from(self.project_root(project).await?)),
-            GitTarget::Worktree { path } => Ok(PathBuf::from(path)),
-            GitTarget::Session { id } => {
-                match self.require(*id).await?.snapshot_summary().await.worktree {
-                    Some(tree) => Ok(PathBuf::from(tree.path)),
-                    None => Ok(PathBuf::from(self.project_root(project).await?)),
-                }
-            }
-        }
+    pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeInfo>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        self.git.list_worktrees(&root).await
+    }
+
+    pub async fn merge_worktree(&self, project: Uuid, target: GitTarget) -> Result<MergeReport> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let dir = self.git_dir(project, &target).await?;
+        self.git.merge(&root, &dir).await
     }
 
     pub async fn context_list(&self, project: Uuid) -> Result<Vec<ContextEntry>> {
@@ -511,137 +283,68 @@ impl SessionManager {
         self.context.note(project, from, to, message).await
     }
 
-    pub async fn transcript(&self, id: Uuid, tail: usize) -> Result<String> {
-        let session = self.require(id).await?;
-        let snapshot = session.process.snapshot();
-        let start = snapshot.len().saturating_sub(tail);
-        Ok(String::from_utf8_lossy(&snapshot[start..]).into_owned())
+    pub async fn list_history(&self, project: Uuid) -> Result<Vec<HistoryEntry>> {
+        let root = self.project_root(project).await?;
+        let home = home_directory();
+
+        let mut entries: Vec<HistoryEntry> = self
+            .profiles
+            .iter()
+            .flat_map(|profile| apex_core::history::read_history(profile, &PathBuf::from(&root), &home))
+            .map(|entry| HistoryEntry {
+                agent: entry.agent,
+                session_id: entry.session_id,
+                label: entry.label,
+                updated_at: entry.updated_at.min(u64::from(u32::MAX)) as u32,
+            })
+            .collect();
+
+        entries.sort_by_key(|entry| std::cmp::Reverse(entry.updated_at));
+        Ok(entries)
     }
 
-    pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeInfo>> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        self.git.list_worktrees(&root).await
+    pub async fn list_projects(&self) -> Result<Vec<ProjectSummary>> {
+        self.projects.list().await
     }
 
-    pub async fn merge_worktree(&self, project: Uuid, target: GitTarget) -> Result<MergeReport> {
-        let root = PathBuf::from(self.project_root(project).await?);
-        let dir = self.git_dir(project, &target).await?;
-        self.git.merge(&root, &dir).await
+    pub async fn open_project(&self, root: &str) -> Result<ProjectSummary> {
+        self.projects.open(root).await
     }
 
-    async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
-        let root = PathBuf::from(project_root);
-        if !tokio::task::spawn_blocking({
-            let root = root.clone();
-            move || apex_git::is_repo(&root)
-        })
-        .await?
-        {
-            bail!("{project_root} is not a git repository")
+    pub async fn save_layout(&self, project: Uuid, payload: &str) -> Result<()> {
+        self.projects.save_layout(project, payload).await
+    }
+
+    pub async fn load_layout(&self, project: Uuid) -> Result<Option<String>> {
+        self.projects.load_layout(project).await
+    }
+
+    pub async fn list_tasks(&self, project: Uuid) -> Result<Vec<TaskSummary>> {
+        self.tasks.list(project).await
+    }
+
+    async fn git_dir(&self, project: Uuid, target: &GitTarget) -> Result<PathBuf> {
+        match target {
+            GitTarget::Project => Ok(PathBuf::from(self.project_root(project).await?)),
+            GitTarget::Worktree { path } => Ok(PathBuf::from(path)),
+            GitTarget::Session { id } => {
+                match self
+                    .registry
+                    .require(*id)
+                    .await?
+                    .snapshot_summary()
+                    .await
+                    .worktree
+                {
+                    Some(tree) => Ok(PathBuf::from(tree.path)),
+                    None => Ok(PathBuf::from(self.project_root(project).await?)),
+                }
+            }
         }
-
-        let slug = apex_git::slugify(wanted);
-        if slug.is_empty() {
-            bail!("the worktree name is empty")
-        }
-        let created =
-            tokio::task::spawn_blocking(move || apex_git::add_worktree(&root, &slug)).await??;
-        Ok(WorktreeInfo { path: created.path.display().to_string(), branch: created.branch })
     }
 
     async fn project_root(&self, project: Uuid) -> Result<String> {
-        let store = self.store.lock().await;
-        Ok(store
-            .project(project)?
-            .with_context(|| format!("unknown project {project}"))?
-            .root)
-    }
-
-    async fn require(&self, id: Uuid) -> Result<Arc<LiveSession>> {
-        self.get(id).await.with_context(|| format!("session {id} does not exist"))
-    }
-
-    async fn resolve_binary(&self, profile: &AgentProfile) -> Result<PathBuf> {
-        let mut resolver = self.resolver.lock().await;
-        resolver
-            .resolve(&profile.command)
-            .with_context(|| format!("\"{}\" was not found in PATH", profile.command))
-    }
-
-    async fn next_title(&self, agent: &str) -> String {
-        let sessions = self.sessions.read().await;
-        let mut taken = 0;
-        for session in sessions.values() {
-            if session.summary.lock().await.agent == agent {
-                taken += 1;
-            }
-        }
-        if taken == 0 {
-            return agent.to_string();
-        }
-        format!("{agent} {}", taken + 1)
-    }
-
-    fn watch_state(self: &Arc<Self>, id: Uuid, session: Arc<LiveSession>, profile: &AgentProfile) {
-        let patterns =
-            StatePatterns::compile(&profile.state_patterns.blocked, &profile.state_patterns.done);
-        let manager = self.clone();
-        let mut output = session.process.subscribe();
-        let produced_before_subscribing = session.process.snapshot();
-
-        tokio::spawn(async move {
-            let mut detector = StateDetector::new(patterns, Instant::now());
-            if !produced_before_subscribing.is_empty()
-                && let Some(state) =
-                    detector.observe(&produced_before_subscribing, Instant::now())
-            {
-                manager.publish_state(id, &session, state).await;
-            }
-
-            let mut ticker = interval(POLL_INTERVAL);
-            ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
-
-            loop {
-                let change = tokio::select! {
-                    chunk = output.recv() => match chunk {
-                        Ok(data) => detector.observe(&data, Instant::now()),
-                        Err(broadcast::error::RecvError::Lagged(_)) => {
-                            detector.observe(b"", Instant::now())
-                        }
-                        Err(broadcast::error::RecvError::Closed) => return,
-                    },
-                    _ = ticker.tick() => detector.poll(Instant::now()),
-                };
-
-                if let Some(state) = change {
-                    manager.publish_state(id, &session, state).await;
-                }
-            }
-        });
-    }
-
-    fn watch_exit(self: &Arc<Self>, id: Uuid, session: Arc<LiveSession>) {
-        let manager = self.clone();
-        tokio::spawn(async move {
-            let status = session.process.wait().await;
-            {
-                let mut summary = session.summary.lock().await;
-                summary.exit_code = Some(status.code);
-                summary.state = SessionState::Done;
-            }
-            let _ = manager.events.send(Event::SessionExited { id, code: status.code });
-        });
-    }
-
-    async fn publish_state(&self, id: Uuid, session: &LiveSession, state: SessionState) {
-        {
-            let mut summary = session.summary.lock().await;
-            if summary.exit_code.is_some() {
-                return;
-            }
-            summary.state = state;
-        }
-        let _ = self.events.send(Event::SessionStateChanged { id, state });
+        self.registry.project_root(project).await
     }
 }
 

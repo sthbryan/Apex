@@ -3,4 +3,5 @@ pub mod files;
 pub mod git;
 pub mod metrics;
 pub mod projects;
+pub mod sessions;
 pub mod tasks;
