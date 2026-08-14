@@ -2,6 +2,7 @@ import { useEffect } from "preact/hooks";
 
 import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
+import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
@@ -82,6 +83,10 @@ export function Settings() {
               })),
             ]}
           />
+        </SettingsRow>
+
+        <SettingsRow label={t("settings.sidebar")} hint={t("settings.sidebarHint")}>
+          <DockOrder />
         </SettingsRow>
 
         <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>
