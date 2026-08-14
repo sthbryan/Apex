@@ -73,6 +73,19 @@ export async function readDiff(
   });
 }
 
+export async function readHunks(
+  session: string | null,
+  path: string,
+  scope: DiffScope,
+): Promise<string[]> {
+  return invoke<string[]>("git_hunks", {
+    project: activeProjectId.value,
+    session,
+    path,
+    scope,
+  });
+}
+
 export async function setStaged(paths: string[], staged: boolean): Promise<void> {
   await invoke("git_stage", {
     project: activeProjectId.value,
