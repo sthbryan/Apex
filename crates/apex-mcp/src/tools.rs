@@ -176,6 +176,7 @@ mod tests {
             size: TerminalSize::default(),
             exit_code: None,
             worktree,
+            task: None,
         }
     }
 

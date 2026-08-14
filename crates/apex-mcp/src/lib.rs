@@ -187,6 +187,7 @@ mod tests {
             size: TerminalSize::default(),
             exit_code: None,
             worktree: None,
+            task: None,
         };
         Caller {
             session: summary.id,
@@ -213,6 +214,7 @@ mod tests {
             size: TerminalSize::default(),
             exit_code: None,
             worktree: None,
+            task: None,
         }
     }
 
