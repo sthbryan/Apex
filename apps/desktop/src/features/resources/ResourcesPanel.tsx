@@ -15,10 +15,17 @@ export function ResourcesPanel({ snapshot }: Props) {
   }
 
   const { system, sessions } = snapshot;
+  const sessionMemory = sessions.reduce((total, session) => total + session.memory, 0);
+  const sessionCpu = sessions.reduce((total, session) => total + session.cpu_percent, 0);
 
   return (
     <div class="flex max-h-96 flex-col overflow-y-auto">
-      <div class="px-2 py-1.5">
+      <section class="px-2 py-1.5">
+        <header class="mb-0.5 flex items-baseline gap-1">
+          <h2 class="uppercase tracking-wider text-faint">{t("resources.system")}</h2>
+          <span class="text-faint">·</span>
+          <span class="text-faint">{t("resources.cores", { count: String(system.cores) })}</span>
+        </header>
         <Meter icon="cpu" label={t("resources.cpu")} percent={system.cpu_percent} />
         {system.gpu_percent !== null && (
           <Meter icon="gpu" label={t("resources.gpu")} percent={system.gpu_percent} />
@@ -34,13 +41,25 @@ export function ResourcesPanel({ snapshot }: Props) {
             icon="swap"
             label={t("resources.swap")}
             percent={percentOf(system.swap_used, system.swap_total)}
-            detail={compactBytes(system.swap_used)}
+            detail={`${compactBytes(system.swap_used)}/${compactBytes(system.swap_total)}`}
           />
         )}
-      </div>
+      </section>
 
-      <div class="border-t border-border px-2 py-1.5">
-        <h2 class="mb-0.5 uppercase tracking-wider text-faint">{t("resources.bySession")}</h2>
+      <section class="border-t border-border px-2 py-1.5">
+        <header class="mb-0.5 flex items-baseline gap-1">
+          <h2 class="uppercase tracking-wider text-faint">{t("resources.bySession")}</h2>
+          {sessions.length > 0 && (
+            <span class="truncate text-faint">
+              ·{" "}
+              {t("resources.sessionSummary", {
+                count: String(sessions.length),
+                memory: compactBytes(sessionMemory),
+                cpu: sessionCpu.toFixed(0),
+              })}
+            </span>
+          )}
+        </header>
         {sessions.length === 0 ? (
           <p class="text-faint">{t("resources.noSessions")}</p>
         ) : (
@@ -79,7 +98,7 @@ export function ResourcesPanel({ snapshot }: Props) {
             ))}
           </ul>
         )}
-      </div>
+      </section>
     </div>
   );
 }
