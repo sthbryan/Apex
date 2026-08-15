@@ -4,17 +4,31 @@ import { togglePage } from "@/app/view";
 import { cycleLayout, splitWithShell } from "@/features/sessions/pending";
 import { toggleUsagePopover } from "@/features/usage/state";
 import { activeTab, activeTabId, closePane, tabs } from "@/features/workspace/state";
-import { findLeaf } from "@/features/workspace/tree";
+import { type Direction, findLeaf } from "@/features/workspace/tree";
 
 type Toggles = {
   togglePalette: () => void;
   toggleFinder: () => void;
 };
 
+const ARROW_DIRECTIONS: Record<string, Direction> = {
+  ArrowLeft: "row-reverse",
+  ArrowRight: "row",
+  ArrowUp: "column-reverse",
+  ArrowDown: "column",
+};
+
+let pendingDirection: Direction | null = null;
+
 export function useKeymap({ togglePalette, toggleFinder }: Toggles): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) {
+        return;
+      }
+      const direction = ARROW_DIRECTIONS[event.key];
+      if (direction) {
+        pendingDirection = direction;
         return;
       }
       const binding = BINDINGS[event.key.toLowerCase()];
@@ -34,8 +48,18 @@ export function useKeymap({ togglePalette, toggleFinder }: Toggles): void {
       }
     };
 
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (ARROW_DIRECTIONS[event.key]) {
+        pendingDirection = null;
+      }
+    };
+
     window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+    };
   }, [togglePalette, toggleFinder]);
 }
 
@@ -48,7 +72,9 @@ const BINDINGS: Record<string, (context: Context) => void> = {
   u: () => toggleUsagePopover(),
   b: () => toggleDock(),
   d: ({ event }) => {
-    void splitWithShell(event.shiftKey ? "column" : "row");
+    const direction = pendingDirection ?? (event.shiftKey ? "column" : "row");
+    pendingDirection = null;
+    void splitWithShell(direction);
   },
   l: ({ event }) => {
     if (event.shiftKey) {

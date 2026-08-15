@@ -1,6 +1,6 @@
 import type { GitTarget } from "@/bindings/GitTarget";
 
-export type Direction = "row" | "column";
+export type Direction = "row" | "column" | "row-reverse" | "column-reverse";
 
 export type PaneView =
   | { type: "session"; sessionId: string }
@@ -91,7 +91,15 @@ export function splitLeaf(
     if (node.id !== targetId) {
       return node;
     }
-    return { kind: "split", id: newId(), direction, ratio: 0.5, first: node, second: incoming };
+    const before = direction === "row-reverse" || direction === "column-reverse";
+    return {
+      kind: "split",
+      id: newId(),
+      direction,
+      ratio: 0.5,
+      first: before ? incoming : node,
+      second: before ? node : incoming,
+    };
   }
   return {
     ...node,

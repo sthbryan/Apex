@@ -27,7 +27,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
     return <PaneLeaf tabId={tabId} node={node} focused={tabActive && node.id === activeLeafId} />;
   }
 
-  const horizontal = node.direction === "row";
+  const horizontal = node.direction === "row" || node.direction === "row-reverse";
   return (
     <div class={cn("flex h-full w-full", horizontal ? "flex-row" : "flex-col")}>
       <div style={{ flex: `${node.ratio} 1 0%`, minWidth: 0, minHeight: 0 }}>
