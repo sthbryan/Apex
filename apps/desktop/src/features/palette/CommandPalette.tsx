@@ -136,6 +136,15 @@ function buildActions(
     },
   });
 
+  actions.push({
+    id: "shortcuts",
+    label: t("palette.shortcuts"),
+    run: () => {
+      onClose();
+      togglePage("shortcuts");
+    },
+  });
+
   const tab = activeTab.value;
   if (tab) {
     const current = findLeaf(tab.root, tab.activeLeafId);
