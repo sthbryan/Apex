@@ -37,7 +37,7 @@ fn caller() -> Caller {
 
 async fn exchange(daemon: &mut Fake, request: Value) -> Value {
     let line = request.to_string();
-    let answer = handle(daemon, &caller(), &line).await.expect("a response");
+    let answer = answer(daemon, &caller(), &line).await.expect("a response");
     serde_json::from_str(&answer).expect("json")
 }
 
@@ -133,7 +133,7 @@ async fn the_tool_list_carries_every_tool_with_its_schema() {
 async fn a_notification_gets_no_answer() {
     let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
     let line = json!({ "jsonrpc": "2.0", "method": "notifications/initialized" }).to_string();
-    assert!(handle(&mut daemon, &caller(), &line).await.is_none());
+    assert!(answer(&mut daemon, &caller(), &line).await.is_none());
 }
 
 #[tokio::test]
@@ -245,7 +245,7 @@ async fn the_worktree_tool_answers_without_touching_the_daemon() {
 #[tokio::test]
 async fn broken_json_is_answered_with_a_parse_error() {
     let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
-    let answer = handle(&mut daemon, &caller(), "{not json").await.expect("a response");
+    let answer = answer(&mut daemon, &caller(), "{not json").await.expect("a response");
     let parsed: Value = serde_json::from_str(&answer).expect("json");
     assert_eq!(parsed["error"]["code"], -32700);
 }

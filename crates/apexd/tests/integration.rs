@@ -1372,8 +1372,10 @@ async fn an_acp_session_is_handed_the_apex_mcp_server() {
     let seen = std::fs::read_to_string(room.path().join("session-new.json"))
         .expect("the agent recorded session/new");
     assert!(seen.contains("\"name\":\"apex\""), "no apex server in {seen}");
-    assert!(seen.contains("\"mcp\""), "the launcher does not run mcp in {seen}");
-    assert!(seen.contains(&session.id.to_string()), "the session id is missing from {seen}");
+    assert!(seen.contains("\"type\":\"http\""), "this agent takes http, got {seen}");
+    assert!(seen.contains("http://127.0.0.1:"), "no local url in {seen}");
+    assert!(seen.contains("Bearer "), "no token in {seen}");
+    let _ = session;
 }
 
 #[tokio::test]
@@ -1479,4 +1481,45 @@ async fn the_models_an_acp_agent_offers_can_be_switched() {
     harness.manager.acp_choose(session.id, Some("deep".into()), None).await.expect("choose");
     let after = harness.manager.acp_snapshot(session.id).await.expect("snapshot").models;
     assert_eq!(after.chosen.as_deref(), Some("deep"));
+}
+
+#[tokio::test]
+async fn the_http_mcp_endpoint_turns_away_a_caller_without_the_token() {
+    let room = tempfile::tempdir().expect("tempdir");
+    let harness = Harness::start().await;
+    harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some(room.path().display().to_string()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    let seen = std::fs::read_to_string(room.path().join("session-new.json")).expect("session/new");
+    let offered: serde_json::Value = serde_json::from_str(&seen).expect("json");
+    let url = offered["params"]["mcpServers"][0]["url"].as_str().expect("a url").to_owned();
+    let port: u16 = url.rsplit(':').next().unwrap().trim_end_matches("/mcp").parse().expect("port");
+
+    let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }).to_string();
+    let refused = ask(port, "not-a-token", &body).await;
+    assert!(refused.contains("401"), "an unknown token got in: {refused}");
+}
+
+async fn ask(port: u16, token: &str, body: &str) -> String {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let mut stream = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.expect("connect");
+    let request = format!(
+        "POST /mcp HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{body}",
+        body.len()
+    );
+    stream.write_all(request.as_bytes()).await.expect("write");
+    let mut answered = String::new();
+    stream.read_to_string(&mut answered).await.expect("read");
+    answered
 }

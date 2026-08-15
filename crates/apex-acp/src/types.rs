@@ -47,7 +47,7 @@ pub struct AuthMethod {
 pub struct Initialized {
     pub protocol_version: u32,
     #[serde(default)]
-    pub agent_capabilities: Value,
+    pub agent_capabilities: AgentCapabilities,
     #[serde(default)]
     pub auth_methods: Vec<AuthMethod>,
     #[serde(default)]
@@ -62,12 +62,28 @@ pub struct EnvVar {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum McpServer {
+    #[serde(rename = "stdio")]
+    Stdio { name: String, command: String, args: Vec<String>, env: Vec<EnvVar> },
+    #[serde(rename = "http")]
+    Http { name: String, url: String, headers: Vec<EnvVar> },
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct McpServer {
-    pub name: String,
-    pub command: String,
-    pub args: Vec<String>,
-    pub env: Vec<EnvVar>,
+pub struct McpCapabilities {
+    #[serde(default)]
+    pub http: bool,
+    #[serde(default)]
+    pub sse: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentCapabilities {
+    #[serde(default)]
+    pub mcp_capabilities: McpCapabilities,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

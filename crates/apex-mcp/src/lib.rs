@@ -27,7 +27,7 @@ where
         if line.trim().is_empty() {
             continue;
         }
-        let Some(response) = handle(daemon, caller, &line).await else {
+        let Some(response) = answer(daemon, caller, &line).await else {
             continue;
         };
         output.write_all(response.as_bytes()).await?;
@@ -37,7 +37,7 @@ where
     Ok(())
 }
 
-async fn handle<D: Daemon>(daemon: &mut D, caller: &Caller, line: &str) -> Option<String> {
+pub async fn answer<D: Daemon>(daemon: &mut D, caller: &Caller, line: &str) -> Option<String> {
     let request: Value = match serde_json::from_str(line) {
         Ok(value) => value,
         Err(error) => {

@@ -453,6 +453,8 @@ impl Client for Relay {
 }
 
 pub struct AcpRegistry {
+    socket: PathBuf,
+    http: tokio::sync::OnceCell<Arc<crate::mcp_http::HttpMcp>>,
     profiles: ProfileSet,
     resolver: Arc<Mutex<BinaryResolver>>,
     store: Arc<Mutex<Store>>,
@@ -468,8 +470,11 @@ impl AcpRegistry {
         store: Arc<Mutex<Store>>,
         base_env: std::collections::BTreeMap<String, String>,
         events: broadcast::Sender<Event>,
+        socket: PathBuf,
     ) -> Self {
         Self {
+            socket,
+            http: tokio::sync::OnceCell::new(),
             profiles,
             resolver,
             store,
@@ -570,7 +575,8 @@ impl AcpRegistry {
 
         let greeting = tokio::time::timeout(HANDSHAKE_PATIENCE, async {
             let hello = agent.initialize().await?;
-            let opened = agent.new_session(cwd, &self.mcp_servers(record.id)).await?;
+            let servers = self.mcp_servers(record.id, hello.agent_capabilities.mcp_capabilities).await;
+            let opened = agent.new_session(cwd, &servers).await?;
             anyhow::Ok((opened, sign_in_hint(&hello)))
         })
         .await;
@@ -658,6 +664,9 @@ impl AcpRegistry {
         };
         let _ = session.cancel();
         let _ = session.kill().await;
+        if let Some(http) = self.http.get() {
+            http.revoke(id).await;
+        }
         {
             let store = self.store.lock().await;
             store.close_session(id)?;
@@ -666,9 +675,38 @@ impl AcpRegistry {
         Ok(())
     }
 
-    fn mcp_servers(&self, session: Uuid) -> Vec<apex_acp::McpServer> {
+    async fn http_mcp(&self) -> Option<&Arc<crate::mcp_http::HttpMcp>> {
+        let started = self
+            .http
+            .get_or_try_init(|| crate::mcp_http::HttpMcp::start(self.socket.clone()))
+            .await;
+        match started {
+            Ok(http) => Some(http),
+            Err(error) => {
+                tracing::warn!(%error, "could not open the http mcp port");
+                None
+            }
+        }
+    }
+
+    async fn mcp_servers(
+        &self,
+        session: Uuid,
+        accepts: apex_acp::McpCapabilities,
+    ) -> Vec<apex_acp::McpServer> {
+        if accepts.http && let Some(http) = self.http_mcp().await {
+            return vec![apex_acp::McpServer::Http {
+                name: "apex".to_owned(),
+                url: http.url(),
+                headers: vec![apex_acp::EnvVar {
+                    name: "Authorization".to_owned(),
+                    value: format!("Bearer {}", http.issue(session).await),
+                }],
+            }];
+        }
+
         match crate::mcp_delivery::launcher() {
-            Ok(command) => vec![apex_acp::McpServer {
+            Ok(command) => vec![apex_acp::McpServer::Stdio {
                 name: "apex".to_owned(),
                 command,
                 args: vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()],

@@ -14,13 +14,13 @@ pub async fn run(socket: &Path, session: Option<Uuid>) -> Result<()> {
     apex_mcp::serve(&mut daemon, &caller, tokio::io::stdin(), tokio::io::stdout()).await
 }
 
-struct Link {
+pub struct Link {
     connection: Connection,
     next: u64,
 }
 
 impl Link {
-    async fn connect(socket: &Path) -> Result<Self> {
+    pub async fn connect(socket: &Path) -> Result<Self> {
         let mut connection = connect_unix(socket)
             .await
             .with_context(|| format!("connecting to {}", socket.display()))?;
