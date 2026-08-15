@@ -1,4 +1,5 @@
 import { signal } from "@preact/signals";
+import { invoke } from "@tauri-apps/api/core";
 
 import type { AgentMode } from "@/bindings/AgentMode";
 
@@ -22,4 +23,23 @@ export function modeOf(agent: string, fallback: AgentMode): AgentMode {
 export function setAgentMode(agent: string, mode: AgentMode): void {
   agentModes.value = { ...agentModes.value, [agent]: mode };
   localStorage.setItem(STORE, JSON.stringify(agentModes.value));
+}
+
+const SHARED = "apex.agent-context";
+
+function restoreShared(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(SHARED);
+    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export const sharedContext = signal<Record<string, boolean>>(restoreShared());
+
+export async function setSharedContext(agent: string, enabled: boolean): Promise<void> {
+  await invoke("mcp_adopt", { agent, enabled });
+  sharedContext.value = { ...sharedContext.value, [agent]: enabled };
+  localStorage.setItem(SHARED, JSON.stringify(sharedContext.value));
 }

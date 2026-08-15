@@ -2,10 +2,15 @@ import { useEffect } from "preact/hooks";
 
 import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
-import { agentModes, setAgentMode } from "@/features/settings/agentMode";
+import {
+  agentModes,
+  setAgentMode,
+  setSharedContext,
+  sharedContext,
+} from "@/features/settings/agentMode";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import { agents } from "@/shared/daemon";
+import { agents, complain } from "@/shared/daemon";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
@@ -105,13 +110,25 @@ export function Settings() {
             ))}
           </Segmented>
         </SettingsRow>
-        <SettingsRow label={t("settings.agents")} hint={t("settings.agentsModeHint")}>
+        <SettingsRow label={t("settings.agents")} hint={t("settings.agentsHint2")}>
           <div class="flex flex-col gap-1.5">
             {agents.value
               .filter((agent) => agent.speaks_acp && agent.resolved_path !== null)
               .map((agent) => (
                 <div key={agent.name} class="flex items-center justify-end gap-3">
                   <span class="text-muted">{agent.name}</span>
+                  <label class="flex items-center gap-1.5 text-faint">
+                    <input
+                      type="checkbox"
+                      checked={sharedContext.value[agent.name] === true}
+                      onChange={(event) => {
+                        void setSharedContext(agent.name, event.currentTarget.checked).catch(
+                          complain,
+                        );
+                      }}
+                    />
+                    {t("settings.shareContext")}
+                  </label>
                   <Segmented label={t("settings.agentMode", { agent: agent.name })}>
                     {(["pty", "acp"] as const).map((option) => (
                       <Choice

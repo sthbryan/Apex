@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 4;
+pub const PROTOCOL_VERSION: u32 = 5;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -684,6 +684,10 @@ pub enum Command {
         id: Uuid,
         model: Option<String>,
         mode: Option<String>,
+    },
+    McpAdopt {
+        agent: String,
+        enabled: bool,
     },
 }
 

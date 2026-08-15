@@ -90,6 +90,9 @@ export const es: Messages = {
     agents: "Agentes",
     agentsModeHint:
       "Cómo les habla Apex. Nativo usa ACP: chat, diffs y permisos dentro de Apex. Beta.",
+    agentsHint2:
+      "Cómo les habla Apex, y si escribe su servidor MCP en la config propia de cada uno. Nativo (ACP) es beta.",
+    shareContext: "comparte contexto",
   },
   shortcuts: {
     title: "Atajos de teclado",

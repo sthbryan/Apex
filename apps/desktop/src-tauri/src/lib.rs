@@ -488,6 +488,18 @@ async fn acp_choose(
 }
 
 #[tauri::command]
+async fn mcp_adopt(
+    state: tauri::State<'_, AppState>,
+    agent: String,
+    enabled: bool,
+) -> Answer<String> {
+    match state.daemon()?.request(Command::McpAdopt { agent, enabled }).await.map_err(failed)? {
+        Reply::Text { text } => Ok(text),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn context_list(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -601,6 +613,7 @@ pub fn run() {
             acp_cancel,
             acp_decide,
             acp_choose,
+            mcp_adopt,
             context_list,
             context_read,
             context_write

@@ -1523,3 +1523,30 @@ async fn ask(port: u16, token: &str, body: &str) -> String {
     stream.read_to_string(&mut answered).await.expect("read");
     answered
 }
+
+#[tokio::test]
+async fn adopting_an_agent_writes_apex_into_its_own_config_and_keeps_a_backup() {
+    let harness = Harness::start().await;
+    let config = std::env::temp_dir().join("apex-test-home/.pi/agent/mcp.json");
+    std::fs::create_dir_all(config.parent().expect("parent")).expect("mkdir");
+    std::fs::write(&config, r#"{"mcpServers":{"theirs":{"command":"echo"}}}"#).expect("write");
+
+    let written = harness.manager.mcp_adopt("pi", true).await.expect("adopt");
+    assert_eq!(written, config.display().to_string());
+
+    let after: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&config).expect("read")).expect("json");
+    assert!(after["mcpServers"]["apex"]["command"].is_string());
+    assert_eq!(after["mcpServers"]["theirs"]["command"], "echo");
+
+    let backup = config.with_extension("apex-backup");
+    let kept: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&backup).expect("backup")).expect("json");
+    assert!(kept["mcpServers"]["apex"].is_null());
+
+    harness.manager.mcp_adopt("pi", false).await.expect("forget");
+    let cleaned: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&config).expect("read")).expect("json");
+    assert!(cleaned["mcpServers"]["apex"].is_null());
+    assert_eq!(cleaned["mcpServers"]["theirs"]["command"], "echo");
+}

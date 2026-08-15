@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
@@ -32,6 +32,7 @@ pub struct NewSession {
 }
 
 pub struct SessionManager {
+    paths: ApexPaths,
     profiles: ProfileSet,
     files: FilesService,
     git: GitService,
@@ -70,7 +71,7 @@ impl SessionManager {
         let projects = ProjectsService::new(Arc::clone(&store));
         let tasks = TasksService::new(Arc::clone(&store));
         let registry = Arc::new(SessionRegistry::new(
-            paths,
+            paths.clone(),
             profiles.clone(),
             Arc::clone(&resolver),
             Arc::clone(&store),
@@ -86,6 +87,7 @@ impl SessionManager {
             base_env,
         );
         Self {
+            paths,
             profiles,
             files,
             git: GitService,
@@ -385,6 +387,15 @@ impl SessionManager {
 
     pub async fn load_layout(&self, project: Uuid) -> Result<Option<String>> {
         self.projects.load_layout(project).await
+    }
+
+    pub async fn mcp_adopt(&self, agent: &str, enabled: bool) -> Result<String> {
+        let profile =
+            self.profiles.get(agent).context(format!("unknown agent {agent}"))?;
+        let delivery =
+            profile.mcp.as_ref().context(format!("{agent} does not take an MCP server"))?;
+        let written = crate::mcp_delivery::adopt(delivery, &self.paths.home, enabled)?;
+        Ok(written.display().to_string())
     }
 
     pub async fn list_tasks(&self, project: Uuid) -> Result<Vec<TaskSummary>> {

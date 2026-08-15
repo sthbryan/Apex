@@ -59,6 +59,46 @@ pub fn launcher() -> Result<String> {
     Ok(locate()?.display().to_string())
 }
 
+pub fn adopt(delivery: &McpDelivery, home: &Path, wanted: bool) -> Result<PathBuf> {
+    let McpDelivery::Flag { merge_from: Some(source), .. } = delivery else {
+        anyhow::bail!("this agent has no config of its own to share")
+    };
+    let path = expand_home(source, home);
+    let existing = std::fs::read(&path)
+        .ok()
+        .and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok());
+
+    if path.exists() {
+        let backup = path.with_extension("apex-backup");
+        if !backup.exists() {
+            std::fs::copy(&path, &backup)
+                .with_context(|| format!("backing up {}", path.display()))?;
+        }
+    }
+
+    let mut servers = existing
+        .and_then(|config| config.get("mcpServers").cloned())
+        .and_then(|servers| servers.as_object().cloned())
+        .unwrap_or_default();
+
+    if wanted {
+        let launcher = locate()?.display().to_string();
+        servers.insert(
+            "apex".to_owned(),
+            serde_json::json!({ "command": launcher, "args": ["mcp"] }),
+        );
+    } else {
+        servers.remove("apex");
+    }
+
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
+    }
+    let body = serde_json::to_string_pretty(&serde_json::json!({ "mcpServers": servers }))?;
+    std::fs::write(&path, body).with_context(|| format!("writing {}", path.display()))?;
+    Ok(path)
+}
+
 fn locate() -> Result<PathBuf> {
     if let Some(path) = std::env::var_os("CARGO_BIN_EXE_apexd") {
         return Ok(PathBuf::from(path));

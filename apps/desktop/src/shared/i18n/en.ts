@@ -88,6 +88,9 @@ export const en = {
     agents: "Agents",
     agentsModeHint:
       "How Apex talks to each one. Native uses ACP: chat, diffs and permissions inside Apex. Beta.",
+    agentsHint2:
+      "How Apex talks to each one, and whether it writes its MCP server into their own config. Native (ACP) is beta.",
+    shareContext: "shares context",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

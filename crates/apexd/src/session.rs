@@ -345,6 +345,9 @@ impl Client {
                 self.manager.acp_choose(id, model, mode).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
+            Command::McpAdopt { agent, enabled } => Ok(Reply::Text {
+                text: self.manager.mcp_adopt(&agent, enabled).await.map_err(internal_error)?,
+            }),
             Command::SessionClose { id, worktree } => {
                 self.subscriptions.detach(id).await;
                 self.manager.close(id, worktree).await.map_err(not_found_error)?;
@@ -452,6 +455,7 @@ fn runs_detached(command: &Command) -> bool {
             | Command::AcpCancel { .. }
             | Command::AcpDecide { .. }
             | Command::AcpChoose { .. }
+            | Command::McpAdopt { .. }
     )
 }
 
