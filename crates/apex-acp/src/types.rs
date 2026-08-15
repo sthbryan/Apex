@@ -120,10 +120,30 @@ pub struct SessionModes {
     pub available_modes: Vec<ModeInfo>,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigChoice {
+    pub value: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigOption {
+    pub id: String,
+    #[serde(default)]
+    pub current_value: Option<String>,
+    #[serde(default)]
+    pub options: Vec<ConfigChoice>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewSession {
     pub session_id: String,
+    #[serde(default)]
+    pub config_options: Vec<ConfigOption>,
     #[serde(default)]
     pub models: Option<SessionModels>,
     #[serde(default)]

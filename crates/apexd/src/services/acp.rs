@@ -208,6 +208,30 @@ fn models_of(opened: &apex_acp::NewSession) -> AcpPicker {
                 .collect(),
             chosen: models.current_model_id.clone(),
         },
+        None => from_config(opened, "model"),
+    }
+}
+
+fn from_config(opened: &apex_acp::NewSession, wanted: &str) -> AcpPicker {
+    let found = opened.config_options.iter().find(|option| match wanted {
+        "model" => option.id == "model",
+        _ => option.id != "model",
+    });
+    match found {
+        Some(option) => AcpPicker {
+            choices: option
+                .options
+                .iter()
+                .map(|choice| AcpChoice {
+                    id: choice.value.clone(),
+                    name: match choice.name.is_empty() {
+                        true => choice.value.clone(),
+                        false => choice.name.clone(),
+                    },
+                })
+                .collect(),
+            chosen: option.current_value.clone(),
+        },
         None => AcpPicker::default(),
     }
 }
@@ -228,7 +252,7 @@ fn modes_of(opened: &apex_acp::NewSession) -> AcpPicker {
                 .collect(),
             chosen: modes.current_mode_id.clone(),
         },
-        None => AcpPicker::default(),
+        None => from_config(opened, "mode"),
     }
 }
 
