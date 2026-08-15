@@ -477,6 +477,17 @@ async fn acp_decide(
 }
 
 #[tauri::command]
+async fn acp_choose(
+    state: tauri::State<'_, AppState>,
+    id: Uuid,
+    model: Option<String>,
+    mode: Option<String>,
+) -> Answer<()> {
+    state.daemon()?.request(Command::AcpChoose { id, model, mode }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn context_list(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -589,6 +600,7 @@ pub fn run() {
             acp_prompt,
             acp_cancel,
             acp_decide,
+            acp_choose,
             context_list,
             context_read,
             context_write

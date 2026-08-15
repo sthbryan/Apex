@@ -341,6 +341,10 @@ impl Client {
                 self.manager.acp_decide(id, request, option).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
+            Command::AcpChoose { id, model, mode } => {
+                self.manager.acp_choose(id, model, mode).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
             Command::SessionClose { id, worktree } => {
                 self.subscriptions.detach(id).await;
                 self.manager.close(id, worktree).await.map_err(not_found_error)?;
@@ -447,6 +451,7 @@ fn runs_detached(command: &Command) -> bool {
             | Command::AcpPrompt { .. }
             | Command::AcpCancel { .. }
             | Command::AcpDecide { .. }
+            | Command::AcpChoose { .. }
     )
 }
 

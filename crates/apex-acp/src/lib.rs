@@ -283,12 +283,24 @@ impl Agent {
         Ok(())
     }
 
-    pub async fn new_session(&self, cwd: &Path, servers: &[McpServer]) -> Result<String> {
-        let session: NewSession = self
+    pub async fn new_session(&self, cwd: &Path, servers: &[McpServer]) -> Result<NewSession> {
+        self.connection.request("session/new", json!({ "cwd": cwd, "mcpServers": servers })).await
+    }
+
+    pub async fn set_model(&self, session: &str, model: &str) -> Result<()> {
+        let _: Value = self
             .connection
-            .request("session/new", json!({ "cwd": cwd, "mcpServers": servers }))
+            .request("session/set_model", json!({ "sessionId": session, "modelId": model }))
             .await?;
-        Ok(session.session_id)
+        Ok(())
+    }
+
+    pub async fn set_mode(&self, session: &str, mode: &str) -> Result<()> {
+        let _: Value = self
+            .connection
+            .request("session/set_mode", json!({ "sessionId": session, "modeId": mode }))
+            .await?;
+        Ok(())
     }
 
     pub async fn prompt(&self, session: &str, text: &str) -> Result<StopReason> {

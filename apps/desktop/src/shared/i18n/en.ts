@@ -144,6 +144,8 @@ export const en = {
     stop: "Stop",
     reject: "Deny",
     decided: "Answered: {option}",
+    model: "Model for this session",
+    mode: "How hard it thinks",
   },
   git: {
     noRepo: "This project is not a git repository.",

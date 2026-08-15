@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 3;
+pub const PROTOCOL_VERSION: u32 = 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -369,11 +369,27 @@ pub struct AcpCommand {
     pub description: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpChoice {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpPicker {
+    pub choices: Vec<AcpChoice>,
+    pub chosen: Option<String>,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct AcpSnapshot {
     pub entries: Vec<AcpEntry>,
     pub commands: Vec<AcpCommand>,
+    pub models: AcpPicker,
+    pub modes: AcpPicker,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -662,6 +678,12 @@ pub enum Command {
         id: Uuid,
         request: u32,
         option: Option<String>,
+    },
+    AcpChoose {
+        #[ts(type = "string")]
+        id: Uuid,
+        model: Option<String>,
+        mode: Option<String>,
     },
 }
 

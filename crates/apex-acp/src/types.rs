@@ -70,10 +70,48 @@ pub struct McpServer {
     pub env: Vec<EnvVar>,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInfo {
+    pub model_id: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionModels {
+    #[serde(default)]
+    pub available_models: Vec<ModelInfo>,
+    #[serde(default)]
+    pub current_model_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModeInfo {
+    pub id: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionModes {
+    #[serde(default)]
+    pub current_mode_id: Option<String>,
+    #[serde(default)]
+    pub available_modes: Vec<ModeInfo>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewSession {
     pub session_id: String,
+    #[serde(default)]
+    pub models: Option<SessionModels>,
+    #[serde(default)]
+    pub modes: Option<SessionModes>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

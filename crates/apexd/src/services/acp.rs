@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use apex_acp::{ContentBlock, SessionUpdate, ToolCall, ToolContent, ToolStatus};
 use apex_proto::{
-    AcpBody, AcpCommand, AcpDiff, AcpEntry, AcpOption, AcpPermission, AcpPlanEntry, AcpSnapshot,
-    AcpToolCall, AcpToolStatus,
+    AcpBody, AcpChoice, AcpCommand, AcpDiff, AcpEntry, AcpOption, AcpPermission, AcpPicker,
+    AcpPlanEntry, AcpSnapshot, AcpToolCall, AcpToolStatus,
 };
 
 #[derive(Default)]
@@ -192,6 +192,46 @@ fn merge(known: AcpToolCall, update: ToolCall) -> AcpToolCall {
     }
 }
 
+fn models_of(opened: &apex_acp::NewSession) -> AcpPicker {
+    match &opened.models {
+        Some(models) => AcpPicker {
+            choices: models
+                .available_models
+                .iter()
+                .map(|model| AcpChoice {
+                    id: model.model_id.clone(),
+                    name: match model.name.is_empty() {
+                        true => model.model_id.clone(),
+                        false => model.name.clone(),
+                    },
+                })
+                .collect(),
+            chosen: models.current_model_id.clone(),
+        },
+        None => AcpPicker::default(),
+    }
+}
+
+fn modes_of(opened: &apex_acp::NewSession) -> AcpPicker {
+    match &opened.modes {
+        Some(modes) => AcpPicker {
+            choices: modes
+                .available_modes
+                .iter()
+                .map(|mode| AcpChoice {
+                    id: mode.id.clone(),
+                    name: match mode.name.is_empty() {
+                        true => mode.id.clone(),
+                        false => mode.name.clone(),
+                    },
+                })
+                .collect(),
+            chosen: modes.current_mode_id.clone(),
+        },
+        None => AcpPicker::default(),
+    }
+}
+
 fn sign_in_hint(hello: &apex_acp::Initialized) -> Option<String> {
     let ways: Vec<String> = hello
         .auth_methods
@@ -238,6 +278,8 @@ pub struct AcpSession {
     decisions: Decisions,
     commands: Commands,
     auth: Option<String>,
+    models: Mutex<AcpPicker>,
+    modes: Mutex<AcpPicker>,
 }
 
 impl AcpSession {
@@ -249,7 +291,21 @@ impl AcpSession {
         AcpSnapshot {
             entries: self.transcript.lock().await.entries(),
             commands: self.commands.lock().await.clone(),
+            models: self.models.lock().await.clone(),
+            modes: self.modes.lock().await.clone(),
         }
+    }
+
+    pub async fn choose(&self, model: Option<String>, mode: Option<String>) -> Result<()> {
+        if let Some(model) = model {
+            self.agent.set_model(&self.remote, &model).await?;
+            self.models.lock().await.chosen = Some(model);
+        }
+        if let Some(mode) = mode {
+            self.agent.set_mode(&self.remote, &mode).await?;
+            self.modes.lock().await.chosen = Some(mode);
+        }
+        Ok(())
     }
 
     async fn explain(&self, reason: StopReason) -> String {
@@ -514,12 +570,12 @@ impl AcpRegistry {
 
         let greeting = tokio::time::timeout(HANDSHAKE_PATIENCE, async {
             let hello = agent.initialize().await?;
-            let remote = agent.new_session(cwd, &self.mcp_servers(record.id)).await?;
-            anyhow::Ok((remote, sign_in_hint(&hello)))
+            let opened = agent.new_session(cwd, &self.mcp_servers(record.id)).await?;
+            anyhow::Ok((opened, sign_in_hint(&hello)))
         })
         .await;
 
-        let (remote, auth) = match greeting {
+        let (opened, auth) = match greeting {
             Ok(Ok(greeted)) => greeted,
             outcome => {
                 let _ = agent.kill().await;
@@ -545,11 +601,13 @@ impl AcpRegistry {
         let session = Arc::new(AcpSession {
             summary: Arc::clone(&summary),
             agent,
-            remote,
             transcript,
             decisions,
             commands,
             auth,
+            models: Mutex::new(models_of(&opened)),
+            modes: Mutex::new(modes_of(&opened)),
+            remote: opened.session_id,
         });
         self.sessions.write().await.insert(record.id, Arc::clone(&session));
 

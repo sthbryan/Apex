@@ -120,6 +120,15 @@ impl SessionManager {
         Arc::clone(&self.acp).prompt(id, text).await
     }
 
+    pub async fn acp_choose(
+        &self,
+        id: Uuid,
+        model: Option<String>,
+        mode: Option<String>,
+    ) -> Result<()> {
+        self.acp.require(id).await?.choose(model, mode).await
+    }
+
     pub async fn acp_cancel(&self, id: Uuid) -> Result<()> {
         self.acp.require(id).await?.cancel()
     }

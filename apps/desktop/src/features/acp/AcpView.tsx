@@ -8,11 +8,14 @@ import type { AcpToolCall } from "@/bindings/AcpToolCall";
 import type { AcpToolStatus } from "@/bindings/AcpToolStatus";
 import {
   cancel,
+  choose,
   commands,
   decide,
   entriesOf,
   failure,
   loadTranscript,
+  models,
+  modes,
   prompt,
   transcripts,
 } from "@/features/acp/state";
@@ -267,6 +270,8 @@ function Composer({ id, working }: { id: string; working: boolean }) {
         class="w-full resize-none bg-transparent px-3 py-1.5 text-text outline-none placeholder:text-faint"
       />
       <div class="flex items-center gap-2 px-3 pb-1.5">
+        <Picker id={id} kind="model" />
+        <Picker id={id} kind="mode" />
         <span class="min-w-0 flex-1 truncate text-faint">
           {offered.length > 0 ? t("acp.hintCommands") : t("acp.hint")}
         </span>
@@ -289,6 +294,30 @@ function Composer({ id, working }: { id: string; working: boolean }) {
         </button>
       </div>
     </div>
+  );
+}
+
+function Picker({ id, kind }: { id: string; kind: "model" | "mode" }) {
+  const picker = (kind === "model" ? models.value : modes.value)[id];
+  if (!picker || picker.choices.length === 0) {
+    return null;
+  }
+  return (
+    <select
+      value={picker.chosen ?? ""}
+      title={t(kind === "model" ? "acp.model" : "acp.mode")}
+      onChange={(event) => {
+        const wanted = event.currentTarget.value;
+        void choose(id, kind === "model" ? wanted : null, kind === "mode" ? wanted : null);
+      }}
+      class="max-w-40 shrink-0 truncate border border-border bg-transparent px-1 text-faint outline-none transition-colors hover:text-text"
+    >
+      {picker.choices.map((choice) => (
+        <option key={choice.id} value={choice.id}>
+          {choice.name}
+        </option>
+      ))}
+    </select>
   );
 }
 

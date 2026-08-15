@@ -11,8 +11,11 @@ while IFS= read -r line; do
       ;;
     *'"session/new"'*)
       printf '%s\n' "$line" > ./session-new.json
-      printf '{"jsonrpc":"2.0","id":%s,"result":{"sessionId":"s-1"}}\n' "$id"
+      printf '{"jsonrpc":"2.0","id":%s,"result":{"sessionId":"s-1","models":{"currentModelId":"fast","availableModels":[{"modelId":"fast","name":"Fast"},{"modelId":"deep","name":"Deep"}]}}}\n' "$id"
       notify '{"sessionUpdate":"available_commands_update","availableCommands":[{"name":"compact","description":"Shrink the context"}]}'
+      ;;
+    *'"session/set_model"'*)
+      printf '{"jsonrpc":"2.0","id":%s,"result":null}\n' "$id"
       ;;
     *'"session/prompt"'*)
       case "$line" in

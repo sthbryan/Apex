@@ -3,10 +3,13 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { AcpCommand } from "@/bindings/AcpCommand";
 import type { AcpEntry } from "@/bindings/AcpEntry";
+import type { AcpPicker } from "@/bindings/AcpPicker";
 import type { AcpSnapshot } from "@/bindings/AcpSnapshot";
 
 export const transcripts = signal<Record<string, AcpEntry[]>>({});
 export const commands = signal<Record<string, AcpCommand[]>>({});
+export const models = signal<Record<string, AcpPicker>>({});
+export const modes = signal<Record<string, AcpPicker>>({});
 export const failure = signal<string | null>(null);
 
 export function entriesOf(id: string): AcpEntry[] {
@@ -47,6 +50,8 @@ export async function loadTranscript(id: string): Promise<void> {
     const snapshot = await invoke<AcpSnapshot>("acp_transcript", { id });
     transcripts.value = { ...transcripts.value, [id]: snapshot.entries };
     commands.value = { ...commands.value, [id]: snapshot.commands };
+    models.value = { ...models.value, [id]: snapshot.models };
+    modes.value = { ...modes.value, [id]: snapshot.modes };
     failure.value = null;
   } catch (cause) {
     failure.value = cause instanceof Error ? cause.message : String(cause);
@@ -59,6 +64,24 @@ export async function prompt(id: string, text: string): Promise<void> {
     failure.value = null;
   } catch (cause) {
     failure.value = cause instanceof Error ? cause.message : String(cause);
+  }
+}
+
+export async function choose(id: string, model: string | null, mode: string | null): Promise<void> {
+  const picker = model ? models : modes;
+  const chosen = model ?? mode;
+  const before = picker.value[id];
+  if (before) {
+    picker.value = { ...picker.value, [id]: { ...before, chosen } };
+  }
+  try {
+    await invoke("acp_choose", { id, model, mode });
+    failure.value = null;
+  } catch (cause) {
+    failure.value = cause instanceof Error ? cause.message : String(cause);
+    if (before) {
+      picker.value = { ...picker.value, [id]: before };
+    }
   }
 }
 

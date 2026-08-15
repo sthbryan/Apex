@@ -146,6 +146,8 @@ export const es: Messages = {
     stop: "Parar",
     reject: "Denegar",
     decided: "Respondido: {option}",
+    model: "Modelo de esta sesión",
+    mode: "Cuánto piensa",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

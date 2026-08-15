@@ -1453,3 +1453,30 @@ async fn an_agent_that_answers_nothing_says_so_in_the_transcript() {
     assert!(text.contains("without saying anything"), "unhelpful notice: {text}");
     assert!(text.contains("opencode auth login"), "the sign in hint is missing from {text}");
 }
+
+#[tokio::test]
+async fn the_models_an_acp_agent_offers_can_be_switched() {
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    let models = harness.manager.acp_snapshot(session.id).await.expect("snapshot").models;
+    assert_eq!(models.chosen.as_deref(), Some("fast"));
+    assert_eq!(models.choices.len(), 2);
+    assert_eq!(models.choices[1].name, "Deep");
+
+    harness.manager.acp_choose(session.id, Some("deep".into()), None).await.expect("choose");
+    let after = harness.manager.acp_snapshot(session.id).await.expect("snapshot").models;
+    assert_eq!(after.chosen.as_deref(), Some("deep"));
+}
