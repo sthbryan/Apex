@@ -4,16 +4,19 @@ import { gitStatus, worktrees } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+import { revealPanel } from "@/app/layout/actions";
 
-export function GitChip({ onOpen }: { onOpen: () => void }) {
+export function GitChip() {
   const project = activeProject.value;
   const status = gitStatus.value;
   if (!project?.is_git || !status) {
-    return null;
+    return <div />;
   }
 
   const trees = worktrees.value.length;
   const dirty = status.changes.length;
+
+  const onOpen = () => revealPanel("git");
 
   return (
     <button

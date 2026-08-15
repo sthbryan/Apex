@@ -35,7 +35,7 @@ export function ResourcesSummary() {
 
   const snapshot = metrics.value;
   if (!snapshot) {
-    return null;
+    return <div />;
   }
 
   return (
