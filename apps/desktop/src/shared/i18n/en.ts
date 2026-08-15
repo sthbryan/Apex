@@ -146,6 +146,7 @@ export const en = {
     decided: "Answered: {option}",
     model: "Model for this session",
     mode: "How hard it thinks",
+    working: "The agent is working… {seconds}s",
   },
   git: {
     noRepo: "This project is not a git repository.",

@@ -148,6 +148,7 @@ export const es: Messages = {
     decided: "Respondido: {option}",
     model: "Modelo de esta sesión",
     mode: "Cuánto piensa",
+    working: "El agente está trabajando… {seconds}s",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

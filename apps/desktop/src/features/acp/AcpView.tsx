@@ -47,6 +47,8 @@ export function AcpView({ id }: { id: string }) {
 
       {failure.value && <p class="px-3 pb-1 text-state-failed">{failure.value}</p>}
 
+      <Working since={session?.state} on={working} />
+
       <Composer id={id} working={working} />
     </div>
   );
@@ -180,6 +182,31 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
         </div>
       )}
     </div>
+  );
+}
+
+function Working({ since, on }: { since: string | undefined; on: boolean }) {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!on) {
+      setSeconds(0);
+      return;
+    }
+    const started = Date.now();
+    const tick = setInterval(() => setSeconds(Math.round((Date.now() - started) / 1000)), 500);
+    return () => clearInterval(tick);
+  }, [on, since]);
+
+  if (!on) {
+    return null;
+  }
+
+  return (
+    <p class="flex shrink-0 animate-pulse items-center gap-2 border-t border-border px-3 py-1 text-state-working">
+      <span>◍</span>
+      <span>{t("acp.working", { seconds: String(seconds) })}</span>
+    </p>
   );
 }
 
