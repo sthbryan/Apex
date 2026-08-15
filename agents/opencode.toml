@@ -1,6 +1,8 @@
 name = "opencode"
 command = "opencode"
 mode = "pty"
+acp_command = "opencode"
+acp_args = ["acp"]
 
 [mcp]
 kind = "project"

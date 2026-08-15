@@ -2,7 +2,7 @@ name = "claude"
 command = "claude"
 mode = "pty"
 acp_command = "npx"
-acp_args = ["@zed-industries/claude-code-acp"]
+acp_args = ["-y", "@agentclientprotocol/claude-agent-acp"]
 
 [mcp]
 kind = "flag"

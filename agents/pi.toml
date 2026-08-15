@@ -1,6 +1,8 @@
 name = "pi"
 command = "pi"
 mode = "pty"
+acp_command = "npx"
+acp_args = ["-y", "pi-acp"]
 
 [mcp]
 kind = "flag"
