@@ -1231,3 +1231,63 @@ async fn creating_a_session_for_an_unknown_agent_fails() {
         other => panic!("expected an error, got {other:?}"),
     }
 }
+
+#[tokio::test]
+async fn an_acp_session_streams_its_answer_and_waits_for_permission() {
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    assert_eq!(session.mode, apex_proto::AgentMode::Acp);
+    assert!(harness.manager.acp_entries(session.id).await.expect("transcript").is_empty());
+
+    harness.manager.acp_prompt(session.id, "change hello".into()).await.expect("prompt");
+    wait_for_state(&harness.manager, session.id, SessionState::Blocked).await;
+
+    let entries = harness.manager.acp_entries(session.id).await.expect("transcript");
+    assert_eq!(entries[0].body, apex_proto::AcpBody::User { text: "change hello".into() });
+    assert_eq!(entries[1].body, apex_proto::AcpBody::Agent { text: "on it".into() });
+
+    let apex_proto::AcpBody::Tool { call } = &entries[2].body else {
+        panic!("expected a tool call, got {:?}", entries[2].body);
+    };
+    assert_eq!(call.diffs[0].new_text, "two");
+    assert_eq!(call.status, apex_proto::AcpToolStatus::Running);
+
+    let apex_proto::AcpBody::Permission { ask } = &entries[3].body else {
+        panic!("expected a permission, got {:?}", entries[3].body);
+    };
+    assert_eq!(ask.decided, None);
+    assert_eq!(ask.options[0].id, "allow_once");
+
+    harness
+        .manager
+        .acp_decide(session.id, ask.request, Some("allow_once".into()))
+        .await
+        .expect("decide");
+    wait_for_state(&harness.manager, session.id, SessionState::Done).await;
+
+    let settled = harness.manager.acp_entries(session.id).await.expect("transcript");
+    let apex_proto::AcpBody::Permission { ask } = &settled[3].body else {
+        panic!("expected a permission");
+    };
+    assert_eq!(ask.decided.as_deref(), Some("allow_once"));
+
+    let apex_proto::AcpBody::Tool { call } = &settled[2].body else {
+        panic!("expected a tool call");
+    };
+    assert_eq!(call.status, apex_proto::AcpToolStatus::Completed);
+    assert_eq!(call.diffs[0].new_text, "two");
+    assert_eq!(settled.len(), 4);
+}

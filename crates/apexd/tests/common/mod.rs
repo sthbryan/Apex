@@ -35,6 +35,15 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         )
         .expect("prompted profile"),
     );
+    let acp = format!(
+        "name = \"acp-agent\"\n\
+         command = \"sh\"\n\
+         mode = \"acp\"\n\
+         acp_command = \"sh\"\n\
+         acp_args = [\"{}/tests/fixtures/acp-agent.sh\"]\n",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    profiles.upsert(AgentProfile::parse(&acp).expect("acp profile"));
     let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
         PathBuf::from("/bin"),
         PathBuf::from("/usr/bin"),
