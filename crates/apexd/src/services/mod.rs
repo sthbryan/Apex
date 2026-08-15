@@ -6,3 +6,6 @@ pub mod metrics;
 pub mod projects;
 pub mod sessions;
 pub mod tasks;
+
+#[cfg(test)]
+mod acp_tests;
