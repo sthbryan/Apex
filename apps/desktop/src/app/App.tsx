@@ -18,10 +18,11 @@ import { sessions } from "@/features/sessions/state";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { activeSessionId } from "@/features/workspace/state";
-import { agents, connect, failure, platform, stale, status } from "@/shared/daemon";
+import { agents, connect, failure, notice, platform, stale, status } from "@/shared/daemon";
 import { locale, t } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
+import { Icon } from "@/shared/ui/Icon";
 import { watchFullscreen } from "@/shared/window";
 
 export function App() {
@@ -100,6 +101,7 @@ export function App() {
   return (
     <>
       <Layout onNewSession={() => setPaletteOpen(true)} />
+      <Notice />
       <NewSession />
       <CloseSession />
       <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
@@ -113,6 +115,26 @@ export function App() {
         isGit={activeProject.value?.is_git ?? false}
       />
     </>
+  );
+}
+
+function Notice() {
+  if (!notice.value) {
+    return null;
+  }
+  return (
+    <div class="-translate-x-1/2 fixed bottom-8 left-1/2 z-50 flex max-w-xl items-start gap-3 border border-state-failed bg-surface px-3 py-2 text-text shadow-lg">
+      <span class="min-w-0 whitespace-pre-wrap">{notice.value}</span>
+      <button
+        type="button"
+        onClick={() => {
+          notice.value = null;
+        }}
+        class="shrink-0 text-faint transition-colors hover:text-text"
+      >
+        <Icon name="close" size={12} />
+      </button>
+    </div>
   );
 }
 

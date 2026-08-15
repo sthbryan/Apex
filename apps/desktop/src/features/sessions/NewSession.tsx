@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import type { AgentMode } from "@/bindings/AgentMode";
 import type { Isolation } from "@/bindings/Isolation";
 import { cancelSession, pendingSession, startSession } from "@/features/sessions/pending";
-import { agents } from "@/shared/daemon";
+import { agents, complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
@@ -30,9 +30,10 @@ function Choices() {
         return;
       }
       const slug = isolation === "worktree" ? name.trim() || null : null;
-      void startSession(current, isolation, slug, mode).catch((error: unknown) =>
-        setFailure(String(error)),
-      );
+      void startSession(current, isolation, slug, mode).catch((error: unknown) => {
+        setFailure(String(error));
+        complain(error);
+      });
     },
     [name, mode],
   );

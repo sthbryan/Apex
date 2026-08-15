@@ -44,6 +44,16 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         env!("CARGO_MANIFEST_DIR")
     );
     profiles.upsert(AgentProfile::parse(&acp).expect("acp profile"));
+    profiles.upsert(
+        AgentProfile::parse(
+            "name = \"acp-mute\"\n\
+             command = \"sh\"\n\
+             mode = \"acp\"\n\
+             acp_command = \"sh\"\n\
+             acp_args = [\"-c\", \"echo 'cannot reach the model' >&2; exit 1\"]\n",
+        )
+        .expect("mute acp profile"),
+    );
     let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
         PathBuf::from("/bin"),
         PathBuf::from("/usr/bin"),

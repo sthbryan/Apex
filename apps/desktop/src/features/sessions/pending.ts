@@ -23,6 +23,7 @@ import {
   whenClosingSession,
 } from "@/features/workspace/state";
 import { type Direction, findLeaf, leaves, type PaneView } from "@/features/workspace/tree";
+import { complain } from "@/shared/daemon";
 
 export type PendingSession = {
   id: number;
@@ -38,7 +39,7 @@ export const pendingSession = signal<PendingSession | null>(null);
 
 export function requestSession(request: Omit<PendingSession, "id">): void {
   if (!request.isGit) {
-    void startSession({ ...request, id: 0 }, "directory");
+    void startSession({ ...request, id: 0 }, "directory").catch(complain);
     return;
   }
   requests += 1;

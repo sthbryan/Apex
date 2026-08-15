@@ -212,6 +212,8 @@ use tokio::sync::{Mutex, RwLock, broadcast, oneshot};
 use uuid::Uuid;
 
 type Decisions = Arc<Mutex<std::collections::HashMap<u32, oneshot::Sender<Option<String>>>>>;
+const HANDSHAKE_PATIENCE: std::time::Duration = std::time::Duration::from_secs(90);
+
 type Shared = Arc<Mutex<SessionSummary>>;
 type Commands = Arc<Mutex<Vec<AcpCommand>>>;
 
@@ -476,8 +478,35 @@ impl AcpRegistry {
         env.extend(profile.env.clone());
         let agent =
             Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay).await?;
-        agent.initialize().await?;
-        let remote = agent.new_session(cwd, &self.mcp_servers(record.id)).await?;
+
+        let greeting = tokio::time::timeout(HANDSHAKE_PATIENCE, async {
+            agent.initialize().await?;
+            agent.new_session(cwd, &self.mcp_servers(record.id)).await
+        })
+        .await;
+
+        let remote = match greeting {
+            Ok(Ok(remote)) => remote,
+            outcome => {
+                let _ = agent.kill().await;
+                let store = self.store.lock().await;
+                let _ = store.close_session(record.id);
+                let complaints = agent.complaints().await;
+                let reason = match outcome {
+                    Err(_) => format!(
+                        "{} did not answer in {} seconds",
+                        profile.name,
+                        HANDSHAKE_PATIENCE.as_secs()
+                    ),
+                    Ok(Err(error)) => format!("{error:#}"),
+                    Ok(Ok(_)) => unreachable!(),
+                };
+                if complaints.is_empty() {
+                    bail!("{reason}")
+                }
+                bail!("{reason}: {complaints}")
+            }
+        };
 
         let session = Arc::new(AcpSession {
             summary: Arc::clone(&summary),

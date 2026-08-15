@@ -1375,3 +1375,25 @@ async fn an_acp_session_is_handed_the_apex_mcp_server() {
     assert!(seen.contains("\"mcp\""), "the launcher does not run mcp in {seen}");
     assert!(seen.contains(&session.id.to_string()), "the session id is missing from {seen}");
 }
+
+#[tokio::test]
+async fn an_acp_agent_that_never_greets_leaves_no_session_behind() {
+    let harness = Harness::start().await;
+    let failure = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-mute".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect_err("the handshake cannot succeed");
+
+    let told = format!("{failure:#}");
+    assert!(told.contains("cannot reach the model"), "the agent complaint is missing from {told}");
+    assert!(harness.manager.list_sessions().await.is_empty());
+}

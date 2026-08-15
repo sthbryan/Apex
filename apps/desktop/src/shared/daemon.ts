@@ -10,6 +10,12 @@ export const status = signal<ConnectionStatus>("connecting");
 export const failure = signal<string | null>(null);
 export const agents = signal<AgentSummary[]>([]);
 export const daemonVersion = signal<string | null>(null);
+export const notice = signal<string | null>(null);
+
+export function complain(cause: unknown): void {
+  notice.value = cause instanceof Error ? cause.message : String(cause);
+}
+
 export const stale = computed(() => (failure.value ?? "").includes("UnsupportedVersion"));
 export const platform = signal<string | null>(null);
 

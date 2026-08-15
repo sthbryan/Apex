@@ -16,6 +16,8 @@ use tokio::sync::{Mutex, mpsc, oneshot};
 
 pub use types::*;
 
+const STDERR_KEPT: usize = 20;
+
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
 #[async_trait::async_trait]
@@ -203,6 +205,7 @@ async fn notify_client<C: Client>(client: &mut C, method: &str, params: Value) {
 pub struct Agent {
     connection: Connection,
     child: Mutex<Child>,
+    complaints: Arc<Mutex<Vec<String>>>,
 }
 
 impl Agent {
@@ -228,17 +231,28 @@ impl Agent {
         let mut child = process.spawn().with_context(|| format!("could not start {command}"))?;
         let stdin = child.stdin.take().context("the agent has no stdin")?;
         let stdout = child.stdout.take().context("the agent has no stdout")?;
+        let complaints: Arc<Mutex<Vec<String>>> = Arc::default();
         if let Some(stderr) = child.stderr.take() {
             let name = command.to_owned();
+            let kept = Arc::clone(&complaints);
             tokio::spawn(async move {
                 let mut lines = BufReader::new(stderr).lines();
                 while let Ok(Some(line)) = lines.next_line().await {
                     tracing::debug!(agent = name, line, "acp stderr");
+                    let mut kept = kept.lock().await;
+                    if kept.len() == STDERR_KEPT {
+                        kept.remove(0);
+                    }
+                    kept.push(line);
                 }
             });
         }
 
-        Ok(Self { connection: Connection::new(stdout, stdin, client), child: Mutex::new(child) })
+        Ok(Self {
+            connection: Connection::new(stdout, stdin, client),
+            child: Mutex::new(child),
+            complaints,
+        })
     }
 
     pub async fn initialize(&self) -> Result<Initialized> {
@@ -294,6 +308,10 @@ impl Agent {
 
     pub async fn pid(&self) -> Option<u32> {
         self.child.lock().await.id()
+    }
+
+    pub async fn complaints(&self) -> String {
+        self.complaints.lock().await.join("\n")
     }
 
     pub async fn wait(&self) -> i32 {
