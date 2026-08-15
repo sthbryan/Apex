@@ -298,6 +298,7 @@ impl SessionRegistry {
             exit_code: None,
             worktree: worktree.clone(),
             task: task.clone(),
+            mode: apex_proto::AgentMode::Pty,
         };
 
         let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
@@ -316,7 +317,7 @@ impl SessionRegistry {
             .with_context(|| format!("\"{}\" was not found in PATH", profile.command))
     }
 
-    async fn next_title(&self, agent: &str) -> String {
+    pub async fn next_title(&self, agent: &str) -> String {
         let sessions = self.sessions.read().await;
         let mut taken = 0;
         for session in sessions.values() {
@@ -330,7 +331,7 @@ impl SessionRegistry {
         format!("{agent} {}", taken + 1)
     }
 
-    async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
+    pub async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
         let root = PathBuf::from(project_root);
         if !tokio::task::spawn_blocking({
             let root = root.clone();

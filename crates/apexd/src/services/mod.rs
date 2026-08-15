@@ -1,3 +1,4 @@
+pub mod acp;
 pub mod context;
 pub mod files;
 pub mod git;

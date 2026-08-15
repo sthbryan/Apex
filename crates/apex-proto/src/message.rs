@@ -284,12 +284,88 @@ pub struct SessionSummary {
     pub exit_code: Option<u32>,
     pub worktree: Option<WorktreeInfo>,
     pub task: Option<String>,
+    pub mode: AgentMode,
 }
 
 impl SessionSummary {
     pub fn is_alive(&self) -> bool {
         self.exit_code.is_none()
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum AcpToolStatus {
+    #[default]
+    Pending,
+    Running,
+    Completed,
+    Failed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpDiff {
+    pub path: String,
+    pub old_text: Option<String>,
+    pub new_text: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpToolCall {
+    pub call_id: String,
+    pub title: String,
+    pub kind: String,
+    pub status: AcpToolStatus,
+    pub text: String,
+    pub diffs: Vec<AcpDiff>,
+    pub locations: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpOption {
+    pub id: String,
+    pub name: String,
+    pub kind: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpPermission {
+    pub request: u32,
+    pub title: String,
+    pub options: Vec<AcpOption>,
+    pub decided: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpPlanEntry {
+    pub content: String,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum AcpBody {
+    User { text: String },
+    Agent { text: String },
+    Thought { text: String },
+    Tool { call: AcpToolCall },
+    Permission { ask: AcpPermission },
+    Plan { entries: Vec<AcpPlanEntry> },
+    Notice { text: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpEntry {
+    pub index: u32,
+    pub body: AcpBody,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -551,6 +627,25 @@ pub enum Command {
         project: Uuid,
         target: GitTarget,
     },
+    AcpTranscript {
+        #[ts(type = "string")]
+        id: Uuid,
+    },
+    AcpPrompt {
+        #[ts(type = "string")]
+        id: Uuid,
+        text: String,
+    },
+    AcpCancel {
+        #[ts(type = "string")]
+        id: Uuid,
+    },
+    AcpDecide {
+        #[ts(type = "string")]
+        id: Uuid,
+        request: u32,
+        option: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -579,6 +674,7 @@ pub enum Reply {
     Merge { report: MergeReport },
     File { contents: FileContents },
     Metrics { snapshot: MetricsSnapshot },
+    Acp { entries: Vec<AcpEntry> },
     Done,
 }
 
@@ -611,6 +707,11 @@ pub enum Event {
     SessionClosed {
         #[ts(type = "string")]
         id: Uuid,
+    },
+    AcpUpdated {
+        #[ts(type = "string")]
+        id: Uuid,
+        entry: AcpEntry,
     },
 }
 

@@ -297,7 +297,9 @@ impl Client {
                     .create(project, &agent, cwd, size, isolation, slug)
                     .await
                     .map_err(internal_error)?;
-                self.subscriptions.attach(session.id).await?;
+                if session.mode == apex_proto::AgentMode::Pty {
+                    self.subscriptions.attach(session.id).await?;
+                }
                 Ok(Reply::Session { session })
             }
             Command::SessionAttach { id } => {
@@ -314,6 +316,21 @@ impl Client {
             }
             Command::SessionResize { id, size } => {
                 self.manager.resize(id, size).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::AcpTranscript { id } => Ok(Reply::Acp {
+                entries: self.manager.acp_entries(id).await.map_err(not_found_error)?,
+            }),
+            Command::AcpPrompt { id, text } => {
+                self.manager.acp_prompt(id, text).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::AcpCancel { id } => {
+                self.manager.acp_cancel(id).await.map_err(not_found_error)?;
+                Ok(Reply::Done)
+            }
+            Command::AcpDecide { id, request, option } => {
+                self.manager.acp_decide(id, request, option).await.map_err(not_found_error)?;
                 Ok(Reply::Done)
             }
             Command::SessionClose { id, worktree } => {

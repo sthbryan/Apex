@@ -188,6 +188,7 @@ mod tests {
             exit_code: None,
             worktree: None,
             task: None,
+            mode: apex_proto::AgentMode::Pty,
         };
         Caller {
             session: summary.id,
@@ -215,6 +216,7 @@ mod tests {
             exit_code: None,
             worktree: None,
             task: None,
+            mode: apex_proto::AgentMode::Pty,
         }
     }
 

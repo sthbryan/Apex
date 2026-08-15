@@ -183,6 +183,7 @@ name = "apexd"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "apex-acp",
  "apex-core",
  "apex-git",
  "apex-mcp",
@@ -191,6 +192,7 @@ dependencies = [
  "apex-pty",
  "apex-quota",
  "apex-tasks",
+ "async-trait",
  "bytes",
  "directories",
  "serde_json",

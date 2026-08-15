@@ -177,6 +177,7 @@ mod tests {
             exit_code: None,
             worktree,
             task: None,
+            mode: apex_proto::AgentMode::Pty,
         }
     }
 

@@ -12,6 +12,7 @@ use tokio::sync::Mutex;
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
+use crate::services::acp::AcpRegistry;
 use crate::services::sessions::SessionRegistry;
 use crate::services::{
     context::ContextService, files::FilesService, git::GitService, metrics::MetricsService,
@@ -29,6 +30,7 @@ pub struct SessionManager {
     tasks: TasksService,
     metrics: MetricsService,
     registry: Arc<SessionRegistry>,
+    acp: Arc<AcpRegistry>,
 }
 
 impl SessionManager {
@@ -45,6 +47,13 @@ impl SessionManager {
         let resolver = Arc::new(Mutex::new(resolver));
         let store = Arc::new(Mutex::new(store));
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
+        let acp = Arc::new(AcpRegistry::new(
+            profiles.clone(),
+            Arc::clone(&resolver),
+            Arc::clone(&store),
+            base_env.clone(),
+            events.clone(),
+        ));
         let files = FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
         let context = ContextService::new(Arc::clone(&store));
         let projects = ProjectsService::new(Arc::clone(&store));
@@ -74,6 +83,7 @@ impl SessionManager {
             tasks,
             metrics,
             registry,
+            acp,
         }
     }
 
@@ -86,7 +96,26 @@ impl SessionManager {
     }
 
     pub async fn list_sessions(&self) -> Vec<SessionSummary> {
-        self.registry.list_sessions().await
+        let mut sessions = self.registry.list_sessions().await;
+        sessions.extend(self.acp.list().await);
+        sessions.sort_by(|left, right| left.title.cmp(&right.title));
+        sessions
+    }
+
+    pub async fn acp_entries(&self, id: Uuid) -> Result<Vec<apex_proto::AcpEntry>> {
+        Ok(self.acp.require(id).await?.entries().await)
+    }
+
+    pub async fn acp_prompt(&self, id: Uuid, text: String) -> Result<()> {
+        Arc::clone(&self.acp).prompt(id, text).await
+    }
+
+    pub async fn acp_cancel(&self, id: Uuid) -> Result<()> {
+        self.acp.require(id).await?.cancel()
+    }
+
+    pub async fn acp_decide(&self, id: Uuid, request: u32, option: Option<String>) -> Result<()> {
+        self.acp.require(id).await?.decide(request, option).await
     }
 
     pub async fn get(&self, id: Uuid) -> Option<Arc<crate::services::sessions::LiveSession>> {
@@ -102,7 +131,25 @@ impl SessionManager {
         isolation: Isolation,
         slug: Option<String>,
     ) -> Result<SessionSummary> {
-        Arc::clone(&self.registry).create(project, agent, cwd, size, isolation, slug).await
+        if !self.acp.speaks_acp(agent).await {
+            return Arc::clone(&self.registry).create(project, agent, cwd, size, isolation, slug).await;
+        }
+
+        let root = self.registry.project_root(project).await?;
+        let title = self.registry.next_title(agent).await;
+        let worktree = match isolation {
+            Isolation::Worktree => {
+                Some(self.registry.open_worktree(&root, slug.as_deref().unwrap_or(&title)).await?)
+            }
+            Isolation::Directory => None,
+        };
+        let directory = match (&worktree, cwd) {
+            (Some(tree), _) => PathBuf::from(&tree.path),
+            (None, Some(explicit)) => PathBuf::from(explicit),
+            (None, None) => PathBuf::from(root),
+        };
+
+        Arc::clone(&self.acp).open(project, agent, &directory, title, size, worktree).await
     }
 
     pub async fn resume(
@@ -134,6 +181,9 @@ impl SessionManager {
     }
 
     pub async fn close(&self, id: Uuid, disposal: WorktreeDisposal) -> Result<()> {
+        if self.acp.get(id).await.is_some() {
+            return self.acp.close(id).await;
+        }
         self.registry.close(id, disposal).await
     }
 

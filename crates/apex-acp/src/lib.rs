@@ -202,7 +202,7 @@ async fn notify_client<C: Client>(client: &mut C, method: &str, params: Value) {
 
 pub struct Agent {
     connection: Connection,
-    child: Child,
+    child: Mutex<Child>,
 }
 
 impl Agent {
@@ -238,7 +238,7 @@ impl Agent {
             });
         }
 
-        Ok(Self { connection: Connection::new(stdout, stdin, client), child })
+        Ok(Self { connection: Connection::new(stdout, stdin, client), child: Mutex::new(child) })
     }
 
     pub async fn initialize(&self) -> Result<Initialized> {
@@ -292,12 +292,12 @@ impl Agent {
         self.connection.notify("session/cancel", json!({ "sessionId": session }))
     }
 
-    pub fn pid(&self) -> Option<u32> {
-        self.child.id()
+    pub async fn pid(&self) -> Option<u32> {
+        self.child.lock().await.id()
     }
 
-    pub async fn kill(&mut self) -> Result<()> {
-        self.child.kill().await.context("could not stop the agent")
+    pub async fn kill(&self) -> Result<()> {
+        self.child.lock().await.kill().await.context("could not stop the agent")
     }
 }
 
