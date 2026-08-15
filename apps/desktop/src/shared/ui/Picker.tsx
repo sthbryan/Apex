@@ -24,6 +24,7 @@ type Props = {
 export function Picker({ open, onClose, query, onQuery, placeholder, items }: Props) {
   const [cursor, setCursor] = useState(0);
   const field = useRef<HTMLInputElement>(null);
+  const selected = useRef<HTMLButtonElement>(null);
   const overlay = usePresence<HTMLDivElement>(open);
 
   useEffect(() => {
@@ -41,25 +42,36 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
     setCursor((current) => Math.min(current, Math.max(items.length - 1, 0)));
   }, [items.length]);
 
+  useEffect(() => {
+    selected.current?.scrollIntoView({ block: "nearest" });
+  }, [cursor]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setCursor((current) => (current + 1) % Math.max(items.length, 1));
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setCursor((current) => (current - 1 + items.length) % Math.max(items.length, 1));
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        items[cursor]?.run();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [open, items, cursor, onClose]);
+
   if (!overlay.mounted) {
     return null;
   }
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setCursor((current) => (current + 1) % Math.max(items.length, 1));
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setCursor((current) => (current - 1 + items.length) % Math.max(items.length, 1));
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      items[cursor]?.run();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      onClose();
-    }
-  };
 
   return (
     <div
@@ -86,7 +98,6 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
           value={query}
           placeholder={placeholder}
           onInput={(event) => onQuery(event.currentTarget.value)}
-          onKeyDown={onKeyDown}
           class="w-full border-b border-border bg-transparent px-3 py-2.5 outline-none placeholder:text-faint"
         />
         <ul class="max-h-80 overflow-y-auto py-1">
@@ -97,6 +108,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
               <li key={item.id}>
                 <button
                   type="button"
+                  ref={index === cursor ? selected : undefined}
                   onMouseEnter={() => setCursor(index)}
                   onClick={item.run}
                   title={item.hint ?? item.label}
@@ -108,7 +120,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
                   <span class="shrink-0 truncate">{item.label}</span>
                   {item.hint && <span class="truncate text-faint">{item.hint}</span>}
                   {item.preview && (
-                    <span class="ml-auto shrink-0 font-mono text-faint">
+                    <span class="ml-auto shrink-0 whitespace-pre rounded border border-border bg-black/20 px-1 py-0.5 font-mono text-[9px] leading-[1.25] text-faint">
                       {item.preview.join("\n")}
                     </span>
                   )}
