@@ -14,6 +14,9 @@ while IFS= read -r line; do
       notify '{"sessionUpdate":"available_commands_update","availableCommands":[{"name":"compact","description":"Shrink the context"}]}'
       ;;
     *'"session/prompt"'*)
+      case "$line" in
+        *walk\ out*) exit 3 ;;
+      esac
       notify '{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"on it"}}'
       notify '{"sessionUpdate":"tool_call","toolCallId":"c1","title":"Edit hello.txt","kind":"edit","status":"in_progress","content":[{"type":"diff","path":"/tmp/hello.txt","oldText":"one","newText":"two"}]}'
       printf '{"jsonrpc":"2.0","id":100,"method":"session/request_permission","params":{"sessionId":"s-1","toolCall":{"toolCallId":"c1","title":"Edit hello.txt"},"options":[{"optionId":"allow_once","name":"Allow once","kind":"allow_once"}]}}\n'

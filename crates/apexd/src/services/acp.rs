@@ -248,6 +248,10 @@ impl AcpSession {
         self.agent.cancel(&self.remote)
     }
 
+    pub async fn wait(&self) -> i32 {
+        self.agent.wait().await
+    }
+
     pub async fn kill(&self) -> Result<()> {
         self.agent.kill().await
     }
@@ -487,6 +491,7 @@ impl AcpRegistry {
 
         let opened = session.snapshot_summary().await;
         let _ = self.events.send(Event::SessionOpened { session: opened.clone() });
+        self.watch_exit(record.id, session);
         Ok(opened)
     }
 
@@ -529,6 +534,28 @@ impl AcpRegistry {
 
     pub async fn require(&self, id: Uuid) -> Result<Arc<AcpSession>> {
         self.get(id).await.with_context(|| format!("session {id} does not exist"))
+    }
+
+    fn watch_exit(self: &Arc<Self>, id: Uuid, session: Arc<AcpSession>) {
+        let registry = Arc::clone(self);
+        tokio::spawn(async move {
+            let code = session.wait().await;
+            let gone = {
+                let mut summary = session.summary.lock().await;
+                if summary.exit_code.is_some() {
+                    return;
+                }
+                summary.exit_code = Some(code.max(0) as u32);
+                summary.state = SessionState::Done;
+                summary.exit_code
+            };
+            for (_, waiting) in session.decisions.lock().await.drain() {
+                let _ = waiting.send(None);
+            }
+            if let Some(code) = gone {
+                let _ = registry.events.send(Event::SessionExited { id, code });
+            }
+        });
     }
 
     async fn moved(&self, session: &AcpSession, id: Uuid, state: SessionState) {

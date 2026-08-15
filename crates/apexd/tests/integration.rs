@@ -1295,3 +1295,29 @@ async fn an_acp_session_streams_its_answer_and_waits_for_permission() {
     assert_eq!(call.diffs[0].new_text, "two");
     assert_eq!(settled.len(), 4);
 }
+
+#[tokio::test]
+async fn an_acp_agent_that_dies_leaves_its_session_marked_as_finished() {
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    harness.manager.acp_prompt(session.id, "walk out".into()).await.expect("prompt");
+    wait_for_state(&harness.manager, session.id, SessionState::Done).await;
+
+    let listed = harness.manager.list_sessions().await;
+    let found = listed.iter().find(|candidate| candidate.id == session.id).expect("the session");
+    assert_eq!(found.exit_code, Some(3));
+    assert!(!found.is_alive());
+}

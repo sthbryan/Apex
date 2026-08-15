@@ -296,6 +296,13 @@ impl Agent {
         self.child.lock().await.id()
     }
 
+    pub async fn wait(&self) -> i32 {
+        match self.child.lock().await.wait().await {
+            Ok(status) => status.code().unwrap_or(1),
+            Err(_) => 1,
+        }
+    }
+
     pub async fn kill(&self) -> Result<()> {
         self.child.lock().await.kill().await.context("could not stop the agent")
     }
