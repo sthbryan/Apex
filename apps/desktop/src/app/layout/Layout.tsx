@@ -71,12 +71,6 @@ export function Layout({ onNewSession }: Props) {
               <UsageChip />
               <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
               <ToolbarButton
-                label={t("shortcuts.title")}
-                icon="keyboard"
-                pressed={page.value === "shortcuts"}
-                onClick={() => togglePage("shortcuts")}
-              />
-              <ToolbarButton
                 label={t("settings.title")}
                 icon="settings"
                 pressed={page.value === "settings"}
