@@ -8,6 +8,7 @@ import type { AcpToolCall } from "@/bindings/AcpToolCall";
 import type { AcpToolStatus } from "@/bindings/AcpToolStatus";
 import {
   cancel,
+  commands,
   decide,
   entriesOf,
   failure,
@@ -183,6 +184,11 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
 
 function Composer({ id, working }: { id: string; working: boolean }) {
   const [text, setText] = useState("");
+  const [cursor, setCursor] = useState(0);
+  const field = useRef<HTMLTextAreaElement>(null);
+  const offered = commands.value[id] ?? [];
+  const typed = /^\/(\S*)$/.exec(text);
+  const matches = typed ? offered.filter((command) => command.name.startsWith(typed[1])) : [];
 
   const send = () => {
     const body = text.trim();
@@ -193,15 +199,68 @@ function Composer({ id, working }: { id: string; working: boolean }) {
     void prompt(id, body);
   };
 
+  const pick = (name: string) => {
+    setText(`/${name} `);
+    setCursor(0);
+    field.current?.focus();
+  };
+
   return (
-    <div class="flex shrink-0 flex-col border-t border-border">
+    <div class="relative flex shrink-0 flex-col border-t border-border">
+      {matches.length > 0 && (
+        <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-surface">
+          {matches.map((command, index) => (
+            <li key={command.name}>
+              <button
+                type="button"
+                onMouseEnter={() => setCursor(index)}
+                onClick={() => pick(command.name)}
+                class={cn(
+                  "flex w-full items-baseline gap-2 px-3 py-0.5 text-left",
+                  index === cursor ? "bg-raised" : "hover:bg-raised",
+                )}
+              >
+                <span class="shrink-0 text-text">/{command.name}</span>
+                <span class="min-w-0 truncate text-faint">{command.description}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <textarea
+        ref={field}
         value={text}
         rows={3}
         placeholder={t("acp.placeholder")}
         spellcheck={false}
-        onInput={(event) => setText(event.currentTarget.value)}
+        onInput={(event) => {
+          setText(event.currentTarget.value);
+          setCursor(0);
+        }}
         onKeyDown={(event) => {
+          if (matches.length > 0) {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setCursor((current) => (current + 1) % matches.length);
+              return;
+            }
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setCursor((current) => (current - 1 + matches.length) % matches.length);
+              return;
+            }
+            if (event.key === "Tab" || (event.key === "Enter" && !event.shiftKey)) {
+              event.preventDefault();
+              pick(matches[cursor].name);
+              return;
+            }
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setText("");
+              return;
+            }
+          }
           if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
             event.preventDefault();
             send();
@@ -210,7 +269,9 @@ function Composer({ id, working }: { id: string; working: boolean }) {
         class="w-full resize-none bg-transparent px-3 py-1.5 text-text outline-none placeholder:text-faint"
       />
       <div class="flex items-center gap-2 px-3 pb-1.5">
-        <span class="min-w-0 flex-1 truncate text-faint">{t("acp.hint")}</span>
+        <span class="min-w-0 flex-1 truncate text-faint">
+          {offered.length > 0 ? t("acp.hintCommands") : t("acp.hint")}
+        </span>
         {working && (
           <button
             type="button"

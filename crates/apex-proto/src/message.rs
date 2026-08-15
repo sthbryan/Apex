@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 2;
+pub const PROTOCOL_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -364,6 +364,20 @@ pub enum AcpBody {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct AcpCommand {
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AcpSnapshot {
+    pub entries: Vec<AcpEntry>,
+    pub commands: Vec<AcpCommand>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct AcpEntry {
     pub index: u32,
     pub body: AcpBody,
@@ -677,7 +691,7 @@ pub enum Reply {
     Merge { report: MergeReport },
     File { contents: FileContents },
     Metrics { snapshot: MetricsSnapshot },
-    Acp { entries: Vec<AcpEntry> },
+    Acp { snapshot: AcpSnapshot },
     Done,
 }
 
@@ -715,6 +729,11 @@ pub enum Event {
         #[ts(type = "string")]
         id: Uuid,
         entry: AcpEntry,
+    },
+    AcpCommands {
+        #[ts(type = "string")]
+        id: Uuid,
+        commands: Vec<AcpCommand>,
     },
 }
 

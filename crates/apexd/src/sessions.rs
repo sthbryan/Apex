@@ -112,8 +112,8 @@ impl SessionManager {
         sessions
     }
 
-    pub async fn acp_entries(&self, id: Uuid) -> Result<Vec<apex_proto::AcpEntry>> {
-        Ok(self.acp.require(id).await?.entries().await)
+    pub async fn acp_snapshot(&self, id: Uuid) -> Result<apex_proto::AcpSnapshot> {
+        Ok(self.acp.require(id).await?.snapshot().await)
     }
 
     pub async fn acp_prompt(&self, id: Uuid, text: String) -> Result<()> {

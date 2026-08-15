@@ -327,7 +327,7 @@ impl Client {
                 Ok(Reply::Done)
             }
             Command::AcpTranscript { id } => Ok(Reply::Acp {
-                entries: self.manager.acp_entries(id).await.map_err(not_found_error)?,
+                snapshot: self.manager.acp_snapshot(id).await.map_err(not_found_error)?,
             }),
             Command::AcpPrompt { id, text } => {
                 self.manager.acp_prompt(id, text).await.map_err(not_found_error)?;

@@ -139,6 +139,7 @@ export const es: Messages = {
     empty: "Escríbele algo para que el agente arranque.",
     placeholder: "Pídele algo al agente…",
     hint: "↵ envía · ⇧↵ salto de línea",
+    hintCommands: "↵ envía · ⇧↵ salto de línea · / para comandos",
     send: "Enviar",
     stop: "Parar",
     reject: "Denegar",

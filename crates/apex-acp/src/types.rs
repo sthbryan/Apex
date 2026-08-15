@@ -178,6 +178,14 @@ pub struct PlanEntry {
     pub priority: Option<String>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AvailableCommand {
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "sessionUpdate", rename_all = "snake_case", rename_all_fields = "camelCase")]
 pub enum SessionUpdate {
@@ -204,6 +212,10 @@ pub enum SessionUpdate {
     },
     CurrentModeUpdate {
         current_mode_id: String,
+    },
+    AvailableCommandsUpdate {
+        #[serde(default)]
+        available_commands: Vec<AvailableCommand>,
     },
 }
 

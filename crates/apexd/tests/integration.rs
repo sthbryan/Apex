@@ -1250,12 +1250,16 @@ async fn an_acp_session_streams_its_answer_and_waits_for_permission() {
         .expect("create");
 
     assert_eq!(session.mode, apex_proto::AgentMode::Acp);
-    assert!(harness.manager.acp_entries(session.id).await.expect("transcript").is_empty());
+    assert!(harness.manager.acp_snapshot(session.id).await.expect("transcript").entries.is_empty());
 
     harness.manager.acp_prompt(session.id, "change hello".into()).await.expect("prompt");
     wait_for_state(&harness.manager, session.id, SessionState::Blocked).await;
 
-    let entries = harness.manager.acp_entries(session.id).await.expect("transcript");
+    let snapshot = harness.manager.acp_snapshot(session.id).await.expect("transcript");
+    assert_eq!(snapshot.commands.len(), 1);
+    assert_eq!(snapshot.commands[0].name, "compact");
+    assert_eq!(snapshot.commands[0].description, "Shrink the context");
+    let entries = snapshot.entries;
     assert_eq!(entries[0].body, apex_proto::AcpBody::User { text: "change hello".into() });
     assert_eq!(entries[1].body, apex_proto::AcpBody::Agent { text: "on it".into() });
 
@@ -1278,7 +1282,7 @@ async fn an_acp_session_streams_its_answer_and_waits_for_permission() {
         .expect("decide");
     wait_for_state(&harness.manager, session.id, SessionState::Done).await;
 
-    let settled = harness.manager.acp_entries(session.id).await.expect("transcript");
+    let settled = harness.manager.acp_snapshot(session.id).await.expect("transcript").entries;
     let apex_proto::AcpBody::Permission { ask } = &settled[3].body else {
         panic!("expected a permission");
     };

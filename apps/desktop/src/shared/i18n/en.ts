@@ -137,6 +137,7 @@ export const en = {
     empty: "Say something to get the agent going.",
     placeholder: "Ask the agent…",
     hint: "↵ sends · ⇧↵ new line",
+    hintCommands: "↵ sends · ⇧↵ new line · / for commands",
     send: "Send",
     stop: "Stop",
     reject: "Deny",

@@ -7,7 +7,7 @@ import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { TerminalSize } from "@/bindings/TerminalSize";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
-import { absorb, forget } from "@/features/acp/state";
+import { absorb, forget, offer } from "@/features/acp/state";
 import { disposeTerminal } from "@/features/sessions/registry";
 
 const UUID_BYTES = 16;
@@ -100,6 +100,9 @@ function applyEvent(event: Event): void {
       break;
     case "acp_updated":
       absorb(event.id, event.entry);
+      break;
+    case "acp_commands":
+      offer(event.id, event.commands);
       break;
     case "session_closed":
       sessions.value = sessions.value.filter((session) => session.id !== event.id);

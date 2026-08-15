@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use apex_acp::{ContentBlock, SessionUpdate, ToolCall, ToolContent, ToolStatus};
 use apex_proto::{
-    AcpBody, AcpDiff, AcpEntry, AcpOption, AcpPermission, AcpPlanEntry, AcpToolCall, AcpToolStatus,
+    AcpBody, AcpCommand, AcpDiff, AcpEntry, AcpOption, AcpPermission, AcpPlanEntry, AcpSnapshot,
+    AcpToolCall, AcpToolStatus,
 };
 
 #[derive(Default)]
@@ -77,7 +78,8 @@ impl Transcript {
                     .collect();
                 Some(self.push(AcpBody::Plan { entries }))
             }
-            SessionUpdate::CurrentModeUpdate { .. } => None,
+            SessionUpdate::CurrentModeUpdate { .. }
+            | SessionUpdate::AvailableCommandsUpdate { .. } => None,
         }
     }
 
@@ -211,6 +213,7 @@ use uuid::Uuid;
 
 type Decisions = Arc<Mutex<std::collections::HashMap<u32, oneshot::Sender<Option<String>>>>>;
 type Shared = Arc<Mutex<SessionSummary>>;
+type Commands = Arc<Mutex<Vec<AcpCommand>>>;
 
 pub struct AcpSession {
     pub summary: Shared,
@@ -218,6 +221,7 @@ pub struct AcpSession {
     remote: String,
     transcript: Arc<Mutex<Transcript>>,
     decisions: Decisions,
+    commands: Commands,
 }
 
 impl AcpSession {
@@ -225,8 +229,11 @@ impl AcpSession {
         self.summary.lock().await.clone()
     }
 
-    pub async fn entries(&self) -> Vec<AcpEntry> {
-        self.transcript.lock().await.entries()
+    pub async fn snapshot(&self) -> AcpSnapshot {
+        AcpSnapshot {
+            entries: self.transcript.lock().await.entries(),
+            commands: self.commands.lock().await.clone(),
+        }
     }
 
     pub async fn decide(&self, request: u32, option: Option<String>) -> Result<()> {
@@ -251,6 +258,7 @@ struct Relay {
     summary: Shared,
     transcript: Arc<Mutex<Transcript>>,
     decisions: Decisions,
+    commands: Commands,
     events: broadcast::Sender<Event>,
     root: PathBuf,
 }
@@ -283,6 +291,18 @@ impl Relay {
 #[async_trait::async_trait]
 impl Client for Relay {
     async fn update(&mut self, _session: &str, update: apex_acp::SessionUpdate) {
+        if let apex_acp::SessionUpdate::AvailableCommandsUpdate { available_commands } = update {
+            let offered: Vec<AcpCommand> = available_commands
+                .into_iter()
+                .map(|command| AcpCommand {
+                    name: command.name,
+                    description: command.description,
+                })
+                .collect();
+            *self.commands.lock().await = offered.clone();
+            let _ = self.events.send(Event::AcpCommands { id: self.id, commands: offered });
+            return;
+        }
         if let Some(entry) = self.transcript.lock().await.absorb(update) {
             self.publish(entry);
         }
@@ -437,11 +457,13 @@ impl AcpRegistry {
 
         let transcript: Arc<Mutex<Transcript>> = Arc::default();
         let decisions: Decisions = Arc::default();
+        let commands: Commands = Arc::default();
         let relay = Relay {
             id: record.id,
             summary: Arc::clone(&summary),
             transcript: Arc::clone(&transcript),
             decisions: Arc::clone(&decisions),
+            commands: Arc::clone(&commands),
             events: self.events.clone(),
             root: cwd.to_path_buf(),
         };
@@ -453,8 +475,14 @@ impl AcpRegistry {
         agent.initialize().await?;
         let remote = agent.new_session(cwd).await?;
 
-        let session =
-            Arc::new(AcpSession { summary: Arc::clone(&summary), agent, remote, transcript, decisions });
+        let session = Arc::new(AcpSession {
+            summary: Arc::clone(&summary),
+            agent,
+            remote,
+            transcript,
+            decisions,
+            commands,
+        });
         self.sessions.write().await.insert(record.id, Arc::clone(&session));
 
         let opened = session.snapshot_summary().await;

@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AcpEntry, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents,
+    AcpSnapshot, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents,
     FileEntry,
     GitCommit,
     GitStatus, GitTarget, HistoryEntry, TaskSummary, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
@@ -442,9 +442,9 @@ async fn session_transcript(
 }
 
 #[tauri::command]
-async fn acp_transcript(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<Vec<AcpEntry>> {
+async fn acp_transcript(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<AcpSnapshot> {
     match state.daemon.request(Command::AcpTranscript { id }).await.map_err(failed)? {
-        Reply::Acp { entries } => Ok(entries),
+        Reply::Acp { snapshot } => Ok(snapshot),
         other => Err(format!("unexpected reply: {other:?}")),
     }
 }

@@ -11,6 +11,7 @@ while IFS= read -r line; do
       ;;
     *'"session/new"'*)
       printf '{"jsonrpc":"2.0","id":%s,"result":{"sessionId":"s-1"}}\n' "$id"
+      notify '{"sessionUpdate":"available_commands_update","availableCommands":[{"name":"compact","description":"Shrink the context"}]}'
       ;;
     *'"session/prompt"'*)
       notify '{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"on it"}}'
