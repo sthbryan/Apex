@@ -4,6 +4,7 @@ import { reconcileDock, returnPanelToDock } from "@/app/layout/state";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { sameTarget } from "@/features/git/state";
+import { type DropEdge, EDGE_DIRECTION, type PaneDrag } from "@/features/workspace/drag";
 
 let onCloseRequest: ((sessionId: string) => void) | null = null;
 
@@ -341,6 +342,32 @@ export function mergeTabInto(sourceTabId: string, targetTabId: string): void {
     activeLeafId: incoming.id,
   }));
   closePane(sourceTabId, pane, false, false);
+}
+
+export function movePane(
+  source: PaneDrag,
+  targetTabId: string,
+  targetLeafId: string,
+  edge: DropEdge,
+): void {
+  if (source.leafId === targetLeafId) {
+    return;
+  }
+  const sourceTab = tabs.value.find((candidate) => candidate.id === source.tabId);
+  const pane = sourceTab ? findLeaf(sourceTab.root, source.leafId) : null;
+  const target = tabs.value.find((candidate) => candidate.id === targetTabId);
+  if (!sourceTab || !pane || !target || !findLeaf(target.root, targetLeafId)) {
+    return;
+  }
+
+  closePane(source.tabId, pane, false, false);
+  const incoming = leaf(pane.view);
+  updateTab(targetTabId, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, targetLeafId, EDGE_DIRECTION[edge], incoming),
+    activeLeafId: incoming.id,
+  }));
+  activeTabId.value = targetTabId;
 }
 
 export function swapPaneWithSibling(tabId: string, leafId: string): void {
