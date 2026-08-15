@@ -192,6 +192,19 @@ fn merge(known: AcpToolCall, update: ToolCall) -> AcpToolCall {
     }
 }
 
+fn sign_in_hint(hello: &apex_acp::Initialized) -> Option<String> {
+    let ways: Vec<String> = hello
+        .auth_methods
+        .iter()
+        .filter_map(|method| method.description.clone().or_else(|| Some(method.name.clone())))
+        .filter(|way| !way.is_empty())
+        .collect();
+    match ways.is_empty() {
+        true => None,
+        false => Some(format!("If it never answers, it may not be signed in: {}", ways.join(" · "))),
+    }
+}
+
 fn status_of(status: Option<ToolStatus>) -> AcpToolStatus {
     match status {
         Some(ToolStatus::Pending) | None => AcpToolStatus::Pending,
@@ -224,6 +237,7 @@ pub struct AcpSession {
     transcript: Arc<Mutex<Transcript>>,
     decisions: Decisions,
     commands: Commands,
+    auth: Option<String>,
 }
 
 impl AcpSession {
@@ -235,6 +249,25 @@ impl AcpSession {
         AcpSnapshot {
             entries: self.transcript.lock().await.entries(),
             commands: self.commands.lock().await.clone(),
+        }
+    }
+
+    async fn explain(&self, reason: StopReason) -> String {
+        let headline = match reason {
+            StopReason::EndTurn => "The agent finished the turn without saying anything.",
+            StopReason::MaxTokens => "The agent ran out of tokens before saying anything.",
+            StopReason::MaxTurnRequests => "The agent hit its request limit before saying anything.",
+            StopReason::Refusal => "The agent refused to answer.",
+            StopReason::Cancelled => "The turn was cancelled.",
+        };
+        let complaints = self.agent.complaints().await;
+        let hint = match &self.auth {
+            Some(hint) if complaints.is_empty() => format!("\n{hint}"),
+            _ => String::new(),
+        };
+        match complaints.is_empty() {
+            true => format!("{headline}{hint}"),
+            false => format!("{headline}\n{complaints}"),
         }
     }
 
@@ -480,13 +513,14 @@ impl AcpRegistry {
             Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay).await?;
 
         let greeting = tokio::time::timeout(HANDSHAKE_PATIENCE, async {
-            agent.initialize().await?;
-            agent.new_session(cwd, &self.mcp_servers(record.id)).await
+            let hello = agent.initialize().await?;
+            let remote = agent.new_session(cwd, &self.mcp_servers(record.id)).await?;
+            anyhow::Ok((remote, sign_in_hint(&hello)))
         })
         .await;
 
-        let remote = match greeting {
-            Ok(Ok(remote)) => remote,
+        let (remote, auth) = match greeting {
+            Ok(Ok(greeted)) => greeted,
             outcome => {
                 let _ = agent.kill().await;
                 let store = self.store.lock().await;
@@ -515,6 +549,7 @@ impl AcpRegistry {
             transcript,
             decisions,
             commands,
+            auth,
         });
         self.sessions.write().await.insert(record.id, Arc::clone(&session));
 
@@ -530,14 +565,26 @@ impl AcpRegistry {
         let _ = self.events.send(Event::AcpUpdated { id, entry });
         self.moved(&session, id, SessionState::Working).await;
 
+        let spoken = session.transcript.lock().await.entries().len();
         let registry = Arc::clone(self);
         tokio::spawn(async move {
             let outcome = session.agent.prompt(&session.remote, &text).await;
             let state = match outcome {
                 Ok(StopReason::Cancelled) => SessionState::Idle,
-                Ok(_) => SessionState::Done,
+                Ok(reason) => {
+                    if session.transcript.lock().await.entries().len() == spoken {
+                        let told = session.explain(reason).await;
+                        let entry = session.transcript.lock().await.noticed(&told);
+                        let _ = registry.events.send(Event::AcpUpdated { id, entry });
+                    }
+                    SessionState::Done
+                }
                 Err(error) => {
-                    let entry = session.transcript.lock().await.noticed(&format!("{error:#}"));
+                    let told = match session.agent.complaints().await {
+                        complaints if complaints.is_empty() => format!("{error:#}"),
+                        complaints => format!("{error:#}\n{complaints}"),
+                    };
+                    let entry = session.transcript.lock().await.noticed(&told);
                     let _ = registry.events.send(Event::AcpUpdated { id, entry });
                     SessionState::Idle
                 }

@@ -1425,3 +1425,31 @@ async fn an_agent_that_takes_its_time_to_greet_does_not_freeze_the_rest() {
     assert_eq!(client.request(Command::Ping).await, Reply::Pong);
     assert_eq!(client.request(Command::ListSessions).await, Reply::Sessions { sessions: vec![] });
 }
+
+#[tokio::test]
+async fn an_agent_that_answers_nothing_says_so_in_the_transcript() {
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-quiet".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    harness.manager.acp_prompt(session.id, "are you there".into()).await.expect("prompt");
+    wait_for_state(&harness.manager, session.id, SessionState::Done).await;
+
+    let entries = harness.manager.acp_snapshot(session.id).await.expect("transcript").entries;
+    let apex_proto::AcpBody::Notice { text } = &entries[1].body else {
+        panic!("expected a notice, got {:?}", entries[1].body);
+    };
+    assert!(text.contains("without saying anything"), "unhelpful notice: {text}");
+    assert!(text.contains("opencode auth login"), "the sign in hint is missing from {text}");
+}
