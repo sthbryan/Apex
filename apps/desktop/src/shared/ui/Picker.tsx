@@ -8,6 +8,7 @@ export type PickerItem = {
   id: string;
   label: string;
   hint?: string;
+  preview?: string[];
   run: () => void;
 };
 
@@ -106,6 +107,11 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
                 >
                   <span class="shrink-0 truncate">{item.label}</span>
                   {item.hint && <span class="truncate text-faint">{item.hint}</span>}
+                  {item.preview && (
+                    <span class="ml-auto shrink-0 font-mono text-faint">
+                      {item.preview.join("\n")}
+                    </span>
+                  )}
                 </button>
               </li>
             ))

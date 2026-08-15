@@ -24,6 +24,8 @@ import {
   Plus,
   RefreshCw,
   Settings2,
+  SquareSplitHorizontal,
+  SquareSplitVertical,
   SquareTerminal,
   Sun,
   X,
@@ -57,6 +59,8 @@ const ICONS = {
   memory: MemoryStick,
   swap: ArrowRightLeft,
   externalApp: PencilRuler,
+  splitRight: SquareSplitHorizontal,
+  splitDown: SquareSplitVertical,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

@@ -156,6 +156,24 @@ export function splitActive(view: PaneView, direction: Direction): void {
   }));
 }
 
+export function splitLeafWithView(
+  tabId: string,
+  leafId: string,
+  view: PaneView,
+  direction: Direction,
+): void {
+  const incoming = leaf(view);
+  updateTab(tabId, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, leafId, direction, incoming),
+    activeLeafId: incoming.id,
+  }));
+}
+
+export function replaceTabRoot(tabId: string, root: PaneNode, activeLeafId: string): void {
+  updateTab(tabId, (current) => ({ ...current, root, activeLeafId }));
+}
+
 function openView(view: PaneView): void {
   const root = leaf(view);
   const tab: Tab = { id: newId(), root, activeLeafId: root.id };

@@ -1,7 +1,7 @@
 import { useEffect } from "preact/hooks";
 import { toggleDock } from "@/app/layout/state";
 import { togglePage } from "@/app/view";
-import { splitWithShell } from "@/features/sessions/pending";
+import { cycleLayout, splitWithShell } from "@/features/sessions/pending";
 import { toggleUsagePopover } from "@/features/usage/state";
 import { activeTab, activeTabId, closePane, tabs } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";
@@ -49,6 +49,11 @@ const BINDINGS: Record<string, (context: Context) => void> = {
   b: () => toggleDock(),
   d: ({ event }) => {
     void splitWithShell(event.shiftKey ? "column" : "row");
+  },
+  l: ({ event }) => {
+    if (event.shiftKey) {
+      cycleLayout();
+    }
   },
   w: () => {
     const tab = activeTab.value;

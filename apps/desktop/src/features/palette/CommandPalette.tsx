@@ -3,8 +3,9 @@ import { togglePage } from "@/app/view";
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { requestSession } from "@/features/sessions/pending";
+import { applyLayout, requestSession } from "@/features/sessions/pending";
 import { resumeSession } from "@/features/sessions/state";
+import { LAYOUT_PRESETS } from "@/features/workspace/layouts";
 import {
   activeTab,
   closePane,
@@ -151,6 +152,20 @@ function buildActions(
               direction: split.direction,
               isGit,
             });
+          },
+        });
+      }
+    }
+
+    if (project) {
+      for (const preset of LAYOUT_PRESETS) {
+        actions.push({
+          id: `layout:${preset.id}`,
+          label: t("palette.layout", { name: t(preset.nameKey) }),
+          preview: preset.preview,
+          run: () => {
+            onClose();
+            void applyLayout(preset.spec);
           },
         });
       }

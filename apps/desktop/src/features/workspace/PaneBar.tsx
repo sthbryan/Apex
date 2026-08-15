@@ -3,6 +3,7 @@ import type { ComponentChildren } from "preact";
 import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
+import { splitWithShellAt } from "@/features/sessions/pending";
 import { sessions } from "@/features/sessions/state";
 import { closePane, extractLeafToTab, swapPaneWithSibling, tabs } from "@/features/workspace/state";
 import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
@@ -32,6 +33,26 @@ export function PaneBar({ tabId, leaf, extra }: Props) {
       )}
       <div class="ml-auto flex shrink-0 items-center gap-1">
         {extra}
+        {leaf.view.type === "session" && (
+          <>
+            <button
+              type="button"
+              title={t("workspace.splitRight")}
+              onClick={() => void splitWithShellAt(tabId, leaf.id, "row")}
+              class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
+            >
+              <Icon name="splitRight" size={12} />
+            </button>
+            <button
+              type="button"
+              title={t("workspace.splitDown")}
+              onClick={() => void splitWithShellAt(tabId, leaf.id, "column")}
+              class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
+            >
+              <Icon name="splitDown" size={12} />
+            </button>
+          </>
+        )}
         {swapable && (
           <button
             type="button"

@@ -6,13 +6,22 @@ import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { activeProjectId } from "@/features/projects/state";
 import { closeSession, createSession, sessions } from "@/features/sessions/state";
 import {
-  activeSessionId,
+  buildLayout,
+  countPanes,
+  LAYOUT_PRESETS,
+  type LayoutSpec,
+} from "@/features/workspace/layouts";
+import {
+  activeTab,
   dropSession,
   openInNewTab,
+  replaceTabRoot,
   splitActive,
+  splitLeafWithView,
+  tabs,
   whenClosingSession,
 } from "@/features/workspace/state";
-import type { Direction } from "@/features/workspace/tree";
+import { type Direction, findLeaf, leaves, type PaneView } from "@/features/workspace/tree";
 
 export type PendingSession = {
   id: number;
@@ -96,11 +105,29 @@ export async function finishClose(sessionId: string, disposal: WorktreeDisposal)
 }
 
 export async function splitWithShell(direction: Direction): Promise<void> {
+  const tab = activeTab.value;
+  if (!tab) {
+    return;
+  }
+  await splitWithShellAt(tab.id, tab.activeLeafId, direction);
+}
+
+export async function splitWithShellAt(
+  tabId: string,
+  leafId: string,
+  direction: Direction,
+): Promise<void> {
   const project = activeProjectId.value;
   if (!project) {
     return;
   }
-  const beside = sessions.value.find((candidate) => candidate.id === activeSessionId.value);
+  const tab = tabs.value.find((candidate) => candidate.id === tabId);
+  const pane = tab ? findLeaf(tab.root, leafId) : null;
+  if (!tab || !pane) {
+    return;
+  }
+  const seedId = pane.view.type === "session" ? pane.view.sessionId : null;
+  const beside = seedId ? sessions.value.find((candidate) => candidate.id === seedId) : null;
   const created = await createSession(
     project,
     SHELL,
@@ -108,7 +135,76 @@ export async function splitWithShell(direction: Direction): Promise<void> {
     "directory",
     beside?.cwd ?? null,
   );
-  splitActive({ type: "session", sessionId: created.id }, direction);
+  splitLeafWithView(tabId, leafId, { type: "session", sessionId: created.id }, direction);
+}
+
+export async function applyLayout(spec: LayoutSpec): Promise<void> {
+  const tab = activeTab.value;
+  if (!tab) {
+    return;
+  }
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  const existing = leaves(tab.root);
+  const seed = existing.find((pane) => pane.id === tab.activeLeafId) ?? existing[0];
+  if (!seed) {
+    return;
+  }
+  const slots = countPanes(spec);
+  const views: PaneView[] = [seed.view];
+  for (const pane of existing) {
+    if (pane.id !== seed.id) {
+      views.push(pane.view);
+    }
+  }
+  if (views.length > slots) {
+    return;
+  }
+  const created: SessionSummary[] = [];
+  try {
+    const seedId = seed.view.type === "session" ? seed.view.sessionId : null;
+    const beside = seedId ? sessions.value.find((candidate) => candidate.id === seedId) : null;
+    while (views.length < slots) {
+      const session = await createSession(
+        project,
+        SHELL,
+        { rows: 24, cols: 80 },
+        "directory",
+        beside?.cwd ?? null,
+      );
+      created.push(session);
+      views.push({ type: "session", sessionId: session.id });
+    }
+  } catch {
+    for (const session of created) {
+      void closeSession(session.id);
+    }
+    return;
+  }
+  const root = buildLayout(spec, views);
+  const first = leaves(root)[0];
+  replaceTabRoot(tab.id, root, first?.id ?? tab.activeLeafId);
+}
+
+let layoutCycle = 0;
+
+export function cycleLayout(): void {
+  const tab = activeTab.value;
+  if (!tab) {
+    return;
+  }
+  const slots = leaves(tab.root).length;
+  for (let step = 1; step <= LAYOUT_PRESETS.length; step += 1) {
+    const index = (layoutCycle + step) % LAYOUT_PRESETS.length;
+    const preset = LAYOUT_PRESETS[index];
+    if (countPanes(preset.spec) >= slots) {
+      layoutCycle = index;
+      void applyLayout(preset.spec);
+      return;
+    }
+  }
 }
 
 whenClosingSession((sessionId) => {
