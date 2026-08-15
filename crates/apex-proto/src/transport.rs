@@ -158,7 +158,7 @@ fn is_stale_socket(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::message::{ClientMessage, Command, PROTOCOL_VERSION, RequestId, Reply, ServerMessage};
+    use crate::message::{ClientMessage, Command, RequestId, Reply, ServerMessage};
 
     fn short_socket_dir() -> PathBuf {
         let id = uuid::Uuid::new_v4().simple().to_string();
@@ -197,7 +197,6 @@ mod tests {
 
         server.await.expect("server");
         let _ = std::fs::remove_dir_all(&dir);
-        assert_eq!(PROTOCOL_VERSION, 1);
     }
 
     #[tokio::test]
