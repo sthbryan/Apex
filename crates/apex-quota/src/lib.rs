@@ -66,8 +66,36 @@ impl QuotaCache {
         fresh
     }
 
+    pub fn peek(&self, name: &str, ttl: Duration) -> Option<Option<QuotaReport>> {
+        let (taken, cached) = self.entries.get(name)?;
+        if taken.elapsed() < ttl {
+            Some(cached.clone())
+        } else {
+            None
+        }
+    }
+
+    pub fn store(&mut self, name: &str, report: Option<QuotaReport>) {
+        self.entries.insert(name.to_string(), (Instant::now(), report));
+    }
+
     pub fn invalidate(&mut self) {
         self.entries.clear();
+    }
+}
+
+pub async fn read_quota_command(
+    profile: &AgentProfile,
+    binary: PathBuf,
+    env: &BTreeMap<String, String>,
+) -> Option<QuotaReport> {
+    let config = profile.quota.as_ref()?;
+    match config.source {
+        QuotaSource::Command => {
+            run_command(&binary, &config.args, env)
+                .await
+                .and_then(|raw| parse(config.format, &profile.name, &raw))
+        }
     }
 }
 

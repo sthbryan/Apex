@@ -1,14 +1,16 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{Result, bail};
+use apex_core::{AgentProfile, BinaryResolver, ProfileSet};
 use apex_metrics::Sampler;
 use apex_proto::{
     ApexUsage, MetricsSnapshot, ProcessUsage, QuotaReport, QuotaWindow, SessionUsage, SystemUsage,
 };
-use apex_quota::QuotaCache;
-use apex_core::{BinaryResolver, ProfileSet};
+use apex_quota::{QuotaCache, read_quota_command};
 use tokio::sync::{Mutex, RwLock};
+use tokio::task::{JoinHandle, JoinSet};
 use uuid::Uuid;
 
 use crate::services::sessions::LiveSession;
@@ -20,6 +22,7 @@ pub struct MetricsService {
     profiles: ProfileSet,
     resolver: Arc<Mutex<BinaryResolver>>,
     base_env: BTreeMap<String, String>,
+    running: Arc<Mutex<Option<JoinHandle<()>>>>,
 }
 
 impl MetricsService {
@@ -31,7 +34,7 @@ impl MetricsService {
         resolver: Arc<Mutex<BinaryResolver>>,
         base_env: BTreeMap<String, String>,
     ) -> Self {
-        Self { sampler, sessions, quotas, profiles, resolver, base_env }
+        Self { sampler, sessions, quotas, profiles, resolver, base_env, running: Arc::new(Mutex::new(None)) }
     }
 
     pub async fn read(&self, refresh_quota: bool) -> MetricsSnapshot {
@@ -90,7 +93,17 @@ impl MetricsService {
             }
         };
 
-        MetricsSnapshot { apex, system, sessions, quotas: self.read_quotas(refresh_quota).await }
+        let quotas = if refresh_quota {
+            self.refresh_quotas().await
+        } else {
+            let cached = self.cached_quotas().await;
+            if cached.is_empty() {
+                self.kick_refresh().await;
+            }
+            cached
+        };
+
+        MetricsSnapshot { apex, system, sessions, quotas }
     }
 
     pub async fn kill_process(&self, pid: u32) -> Result<()> {
@@ -101,48 +114,117 @@ impl MetricsService {
         Ok(())
     }
 
-    async fn read_quotas(&self, force: bool) -> Vec<QuotaReport> {
-        let mut reports = Vec::new();
-        for profile in self.profiles.iter() {
-            let Some(config) = &profile.quota else {
-                continue;
-            };
+    async fn cached_quotas(&self) -> Vec<QuotaReport> {
+        let cache = self.quotas.lock().await;
+        self.profiles
+            .iter()
+            .filter_map(|profile| {
+                let ttl = profile
+                    .quota
+                    .as_ref()
+                    .map(|config| Duration::from_secs(config.cache_ttl_secs.max(1)))
+                    .unwrap_or(Duration::from_secs(900));
+                cache.peek(&profile.name, ttl).flatten()
+            })
+            .map(proto_report)
+            .collect()
+    }
 
-            let binary = {
-                let mut resolver = self.resolver.lock().await;
-                if resolver.resolve(&profile.command).is_none() {
-                    continue;
-                }
-                match resolver.resolve(&config.command) {
-                    Some(binary) => binary,
-                    None => continue,
-                }
-            };
-
-            let mut cache = self.quotas.lock().await;
-            let Some(report) = cache.read(profile, binary, &self.base_env, force).await else {
-                continue;
-            };
-            reports.push(QuotaReport {
-                agent: report.agent,
-                windows: report
-                    .windows
-                    .into_iter()
-                    .map(|window| QuotaWindow {
-                        label: window.label,
-                        used_percent: window.used_percent,
-                        expected_percent: window.expected_percent,
-                        lasts_to_reset: window.lasts_to_reset,
-                        eta_seconds: window
-                            .eta_seconds
-                            .map(|seconds| seconds.min(u64::from(u32::MAX)) as u32),
-                        resets_at: window.resets_at,
-                        reset_description: window.reset_description,
-                    })
-                    .collect(),
-                updated_at: report.updated_at,
-            });
+    async fn kick_refresh(&self) {
+        let mut running = self.running.lock().await;
+        if running.is_some() {
+            return;
         }
-        reports
+        let handle = self.spawn_refresh();
+        *running = Some(handle);
+    }
+
+    async fn refresh_quotas(&self) -> Vec<QuotaReport> {
+        let handle = {
+            let mut running = self.running.lock().await;
+            match running.take() {
+                Some(handle) => handle,
+                None => self.spawn_refresh(),
+            }
+        };
+        let _ = handle.await;
+        self.cached_quotas().await
+    }
+
+    fn spawn_refresh(&self) -> JoinHandle<()> {
+        let quotas = Arc::clone(&self.quotas);
+        let profiles = self.profiles.clone();
+        let resolver = Arc::clone(&self.resolver);
+        let base_env = self.base_env.clone();
+        let running = Arc::clone(&self.running);
+        tokio::spawn(async move {
+            run_quota_refresh(&profiles, &resolver, &quotas, &base_env).await;
+            *running.lock().await = None;
+        })
+    }
+}
+
+async fn run_quota_refresh(
+    profiles: &ProfileSet,
+    resolver: &Mutex<BinaryResolver>,
+    quotas: &Mutex<QuotaCache>,
+    base_env: &BTreeMap<String, String>,
+) {
+    let mut targets: Vec<(AgentProfile, std::path::PathBuf)> = Vec::new();
+    for profile in profiles.iter() {
+        let Some(config) = &profile.quota else {
+            continue;
+        };
+
+        let binary = {
+            let mut resolver = resolver.lock().await;
+            if resolver.resolve(&profile.command).is_none() {
+                continue;
+            }
+            match resolver.resolve(&config.command) {
+                Some(binary) => binary,
+                None => continue,
+            }
+        };
+        targets.push((profile.clone(), binary));
+    }
+
+    let mut set = JoinSet::new();
+    for (profile, binary) in targets {
+        let profile = profile.clone();
+        let binary = binary.clone();
+        let env = base_env.clone();
+        set.spawn(async move {
+            let report = read_quota_command(&profile, binary, &env).await;
+            (profile.name, report)
+        });
+    }
+    while let Some(joined) = set.join_next().await {
+        let Ok((name, report)) = joined else {
+            continue;
+        };
+        quotas.lock().await.store(&name, report);
+    }
+}
+
+fn proto_report(report: apex_quota::QuotaReport) -> QuotaReport {
+    QuotaReport {
+        agent: report.agent,
+        windows: report
+            .windows
+            .into_iter()
+            .map(|window| QuotaWindow {
+                label: window.label,
+                used_percent: window.used_percent,
+                expected_percent: window.expected_percent,
+                lasts_to_reset: window.lasts_to_reset,
+                eta_seconds: window
+                    .eta_seconds
+                    .map(|seconds| seconds.min(u64::from(u32::MAX)) as u32),
+                resets_at: window.resets_at,
+                reset_description: window.reset_description,
+            })
+            .collect(),
+        updated_at: report.updated_at,
     }
 }
