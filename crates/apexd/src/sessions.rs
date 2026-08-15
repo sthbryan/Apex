@@ -85,6 +85,7 @@ impl SessionManager {
             profiles.clone(),
             Arc::clone(&resolver),
             base_env,
+            Arc::clone(&acp),
         );
         Self {
             paths,

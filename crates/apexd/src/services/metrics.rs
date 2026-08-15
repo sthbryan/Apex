@@ -18,6 +18,7 @@ use crate::services::sessions::LiveSession;
 pub struct MetricsService {
     sampler: Arc<Mutex<Sampler>>,
     sessions: Arc<RwLock<HashMap<Uuid, Arc<LiveSession>>>>,
+    acp: Arc<crate::services::acp::AcpRegistry>,
     quotas: Arc<Mutex<QuotaCache>>,
     profiles: ProfileSet,
     resolver: Arc<Mutex<BinaryResolver>>,
@@ -33,8 +34,18 @@ impl MetricsService {
         profiles: ProfileSet,
         resolver: Arc<Mutex<BinaryResolver>>,
         base_env: BTreeMap<String, String>,
+        acp: Arc<crate::services::acp::AcpRegistry>,
     ) -> Self {
-        Self { sampler, sessions, quotas, profiles, resolver, base_env, running: Arc::new(Mutex::new(None)) }
+        Self {
+            sampler,
+            sessions,
+            acp,
+            quotas,
+            profiles,
+            resolver,
+            base_env,
+            running: Arc::new(Mutex::new(None)),
+        }
     }
 
     pub async fn read(&self, refresh_quota: bool) -> MetricsSnapshot {
@@ -61,6 +72,28 @@ impl MetricsService {
                 usage.push(SessionUsage {
                     id: *id,
                     title: session.summary.lock().await.title.clone(),
+                    cpu_percent: tree.cpu_percent,
+                    memory: tree.memory as f64,
+                    processes: tree
+                        .processes
+                        .into_iter()
+                        .map(|entry| ProcessUsage {
+                            pid: entry.pid,
+                            name: entry.name,
+                            cpu_percent: entry.cpu_percent,
+                            memory: entry.memory as f64,
+                        })
+                        .collect(),
+                });
+            }
+            for (id, title, pid) in self.acp.running().await {
+                let tree = sampler.tree_usage(pid);
+                if tree.processes.is_empty() {
+                    continue;
+                }
+                usage.push(SessionUsage {
+                    id,
+                    title,
                     cpu_percent: tree.cpu_percent,
                     memory: tree.memory as f64,
                     processes: tree

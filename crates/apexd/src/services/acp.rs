@@ -517,6 +517,17 @@ impl AcpRegistry {
         summaries
     }
 
+    pub async fn running(&self) -> Vec<(Uuid, String, u32)> {
+        let sessions = self.sessions.read().await;
+        let mut found = Vec::with_capacity(sessions.len());
+        for (id, session) in sessions.iter() {
+            if let Some(pid) = session.agent.pid().await {
+                found.push((*id, session.summary.lock().await.title.clone(), pid));
+            }
+        }
+        found
+    }
+
     pub async fn get(&self, id: Uuid) -> Option<Arc<AcpSession>> {
         self.sessions.read().await.get(&id).cloned()
     }
