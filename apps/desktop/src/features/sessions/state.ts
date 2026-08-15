@@ -105,11 +105,7 @@ function applyEvent(event: Event): void {
       offer(event.id, event.commands);
       break;
     case "session_closed":
-      sessions.value = sessions.value.filter((session) => session.id !== event.id);
-      forget(event.id);
-      disposeTerminal(event.id);
-      listeners.delete(event.id);
-      pendingOutput.delete(event.id);
+      forgetSession(event.id);
       break;
     case "daemon_shutdown":
       sessions.value = [];
@@ -192,5 +188,17 @@ export async function resizeSession(id: string, size: TerminalSize): Promise<voi
 }
 
 export async function closeSession(id: string, worktree: WorktreeDisposal = "keep"): Promise<void> {
-  await invoke("close_session", { id, worktree });
+  try {
+    await invoke("close_session", { id, worktree });
+  } finally {
+    forgetSession(id);
+  }
+}
+
+export function forgetSession(id: string): void {
+  sessions.value = sessions.value.filter((session) => session.id !== id);
+  forget(id);
+  disposeTerminal(id);
+  listeners.delete(id);
+  pendingOutput.delete(id);
 }
