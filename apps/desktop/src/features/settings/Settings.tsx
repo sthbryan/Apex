@@ -105,27 +105,28 @@ export function Settings() {
             ))}
           </Segmented>
         </SettingsRow>
-        {agents.value
-          .filter((agent) => agent.speaks_acp)
-          .map((agent) => (
-            <SettingsRow
-              key={agent.name}
-              label={t("settings.agentMode", { agent: agent.name })}
-              hint={t("settings.agentModeHint")}
-            >
-              <Segmented label={t("settings.agentMode", { agent: agent.name })}>
-                {(["pty", "acp"] as const).map((option) => (
-                  <Choice
-                    key={option}
-                    selected={(agentModes.value[agent.name] ?? agent.mode) === option}
-                    onSelect={() => setAgentMode(agent.name, option)}
-                  >
-                    {t(`isolation.${option}`)}
-                  </Choice>
-                ))}
-              </Segmented>
-            </SettingsRow>
-          ))}
+        <SettingsRow label={t("settings.agents")} hint={t("settings.agentsModeHint")}>
+          <div class="flex flex-col gap-1.5">
+            {agents.value
+              .filter((agent) => agent.speaks_acp && agent.resolved_path !== null)
+              .map((agent) => (
+                <div key={agent.name} class="flex items-center justify-end gap-3">
+                  <span class="text-muted">{agent.name}</span>
+                  <Segmented label={t("settings.agentMode", { agent: agent.name })}>
+                    {(["pty", "acp"] as const).map((option) => (
+                      <Choice
+                        key={option}
+                        selected={(agentModes.value[agent.name] ?? agent.mode) === option}
+                        onSelect={() => setAgentMode(agent.name, option)}
+                      >
+                        {t(`isolation.${option}`)}
+                      </Choice>
+                    ))}
+                  </Segmented>
+                </div>
+              ))}
+          </div>
+        </SettingsRow>
       </div>
 
       <footer class="shrink-0 border-t border-border px-4 py-2 text-faint">
