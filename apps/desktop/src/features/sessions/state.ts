@@ -9,6 +9,7 @@ import type { TerminalSize } from "@/bindings/TerminalSize";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { absorb, forget, offer } from "@/features/acp/state";
 import { disposeTerminal } from "@/features/sessions/registry";
+import { complain } from "@/shared/daemon";
 
 const UUID_BYTES = 16;
 
@@ -190,6 +191,9 @@ export async function resizeSession(id: string, size: TerminalSize): Promise<voi
 export async function closeSession(id: string, worktree: WorktreeDisposal = "keep"): Promise<void> {
   try {
     await invoke("close_session", { id, worktree });
+  } catch (cause) {
+    complain(cause);
+    throw cause;
   } finally {
     forgetSession(id);
   }

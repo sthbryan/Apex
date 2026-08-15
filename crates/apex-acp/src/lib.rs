@@ -223,6 +223,7 @@ impl Agent {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .process_group(0)
             .kill_on_drop(true);
         for (key, value) in env {
             process.env(key, value);
@@ -334,7 +335,17 @@ impl Agent {
     }
 
     pub async fn kill(&self) -> Result<()> {
-        self.child.lock().await.kill().await.context("could not stop the agent")
+        let mut child = self.child.lock().await;
+        if let Some(pid) = child.id() {
+            let _ = Command::new("/bin/kill")
+                .arg("-KILL")
+                .arg(format!("-{pid}"))
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .await;
+        }
+        child.kill().await.context("could not stop the agent")
     }
 }
 
