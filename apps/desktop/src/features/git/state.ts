@@ -75,7 +75,13 @@ export function startGitWatch(): () => void {
   };
   tick();
   const timer = setInterval(tick, INTERVAL);
-  return () => clearInterval(timer);
+  const unsub = activeProjectId.subscribe(() => {
+    tick();
+  });
+  return () => {
+    clearInterval(timer);
+    unsub();
+  };
 }
 
 export async function readDiff(
