@@ -61,26 +61,14 @@ export function ResourcesSummary() {
         class="flex items-center gap-3 rounded px-1 transition-colors hover:bg-raised hover:text-muted"
       >
         <Gauge
-          icon="cpu"
-          label={t("resources.cpu")}
-          value={`${snapshot.system.cpu_percent.toFixed(0)}%`}
+          icon="sparkles"
+          label={t("resources.apex")}
+          value={`${snapshot.apex.cpu_percent.toFixed(0)}%`}
         />
-        {snapshot.system.gpu_percent !== null && (
-          <Gauge
-            icon="gpu"
-            label={t("resources.gpu")}
-            value={`${snapshot.system.gpu_percent.toFixed(0)}%`}
-          />
-        )}
         <Gauge
           icon="memory"
           label={t("resources.memory")}
-          value={compactBytes(snapshot.system.memory_used)}
-        />
-        <Gauge
-          icon="sessions"
-          label={t("resources.bySession")}
-          value={String(snapshot.sessions.length)}
+          value={compactBytes(snapshot.apex.memory)}
         />
       </button>
     </div>

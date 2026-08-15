@@ -25,6 +25,7 @@ import {
   Plus,
   RefreshCw,
   Settings2,
+  Sparkles,
   SquareSplitHorizontal,
   SquareSplitVertical,
   SquareTerminal,
@@ -63,6 +64,7 @@ const ICONS = {
   externalApp: PencilRuler,
   splitRight: SquareSplitHorizontal,
   splitDown: SquareSplitVertical,
+  sparkles: Sparkles,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

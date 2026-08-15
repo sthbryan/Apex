@@ -53,6 +53,8 @@ export const es: Messages = {
     gpu: "GPU",
     memory: "Memoria",
     swap: "Swap",
+    apex: "Apex",
+    apexHint: "Tu daemon y sesiones",
     system: "Sistema",
     cores: "{count} núcleos",
     bySession: "Por sesión",

@@ -1,4 +1,5 @@
 import type { MetricsSnapshot } from "@/bindings/MetricsSnapshot";
+import { ApexSection } from "@/features/resources/ApexSection";
 import { SessionSection } from "@/features/resources/SessionSection";
 import { SystemSection } from "@/features/resources/SystemSection";
 import { t } from "@/shared/i18n";
@@ -14,6 +15,7 @@ export function ResourcesPanel({ snapshot }: Props) {
 
   return (
     <div class="flex max-h-96 flex-col overflow-y-auto">
+      <ApexSection apex={snapshot.apex} system={snapshot.system} />
       <SystemSection system={snapshot.system} />
       <SessionSection sessions={snapshot.sessions} />
     </div>

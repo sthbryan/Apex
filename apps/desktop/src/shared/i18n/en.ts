@@ -51,6 +51,8 @@ export const en = {
     gpu: "GPU",
     memory: "Memory",
     swap: "Swap",
+    apex: "Apex",
+    apexHint: "Your daemon and sessions",
     system: "System",
     cores: "{count} cores",
     bySession: "By session",
