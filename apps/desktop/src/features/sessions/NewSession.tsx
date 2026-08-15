@@ -1,5 +1,5 @@
 import cn from "cnfast";
-import { useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { Isolation } from "@/bindings/Isolation";
 import { cancelSession, pendingSession, startSession } from "@/features/sessions/pending";
@@ -13,49 +13,99 @@ const CHOICES: { value: Isolation; icon: IconName }[] = [
 ];
 
 function Choices() {
-  const [choice, setChoice] = useState<Isolation>("worktree");
+  const [cursor, setCursor] = useState(0);
   const [name, setName] = useState(suggestName(pendingSession.value?.agent ?? ""));
   const [failure, setFailure] = useState<string | null>(null);
+  const field = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLDivElement>(null);
 
-  const confirm = (isolation: Isolation) => {
-    const current = pendingSession.value;
-    if (!current) {
-      return;
+  const confirm = useCallback(
+    (isolation: Isolation) => {
+      const current = pendingSession.value;
+      if (!current) {
+        return;
+      }
+      const slug = isolation === "worktree" ? name.trim() || null : null;
+      void startSession(current, isolation, slug).catch((error: unknown) =>
+        setFailure(String(error)),
+      );
+    },
+    [name],
+  );
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!pendingSession.value) {
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancelSession();
+        return;
+      }
+      if (event.key === "Enter" && event.target instanceof HTMLInputElement) {
+        return;
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setCursor((current) => (current + 1) % CHOICES.length);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setCursor((current) => (current - 1 + CHOICES.length) % CHOICES.length);
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        confirm(CHOICES[cursor].value);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cursor, confirm]);
+
+  useEffect(() => {
+    if (cursor === 0) {
+      field.current?.focus();
+    } else {
+      list.current?.querySelector<HTMLButtonElement>("[data-cursor='1']")?.focus();
     }
-    const slug = isolation === "worktree" ? name.trim() || null : null;
-    void startSession(current, isolation, slug).catch((error: unknown) =>
-      setFailure(String(error)),
-    );
-  };
+  }, [cursor]);
 
   return (
     <>
-      <div class="flex flex-col gap-1 p-2">
-        {CHOICES.map((option) => (
+      <div ref={list} class="flex flex-col p-1">
+        {CHOICES.map((option, index) => (
           <button
             key={option.value}
             type="button"
-            autofocus={option.value === choice}
-            onMouseEnter={() => setChoice(option.value)}
+            data-cursor={index}
+            onMouseEnter={() => setCursor(index)}
             onClick={() => confirm(option.value)}
             class={cn(
-              "flex items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-colors",
-              option.value === choice ? "bg-raised" : "hover:bg-raised",
+              "group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-1.5 text-left transition-colors",
+              index === cursor ? "border-border bg-raised" : "hover:bg-raised",
             )}
           >
-            <Icon name={option.icon} class="mt-0.5 shrink-0 text-faint" />
+            <span
+              class={cn(
+                "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                index === cursor ? "border-state-done text-state-done" : "border-faint text-faint",
+              )}
+            >
+              {index === cursor && <Icon name="check" size={10} />}
+            </span>
+            <Icon name={option.icon} size={14} class="shrink-0 text-faint" />
             <span class="min-w-0">
-              <span class="block text-text">{t(`isolation.${option.value}`)}</span>
-              <span class="block text-faint">{t(`isolation.${option.value}Hint`)}</span>
+              <span class="block text-[13px] text-text">{t(`isolation.${option.value}`)}</span>
+              <span class="block text-[11px] text-faint">{t(`isolation.${option.value}Hint`)}</span>
             </span>
           </button>
         ))}
       </div>
 
-      {choice === "worktree" && (
-        <label class="flex flex-col gap-1 px-4 pb-3">
-          <span class="text-faint">{t("isolation.name")}</span>
+      {CHOICES[cursor].value === "worktree" && (
+        <label class="flex flex-col gap-0.5 px-3 pb-2">
+          <span class="text-[11px] text-faint">{t("isolation.name")}</span>
           <input
+            ref={field}
             type="text"
             value={name}
             autocomplete="off"
@@ -67,15 +117,15 @@ function Choices() {
                 confirm("worktree");
               }
             }}
-            class="rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
+            class="rounded border border-border bg-raised px-2 py-1 text-[13px] text-text outline-none placeholder:text-faint focus:border-muted"
           />
-          <span class="text-faint">
+          <span class="text-[10px] text-faint">
             {t("isolation.branch", { branch: `apex/${slugify(name)}` })}
           </span>
         </label>
       )}
 
-      {failure && <p class="px-4 pb-3 text-state-failed">{failure}</p>}
+      {failure && <p class="px-3 pb-2 text-[11px] text-state-failed">{failure}</p>}
     </>
   );
 }
@@ -99,20 +149,6 @@ export function NewSession() {
   const request = pendingSession.value;
   const overlay = usePresence<HTMLDivElement>(request !== null);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (!pendingSession.value) {
-        return;
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        cancelSession();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   if (!overlay.mounted) {
     return null;
   }
@@ -121,19 +157,19 @@ export function NewSession() {
     <div
       ref={overlay.holder}
       class={cn(
-        "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-32",
+        "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24",
         overlay.leaving ? "animate-veil-out" : "animate-veil-in",
       )}
       onMouseDown={cancelSession}
     >
       <div
         class={cn(
-          "w-100 max-w-[90vw] overflow-hidden rounded-xl border border-border bg-surface shadow-2xl",
+          "w-96 max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
           overlay.leaving ? "animate-pop-out" : "animate-pop-in",
         )}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header class="border-b border-border px-4 py-2.5 text-text">
+        <header class="border-b border-border px-3 py-2 text-[13px] text-text">
           {t("isolation.title", { agent: request?.agent ?? "" })}
         </header>
 
