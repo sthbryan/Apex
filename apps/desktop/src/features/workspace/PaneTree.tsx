@@ -8,16 +8,9 @@ import { FileView } from "@/features/files/FileView";
 import { DiffView } from "@/features/git/DiffView";
 import { activeProject } from "@/features/projects/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
-import {
-  type DropEdge,
-  draggedPane,
-  EDGE_CLASS,
-  edgeAt,
-  type PaneDrag,
-} from "@/features/workspace/drag";
 import { PaneBar } from "@/features/workspace/PaneBar";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
-import { focusLeaf, movePane } from "@/features/workspace/state";
+import { focusLeaf } from "@/features/workspace/state";
 import type { Leaf, PaneNode } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -61,13 +54,11 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
 function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused: boolean }) {
   const [reload, setReload] = useState(0);
   const projectId = activeProject.value?.id ?? null;
-  const dragged = draggedPane.value;
-  const droppable = dragged !== null && dragged.leafId !== node.id;
 
   return (
     <div
       class={cn(
-        "group relative flex h-full w-full flex-col overflow-hidden border transition-colors",
+        "group flex h-full w-full flex-col overflow-hidden border transition-colors",
         focused ? "border-focus" : "border-transparent",
       )}
       tabIndex={-1}
@@ -112,35 +103,6 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
         )}
         {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
       </div>
-      {droppable && dragged && <DropZone tabId={tabId} leafId={node.id} source={dragged} />}
-    </div>
-  );
-}
-
-function DropZone({ tabId, leafId, source }: { tabId: string; leafId: string; source: PaneDrag }) {
-  const [edge, setEdge] = useState<DropEdge | null>(null);
-
-  return (
-    <div
-      class="absolute inset-0 z-20 border border-dashed border-focus/40"
-      onDragOver={(event) => {
-        event.preventDefault();
-        if (event.dataTransfer) {
-          event.dataTransfer.dropEffect = "move";
-        }
-        setEdge(edgeAt(event.currentTarget.getBoundingClientRect(), event.clientX, event.clientY));
-      }}
-      onDragLeave={() => setEdge(null)}
-      onDrop={(event) => {
-        event.preventDefault();
-        const where =
-          edge ?? edgeAt(event.currentTarget.getBoundingClientRect(), event.clientX, event.clientY);
-        setEdge(null);
-        draggedPane.value = null;
-        movePane(source, tabId, leafId, where);
-      }}
-    >
-      {edge && <div class={cn("absolute border border-focus bg-focus/15", EDGE_CLASS[edge])} />}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import { splitWithShellAt } from "@/features/sessions/pending";
 import { sessions } from "@/features/sessions/state";
-import { draggedPane } from "@/features/workspace/drag";
 import { closePane, extractLeafToTab, swapPaneWithSibling, tabs } from "@/features/workspace/state";
 import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
 import type { Leaf } from "@/features/workspace/tree";
@@ -26,21 +25,7 @@ export function PaneBar({ tabId, leaf, extra }: Props) {
   const swapable = Boolean(currentTab && siblingOf(currentTab.root, leaf.id));
 
   return (
-    <header
-      draggable
-      onDragStart={(event) => {
-        draggedPane.value = { tabId, leafId: leaf.id };
-        event.dataTransfer?.setData("text/plain", leaf.id);
-        if (event.dataTransfer) {
-          event.dataTransfer.effectAllowed = "move";
-        }
-      }}
-      onDragEnd={() => {
-        draggedPane.value = null;
-      }}
-      title={t("workspace.dragPane")}
-      class="flex h-7 shrink-0 cursor-grab items-center gap-2 border-b border-border px-2 active:cursor-grabbing"
-    >
+    <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
       <Icon name={paneIcon(leaf.view)} size={12} class="shrink-0 text-faint" />
       <span class="min-w-0 truncate text-text">{paneTitle(leaf.view, sessions.value)}</span>
       {paneSubtitle(leaf.view) && (
