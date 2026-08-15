@@ -43,12 +43,14 @@ export const es: Messages = {
   },
   usage: {
     title: "Uso de suscripción",
+    updatedAgo: "actualizado hace {away}",
     resetsIn: "reinicia en {away} · {when}",
     resetsAt: "reinicia {when}",
     overPace: "acelerado",
   },
   resources: {
     sampling: "Midiendo…",
+    title: "Recursos",
     cpu: "CPU",
     gpu: "GPU",
     memory: "Memoria",

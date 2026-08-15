@@ -11,10 +11,10 @@ type Props = {
 export function Meter({ icon, label, percent, detail }: Props) {
   const clamped = Math.min(100, Math.max(0, percent));
   return (
-    <div class="flex items-center gap-2 py-0.5 text-xs" title={label}>
+    <div class="flex items-center gap-1.5 py-0.5 text-[11px]" title={label}>
       <Icon name={icon} class="shrink-0 text-muted" />
-      <span class="w-20 shrink-0 text-muted">{label}</span>
-      <span class={cn("w-9 shrink-0 text-right", toneText(clamped))}>{clamped.toFixed(0)}%</span>
+      <span class="w-14 shrink-0 text-muted">{label}</span>
+      <span class={cn("w-8 shrink-0 text-right", toneText(clamped))}>{clamped.toFixed(0)}%</span>
       <span class="h-1 flex-1 overflow-hidden rounded-full bg-border">
         <span
           class={cn(
@@ -24,7 +24,7 @@ export function Meter({ icon, label, percent, detail }: Props) {
           style={{ transform: `scaleX(${clamped / 100})` }}
         />
       </span>
-      <span class="w-18 shrink-0 truncate text-right text-faint">{detail ?? ""}</span>
+      <span class="w-16 shrink-0 truncate text-right text-[10px] text-faint">{detail ?? ""}</span>
     </div>
   );
 }

@@ -41,12 +41,14 @@ export const en = {
   },
   usage: {
     title: "Subscription usage",
+    updatedAgo: "updated {away} ago",
     resetsIn: "resets in {away} · {when}",
     resetsAt: "resets {when}",
     overPace: "over pace",
   },
   resources: {
     sampling: "Sampling…",
+    title: "Resources",
     cpu: "CPU",
     gpu: "GPU",
     memory: "Memory",

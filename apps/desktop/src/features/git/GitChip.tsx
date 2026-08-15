@@ -1,10 +1,9 @@
 import cn from "cnfast";
-
+import { revealPanel } from "@/app/layout/actions";
 import { gitStatus, worktrees } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import { revealPanel } from "@/app/layout/actions";
 
 export function GitChip() {
   const project = activeProject.value;

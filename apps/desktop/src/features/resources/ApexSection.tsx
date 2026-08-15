@@ -11,11 +11,10 @@ type Props = {
 
 export function ApexSection({ apex, system }: Props) {
   return (
-    <section class="px-2 py-1.5">
+    <section class="px-2.5 py-1">
       <header class="mb-0.5 flex items-baseline gap-1">
         <h3 class="text-micro uppercase tracking-wider text-faint">{t("resources.apex")}</h3>
-        <span class="text-faint">·</span>
-        <span class="text-faint">{t("resources.apexHint")}</span>
+        <span class="truncate text-[10px] text-faint">{t("resources.apexHint")}</span>
       </header>
       <Meter icon="sparkles" label={t("resources.cpu")} percent={apex.cpu_percent} />
       <Meter

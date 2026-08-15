@@ -51,7 +51,7 @@ export function ResourcesSummary() {
             },
           )}
         >
-          <ResourcesPanel snapshot={snapshot} />
+          <ResourcesPanel snapshot={snapshot} onClose={() => setOpen(false)} />
         </div>
       )}
 
