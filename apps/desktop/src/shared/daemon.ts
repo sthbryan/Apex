@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { AgentSummary } from "@/bindings/AgentSummary";
@@ -10,6 +10,7 @@ export const status = signal<ConnectionStatus>("connecting");
 export const failure = signal<string | null>(null);
 export const agents = signal<AgentSummary[]>([]);
 export const daemonVersion = signal<string | null>(null);
+export const stale = computed(() => (failure.value ?? "").includes("UnsupportedVersion"));
 export const platform = signal<string | null>(null);
 
 export async function connect(): Promise<void> {

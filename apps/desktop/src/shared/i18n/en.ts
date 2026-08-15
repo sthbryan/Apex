@@ -10,6 +10,8 @@ export const en = {
   daemon: {
     unreachable: "Could not reach apexd.",
     retry: "Retry",
+    stale: "This daemon is older than the app.",
+    staleHint: "Close its sessions and restart it: pkill -f target/debug/apexd",
   },
   dock: {
     toggle: "Toggle sidebar",

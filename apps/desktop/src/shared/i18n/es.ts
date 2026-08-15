@@ -12,6 +12,8 @@ export const es: Messages = {
   daemon: {
     unreachable: "No se pudo hablar con apexd.",
     retry: "Reintentar",
+    stale: "Este daemon es más viejo que la app.",
+    staleHint: "Cierra sus sesiones y reinícialo: pkill -f target/debug/apexd",
   },
   dock: {
     toggle: "Mostrar u ocultar la barra lateral",

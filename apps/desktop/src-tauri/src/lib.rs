@@ -1,5 +1,6 @@
 mod client;
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use apex_core::ApexPaths;
@@ -16,7 +17,29 @@ use tauri::ipc::{Channel, InvokeResponseBody};
 use uuid::Uuid;
 
 struct AppState {
-    daemon: Arc<DaemonClient>,
+    daemon: std::sync::Mutex<Option<Arc<DaemonClient>>>,
+    socket: PathBuf,
+}
+
+impl AppState {
+    fn daemon(&self) -> Answer<Arc<DaemonClient>> {
+        self.daemon
+            .lock()
+            .map_err(|_| "the daemon handle is poisoned".to_owned())?
+            .clone()
+            .ok_or_else(|| "apexd is not connected".to_owned())
+    }
+
+    async fn connect(&self) -> Answer<Arc<DaemonClient>> {
+        if let Ok(existing) = self.daemon() {
+            return Ok(existing);
+        }
+        let client = DaemonClient::attach(&self.socket).await.map_err(failed)?;
+        if let Ok(mut slot) = self.daemon.lock() {
+            *slot = Some(Arc::clone(&client));
+        }
+        Ok(client)
+    }
 }
 
 type Answer<T> = Result<T, String>;
@@ -26,8 +49,9 @@ fn failed(error: anyhow::Error) -> String {
 }
 
 #[tauri::command]
-fn daemon_version(state: tauri::State<'_, AppState>) -> String {
-    state.daemon.daemon_version().to_string()
+async fn daemon_version(state: tauri::State<'_, AppState>) -> Answer<String> {
+    let daemon = state.connect().await?;
+    Ok(daemon.daemon_version().to_string())
 }
 
 #[tauri::command]
@@ -46,7 +70,7 @@ async fn subscribe_output(
     state: tauri::State<'_, AppState>,
     channel: Channel<InvokeResponseBody>,
 ) -> Answer<()> {
-    state.daemon.set_output_channel(channel).await;
+    state.daemon()?.set_output_channel(channel).await;
     Ok(())
 }
 
@@ -55,13 +79,13 @@ async fn subscribe_events(
     state: tauri::State<'_, AppState>,
     channel: Channel<Event>,
 ) -> Answer<()> {
-    state.daemon.set_event_channel(channel).await;
+    state.daemon()?.set_event_channel(channel).await;
     Ok(())
 }
 
 #[tauri::command]
 async fn list_agents(state: tauri::State<'_, AppState>) -> Answer<Vec<AgentSummary>> {
-    match state.daemon.request(Command::ListAgents).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ListAgents).await.map_err(failed)? {
         Reply::Agents { agents } => Ok(agents),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -69,7 +93,7 @@ async fn list_agents(state: tauri::State<'_, AppState>) -> Answer<Vec<AgentSumma
 
 #[tauri::command]
 async fn list_sessions(state: tauri::State<'_, AppState>) -> Answer<Vec<SessionSummary>> {
-    match state.daemon.request(Command::ListSessions).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ListSessions).await.map_err(failed)? {
         Reply::Sessions { sessions } => Ok(sessions),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -77,7 +101,7 @@ async fn list_sessions(state: tauri::State<'_, AppState>) -> Answer<Vec<SessionS
 
 #[tauri::command]
 async fn list_projects(state: tauri::State<'_, AppState>) -> Answer<Vec<ProjectSummary>> {
-    match state.daemon.request(Command::ListProjects).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ListProjects).await.map_err(failed)? {
         Reply::Projects { projects } => Ok(projects),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -85,7 +109,7 @@ async fn list_projects(state: tauri::State<'_, AppState>) -> Answer<Vec<ProjectS
 
 #[tauri::command]
 async fn open_project(state: tauri::State<'_, AppState>, root: String) -> Answer<ProjectSummary> {
-    match state.daemon.request(Command::ProjectOpen { root }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ProjectOpen { root }).await.map_err(failed)? {
         Reply::Project { project } => Ok(project),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -97,13 +121,13 @@ async fn save_layout(
     project: Uuid,
     payload: String,
 ) -> Answer<()> {
-    state.daemon.request(Command::LayoutSave { project, payload }).await.map_err(failed)?;
+    state.daemon()?.request(Command::LayoutSave { project, payload }).await.map_err(failed)?;
     Ok(())
 }
 
 #[tauri::command]
 async fn load_layout(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Option<String>> {
-    match state.daemon.request(Command::LayoutLoad { project }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::LayoutLoad { project }).await.map_err(failed)? {
         Reply::Layout { payload } => Ok(payload),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -114,7 +138,7 @@ async fn read_metrics(
     state: tauri::State<'_, AppState>,
     refresh_quota: bool,
 ) -> Answer<MetricsSnapshot> {
-    match state.daemon.request(Command::ReadMetrics { refresh_quota }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ReadMetrics { refresh_quota }).await.map_err(failed)? {
         Reply::Metrics { snapshot } => Ok(snapshot),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -122,7 +146,7 @@ async fn read_metrics(
 
 #[tauri::command]
 async fn kill_process(state: tauri::State<'_, AppState>, pid: u32) -> Answer<()> {
-    state.daemon.request(Command::KillProcess { pid }).await.map_err(failed)?;
+    state.daemon()?.request(Command::KillProcess { pid }).await.map_err(failed)?;
     Ok(())
 }
 
@@ -131,7 +155,7 @@ async fn list_history(
     state: tauri::State<'_, AppState>,
     project: Uuid,
 ) -> Answer<Vec<HistoryEntry>> {
-    match state.daemon.request(Command::ListHistory { project }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ListHistory { project }).await.map_err(failed)? {
         Reply::History { entries } => Ok(entries),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -143,7 +167,7 @@ async fn list_directory(
     project: Uuid,
     path: String,
 ) -> Answer<Vec<FileEntry>> {
-    match state.daemon.request(Command::DirList { project, path }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::DirList { project, path }).await.map_err(failed)? {
         Reply::Directory { entries } => Ok(entries),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -155,7 +179,7 @@ async fn read_file(
     project: Uuid,
     path: String,
 ) -> Answer<FileContents> {
-    match state.daemon.request(Command::FileRead { project, path }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::FileRead { project, path }).await.map_err(failed)? {
         Reply::File { contents } => Ok(contents),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -163,7 +187,7 @@ async fn read_file(
 
 #[tauri::command]
 async fn list_editors(state: tauri::State<'_, AppState>) -> Answer<Vec<EditorSummary>> {
-    match state.daemon.request(Command::ListEditors).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ListEditors).await.map_err(failed)? {
         Reply::Editors { editors } => Ok(editors),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -176,9 +200,7 @@ async fn open_externally(
     path: String,
     editor: Option<String>,
 ) -> Answer<()> {
-    state
-        .daemon
-        .request(Command::FileOpenExternal { project, path, editor })
+    state.daemon()?.request(Command::FileOpenExternal { project, path, editor })
         .await
         .map_err(failed)?;
     Ok(())
@@ -191,7 +213,7 @@ async fn search_files(
     query: String,
     limit: u32,
 ) -> Answer<Vec<FileEntry>> {
-    match state.daemon.request(Command::FileSearch { project, query, limit }).await.map_err(failed)?
+    match state.daemon()?.request(Command::FileSearch { project, query, limit }).await.map_err(failed)?
     {
         Reply::Directory { entries } => Ok(entries),
         other => Err(format!("unexpected reply: {other:?}")),
@@ -206,9 +228,7 @@ async fn resume_session(
     session_id: String,
     size: TerminalSize,
 ) -> Answer<SessionSummary> {
-    match state
-        .daemon
-        .request(Command::SessionResume { project, agent, session_id, size })
+    match state.daemon()?.request(Command::SessionResume { project, agent, session_id, size })
         .await
         .map_err(failed)?
     {
@@ -229,9 +249,7 @@ async fn create_session(
     slug: Option<String>,
     mode: Option<apex_proto::AgentMode>,
 ) -> Answer<SessionSummary> {
-    match state
-        .daemon
-        .request(Command::SessionCreate { project, agent, cwd, size, isolation, slug, mode })
+    match state.daemon()?.request(Command::SessionCreate { project, agent, cwd, size, isolation, slug, mode })
         .await
         .map_err(failed)?
     {
@@ -242,13 +260,13 @@ async fn create_session(
 
 #[tauri::command]
 async fn attach_session(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<()> {
-    state.daemon.request(Command::SessionAttach { id }).await.map_err(failed)?;
+    state.daemon()?.request(Command::SessionAttach { id }).await.map_err(failed)?;
     Ok(())
 }
 
 #[tauri::command]
 async fn send_input(state: tauri::State<'_, AppState>, id: Uuid, data: String) -> Answer<()> {
-    state.daemon.request(Command::SessionInput { id, data }).await.map_err(failed)?;
+    state.daemon()?.request(Command::SessionInput { id, data }).await.map_err(failed)?;
     Ok(())
 }
 
@@ -258,7 +276,7 @@ async fn resize_session(
     id: Uuid,
     size: TerminalSize,
 ) -> Answer<()> {
-    state.daemon.request(Command::SessionResize { id, size }).await.map_err(failed)?;
+    state.daemon()?.request(Command::SessionResize { id, size }).await.map_err(failed)?;
     Ok(())
 }
 
@@ -268,7 +286,7 @@ async fn close_session(
     id: Uuid,
     worktree: WorktreeDisposal,
 ) -> Answer<()> {
-    state.daemon.request(Command::SessionClose { id, worktree }).await.map_err(failed)?;
+    state.daemon()?.request(Command::SessionClose { id, worktree }).await.map_err(failed)?;
     Ok(())
 }
 
@@ -278,7 +296,7 @@ async fn git_status(
     project: Uuid,
     target: GitTarget,
 ) -> Answer<GitStatus> {
-    match state.daemon.request(Command::GitRead { project, target }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::GitRead { project, target }).await.map_err(failed)? {
         Reply::Git { status } => Ok(status),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -293,9 +311,7 @@ async fn git_diff(
     commit: Option<String>,
     scope: DiffScope,
 ) -> Answer<String> {
-    match state
-        .daemon
-        .request(Command::GitDiff { project, target, path, commit, scope })
+    match state.daemon()?.request(Command::GitDiff { project, target, path, commit, scope })
         .await
         .map_err(failed)?
     {
@@ -311,9 +327,7 @@ async fn git_log(
     target: GitTarget,
     limit: u32,
 ) -> Answer<Vec<GitCommit>> {
-    match state
-        .daemon
-        .request(Command::GitLog { project, target, limit })
+    match state.daemon()?.request(Command::GitLog { project, target, limit })
         .await
         .map_err(failed)?
     {
@@ -327,7 +341,7 @@ async fn list_worktrees(
     state: tauri::State<'_, AppState>,
     project: Uuid,
 ) -> Answer<Vec<WorktreeInfo>> {
-    match state.daemon.request(Command::WorktreeList { project }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::WorktreeList { project }).await.map_err(failed)? {
         Reply::Worktrees { worktrees } => Ok(worktrees),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -341,9 +355,7 @@ async fn git_hunks(
     path: String,
     scope: DiffScope,
 ) -> Answer<Vec<String>> {
-    match state
-        .daemon
-        .request(Command::GitHunks { project, target, path, scope })
+    match state.daemon()?.request(Command::GitHunks { project, target, path, scope })
         .await
         .map_err(failed)?
     {
@@ -360,9 +372,7 @@ async fn git_stage(
     paths: Vec<String>,
     staged: bool,
 ) -> Answer<()> {
-    state
-        .daemon
-        .request(Command::GitStage { project, target, paths, staged })
+    state.daemon()?.request(Command::GitStage { project, target, paths, staged })
         .await
         .map_err(failed)?;
     Ok(())
@@ -376,9 +386,7 @@ async fn git_stage_hunk(
     patch: String,
     staged: bool,
 ) -> Answer<()> {
-    state
-        .daemon
-        .request(Command::GitStageHunk { project, target, patch, staged })
+    state.daemon()?.request(Command::GitStageHunk { project, target, patch, staged })
         .await
         .map_err(failed)?;
     Ok(())
@@ -391,9 +399,7 @@ async fn git_commit(
     target: GitTarget,
     message: String,
 ) -> Answer<GitCommit> {
-    match state
-        .daemon
-        .request(Command::GitCommitStaged { project, target, message })
+    match state.daemon()?.request(Command::GitCommitStaged { project, target, message })
         .await
         .map_err(failed)?
     {
@@ -404,7 +410,7 @@ async fn git_commit(
 
 #[tauri::command]
 async fn list_tasks(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Vec<TaskSummary>> {
-    match state.daemon.request(Command::ListTasks { project }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ListTasks { project }).await.map_err(failed)? {
         Reply::Tasks { tasks } => Ok(tasks),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -418,9 +424,7 @@ async fn run_task(
     command: String,
     size: TerminalSize,
 ) -> Answer<SessionSummary> {
-    match state
-        .daemon
-        .request(Command::TaskRun { project, task, command, size })
+    match state.daemon()?.request(Command::TaskRun { project, task, command, size })
         .await
         .map_err(failed)?
     {
@@ -435,7 +439,7 @@ async fn session_transcript(
     id: Uuid,
     tail: u32,
 ) -> Answer<String> {
-    match state.daemon.request(Command::SessionTranscript { id, tail }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::SessionTranscript { id, tail }).await.map_err(failed)? {
         Reply::Text { text } => Ok(text),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -443,7 +447,7 @@ async fn session_transcript(
 
 #[tauri::command]
 async fn acp_transcript(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<AcpSnapshot> {
-    match state.daemon.request(Command::AcpTranscript { id }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::AcpTranscript { id }).await.map_err(failed)? {
         Reply::Acp { snapshot } => Ok(snapshot),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -451,13 +455,13 @@ async fn acp_transcript(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<A
 
 #[tauri::command]
 async fn acp_prompt(state: tauri::State<'_, AppState>, id: Uuid, text: String) -> Answer<()> {
-    state.daemon.request(Command::AcpPrompt { id, text }).await.map_err(failed)?;
+    state.daemon()?.request(Command::AcpPrompt { id, text }).await.map_err(failed)?;
     Ok(())
 }
 
 #[tauri::command]
 async fn acp_cancel(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<()> {
-    state.daemon.request(Command::AcpCancel { id }).await.map_err(failed)?;
+    state.daemon()?.request(Command::AcpCancel { id }).await.map_err(failed)?;
     Ok(())
 }
 
@@ -468,7 +472,7 @@ async fn acp_decide(
     request: u32,
     option: Option<String>,
 ) -> Answer<()> {
-    state.daemon.request(Command::AcpDecide { id, request, option }).await.map_err(failed)?;
+    state.daemon()?.request(Command::AcpDecide { id, request, option }).await.map_err(failed)?;
     Ok(())
 }
 
@@ -477,7 +481,7 @@ async fn context_list(
     state: tauri::State<'_, AppState>,
     project: Uuid,
 ) -> Answer<Vec<ContextEntry>> {
-    match state.daemon.request(Command::ContextList { project }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ContextList { project }).await.map_err(failed)? {
         Reply::Context { entries } => Ok(entries),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -489,7 +493,7 @@ async fn context_read(
     project: Uuid,
     key: String,
 ) -> Answer<String> {
-    match state.daemon.request(Command::ContextRead { project, key }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::ContextRead { project, key }).await.map_err(failed)? {
         Reply::Text { text } => Ok(text),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -502,9 +506,7 @@ async fn context_write(
     key: String,
     contents: String,
 ) -> Answer<()> {
-    state
-        .daemon
-        .request(Command::ContextWrite { project, key, contents })
+    state.daemon()?.request(Command::ContextWrite { project, key, contents })
         .await
         .map_err(failed)?;
     Ok(())
@@ -516,7 +518,7 @@ async fn merge_worktree(
     project: Uuid,
     target: GitTarget,
 ) -> Answer<MergeReport> {
-    match state.daemon.request(Command::WorktreeMerge { project, target }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::WorktreeMerge { project, target }).await.map_err(failed)? {
         Reply::Merge { report } => Ok(report),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -535,8 +537,14 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             let paths = ApexPaths::discover()?;
-            let daemon = tauri::async_runtime::block_on(DaemonClient::attach(&paths.socket))?;
-            app.manage(AppState { daemon });
+            let daemon = tauri::async_runtime::block_on(DaemonClient::attach(&paths.socket));
+            if let Err(error) = &daemon {
+                tracing::warn!(%error, "could not reach apexd at startup");
+            }
+            app.manage(AppState {
+                daemon: std::sync::Mutex::new(daemon.ok()),
+                socket: paths.socket,
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

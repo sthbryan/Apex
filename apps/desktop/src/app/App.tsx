@@ -18,7 +18,7 @@ import { sessions } from "@/features/sessions/state";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { activeSessionId } from "@/features/workspace/state";
-import { agents, connect, failure, platform, status } from "@/shared/daemon";
+import { agents, connect, failure, platform, stale, status } from "@/shared/daemon";
 import { locale, t } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
@@ -121,7 +121,10 @@ function DaemonFailed() {
     <div class="flex h-full flex-col bg-bg text-text">
       <TitleBar reserveControls />
       <main class="flex-1 overflow-auto p-4">
-        <p class="text-state-blocked">{t("daemon.unreachable")}</p>
+        <p class="text-state-blocked">
+          {stale.value ? t("daemon.stale") : t("daemon.unreachable")}
+        </p>
+        {stale.value && <p class="mt-1 text-muted">{t("daemon.staleHint")}</p>}
         <pre class="mt-2 max-w-xl overflow-x-auto rounded border border-border bg-surface p-3 text-muted">
           {failure.value}
         </pre>
