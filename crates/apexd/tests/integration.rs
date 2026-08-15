@@ -1,5 +1,6 @@
 mod common;
 
+use apexd::sessions::NewSession;
 use apex_proto::{
     ClientMessage, Command, CommandOutcome, DiffScope, ErrorCode, Frame, GitTarget, Isolation,
     Reply, RequestId, ServerMessage, SessionState, TerminalSize, WorktreeDisposal,
@@ -103,14 +104,15 @@ async fn a_prompt_moves_the_session_to_blocked() {
     let harness = Harness::start().await;
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "prompted",
-            Some("/tmp".into()),
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "prompted".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("create");
 
@@ -124,14 +126,15 @@ async fn a_state_change_is_announced_as_an_event() {
 
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "prompted",
-            Some("/tmp".into()),
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "prompted".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("create");
 
@@ -169,14 +172,15 @@ async fn answering_the_prompt_moves_the_session_back_to_working() {
     let harness = Harness::start().await;
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "prompted",
-            Some("/tmp".into()),
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "prompted".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("create");
     wait_for_state(&harness.manager, session.id, SessionState::Blocked).await;
@@ -259,14 +263,15 @@ async fn an_isolated_session_runs_in_its_own_worktree() {
 
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "sh",
-            None,
-            TerminalSize::default(),
-            Isolation::Worktree,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Worktree,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
 
@@ -415,7 +420,7 @@ async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
         .id;
 
     let session = manager
-        .create(project, "mcp-aware", None, TerminalSize::default(), Isolation::Directory, None)
+        .create(NewSession { project, agent: "mcp-aware".into(), cwd: None, size: TerminalSize::default(), isolation: Isolation::Directory, slug: None, mode: None })
         .await
         .expect("session");
 
@@ -465,14 +470,15 @@ async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
         .id;
 
     let session = manager
-        .create(
+        .create(NewSession {
             project,
-            "mcp-project",
-            None,
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+            agent: "mcp-project".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
     assert!(session.worktree.is_none());
@@ -510,7 +516,7 @@ async fn the_servers_the_agent_already_had_survive_ours() {
         .id;
 
     let session = manager
-        .create(project, "mcp-aware", None, TerminalSize::default(), Isolation::Directory, None)
+        .create(NewSession { project, agent: "mcp-aware".into(), cwd: None, size: TerminalSize::default(), isolation: Isolation::Directory, slug: None, mode: None })
         .await
         .expect("session");
 
@@ -538,14 +544,15 @@ async fn the_config_left_in_a_folder_does_not_name_a_session() {
         .id;
 
     let first = manager
-        .create(
+        .create(NewSession {
             project,
-            "mcp-project",
-            None,
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+            agent: "mcp-project".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
 
@@ -573,14 +580,15 @@ async fn a_config_the_project_already_has_is_never_overwritten() {
         .id;
 
     manager
-        .create(
+        .create(NewSession {
             project,
-            "mcp-project",
-            None,
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+            agent: "mcp-project".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
 
@@ -713,14 +721,15 @@ async fn a_worktree_outlives_the_session_that_made_it() {
     init_repo(harness.root.path());
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "sh",
-            None,
-            TerminalSize::default(),
-            Isolation::Worktree,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Worktree,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
     let tree = session.worktree.clone().expect("worktree");
@@ -763,14 +772,15 @@ async fn a_worktree_commit_never_touches_the_project() {
     init_repo(harness.root.path());
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "sh",
-            None,
-            TerminalSize::default(),
-            Isolation::Worktree,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Worktree,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
     let tree = std::path::PathBuf::from(&session.worktree.expect("worktree").path);
@@ -843,14 +853,15 @@ async fn discarding_a_session_takes_its_worktree_with_it() {
 
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "sh",
-            None,
-            TerminalSize::default(),
-            Isolation::Worktree,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Worktree,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("session");
     let path = std::path::PathBuf::from(&session.worktree.expect("worktree").path);
@@ -865,14 +876,15 @@ async fn a_session_in_a_plain_folder_cannot_be_isolated() {
     assert!(
         harness
             .manager
-            .create(
-                harness.project,
-                "sh",
-                None,
-                TerminalSize::default(),
-                Isolation::Worktree,
-                None,
-            )
+            .create(NewSession {
+                project: harness.project,
+                agent: "sh".into(),
+                cwd: None,
+                size: TerminalSize::default(),
+                isolation: Isolation::Worktree,
+                slug: None,
+                mode: None,
+            })
             .await
             .is_err()
     );
@@ -1059,14 +1071,15 @@ async fn a_session_defaults_to_the_project_root_as_its_cwd() {
     let harness = Harness::start().await;
     let session = harness
         .manager
-        .create(
-            harness.project,
-            "sh",
-            None,
-            TerminalSize::default(),
-            Isolation::Directory,
-            None,
-        )
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
         .await
         .expect("create");
 
@@ -1198,6 +1211,7 @@ async fn creating_a_session_for_an_unknown_agent_fails() {
         .send_control(&ClientMessage::Request {
             id,
             command: Command::SessionCreate {
+                mode: None,
                 isolation: Isolation::Directory,
                 slug: None,
                 project: harness.project,

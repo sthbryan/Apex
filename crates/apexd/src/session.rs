@@ -291,10 +291,18 @@ impl Client {
             Command::LayoutLoad { project } => Ok(Reply::Layout {
                 payload: self.manager.load_layout(project).await.map_err(not_found_error)?,
             }),
-            Command::SessionCreate { project, agent, cwd, size, isolation, slug } => {
+            Command::SessionCreate { project, agent, cwd, size, isolation, slug, mode } => {
                 let session = self
                     .manager
-                    .create(project, &agent, cwd, size, isolation, slug)
+                    .create(crate::sessions::NewSession {
+                        project,
+                        agent,
+                        cwd,
+                        size,
+                        isolation,
+                        slug,
+                        mode,
+                    })
                     .await
                     .map_err(internal_error)?;
                 if session.mode == apex_proto::AgentMode::Pty {

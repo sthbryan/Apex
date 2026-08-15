@@ -90,6 +90,7 @@ pub struct AgentSummary {
     pub resolved_path: Option<String>,
     pub mode: AgentMode,
     pub supports_resume: bool,
+    pub speaks_acp: bool,
 }
 
 impl AgentSummary {
@@ -507,6 +508,8 @@ pub enum Command {
         isolation: Isolation,
         #[serde(default)]
         slug: Option<String>,
+        #[serde(default)]
+        mode: Option<AgentMode>,
     },
     SessionAttach {
         #[ts(type = "string")]

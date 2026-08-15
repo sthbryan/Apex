@@ -1,11 +1,13 @@
 import { signal } from "@preact/signals";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
+import type { AgentMode } from "@/bindings/AgentMode";
 import type { Event } from "@/bindings/Event";
 import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { TerminalSize } from "@/bindings/TerminalSize";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
+import { absorb, forget } from "@/features/acp/state";
 import { disposeTerminal } from "@/features/sessions/registry";
 
 const UUID_BYTES = 16;
@@ -96,8 +98,12 @@ function applyEvent(event: Event): void {
         handler(event.id, event.code);
       }
       break;
+    case "acp_updated":
+      absorb(event.id, event.entry);
+      break;
     case "session_closed":
       sessions.value = sessions.value.filter((session) => session.id !== event.id);
+      forget(event.id);
       disposeTerminal(event.id);
       listeners.delete(event.id);
       pendingOutput.delete(event.id);
@@ -139,6 +145,7 @@ export async function createSession(
   isolation: Isolation = "directory",
   cwd: string | null = null,
   slug: string | null = null,
+  mode: AgentMode | null = null,
 ): Promise<SessionSummary> {
   const session = await invoke<SessionSummary>("create_session", {
     project,
@@ -147,6 +154,7 @@ export async function createSession(
     size,
     isolation,
     slug,
+    mode,
   });
   sessions.value = upsert(sessions.value, session);
   return session;

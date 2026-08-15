@@ -133,6 +133,15 @@ export const en = {
     start: "Run it",
     stop: "Stop it",
   },
+  acp: {
+    empty: "Say something to get the agent going.",
+    placeholder: "Ask the agent…",
+    hint: "⌘↵ sends",
+    send: "Send",
+    stop: "Stop",
+    reject: "Deny",
+    decided: "Answered: {option}",
+  },
   git: {
     noRepo: "This project is not a git repository.",
     chip: "On {branch} — open the git panel",
@@ -181,6 +190,9 @@ export const en = {
     worktreeHint: "Its own branch and folder, so agents never collide.",
     directory: "Project folder",
     directoryHint: "Works where you work, sharing every file.",
+    mode: "How to talk to it",
+    pty: "Terminal",
+    acp: "Native",
   },
   sessions: {
     waiting: "Waiting for you",

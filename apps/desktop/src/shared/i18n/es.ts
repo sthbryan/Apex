@@ -135,6 +135,15 @@ export const es: Messages = {
     start: "Arrancarla",
     stop: "Pararla",
   },
+  acp: {
+    empty: "Escríbele algo para que el agente arranque.",
+    placeholder: "Pídele algo al agente…",
+    hint: "⌘↵ envía",
+    send: "Enviar",
+    stop: "Parar",
+    reject: "Denegar",
+    decided: "Respondido: {option}",
+  },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
     chip: "En {branch} — abrir el panel de git",
@@ -183,6 +192,9 @@ export const es: Messages = {
     worktreeHint: "Su propia rama y carpeta, así los agentes no se pisan.",
     directory: "Carpeta del proyecto",
     directoryHint: "Trabaja donde trabajas tú, compartiendo los archivos.",
+    mode: "Cómo hablarle",
+    pty: "Terminal",
+    acp: "Nativo",
   },
   sessions: {
     waiting: "Te esperan",

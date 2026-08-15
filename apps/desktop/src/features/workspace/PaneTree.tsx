@@ -3,10 +3,12 @@ import { useState } from "preact/hooks";
 
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
+import { AcpView } from "@/features/acp/AcpView";
 import { openExternally } from "@/features/files/editors";
 import { FileView } from "@/features/files/FileView";
 import { DiffView } from "@/features/git/DiffView";
 import { activeProject } from "@/features/projects/state";
+import { sessions } from "@/features/sessions/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
 import { PaneBar } from "@/features/workspace/PaneBar";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
@@ -88,7 +90,7 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
         }
       />
       <div class="min-h-0 flex-1">
-        {node.view.type === "session" && <TerminalView id={node.view.sessionId} active={focused} />}
+        {node.view.type === "session" && <SessionView id={node.view.sessionId} focused={focused} />}
         {node.view.type === "file" && (
           <FileView key={reload} path={node.view.path} chrome={false} />
         )}
@@ -105,6 +107,14 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
       </div>
     </div>
   );
+}
+
+function SessionView({ id, focused }: { id: string; focused: boolean }) {
+  const session = sessions.value.find((candidate) => candidate.id === id);
+  if (session?.mode === "acp") {
+    return <AcpView id={id} />;
+  }
+  return <TerminalView id={id} active={focused} />;
 }
 
 function FileExtras({

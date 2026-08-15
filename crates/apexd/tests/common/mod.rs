@@ -178,6 +178,7 @@ impl TestClient {
     pub async fn create_shell(&mut self, project: Uuid) -> SessionSummary {
         let reply = self
             .request(Command::SessionCreate {
+                mode: None,
                 isolation: apex_proto::Isolation::Directory,
                 slug: None,
                 project,

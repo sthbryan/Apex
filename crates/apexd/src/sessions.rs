@@ -21,6 +21,16 @@ use crate::services::{
 
 const EVENT_CHANNEL_DEPTH: usize = 256;
 
+pub struct NewSession {
+    pub project: Uuid,
+    pub agent: String,
+    pub cwd: Option<String>,
+    pub size: TerminalSize,
+    pub isolation: Isolation,
+    pub slug: Option<String>,
+    pub mode: Option<apex_proto::AgentMode>,
+}
+
 pub struct SessionManager {
     profiles: ProfileSet,
     files: FilesService,
@@ -122,16 +132,14 @@ impl SessionManager {
         self.registry.get(id).await
     }
 
-    pub async fn create(
-        self: &Arc<Self>,
-        project: Uuid,
-        agent: &str,
-        cwd: Option<String>,
-        size: TerminalSize,
-        isolation: Isolation,
-        slug: Option<String>,
-    ) -> Result<SessionSummary> {
-        if !self.acp.speaks_acp(agent).await {
+    pub async fn create(self: &Arc<Self>, request: NewSession) -> Result<SessionSummary> {
+        let NewSession { project, agent, cwd, size, isolation, slug, mode } = request;
+        let agent = agent.as_str();
+        let wanted = match mode {
+            Some(chosen) => chosen,
+            None => self.acp.mode_of(agent).await,
+        };
+        if wanted != apex_proto::AgentMode::Acp || !self.acp.speaks_acp(agent).await {
             return Arc::clone(&self.registry).create(project, agent, cwd, size, isolation, slug).await;
         }
 

@@ -1,5 +1,6 @@
 import { signal } from "@preact/signals";
 
+import type { AgentMode } from "@/bindings/AgentMode";
 import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
@@ -54,6 +55,7 @@ export async function startSession(
   request: PendingSession,
   isolation: Isolation,
   slug: string | null = null,
+  mode: AgentMode | null = null,
 ): Promise<void> {
   pendingSession.value = null;
   const created = await createSession(
@@ -63,6 +65,7 @@ export async function startSession(
     isolation,
     null,
     slug,
+    mode,
   );
   if (request.direction) {
     splitActive({ type: "session", sessionId: created.id }, request.direction);

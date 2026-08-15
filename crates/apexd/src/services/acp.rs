@@ -378,7 +378,11 @@ impl AcpRegistry {
     }
 
     pub async fn speaks_acp(&self, agent: &str) -> bool {
-        self.profiles.get(agent).is_some_and(|profile| profile.mode == AgentMode::Acp)
+        self.profiles.get(agent).is_some_and(|profile| profile.acp_command.is_some())
+    }
+
+    pub async fn mode_of(&self, agent: &str) -> AgentMode {
+        self.profiles.get(agent).map(|profile| profile.mode).unwrap_or_default()
     }
 
     pub async fn open(

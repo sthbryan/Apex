@@ -4,7 +4,8 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry,
+    AcpEntry, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents,
+    FileEntry,
     GitCommit,
     GitStatus, GitTarget, HistoryEntry, TaskSummary, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
     Reply, SessionSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
@@ -217,6 +218,7 @@ async fn resume_session(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn create_session(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -225,10 +227,11 @@ async fn create_session(
     size: TerminalSize,
     isolation: Isolation,
     slug: Option<String>,
+    mode: Option<apex_proto::AgentMode>,
 ) -> Answer<SessionSummary> {
     match state
         .daemon
-        .request(Command::SessionCreate { project, agent, cwd, size, isolation, slug })
+        .request(Command::SessionCreate { project, agent, cwd, size, isolation, slug, mode })
         .await
         .map_err(failed)?
     {
@@ -439,6 +442,37 @@ async fn session_transcript(
 }
 
 #[tauri::command]
+async fn acp_transcript(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<Vec<AcpEntry>> {
+    match state.daemon.request(Command::AcpTranscript { id }).await.map_err(failed)? {
+        Reply::Acp { entries } => Ok(entries),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+async fn acp_prompt(state: tauri::State<'_, AppState>, id: Uuid, text: String) -> Answer<()> {
+    state.daemon.request(Command::AcpPrompt { id, text }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn acp_cancel(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<()> {
+    state.daemon.request(Command::AcpCancel { id }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn acp_decide(
+    state: tauri::State<'_, AppState>,
+    id: Uuid,
+    request: u32,
+    option: Option<String>,
+) -> Answer<()> {
+    state.daemon.request(Command::AcpDecide { id, request, option }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn context_list(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -543,6 +577,10 @@ pub fn run() {
             list_tasks,
             run_task,
             session_transcript,
+            acp_transcript,
+            acp_prompt,
+            acp_cancel,
+            acp_decide,
             context_list,
             context_read,
             context_write

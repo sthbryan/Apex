@@ -149,6 +149,7 @@ impl AgentProfile {
                 .map(|path| path.display().to_string()),
             mode: self.mode,
             supports_resume: self.supports_resume(),
+            speaks_acp: self.acp_command.is_some(),
         }
     }
 }
