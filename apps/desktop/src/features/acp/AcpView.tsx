@@ -202,7 +202,7 @@ function Composer({ id, working }: { id: string; working: boolean }) {
         spellcheck={false}
         onInput={(event) => setText(event.currentTarget.value)}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+          if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
             event.preventDefault();
             send();
           }

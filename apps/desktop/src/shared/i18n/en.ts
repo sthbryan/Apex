@@ -136,7 +136,7 @@ export const en = {
   acp: {
     empty: "Say something to get the agent going.",
     placeholder: "Ask the agent…",
-    hint: "⌘↵ sends",
+    hint: "↵ sends · ⇧↵ new line",
     send: "Send",
     stop: "Stop",
     reject: "Deny",

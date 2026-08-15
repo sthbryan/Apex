@@ -138,7 +138,7 @@ export const es: Messages = {
   acp: {
     empty: "Escríbele algo para que el agente arranque.",
     placeholder: "Pídele algo al agente…",
-    hint: "⌘↵ envía",
+    hint: "↵ envía · ⇧↵ salto de línea",
     send: "Enviar",
     stop: "Parar",
     reject: "Denegar",
