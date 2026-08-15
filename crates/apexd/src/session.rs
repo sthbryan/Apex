@@ -439,6 +439,14 @@ fn runs_detached(command: &Command) -> bool {
             | Command::GitStageHunk { .. }
             | Command::GitCommitStaged { .. }
             | Command::WorktreeMerge { .. }
+            | Command::SessionCreate { .. }
+            | Command::SessionResume { .. }
+            | Command::SessionClose { .. }
+            | Command::TaskRun { .. }
+            | Command::AcpTranscript { .. }
+            | Command::AcpPrompt { .. }
+            | Command::AcpCancel { .. }
+            | Command::AcpDecide { .. }
     )
 }
 

@@ -54,6 +54,16 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         )
         .expect("mute acp profile"),
     );
+    profiles.upsert(
+        AgentProfile::parse(
+            "name = \"acp-mummy\"\n\
+             command = \"sh\"\n\
+             mode = \"acp\"\n\
+             acp_command = \"sh\"\n\
+             acp_args = [\"-c\", \"sleep 120\"]\n",
+        )
+        .expect("mummy acp profile"),
+    );
     let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
         PathBuf::from("/bin"),
         PathBuf::from("/usr/bin"),

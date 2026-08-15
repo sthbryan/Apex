@@ -1397,3 +1397,31 @@ async fn an_acp_agent_that_never_greets_leaves_no_session_behind() {
     assert!(told.contains("cannot reach the model"), "the agent complaint is missing from {told}");
     assert!(harness.manager.list_sessions().await.is_empty());
 }
+
+#[tokio::test]
+async fn an_agent_that_takes_its_time_to_greet_does_not_freeze_the_rest() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+
+    client.next += 1;
+    let id = RequestId(client.next);
+    client
+        .connection
+        .send_control(&ClientMessage::Request {
+            id,
+            command: Command::SessionCreate {
+                mode: None,
+                isolation: Isolation::Directory,
+                slug: None,
+                project: harness.project,
+                agent: "acp-mummy".into(),
+                cwd: Some("/tmp".into()),
+                size: TerminalSize::default(),
+            },
+        })
+        .await
+        .expect("the slow request");
+
+    assert_eq!(client.request(Command::Ping).await, Reply::Pong);
+    assert_eq!(client.request(Command::ListSessions).await, Reply::Sessions { sessions: vec![] });
+}
