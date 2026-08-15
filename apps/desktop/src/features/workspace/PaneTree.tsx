@@ -122,7 +122,7 @@ function DropZone({ tabId, leafId, source }: { tabId: string; leafId: string; so
 
   return (
     <div
-      class="absolute inset-0 z-20"
+      class="absolute inset-0 z-20 border border-dashed border-focus/40"
       onDragOver={(event) => {
         event.preventDefault();
         if (event.dataTransfer) {
