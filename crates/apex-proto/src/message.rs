@@ -346,7 +346,15 @@ pub struct QuotaReport {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct ApexUsage {
+    pub cpu_percent: f32,
+    pub memory: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct MetricsSnapshot {
+    pub apex: ApexUsage,
     pub system: SystemUsage,
     pub sessions: Vec<SessionUsage>,
     pub quotas: Vec<QuotaReport>,

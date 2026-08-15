@@ -3,7 +3,9 @@ use std::sync::Arc;
 
 use anyhow::{Result, bail};
 use apex_metrics::Sampler;
-use apex_proto::{MetricsSnapshot, ProcessUsage, QuotaReport, QuotaWindow, SessionUsage, SystemUsage};
+use apex_proto::{
+    ApexUsage, MetricsSnapshot, ProcessUsage, QuotaReport, QuotaWindow, SessionUsage, SystemUsage,
+};
 use apex_quota::QuotaCache;
 use apex_core::{BinaryResolver, ProfileSet};
 use tokio::sync::{Mutex, RwLock};
@@ -33,9 +35,15 @@ impl MetricsService {
     }
 
     pub async fn read(&self, refresh_quota: bool) -> MetricsSnapshot {
-        let sessions = {
+        let (apex, sessions) = {
             let mut sampler = self.sampler.lock().await;
             sampler.refresh();
+
+            let apex_tree = sampler.tree_usage(std::process::id());
+            let apex = ApexUsage {
+                cpu_percent: apex_tree.cpu_percent,
+                memory: apex_tree.memory as f64,
+            };
 
             let live = self.sessions.read().await;
             let mut usage = Vec::with_capacity(live.len());
@@ -65,7 +73,7 @@ impl MetricsService {
                 });
             }
             usage.sort_by(|left, right| right.memory.total_cmp(&left.memory));
-            usage
+            (apex, usage)
         };
 
         let system = {
@@ -82,7 +90,7 @@ impl MetricsService {
             }
         };
 
-        MetricsSnapshot { system, sessions, quotas: self.read_quotas(refresh_quota).await }
+        MetricsSnapshot { apex, system, sessions, quotas: self.read_quotas(refresh_quota).await }
     }
 
     pub async fn kill_process(&self, pid: u32) -> Result<()> {
