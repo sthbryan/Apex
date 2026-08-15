@@ -86,6 +86,8 @@ export const es: Messages = {
     sidebarDown: "Bajar",
     sidebarTab: "Abierto como pestaña",
     agentsHint: "Los agentes son archivos TOML en {path} — suelta uno para añadir un CLI.",
+    agentMode: "Cómo hablarle a {agent}",
+    agentModeHint: "Nativo usa ACP: chat, diffs y permisos dentro de Apex. Beta.",
   },
   shortcuts: {
     title: "Atajos de teclado",

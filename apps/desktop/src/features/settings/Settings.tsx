@@ -2,8 +2,10 @@ import { useEffect } from "preact/hooks";
 
 import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
+import { agentModes, setAgentMode } from "@/features/settings/agentMode";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
+import { agents } from "@/shared/daemon";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
@@ -103,6 +105,27 @@ export function Settings() {
             ))}
           </Segmented>
         </SettingsRow>
+        {agents.value
+          .filter((agent) => agent.speaks_acp)
+          .map((agent) => (
+            <SettingsRow
+              key={agent.name}
+              label={t("settings.agentMode", { agent: agent.name })}
+              hint={t("settings.agentModeHint")}
+            >
+              <Segmented label={t("settings.agentMode", { agent: agent.name })}>
+                {(["pty", "acp"] as const).map((option) => (
+                  <Choice
+                    key={option}
+                    selected={(agentModes.value[agent.name] ?? agent.mode) === option}
+                    onSelect={() => setAgentMode(agent.name, option)}
+                  >
+                    {t(`isolation.${option}`)}
+                  </Choice>
+                ))}
+              </Segmented>
+            </SettingsRow>
+          ))}
       </div>
 
       <footer class="shrink-0 border-t border-border px-4 py-2 text-faint">

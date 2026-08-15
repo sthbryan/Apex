@@ -1,9 +1,9 @@
 import cn from "cnfast";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import type { AgentMode } from "@/bindings/AgentMode";
 import type { Isolation } from "@/bindings/Isolation";
 import { cancelSession, pendingSession, startSession } from "@/features/sessions/pending";
+import { modeOf } from "@/features/settings/agentMode";
 import { agents, complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
@@ -19,7 +19,7 @@ function Choices() {
   const [name, setName] = useState(suggestName(pendingSession.value?.agent ?? ""));
   const [failure, setFailure] = useState<string | null>(null);
   const profile = agents.value.find((candidate) => candidate.name === pendingSession.value?.agent);
-  const [mode, setMode] = useState<AgentMode>(profile?.mode ?? "pty");
+  const mode = modeOf(pendingSession.value?.agent ?? "", profile?.mode ?? "pty");
   const field = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
 
@@ -128,27 +128,6 @@ function Choices() {
             {t("isolation.branch", { branch: `apex/${slugify(name)}` })}
           </span>
         </label>
-      )}
-
-      {profile?.speaks_acp && (
-        <div class="flex items-center gap-1 px-3 pb-2">
-          <span class="mr-auto text-[11px] text-faint">{t("isolation.mode")}</span>
-          {(["pty", "acp"] as AgentMode[]).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setMode(option)}
-              class={cn(
-                "rounded border px-2 py-0.5 text-[11px] transition-colors",
-                mode === option
-                  ? "border-border bg-raised text-text"
-                  : "border-transparent text-faint hover:text-text",
-              )}
-            >
-              {t(`isolation.${option}`)}
-            </button>
-          ))}
-        </div>
       )}
 
       {failure && <p class="px-3 pb-2 text-[11px] text-state-failed">{failure}</p>}

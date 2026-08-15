@@ -84,6 +84,8 @@ export const en = {
     editorHint: "Where files open when you leave Apex. Only detected editors are listed.",
     editorSystem: "System default",
     agentsHint: "Agents are TOML files in {path} — drop one in to add a CLI.",
+    agentMode: "How to talk to {agent}",
+    agentModeHint: "Native uses ACP: chat, diffs and permissions inside Apex. Beta.",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

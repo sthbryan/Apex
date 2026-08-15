@@ -6,6 +6,7 @@ import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { activeProjectId } from "@/features/projects/state";
 import { closeSession, createSession, sessions } from "@/features/sessions/state";
+import { modeOf } from "@/features/settings/agentMode";
 import {
   buildLayout,
   countPanes,
@@ -23,7 +24,7 @@ import {
   whenClosingSession,
 } from "@/features/workspace/state";
 import { type Direction, findLeaf, leaves, type PaneView } from "@/features/workspace/tree";
-import { complain } from "@/shared/daemon";
+import { agents, complain } from "@/shared/daemon";
 
 export type PendingSession = {
   id: number;
@@ -39,11 +40,18 @@ export const pendingSession = signal<PendingSession | null>(null);
 
 export function requestSession(request: Omit<PendingSession, "id">): void {
   if (!request.isGit) {
-    void startSession({ ...request, id: 0 }, "directory").catch(complain);
+    void startSession({ ...request, id: 0 }, "directory", null, chosenMode(request.agent)).catch(
+      complain,
+    );
     return;
   }
   requests += 1;
   pendingSession.value = { ...request, id: requests };
+}
+
+function chosenMode(agent: string): AgentMode {
+  const profile = agents.value.find((candidate) => candidate.name === agent);
+  return modeOf(agent, profile?.mode ?? "pty");
 }
 
 let requests = 0;
