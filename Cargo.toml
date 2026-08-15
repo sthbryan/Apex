@@ -8,6 +8,7 @@ edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
+apex-acp = { path = "crates/apex-acp" }
 apex-core = { path = "crates/apex-core" }
 apex-git = { path = "crates/apex-git" }
 apex-proto = { path = "crates/apex-proto" }
