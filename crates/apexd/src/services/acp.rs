@@ -477,7 +477,7 @@ impl AcpRegistry {
         let agent =
             Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay).await?;
         agent.initialize().await?;
-        let remote = agent.new_session(cwd).await?;
+        let remote = agent.new_session(cwd, &self.mcp_servers(record.id)).await?;
 
         let session = Arc::new(AcpSession {
             summary: Arc::clone(&summary),
@@ -530,6 +530,21 @@ impl AcpRegistry {
         }
         let _ = self.events.send(Event::SessionClosed { id });
         Ok(())
+    }
+
+    fn mcp_servers(&self, session: Uuid) -> Vec<apex_acp::McpServer> {
+        match crate::mcp_delivery::launcher() {
+            Ok(command) => vec![apex_acp::McpServer {
+                name: "apex".to_owned(),
+                command,
+                args: vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()],
+                env: Vec::new(),
+            }],
+            Err(error) => {
+                tracing::warn!(%error, "could not offer the MCP server to this acp session");
+                Vec::new()
+            }
+        }
     }
 
     pub async fn require(&self, id: Uuid) -> Result<Arc<AcpSession>> {

@@ -10,6 +10,7 @@ while IFS= read -r line; do
       printf '{"jsonrpc":"2.0","id":%s,"result":{"protocolVersion":1,"agentInfo":{"name":"fake","version":"0"}}}\n' "$id"
       ;;
     *'"session/new"'*)
+      printf '%s\n' "$line" > ./session-new.json
       printf '{"jsonrpc":"2.0","id":%s,"result":{"sessionId":"s-1"}}\n' "$id"
       notify '{"sessionUpdate":"available_commands_update","availableCommands":[{"name":"compact","description":"Shrink the context"}]}'
       ;;

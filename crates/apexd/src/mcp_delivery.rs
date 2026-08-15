@@ -55,6 +55,10 @@ pub fn offer(
     }
 }
 
+pub fn launcher() -> Result<String> {
+    Ok(locate()?.display().to_string())
+}
+
 fn locate() -> Result<PathBuf> {
     if let Some(path) = std::env::var_os("CARGO_BIN_EXE_apexd") {
         return Ok(PathBuf::from(path));

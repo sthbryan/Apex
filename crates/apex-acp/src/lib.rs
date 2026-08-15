@@ -269,10 +269,10 @@ impl Agent {
         Ok(())
     }
 
-    pub async fn new_session(&self, cwd: &Path) -> Result<String> {
+    pub async fn new_session(&self, cwd: &Path, servers: &[McpServer]) -> Result<String> {
         let session: NewSession = self
             .connection
-            .request("session/new", json!({ "cwd": cwd, "mcpServers": [] }))
+            .request("session/new", json!({ "cwd": cwd, "mcpServers": servers }))
             .await?;
         Ok(session.session_id)
     }

@@ -1321,3 +1321,57 @@ async fn an_acp_agent_that_dies_leaves_its_session_marked_as_finished() {
     assert_eq!(found.exit_code, Some(3));
     assert!(!found.is_alive());
 }
+
+#[tokio::test]
+async fn closing_an_acp_session_stops_its_agent_and_forgets_it() {
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    assert!(harness.manager.list_sessions().await.iter().any(|found| found.id == session.id));
+
+    harness
+        .manager
+        .close(session.id, apex_proto::WorktreeDisposal::Keep)
+        .await
+        .expect("close");
+
+    assert!(!harness.manager.list_sessions().await.iter().any(|found| found.id == session.id));
+    assert!(harness.manager.acp_snapshot(session.id).await.is_err());
+}
+
+#[tokio::test]
+async fn an_acp_session_is_handed_the_apex_mcp_server() {
+    let room = tempfile::tempdir().expect("tempdir");
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some(room.path().display().to_string()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+        })
+        .await
+        .expect("create");
+
+    let seen = std::fs::read_to_string(room.path().join("session-new.json"))
+        .expect("the agent recorded session/new");
+    assert!(seen.contains("\"name\":\"apex\""), "no apex server in {seen}");
+    assert!(seen.contains("\"mcp\""), "the launcher does not run mcp in {seen}");
+    assert!(seen.contains(&session.id.to_string()), "the session id is missing from {seen}");
+}
