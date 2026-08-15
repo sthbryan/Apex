@@ -35,7 +35,7 @@ export async function startMetrics(): Promise<() => void> {
     }
   });
 
-  void tick(true);
+  void tick(false);
 
   return () => {
     stopped = true;
