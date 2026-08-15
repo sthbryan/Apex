@@ -15,6 +15,7 @@ import { SplitDivider } from "@/features/workspace/SplitDivider";
 import { focusLeaf } from "@/features/workspace/state";
 import type { Leaf, PaneNode } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
+import { Boundary } from "@/shared/ui/Boundary";
 import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
@@ -90,20 +91,24 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
         }
       />
       <div class="min-h-0 flex-1">
-        {node.view.type === "session" && <SessionView id={node.view.sessionId} focused={focused} />}
-        {node.view.type === "file" && (
-          <FileView key={reload} path={node.view.path} chrome={false} />
-        )}
-        {node.view.type === "diff" && (
-          <DiffView
-            key={reload}
-            target={node.view.target}
-            path={node.view.path}
-            commit={node.view.commit}
-            chrome={false}
-          />
-        )}
-        {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+        <Boundary key={node.id}>
+          {node.view.type === "session" && (
+            <SessionView id={node.view.sessionId} focused={focused} />
+          )}
+          {node.view.type === "file" && (
+            <FileView key={reload} path={node.view.path} chrome={false} />
+          )}
+          {node.view.type === "diff" && (
+            <DiffView
+              key={reload}
+              target={node.view.target}
+              path={node.view.path}
+              commit={node.view.commit}
+              chrome={false}
+            />
+          )}
+          {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+        </Boundary>
       </div>
     </div>
   );

@@ -16,8 +16,15 @@ export function entriesOf(id: string): AcpEntry[] {
 export function absorb(id: string, entry: AcpEntry): void {
   const current = entriesOf(id);
   const next = current.slice();
+  const missing = entry.index > next.length;
+  for (let slot = next.length; slot < entry.index; slot += 1) {
+    next[slot] = { index: slot, body: { type: "notice", text: "…" } };
+  }
   next[entry.index] = entry;
   transcripts.value = { ...transcripts.value, [id]: next };
+  if (missing) {
+    void loadTranscript(id);
+  }
 }
 
 export function offer(id: string, offered: AcpCommand[]): void {

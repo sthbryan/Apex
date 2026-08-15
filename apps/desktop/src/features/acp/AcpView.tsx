@@ -38,9 +38,7 @@ export function AcpView({ id }: { id: string }) {
     <div class="flex h-full flex-col bg-bg">
       <div class="min-h-0 flex-1 overflow-auto px-3 py-2">
         {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
-        {entries.map((entry) => (
-          <Entry key={entry.index} id={id} entry={entry} />
-        ))}
+        {entries.map((entry) => (entry ? <Entry key={entry.index} id={id} entry={entry} /> : null))}
         <div ref={foot} />
       </div>
 
