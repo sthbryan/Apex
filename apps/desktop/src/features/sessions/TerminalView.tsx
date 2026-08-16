@@ -28,7 +28,7 @@ export function TerminalView({ id, active }: Props) {
 
     return () => {
       observer.disconnect();
-      detachTerminal(id);
+      detachTerminal(id, container);
     };
   }, [id]);
 

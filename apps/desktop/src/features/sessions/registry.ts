@@ -73,8 +73,15 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
   return entry;
 }
 
-export function detachTerminal(id: string): void {
-  registry.get(id)?.element.remove();
+export function detachTerminal(id: string, host?: HTMLElement): void {
+  const entry = registry.get(id);
+  if (!entry) {
+    return;
+  }
+  if (host && !host.contains(entry.element)) {
+    return;
+  }
+  entry.element.remove();
 }
 
 export function disposeTerminal(id: string): void {
