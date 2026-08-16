@@ -92,6 +92,11 @@ export const es: Messages = {
       "Cómo les habla Apex. Nativo usa ACP: chat, diffs y permisos dentro de Apex. Beta.",
     agentsHint2:
       "Cómo les habla Apex, y si escribe su servidor MCP en la config propia de cada uno. Nativo (ACP) es beta.",
+    agentViews: "Vistas que pide un agente",
+    agentViewsHint:
+      "Dónde pone Apex lo que un agente pide abrir. Nunca te roba el foco. Los splits paran en 4 por pestaña.",
+    agentViewsTab: "Pestaña nueva",
+    agentViewsSplit: "Partir la pestaña",
     shareContext: "comparte contexto",
   },
   shortcuts: {

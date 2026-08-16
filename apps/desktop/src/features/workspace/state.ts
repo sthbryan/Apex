@@ -174,11 +174,29 @@ export function replaceTabRoot(tabId: string, root: PaneNode, activeLeafId: stri
   updateTab(tabId, (current) => ({ ...current, root, activeLeafId }));
 }
 
-function openView(view: PaneView): void {
+function openView(view: PaneView, focus = true): void {
   const root = leaf(view);
   const tab: Tab = { id: newId(), root, activeLeafId: root.id };
   tabs.value = [...tabs.value, tab];
-  activeTabId.value = tab.id;
+  if (focus) {
+    activeTabId.value = tab.id;
+  }
+}
+
+export const SPLITS_PER_TAB = 4;
+
+export function openQuietly(view: PaneView, asSplit: boolean): void {
+  const tab = activeTab.value;
+  if (!asSplit || !tab || leaves(tab.root).length >= SPLITS_PER_TAB) {
+    openView(view, false);
+    return;
+  }
+  const incoming = leaf(view);
+  const direction: Direction = leaves(tab.root).length % 2 === 0 ? "row" : "column";
+  updateTab(tab.id, (current) => ({
+    ...current,
+    root: splitLeaf(current.root, current.activeLeafId, direction, incoming),
+  }));
 }
 
 function focusPane(matches: (view: PaneView) => boolean): boolean {

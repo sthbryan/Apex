@@ -6,7 +6,9 @@ import {
   agentModes,
   setAgentMode,
   setSharedContext,
+  setViewLanding,
   sharedContext,
+  viewLanding,
 } from "@/features/settings/agentMode";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
@@ -91,6 +93,20 @@ export function Settings() {
               })),
             ]}
           />
+        </SettingsRow>
+
+        <SettingsRow label={t("settings.agentViews")} hint={t("settings.agentViewsHint")}>
+          <Segmented label={t("settings.agentViews")}>
+            <Choice selected={viewLanding.value === "tab"} onSelect={() => setViewLanding("tab")}>
+              {t("settings.agentViewsTab")}
+            </Choice>
+            <Choice
+              selected={viewLanding.value === "split"}
+              onSelect={() => setViewLanding("split")}
+            >
+              {t("settings.agentViewsSplit")}
+            </Choice>
+          </Segmented>
         </SettingsRow>
 
         <SettingsRow label={t("settings.sidebar")} hint={t("settings.sidebarHint")}>

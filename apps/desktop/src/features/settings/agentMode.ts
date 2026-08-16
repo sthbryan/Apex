@@ -43,3 +43,16 @@ export async function setSharedContext(agent: string, enabled: boolean): Promise
   sharedContext.value = { ...sharedContext.value, [agent]: enabled };
   localStorage.setItem(SHARED, JSON.stringify(sharedContext.value));
 }
+
+const LANDING = "apex.agent-views";
+
+export type ViewLanding = "tab" | "split";
+
+export const viewLanding = signal<ViewLanding>(
+  (localStorage.getItem(LANDING) as ViewLanding | null) ?? "tab",
+);
+
+export function setViewLanding(landing: ViewLanding): void {
+  viewLanding.value = landing;
+  localStorage.setItem(LANDING, landing);
+}
