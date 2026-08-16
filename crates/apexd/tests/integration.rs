@@ -1,10 +1,10 @@
 mod common;
 
-use apexd::sessions::NewSession;
 use apex_proto::{
     ClientMessage, Command, CommandOutcome, DiffScope, ErrorCode, Frame, GitTarget, Isolation,
     Reply, RequestId, ServerMessage, SessionState, TerminalSize, WorktreeDisposal,
 };
+use apexd::sessions::NewSession;
 use common::{Harness, init_repo, manager_at, wait_for_state};
 use tokio::time::timeout;
 
@@ -22,10 +22,7 @@ async fn creating_a_session_streams_its_output() {
     let session = client.create_shell(harness.project).await;
 
     client
-        .request(Command::SessionInput {
-            id: session.id,
-            data: "echo marca-de-salida\n".into(),
-        })
+        .request(Command::SessionInput { id: session.id, data: "echo marca-de-salida\n".into() })
         .await;
     let text = client.collect_output(session.id, "marca-de-salida").await;
     assert!(text.contains("marca-de-salida"));
@@ -57,9 +54,7 @@ async fn resizing_updates_the_stored_size() {
             size: TerminalSize { rows: 40, cols: 120 },
         })
         .await;
-    client
-        .request(Command::SessionInput { id: session.id, data: "stty size\n".into() })
-        .await;
+    client.request(Command::SessionInput { id: session.id, data: "stty size\n".into() }).await;
 
     let text = client.collect_output(session.id, "40 120").await;
     assert!(text.contains("40 120"));
@@ -73,10 +68,7 @@ async fn a_session_survives_the_client_disconnecting() {
         let mut client = harness.client().await;
         let session = client.create_shell(harness.project).await;
         client
-            .request(Command::SessionInput {
-                id: session.id,
-                data: "echo before-close\n".into(),
-            })
+            .request(Command::SessionInput { id: session.id, data: "echo before-close\n".into() })
             .await;
         client.collect_output(session.id, "before-close").await;
         session
@@ -90,10 +82,7 @@ async fn a_session_survives_the_client_disconnecting() {
     assert!(replayed.contains("before-close"));
 
     reconnected
-        .request(Command::SessionInput {
-            id: session.id,
-            data: "echo still-alive\n".into(),
-        })
+        .request(Command::SessionInput { id: session.id, data: "echo still-alive\n".into() })
         .await;
     let text = reconnected.collect_output(session.id, "still-alive").await;
     assert!(text.contains("still-alive"));
@@ -112,6 +101,7 @@ async fn a_prompt_moves_the_session_to_blocked() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -134,6 +124,7 @@ async fn a_state_change_is_announced_as_an_event() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -160,9 +151,7 @@ async fn a_quiet_session_without_patterns_settles_on_idle() {
     let harness = Harness::start().await;
     let mut client = harness.client().await;
     let session = client.create_shell(harness.project).await;
-    client
-        .request(Command::SessionInput { id: session.id, data: "echo quiet\n".into() })
-        .await;
+    client.request(Command::SessionInput { id: session.id, data: "echo quiet\n".into() }).await;
 
     wait_for_state(&harness.manager, session.id, SessionState::Idle).await;
 }
@@ -180,6 +169,7 @@ async fn answering_the_prompt_moves_the_session_back_to_working() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -271,6 +261,7 @@ async fn an_isolated_session_runs_in_its_own_worktree() {
             isolation: Isolation::Worktree,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -287,8 +278,7 @@ async fn an_isolated_session_runs_in_its_own_worktree() {
     assert!(status.isolated);
     assert!(status.changes.is_empty());
 
-    std::fs::write(std::path::Path::new(&tree.path).join("README.md"), "# agent\n")
-        .expect("write");
+    std::fs::write(std::path::Path::new(&tree.path).join("README.md"), "# agent\n").expect("write");
     let target = GitTarget::Session { id: session.id };
     let status = harness.manager.git_status(harness.project, target).await.expect("status");
     assert_eq!(status.changes.len(), 1);
@@ -413,14 +403,20 @@ async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
     let paths = apex_core::ApexPaths::rooted_at(home.path());
     let manager = manager_at(&paths);
     let root = tempfile::tempdir().expect("project");
-    let project = manager
-        .open_project(&root.path().display().to_string())
-        .await
-        .expect("project")
-        .id;
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
 
     let session = manager
-        .create(NewSession { project, agent: "mcp-aware".into(), cwd: None, size: TerminalSize::default(), isolation: Isolation::Directory, slug: None, mode: None })
+        .create(NewSession {
+            project,
+            agent: "mcp-aware".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
         .await
         .expect("session");
 
@@ -437,10 +433,7 @@ async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
     let launcher = server["command"].as_str().expect("command");
     assert!(std::path::Path::new(launcher).is_absolute());
     assert!(launcher.contains("apexd"));
-    assert_eq!(
-        server["args"],
-        serde_json::json!(["mcp", "--session", session.id.to_string()])
-    );
+    assert_eq!(server["args"], serde_json::json!(["mcp", "--session", session.id.to_string()]));
 
     let wanted = config.display().to_string();
     let echoed = timeout(std::time::Duration::from_secs(10), async {
@@ -463,11 +456,8 @@ async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
     let manager = manager_at(&paths);
     let root = tempfile::tempdir().expect("project");
     init_repo(root.path());
-    let project = manager
-        .open_project(&root.path().display().to_string())
-        .await
-        .expect("project")
-        .id;
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
 
     let session = manager
         .create(NewSession {
@@ -478,6 +468,7 @@ async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -509,14 +500,20 @@ async fn the_servers_the_agent_already_had_survive_ours() {
     let paths = apex_core::ApexPaths::rooted_at(home.path());
     let manager = manager_at(&paths);
     let root = tempfile::tempdir().expect("project");
-    let project = manager
-        .open_project(&root.path().display().to_string())
-        .await
-        .expect("project")
-        .id;
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
 
     let session = manager
-        .create(NewSession { project, agent: "mcp-aware".into(), cwd: None, size: TerminalSize::default(), isolation: Isolation::Directory, slug: None, mode: None })
+        .create(NewSession {
+            project,
+            agent: "mcp-aware".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
         .await
         .expect("session");
 
@@ -537,11 +534,8 @@ async fn the_config_left_in_a_folder_does_not_name_a_session() {
     let manager = manager_at(&paths);
     let root = tempfile::tempdir().expect("project");
     init_repo(root.path());
-    let project = manager
-        .open_project(&root.path().display().to_string())
-        .await
-        .expect("project")
-        .id;
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
 
     let first = manager
         .create(NewSession {
@@ -552,6 +546,7 @@ async fn the_config_left_in_a_folder_does_not_name_a_session() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -573,11 +568,8 @@ async fn a_config_the_project_already_has_is_never_overwritten() {
     let manager = manager_at(&paths);
     let root = tempfile::tempdir().expect("project");
     std::fs::write(root.path().join("opencode.json"), "{\"mine\": true}").expect("write");
-    let project = manager
-        .open_project(&root.path().display().to_string())
-        .await
-        .expect("project")
-        .id;
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
 
     manager
         .create(NewSession {
@@ -588,6 +580,7 @@ async fn a_config_the_project_already_has_is_never_overwritten() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -699,10 +692,7 @@ async fn a_transcript_returns_the_tail_of_what_an_agent_printed() {
     let session = client.create_shell(harness.project).await;
 
     client
-        .request(Command::SessionInput {
-            id: session.id,
-            data: "echo marca-para-el-otro\n".into(),
-        })
+        .request(Command::SessionInput { id: session.id, data: "echo marca-para-el-otro\n".into() })
         .await;
     client.collect_output(session.id, "marca-para-el-otro").await;
 
@@ -729,6 +719,7 @@ async fn a_worktree_outlives_the_session_that_made_it() {
             isolation: Isolation::Worktree,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -741,13 +732,11 @@ async fn a_worktree_outlives_the_session_that_made_it() {
     assert_eq!(listed[0].branch, tree.branch);
 
     let target = GitTarget::Worktree { path: tree.path.clone() };
-    let status =
-        harness.manager.git_status(harness.project, target.clone()).await.expect("status");
+    let status = harness.manager.git_status(harness.project, target.clone()).await.expect("status");
     assert_eq!(status.branch, tree.branch);
     assert!(status.isolated);
 
-    std::fs::write(std::path::Path::new(&tree.path).join("late.txt"), "after\n")
-        .expect("write");
+    std::fs::write(std::path::Path::new(&tree.path).join("late.txt"), "after\n").expect("write");
     harness
         .manager
         .git_stage(harness.project, target.clone(), vec!["late.txt".to_owned()], true)
@@ -780,6 +769,7 @@ async fn a_worktree_commit_never_touches_the_project() {
             isolation: Isolation::Worktree,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -861,6 +851,7 @@ async fn discarding_a_session_takes_its_worktree_with_it() {
             isolation: Isolation::Worktree,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("session");
@@ -884,6 +875,7 @@ async fn a_session_in_a_plain_folder_cannot_be_isolated() {
                 isolation: Isolation::Worktree,
                 slug: None,
                 mode: None,
+                parent: None,
             })
             .await
             .is_err()
@@ -941,10 +933,7 @@ async fn a_project_tree_is_listed_and_read() {
     assert!(entries[0].is_dir);
 
     let Reply::File { contents } = client
-        .request(Command::FileRead {
-            project: harness.project,
-            path: "src/main.rs".into(),
-        })
+        .request(Command::FileRead { project: harness.project, path: "src/main.rs".into() })
         .await
     else {
         panic!("expected a file");
@@ -962,10 +951,7 @@ async fn reading_outside_the_project_is_refused() {
         .connection
         .send_control(&ClientMessage::Request {
             id,
-            command: Command::FileRead {
-                project: harness.project,
-                path: "../../etc/hosts".into(),
-            },
+            command: Command::FileRead { project: harness.project, path: "../../etc/hosts".into() },
         })
         .await
         .expect("request");
@@ -1039,10 +1025,7 @@ async fn a_layout_round_trips_through_the_protocol() {
     assert_eq!(payload, None);
 
     client
-        .request(Command::LayoutSave {
-            project: harness.project,
-            payload: "{\"tabs\":[]}".into(),
-        })
+        .request(Command::LayoutSave { project: harness.project, payload: "{\"tabs\":[]}".into() })
         .await;
 
     let Reply::Layout { payload } =
@@ -1079,6 +1062,7 @@ async fn a_session_defaults_to_the_project_root_as_its_cwd() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1245,6 +1229,7 @@ async fn an_acp_session_streams_its_answer_and_waits_for_permission() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1309,6 +1294,7 @@ async fn an_acp_agent_that_dies_leaves_its_session_marked_as_finished() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1335,17 +1321,14 @@ async fn closing_an_acp_session_stops_its_agent_and_forgets_it() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
 
     assert!(harness.manager.list_sessions().await.iter().any(|found| found.id == session.id));
 
-    harness
-        .manager
-        .close(session.id, apex_proto::WorktreeDisposal::Keep)
-        .await
-        .expect("close");
+    harness.manager.close(session.id, apex_proto::WorktreeDisposal::Keep).await.expect("close");
 
     assert!(!harness.manager.list_sessions().await.iter().any(|found| found.id == session.id));
     assert!(harness.manager.acp_snapshot(session.id).await.is_err());
@@ -1365,6 +1348,7 @@ async fn an_acp_session_is_handed_the_apex_mcp_server() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1391,6 +1375,7 @@ async fn an_acp_agent_that_never_greets_leaves_no_session_behind() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect_err("the handshake cannot succeed");
@@ -1441,6 +1426,7 @@ async fn an_agent_that_answers_nothing_says_so_in_the_transcript() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1469,6 +1455,7 @@ async fn the_models_an_acp_agent_offers_can_be_switched() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1497,6 +1484,7 @@ async fn the_http_mcp_endpoint_turns_away_a_caller_without_the_token() {
             isolation: Isolation::Directory,
             slug: None,
             mode: None,
+            parent: None,
         })
         .await
         .expect("create");
@@ -1509,6 +1497,72 @@ async fn the_http_mcp_endpoint_turns_away_a_caller_without_the_token() {
     let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }).to_string();
     let refused = ask(port, "not-a-token", &body).await;
     assert!(refused.contains("401"), "an unknown token got in: {refused}");
+}
+
+#[tokio::test]
+async fn the_http_mcp_endpoint_serves_its_tools_to_the_token_it_issued() {
+    let room = tempfile::tempdir().expect("tempdir");
+    let harness = Harness::start().await;
+    harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "acp-agent".into(),
+            cwd: Some(room.path().display().to_string()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("create");
+
+    let seen = std::fs::read_to_string(room.path().join("session-new.json")).expect("session/new");
+    let offered: serde_json::Value = serde_json::from_str(&seen).expect("json");
+    let server = &offered["params"]["mcpServers"][0];
+    let url = server["url"].as_str().expect("a url").to_owned();
+    let port: u16 = url.rsplit(':').next().unwrap().trim_end_matches("/mcp").parse().expect("port");
+    let token = server["headers"][0]["value"]
+        .as_str()
+        .expect("a header")
+        .trim_start_matches("Bearer ")
+        .to_owned();
+
+    let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }).to_string();
+    let served = ask(port, &token, &body).await;
+    assert!(served.contains("200 OK"), "the token was turned away: {served}");
+    assert!(served.contains("apex_spawn_agent"), "the tools never arrived: {served}");
+}
+
+#[tokio::test]
+async fn an_agent_cannot_spawn_a_third_generation() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let child =
+        harness.manager.spawn(parent.id, "shell", None, Isolation::Directory).await.expect("child");
+    assert_eq!(child.parent, Some(parent.id));
+
+    let refused = harness
+        .manager
+        .spawn(child.id, "shell", None, Isolation::Directory)
+        .await
+        .expect_err("a third generation got through");
+    assert!(format!("{refused:#}").contains("third generation"), "unexpected refusal: {refused:#}");
 }
 
 async fn ask(port: u16, token: &str, body: &str) -> String {

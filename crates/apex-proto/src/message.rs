@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 5;
+pub const PROTOCOL_VERSION: u32 = 6;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -286,6 +286,8 @@ pub struct SessionSummary {
     pub worktree: Option<WorktreeInfo>,
     pub task: Option<String>,
     pub mode: AgentMode,
+    #[ts(type = "string | null")]
+    pub parent: Option<Uuid>,
 }
 
 impl SessionSummary {
@@ -540,6 +542,15 @@ pub enum Command {
         slug: Option<String>,
         #[serde(default)]
         mode: Option<AgentMode>,
+    },
+    SessionSpawn {
+        #[ts(type = "string")]
+        parent: Uuid,
+        agent: String,
+        #[serde(default)]
+        task: Option<String>,
+        #[serde(default)]
+        isolation: Isolation,
     },
     SessionAttach {
         #[ts(type = "string")]

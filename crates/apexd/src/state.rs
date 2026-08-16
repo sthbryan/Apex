@@ -26,10 +26,10 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
         "PATH resolved"
     );
 
-    Ok(Arc::new(SessionManager::new(
+    Ok(SessionManager::new(
         paths.clone(),
         profiles,
         BinaryResolver::with_environment(environment),
         store,
-    )))
+    ))
 }

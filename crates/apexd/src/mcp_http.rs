@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use anyhow::{Context, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -14,15 +14,15 @@ type Tokens = Arc<Mutex<HashMap<String, Uuid>>>;
 
 pub struct HttpMcp {
     port: u16,
-    socket: PathBuf,
+    owner: Weak<dyn crate::commands::Dispatch>,
     tokens: Tokens,
 }
 
 impl HttpMcp {
-    pub async fn start(socket: PathBuf) -> Result<Arc<Self>> {
+    pub async fn start(owner: Weak<dyn crate::commands::Dispatch>) -> Result<Arc<Self>> {
         let listener = TcpListener::bind(("127.0.0.1", 0)).await.context("opening the mcp port")?;
         let port = listener.local_addr()?.port();
-        let served = Arc::new(Self { port, socket, tokens: Tokens::default() });
+        let served = Arc::new(Self { port, owner, tokens: Tokens::default() });
 
         let serving = Arc::clone(&served);
         tokio::spawn(async move {
@@ -62,7 +62,8 @@ impl HttpMcp {
             return reply(stream, "401 Unauthorized", "").await;
         };
 
-        let mut daemon = crate::mcp::Link::connect(&self.socket).await?;
+        let owner = self.owner.upgrade().context("apexd is shutting down")?;
+        let mut daemon = crate::commands::Remote(owner);
         let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
         let caller = apex_mcp::caller_for(&mut daemon, Some(session), &cwd).await?;
 

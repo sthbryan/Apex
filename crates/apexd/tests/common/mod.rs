@@ -2,14 +2,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use apexd::session::serve;
-use apexd::sessions::SessionManager;
 use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, ShellEnvironment, Store};
 use apex_proto::{
     ClientMessage, Command, CommandOutcome, Connection, Frame, Hello, Listener, PROTOCOL_VERSION,
     Reply, RequestId, ServerMessage, SessionState, SessionSummary, TerminalSize, UnixTransport,
     connect_unix,
 };
+use apexd::session::serve;
+use apexd::sessions::SessionManager;
 use tokio::time::timeout;
 use uuid::Uuid;
 
@@ -22,9 +22,7 @@ pub fn manager() -> Arc<SessionManager> {
 
 pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
     let mut profiles = ProfileSet::builtin().expect("profiles");
-    profiles.upsert(
-        AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("sh profile"),
-    );
+    profiles.upsert(AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("sh profile"));
     profiles.upsert(
         AgentProfile::parse(
             "name = \"prompted\"\n\
@@ -123,12 +121,7 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         .expect("unreachable profile"),
     );
 
-    Arc::new(SessionManager::new(
-        paths.clone(),
-        profiles,
-        resolver,
-        Store::in_memory().expect("store"),
-    ))
+    SessionManager::new(paths.clone(), profiles, resolver, Store::in_memory().expect("store"))
 }
 
 pub struct Harness {
@@ -142,11 +135,8 @@ impl Harness {
     pub async fn start() -> Self {
         let manager = manager();
         let root = tempfile::tempdir().expect("tempdir");
-        let project = manager
-            .open_project(&root.path().display().to_string())
-            .await
-            .expect("project")
-            .id;
+        let project =
+            manager.open_project(&root.path().display().to_string()).await.expect("project").id;
         let id = Uuid::new_v4().simple().to_string();
         let socket = PathBuf::from("/tmp").join(format!("apexd-s-{}.sock", &id[..8]));
         let mut transport = UnixTransport::bind(&socket).expect("bind");
@@ -195,8 +185,7 @@ impl TestClient {
 
         let deadline = timeout(Duration::from_secs(10), async {
             loop {
-                let frame =
-                    self.connection.recv().await.expect("frame").expect("no error");
+                let frame = self.connection.recv().await.expect("frame").expect("no error");
                 if matches!(frame, Frame::Control(_))
                     && let ServerMessage::Response { id: got, outcome } =
                         frame.parse_control::<ServerMessage>().expect("parse")
@@ -235,8 +224,7 @@ impl TestClient {
         let found = timeout(Duration::from_secs(10), async {
             let mut seen = Vec::new();
             loop {
-                let frame =
-                    self.connection.recv().await.expect("frame").expect("no error");
+                let frame = self.connection.recv().await.expect("frame").expect("no error");
                 if let Frame::Output { session, data } = frame
                     && session == id
                 {
@@ -259,19 +247,11 @@ pub fn init_repo(root: &std::path::Path) {
         &["config", "user.email", "test@apex.dev"][..],
         &["config", "user.name", "Apex Test"][..],
     ] {
-        std::process::Command::new("git")
-            .args(args)
-            .current_dir(root)
-            .output()
-            .expect("git");
+        std::process::Command::new("git").args(args).current_dir(root).output().expect("git");
     }
     std::fs::write(root.join("README.md"), "# sample\n").expect("readme");
     for args in [&["add", "."][..], &["commit", "-m", "first"][..]] {
-        std::process::Command::new("git")
-            .args(args)
-            .current_dir(root)
-            .output()
-            .expect("git");
+        std::process::Command::new("git").args(args).current_dir(root).output().expect("git");
     }
 }
 

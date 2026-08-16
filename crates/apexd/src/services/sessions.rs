@@ -28,15 +28,16 @@ impl LiveSession {
     }
 }
 
-struct Spawn {
-    project: Uuid,
-    agent: String,
-    cwd: Option<String>,
-    size: TerminalSize,
-    override_args: Option<Vec<String>>,
-    isolation: Isolation,
-    slug: Option<String>,
-    task: Option<String>,
+pub struct Spawn {
+    pub project: Uuid,
+    pub agent: String,
+    pub cwd: Option<String>,
+    pub size: TerminalSize,
+    pub override_args: Option<Vec<String>>,
+    pub isolation: Isolation,
+    pub slug: Option<String>,
+    pub task: Option<String>,
+    pub parent: Option<Uuid>,
 }
 
 pub struct SessionRegistry {
@@ -89,28 +90,6 @@ impl SessionRegistry {
         self.sessions.read().await.get(&id).cloned()
     }
 
-    pub async fn create(
-        self: &Arc<Self>,
-        project: Uuid,
-        agent: &str,
-        cwd: Option<String>,
-        size: TerminalSize,
-        isolation: Isolation,
-        slug: Option<String>,
-    ) -> Result<SessionSummary> {
-        self.spawn(Spawn {
-            project,
-            agent: agent.to_owned(),
-            cwd,
-            size,
-            override_args: None,
-            isolation,
-            slug,
-            task: None,
-        })
-        .await
-    }
-
     pub async fn resume(
         self: &Arc<Self>,
         project: Uuid,
@@ -118,10 +97,8 @@ impl SessionRegistry {
         session_id: &str,
         size: TerminalSize,
     ) -> Result<SessionSummary> {
-        let profile = self
-            .profiles
-            .get(agent)
-            .with_context(|| format!("unknown profile {agent}"))?;
+        let profile =
+            self.profiles.get(agent).with_context(|| format!("unknown profile {agent}"))?;
         let args = history::resume_args(profile, session_id)
             .with_context(|| format!("{agent} cannot resume sessions"))?;
 
@@ -134,6 +111,7 @@ impl SessionRegistry {
             isolation: Isolation::Directory,
             slug: None,
             task: None,
+            parent: None,
         })
         .await
     }
@@ -157,6 +135,7 @@ impl SessionRegistry {
             isolation: Isolation::Directory,
             slug: None,
             task: Some(task.to_owned()),
+            parent: None,
         })
         .await
     }
@@ -221,18 +200,16 @@ impl SessionRegistry {
 
     pub async fn project_root(&self, project: Uuid) -> Result<String> {
         let store = self.store.lock().await;
-        Ok(store
-            .project(project)?
-            .with_context(|| format!("unknown project {project}"))?
-            .root)
+        Ok(store.project(project)?.with_context(|| format!("unknown project {project}"))?.root)
     }
 
     pub async fn require(&self, id: Uuid) -> Result<Arc<LiveSession>> {
         self.get(id).await.with_context(|| format!("session {id} does not exist"))
     }
 
-    async fn spawn(self: &Arc<Self>, request: Spawn) -> Result<SessionSummary> {
-        let Spawn { project, agent, cwd, size, override_args, isolation, slug, task } = request;
+    pub async fn spawn(self: &Arc<Self>, request: Spawn) -> Result<SessionSummary> {
+        let Spawn { project, agent, cwd, size, override_args, isolation, slug, task, parent } =
+            request;
         let profile = self
             .profiles
             .get(&agent)
@@ -272,8 +249,13 @@ impl SessionRegistry {
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = override_args.unwrap_or_else(|| profile.args.clone());
         if let Some(delivery) = &profile.mcp {
-            match crate::mcp_delivery::offer(record.id, delivery, &cwd, worktree.is_some(), &self.paths)
-            {
+            match crate::mcp_delivery::offer(
+                record.id,
+                delivery,
+                &cwd,
+                worktree.is_some(),
+                &self.paths,
+            ) {
                 Ok(Some(flag)) => spec.args.extend(flag),
                 Ok(None) => {}
                 Err(error) => tracing::warn!(%error, "could not offer the MCP server"),
@@ -299,6 +281,7 @@ impl SessionRegistry {
             worktree: worktree.clone(),
             task: task.clone(),
             mode: apex_proto::AgentMode::Pty,
+            parent,
         };
 
         let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
@@ -361,8 +344,7 @@ impl SessionRegistry {
         tokio::spawn(async move {
             let mut detector = StateDetector::new(patterns, Instant::now());
             if !produced_before_subscribing.is_empty()
-                && let Some(state) =
-                    detector.observe(&produced_before_subscribing, Instant::now())
+                && let Some(state) = detector.observe(&produced_before_subscribing, Instant::now())
             {
                 manager.publish_state(id, &session, state).await;
             }

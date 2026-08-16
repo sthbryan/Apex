@@ -37,12 +37,7 @@ impl Transcript {
         self.thinking = None;
         self.next_request += 1;
         let request = self.next_request;
-        let ask = AcpPermission {
-            request,
-            title: title.to_owned(),
-            options,
-            decided: None,
-        };
+        let ask = AcpPermission { request, title: title.to_owned(), options, decided: None };
         (request, self.push(AcpBody::Permission { ask }))
     }
 
@@ -101,11 +96,7 @@ impl Transcript {
             return self.entries[index].clone();
         }
 
-        let body = if thought {
-            AcpBody::Thought { text }
-        } else {
-            AcpBody::Agent { text }
-        };
+        let body = if thought { AcpBody::Thought { text } } else { AcpBody::Agent { text } };
         let entry = self.push(body);
         let index = entry.index as usize;
         if thought {
@@ -265,7 +256,9 @@ fn sign_in_hint(hello: &apex_acp::Initialized) -> Option<String> {
         .collect();
     match ways.is_empty() {
         true => None,
-        false => Some(format!("If it never answers, it may not be signed in: {}", ways.join(" · "))),
+        false => {
+            Some(format!("If it never answers, it may not be signed in: {}", ways.join(" · ")))
+        }
     }
 }
 
@@ -278,7 +271,7 @@ fn status_of(status: Option<ToolStatus>) -> AcpToolStatus {
     }
 }
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
@@ -336,7 +329,9 @@ impl AcpSession {
         let headline = match reason {
             StopReason::EndTurn => "The agent finished the turn without saying anything.",
             StopReason::MaxTokens => "The agent ran out of tokens before saying anything.",
-            StopReason::MaxTurnRequests => "The agent hit its request limit before saying anything.",
+            StopReason::MaxTurnRequests => {
+                "The agent hit its request limit before saying anything."
+            }
             StopReason::Refusal => "The agent refused to answer.",
             StopReason::Cancelled => "The turn was cancelled.",
         };
@@ -413,10 +408,7 @@ impl Client for Relay {
         if let apex_acp::SessionUpdate::AvailableCommandsUpdate { available_commands } = update {
             let offered: Vec<AcpCommand> = available_commands
                 .into_iter()
-                .map(|command| AcpCommand {
-                    name: command.name,
-                    description: command.description,
-                })
+                .map(|command| AcpCommand { name: command.name, description: command.description })
                 .collect();
             *self.commands.lock().await = offered.clone();
             let _ = self.events.send(Event::AcpCommands { id: self.id, commands: offered });
@@ -476,8 +468,18 @@ impl Client for Relay {
     }
 }
 
+pub struct OpenAcp {
+    pub project: Uuid,
+    pub agent: String,
+    pub cwd: PathBuf,
+    pub title: String,
+    pub size: TerminalSize,
+    pub worktree: Option<apex_proto::WorktreeInfo>,
+    pub parent: Option<Uuid>,
+}
+
 pub struct AcpRegistry {
-    socket: PathBuf,
+    owner: std::sync::OnceLock<std::sync::Weak<dyn crate::commands::Dispatch>>,
     http: tokio::sync::OnceCell<Arc<crate::mcp_http::HttpMcp>>,
     profiles: ProfileSet,
     resolver: Arc<Mutex<BinaryResolver>>,
@@ -494,10 +496,9 @@ impl AcpRegistry {
         store: Arc<Mutex<Store>>,
         base_env: std::collections::BTreeMap<String, String>,
         events: broadcast::Sender<Event>,
-        socket: PathBuf,
     ) -> Self {
         Self {
-            socket,
+            owner: std::sync::OnceLock::new(),
             http: tokio::sync::OnceCell::new(),
             profiles,
             resolver,
@@ -540,24 +541,17 @@ impl AcpRegistry {
         self.profiles.get(agent).map(|profile| profile.mode).unwrap_or_default()
     }
 
-    pub async fn open(
-        self: &Arc<Self>,
-        project: Uuid,
-        agent: &str,
-        cwd: &Path,
-        title: String,
-        size: TerminalSize,
-        worktree: Option<apex_proto::WorktreeInfo>,
-    ) -> Result<SessionSummary> {
+    pub async fn open(self: &Arc<Self>, request: OpenAcp) -> Result<SessionSummary> {
+        let OpenAcp { project, agent, cwd, title, size, worktree, parent } = request;
+        let agent = agent.as_str();
+        let cwd = cwd.as_path();
         let profile = self
             .profiles
             .get(agent)
             .cloned()
             .with_context(|| format!("unknown profile {agent}"))?;
-        let command = profile
-            .acp_command
-            .clone()
-            .with_context(|| format!("{agent} does not speak acp"))?;
+        let command =
+            profile.acp_command.clone().with_context(|| format!("{agent} does not speak acp"))?;
         let binary = {
             let mut resolver = self.resolver.lock().await;
             resolver
@@ -588,6 +582,7 @@ impl AcpRegistry {
             worktree,
             task: None,
             mode: AgentMode::Acp,
+            parent,
         }));
 
         let transcript: Arc<Mutex<Transcript>> = Arc::default();
@@ -606,11 +601,13 @@ impl AcpRegistry {
         let mut env: Vec<(String, String)> = self.base_env.clone().into_iter().collect();
         env.extend(profile.env.clone());
         let agent =
-            Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay).await?;
+            Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay)
+                .await?;
 
         let greeting = tokio::time::timeout(HANDSHAKE_PATIENCE, async {
             let hello = agent.initialize().await?;
-            let servers = self.mcp_servers(record.id, hello.agent_capabilities.mcp_capabilities).await;
+            let servers =
+                self.mcp_servers(record.id, hello.agent_capabilities.mcp_capabilities).await;
             let opened = agent.new_session(cwd, &servers).await?;
             anyhow::Ok((opened, sign_in_hint(&hello)))
         })
@@ -710,11 +707,14 @@ impl AcpRegistry {
         Ok(())
     }
 
+    pub fn bind(&self, owner: std::sync::Weak<dyn crate::commands::Dispatch>) {
+        let _ = self.owner.set(owner);
+    }
+
     async fn http_mcp(&self) -> Option<&Arc<crate::mcp_http::HttpMcp>> {
-        let started = self
-            .http
-            .get_or_try_init(|| crate::mcp_http::HttpMcp::start(self.socket.clone()))
-            .await;
+        let owner = self.owner.get()?.clone();
+        let started =
+            self.http.get_or_try_init(|| crate::mcp_http::HttpMcp::start(owner.clone())).await;
         match started {
             Ok(http) => Some(http),
             Err(error) => {
@@ -729,7 +729,9 @@ impl AcpRegistry {
         session: Uuid,
         accepts: apex_acp::McpCapabilities,
     ) -> Vec<apex_acp::McpServer> {
-        if accepts.http && let Some(http) = self.http_mcp().await {
+        if accepts.http
+            && let Some(http) = self.http_mcp().await
+        {
             return vec![apex_acp::McpServer::Http {
                 name: "apex".to_owned(),
                 url: http.url(),

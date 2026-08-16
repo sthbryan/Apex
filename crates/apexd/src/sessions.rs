@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
@@ -20,6 +20,7 @@ use crate::services::{
 };
 
 const EVENT_CHANNEL_DEPTH: usize = 256;
+const SPAWN_DEPTH_CAP: usize = 1;
 
 pub struct NewSession {
     pub project: Uuid,
@@ -29,6 +30,7 @@ pub struct NewSession {
     pub isolation: Isolation,
     pub slug: Option<String>,
     pub mode: Option<apex_proto::AgentMode>,
+    pub parent: Option<Uuid>,
 }
 
 pub struct SessionManager {
@@ -50,11 +52,9 @@ impl SessionManager {
         profiles: ProfileSet,
         resolver: BinaryResolver,
         store: Store,
-    ) -> Self {
-        let base_env = resolver
-            .environment()
-            .map(|environment| environment.env().clone())
-            .unwrap_or_default();
+    ) -> Arc<Self> {
+        let base_env =
+            resolver.environment().map(|environment| environment.env().clone()).unwrap_or_default();
         let resolver = Arc::new(Mutex::new(resolver));
         let store = Arc::new(Mutex::new(store));
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
@@ -64,7 +64,6 @@ impl SessionManager {
             Arc::clone(&store),
             base_env.clone(),
             events.clone(),
-            paths.socket.clone(),
         ));
         let files = FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
         let context = ContextService::new(Arc::clone(&store));
@@ -87,7 +86,7 @@ impl SessionManager {
             base_env,
             Arc::clone(&acp),
         );
-        Self {
+        let manager = Arc::new(Self {
             paths,
             profiles,
             files,
@@ -98,7 +97,10 @@ impl SessionManager {
             metrics,
             registry,
             acp,
-        }
+        });
+        let dispatch: Arc<dyn crate::commands::Dispatch> = manager.clone();
+        manager.acp.bind(Arc::downgrade(&dispatch));
+        manager
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<Event> {
@@ -145,15 +147,27 @@ impl SessionManager {
         self.registry.get(id).await
     }
 
-    pub async fn create(self: &Arc<Self>, request: NewSession) -> Result<SessionSummary> {
-        let NewSession { project, agent, cwd, size, isolation, slug, mode } = request;
+    pub async fn create(&self, request: NewSession) -> Result<SessionSummary> {
+        let NewSession { project, agent, cwd, size, isolation, slug, mode, parent } = request;
         let agent = agent.as_str();
         let wanted = match mode {
             Some(chosen) => chosen,
             None => self.acp.mode_of(agent).await,
         };
         if wanted != apex_proto::AgentMode::Acp || !self.acp.speaks_acp(agent).await {
-            return Arc::clone(&self.registry).create(project, agent, cwd, size, isolation, slug).await;
+            return Arc::clone(&self.registry)
+                .spawn(crate::services::sessions::Spawn {
+                    project,
+                    agent: agent.to_owned(),
+                    cwd,
+                    size,
+                    override_args: None,
+                    isolation,
+                    slug,
+                    task: None,
+                    parent,
+                })
+                .await;
         }
 
         let root = self.registry.project_root(project).await?;
@@ -170,11 +184,62 @@ impl SessionManager {
             (None, None) => PathBuf::from(root),
         };
 
-        Arc::clone(&self.acp).open(project, agent, &directory, title, size, worktree).await
+        Arc::clone(&self.acp)
+            .open(crate::services::acp::OpenAcp {
+                project,
+                agent: agent.to_owned(),
+                cwd: directory,
+                title,
+                size,
+                worktree,
+                parent,
+            })
+            .await
+    }
+
+    pub async fn spawn(
+        &self,
+        parent: Uuid,
+        agent: &str,
+        task: Option<String>,
+        isolation: Isolation,
+    ) -> Result<SessionSummary> {
+        let sessions = self.list_sessions().await;
+        let caller = sessions
+            .iter()
+            .find(|session| session.id == parent)
+            .with_context(|| format!("session {parent} does not exist"))?;
+        if depth_of(&sessions, caller) >= SPAWN_DEPTH_CAP {
+            bail!(
+                "you were spawned by another agent, so you cannot spawn a third generation.                  Ask the person driving Apex to start it."
+            )
+        }
+
+        let session = self
+            .create(NewSession {
+                project: caller.project_id,
+                agent: agent.to_owned(),
+                cwd: None,
+                size: TerminalSize::default(),
+                isolation,
+                slug: None,
+                mode: None,
+                parent: Some(parent),
+            })
+            .await?;
+
+        if let Some(task) = task.filter(|text| !text.trim().is_empty()) {
+            match session.mode {
+                apex_proto::AgentMode::Acp => self.acp_prompt(session.id, task).await?,
+                apex_proto::AgentMode::Pty => self.write(session.id, &format!("{task}\r")).await?,
+            }
+        }
+
+        Ok(session)
     }
 
     pub async fn resume(
-        self: &Arc<Self>,
+        &self,
         project: Uuid,
         agent: &str,
         session_id: &str,
@@ -184,7 +249,7 @@ impl SessionManager {
     }
 
     pub async fn run_task(
-        self: &Arc<Self>,
+        &self,
         project: Uuid,
         task: &str,
         command: &str,
@@ -361,7 +426,9 @@ impl SessionManager {
         let mut entries: Vec<HistoryEntry> = self
             .profiles
             .iter()
-            .flat_map(|profile| apex_core::history::read_history(profile, &PathBuf::from(&root), &home))
+            .flat_map(|profile| {
+                apex_core::history::read_history(profile, &PathBuf::from(&root), &home)
+            })
             .map(|entry| HistoryEntry {
                 agent: entry.agent,
                 session_id: entry.session_id,
@@ -391,8 +458,7 @@ impl SessionManager {
     }
 
     pub async fn mcp_adopt(&self, agent: &str, enabled: bool) -> Result<String> {
-        let profile =
-            self.profiles.get(agent).context(format!("unknown agent {agent}"))?;
+        let profile = self.profiles.get(agent).context(format!("unknown agent {agent}"))?;
         let delivery =
             profile.mcp.as_ref().context(format!("{agent} does not take an MCP server"))?;
         let written = crate::mcp_delivery::adopt(delivery, &self.paths.home, enabled)?;
@@ -408,14 +474,7 @@ impl SessionManager {
             GitTarget::Project => Ok(PathBuf::from(self.project_root(project).await?)),
             GitTarget::Worktree { path } => Ok(PathBuf::from(path)),
             GitTarget::Session { id } => {
-                match self
-                    .registry
-                    .require(*id)
-                    .await?
-                    .snapshot_summary()
-                    .await
-                    .worktree
-                {
+                match self.registry.require(*id).await?.snapshot_summary().await.worktree {
                     Some(tree) => Ok(PathBuf::from(tree.path)),
                     None => Ok(PathBuf::from(self.project_root(project).await?)),
                 }
@@ -426,6 +485,19 @@ impl SessionManager {
     async fn project_root(&self, project: Uuid) -> Result<String> {
         self.registry.project_root(project).await
     }
+}
+
+fn depth_of(sessions: &[SessionSummary], session: &SessionSummary) -> usize {
+    let mut depth = 0;
+    let mut ancestor = session.parent;
+    while let Some(id) = ancestor {
+        depth += 1;
+        if depth > sessions.len() {
+            break;
+        }
+        ancestor = sessions.iter().find(|found| found.id == id).and_then(|found| found.parent);
+    }
+    depth
 }
 
 fn home_directory() -> PathBuf {
