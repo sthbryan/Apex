@@ -21,6 +21,9 @@ use crate::services::{
 
 const EVENT_CHANNEL_DEPTH: usize = 256;
 const SPAWN_DEPTH_CAP: usize = 1;
+const STARTUP_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
+const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis(600);
+const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
 
 pub struct NewSession {
     pub project: Uuid,
@@ -286,10 +289,7 @@ impl SessionManager {
         });
 
         if let Some(task) = task.filter(|text| !text.trim().is_empty()) {
-            match session.mode {
-                apex_proto::AgentMode::Acp => self.acp_prompt(session.id, task).await?,
-                apex_proto::AgentMode::Pty => self.write(session.id, &format!("{task}\r")).await?,
-            }
+            self.hand_over(&session, task).await?;
         }
 
         Ok(session)
@@ -338,7 +338,35 @@ impl SessionManager {
         if self.acp.get(id).await.is_some() {
             return self.acp_prompt(id, text).await;
         }
-        self.write(id, &format!("{}\r", text.replace('\n', " "))).await
+        self.type_into(id, &text).await
+    }
+
+    async fn hand_over(&self, session: &SessionSummary, task: String) -> Result<()> {
+        if session.mode == apex_proto::AgentMode::Acp {
+            return self.acp_prompt(session.id, task).await;
+        }
+        self.await_first_paint(session.id).await;
+        self.type_into(session.id, &task).await
+    }
+
+    async fn await_first_paint(&self, id: Uuid) {
+        let deadline = std::time::Instant::now() + STARTUP_GRACE;
+        while std::time::Instant::now() < deadline {
+            match self.registry.transcript(id, 4096, false).await {
+                Ok(seen) if !seen.trim().is_empty() => break,
+                Ok(_) => {}
+                Err(_) => return,
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        tokio::time::sleep(SETTLE_AFTER_PAINT).await;
+    }
+
+    async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {
+        let typed = text.replace(['\n', '\r'], " ");
+        self.write(id, &typed).await?;
+        tokio::time::sleep(BEFORE_ENTER).await;
+        self.write(id, "\r").await
     }
 
     pub async fn dismiss(&self, asked_by: Uuid, id: Uuid) -> Result<()> {

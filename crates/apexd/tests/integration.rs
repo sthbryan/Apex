@@ -1766,6 +1766,49 @@ async fn a_plain_transcript_carries_no_terminal_codes() {
 }
 
 #[tokio::test]
+async fn a_task_handed_to_a_terminal_agent_is_actually_submitted() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let child = harness
+        .manager
+        .spawn(
+            parent.id,
+            "shell",
+            Some("echo apex-ran-the-task".into()),
+            Isolation::Directory,
+        )
+        .await
+        .expect("child");
+
+    let ran = timeout(std::time::Duration::from_secs(30), async {
+        loop {
+            let seen = harness.manager.transcript(child.id, 8192, true).await.expect("transcript");
+            if seen.matches("apex-ran-the-task").count() > 1 {
+                return seen;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+    })
+    .await;
+
+    assert!(ran.is_ok(), "the task was typed but never submitted");
+}
+
+#[tokio::test]
 async fn an_agent_cannot_spawn_a_third_generation() {
     let harness = Harness::start().await;
     let parent = harness
