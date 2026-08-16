@@ -169,17 +169,24 @@ export function Settings() {
                       type="button"
                       role="switch"
                       aria-checked={sharing}
-                      title={t(sharing ? "settings.shareContextOn" : "settings.shareContextOff", {
-                        agent: agent.name,
-                      })}
+                      disabled={!agent.takes_mcp}
+                      title={t(
+                        !agent.takes_mcp
+                          ? "settings.shareContextNone"
+                          : sharing
+                            ? "settings.shareContextOn"
+                            : "settings.shareContextOff",
+                        { agent: agent.name },
+                      )}
                       onClick={() => {
                         void setSharedContext(agent.name, !sharing).catch(complain);
                       }}
                       class={cn(
-                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition active:scale-[0.97]",
+                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
                         sharing
                           ? "border-focus text-focus"
-                          : "border-border text-faint hover:text-text",
+                          : "border-border text-faint enabled:hover:text-text",
+                        agent.takes_mcp ? "" : "cursor-not-allowed opacity-40",
                       )}
                     >
                       <Icon name="context" size={12} />

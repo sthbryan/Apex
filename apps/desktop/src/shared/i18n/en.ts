@@ -102,6 +102,7 @@ export const en = {
     agentSplitsYoursOption: "{panes} in yours",
     agentSplitsSpare: "Panes in the spare tab",
     agentSplitsSpareOption: "{panes} in the spare one",
+    shareContextNone: "{agent} has no config of its own for Apex to write into.",
     shareContextOn: "Apex writes its MCP server into {agent}'s own config. Click to stop.",
     shareContextOff: "Let {agent} reach the shared context through its own config.",
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",

@@ -104,6 +104,7 @@ export const es: Messages = {
     agentSplitsYoursOption: "{panes} en la tuya",
     agentSplitsSpare: "Paneles en la pestaña aparte",
     agentSplitsSpareOption: "{panes} en la aparte",
+    shareContextNone: "{agent} no tiene una config propia donde Apex pueda escribir.",
     shareContextOn: "Apex escribe su servidor MCP en la config de {agent}. Pulsa para quitarlo.",
     shareContextOff: "Deja que {agent} llegue al contexto compartido desde su propia config.",
     agentNoAcp: "{agent} no habla ACP, así que Apex solo puede manejarlo como terminal.",

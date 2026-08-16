@@ -133,7 +133,7 @@ function Notice() {
         onClick={() => {
           notice.value = null;
         }}
-        class="shrink-0 text-faint transition-colors hover:text-text"
+        class="grid h-5 w-5 shrink-0 place-items-center text-faint transition-colors hover:text-text"
       >
         <Icon name="close" size={12} />
       </button>
