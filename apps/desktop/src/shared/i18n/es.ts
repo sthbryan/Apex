@@ -217,6 +217,7 @@ export const es: Messages = {
     exited: "salió {code}",
     close: "Cerrar sesión",
     dismiss: "Descartar",
+    spawnedBy: "La lanzó {agent}",
     clearFinished: "Limpiar terminadas",
   },
   workspace: {

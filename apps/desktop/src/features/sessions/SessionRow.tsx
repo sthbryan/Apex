@@ -2,6 +2,7 @@ import cn from "cnfast";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionStateDot } from "@/features/sessions/SessionStateDot";
+import { sessions } from "@/features/sessions/state";
 import { activeSessionId, focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -12,6 +13,7 @@ type Props = {
 
 export function SessionRow({ session }: Props) {
   const finished = session.exit_code !== null;
+  const parent = sessions.value.find((candidate) => candidate.id === session.parent);
 
   return (
     <li
@@ -33,6 +35,14 @@ export function SessionRow({ session }: Props) {
         )}
       >
         <SessionStateDot session={session} />
+        {session.parent !== null && (
+          <span
+            class="shrink-0 select-none text-faint"
+            title={t("sessions.spawnedBy", { agent: parent?.title ?? "?" })}
+          >
+            ↳
+          </span>
+        )}
         <span class="truncate">{session.title}</span>
         {finished && (
           <span class="ml-auto shrink-0 text-faint">

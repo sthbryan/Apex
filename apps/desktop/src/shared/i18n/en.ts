@@ -215,6 +215,7 @@ export const en = {
     exited: "exited {code}",
     close: "Close session",
     dismiss: "Dismiss",
+    spawnedBy: "Started by {agent}",
     clearFinished: "Clear finished",
   },
   workspace: {
