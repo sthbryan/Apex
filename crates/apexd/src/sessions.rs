@@ -197,6 +197,45 @@ impl SessionManager {
             .await
     }
 
+    pub async fn broadcast(
+        &self,
+        parent: Uuid,
+        agents: Vec<String>,
+        task: String,
+        isolation: Isolation,
+    ) -> Result<Vec<SessionSummary>> {
+        if agents.is_empty() {
+            bail!("name at least one agent to send the task to")
+        }
+        let mut started = Vec::with_capacity(agents.len());
+        let mut refused = Vec::new();
+        for agent in &agents {
+            match self.spawn(parent, agent, Some(task.clone()), isolation).await {
+                Ok(session) => started.push(session),
+                Err(error) => refused.push(format!("{agent}: {error:#}")),
+            }
+        }
+        if started.is_empty() {
+            bail!("none of them started — {}", refused.join("; "))
+        }
+        Ok(started)
+    }
+
+    pub async fn open_view(&self, asked_by: Uuid, target: apex_proto::ViewTarget) -> Result<()> {
+        let sessions = self.list_sessions().await;
+        sessions
+            .iter()
+            .find(|session| session.id == asked_by)
+            .with_context(|| format!("session {asked_by} does not exist"))?;
+        if let apex_proto::ViewTarget::Session { id } = &target
+            && !sessions.iter().any(|session| session.id == *id)
+        {
+            bail!("session {id} does not exist")
+        }
+        self.registry.announce(Event::OpenView { target, asked_by });
+        Ok(())
+    }
+
     pub async fn spawn(
         &self,
         parent: Uuid,
@@ -227,6 +266,11 @@ impl SessionManager {
                 parent: Some(parent),
             })
             .await?;
+
+        self.registry.announce(Event::OpenView {
+            target: apex_proto::ViewTarget::Session { id: session.id },
+            asked_by: parent,
+        });
 
         if let Some(task) = task.filter(|text| !text.trim().is_empty()) {
             match session.mode {

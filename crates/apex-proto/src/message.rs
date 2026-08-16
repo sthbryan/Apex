@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 6;
+pub const PROTOCOL_VERSION: u32 = 7;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -543,6 +543,19 @@ pub enum Command {
         #[serde(default)]
         mode: Option<AgentMode>,
     },
+    OpenView {
+        #[ts(type = "string")]
+        asked_by: Uuid,
+        target: ViewTarget,
+    },
+    SessionBroadcast {
+        #[ts(type = "string")]
+        parent: Uuid,
+        agents: Vec<String>,
+        task: String,
+        #[serde(default)]
+        isolation: Isolation,
+    },
     SessionSpawn {
         #[ts(type = "string")]
         parent: Uuid,
@@ -709,6 +722,7 @@ pub enum Reply {
     Pong,
     Agents { agents: Vec<AgentSummary> },
     Sessions { sessions: Vec<SessionSummary> },
+    Spawned { sessions: Vec<SessionSummary> },
     Session { session: SessionSummary },
     Projects { projects: Vec<ProjectSummary> },
     Project { project: ProjectSummary },
@@ -742,8 +756,31 @@ pub enum CommandOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ViewTarget {
+    Session {
+        #[ts(type = "string")]
+        id: Uuid,
+    },
+    File {
+        #[ts(type = "string")]
+        project: Uuid,
+        path: String,
+    },
+    Url {
+        url: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
+    OpenView {
+        target: ViewTarget,
+        #[ts(type = "string")]
+        asked_by: Uuid,
+    },
     DaemonShutdown,
     SessionOpened {
         session: SessionSummary,

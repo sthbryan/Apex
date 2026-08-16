@@ -218,6 +218,20 @@ async fn execute(
             }
             Ok(Reply::Session { session })
         }
+        Command::OpenView { asked_by, target } => {
+            manager
+                .open_view(asked_by, target)
+                .await
+                .map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
+        Command::SessionBroadcast { parent, agents, task, isolation } => {
+            let sessions = manager
+                .broadcast(parent, agents, task, isolation)
+                .await
+                .map_err(internal_error)?;
+            Ok(Reply::Spawned { sessions })
+        }
         Command::SessionSpawn { parent, agent, task, isolation } => {
             let session =
                 manager.spawn(parent, &agent, task, isolation).await.map_err(internal_error)?;
@@ -359,6 +373,8 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitCommitStaged { .. }
             | Command::WorktreeMerge { .. }
             | Command::SessionCreate { .. }
+            | Command::OpenView { .. }
+            | Command::SessionBroadcast { .. }
             | Command::SessionSpawn { .. }
             | Command::SessionResume { .. }
             | Command::SessionClose { .. }

@@ -1536,6 +1536,134 @@ async fn the_http_mcp_endpoint_serves_its_tools_to_the_token_it_issued() {
 }
 
 #[tokio::test]
+async fn spawning_asks_the_ui_to_open_the_child() {
+    let harness = Harness::start().await;
+    let mut events = harness.manager.subscribe();
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let child = harness
+        .manager
+        .spawn(parent.id, "shell", None, Isolation::Directory)
+        .await
+        .expect("child");
+
+    let asked = timeout(std::time::Duration::from_secs(5), async {
+        loop {
+            if let Ok(apex_proto::Event::OpenView { target, asked_by }) = events.recv().await {
+                return (target, asked_by);
+            }
+        }
+    })
+    .await
+    .expect("the ui was never asked");
+
+    assert_eq!(asked.1, parent.id);
+    assert_eq!(asked.0, apex_proto::ViewTarget::Session { id: child.id });
+}
+
+#[tokio::test]
+async fn an_agent_cannot_ask_to_open_a_session_that_is_gone() {
+    let harness = Harness::start().await;
+    let asking = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("session");
+
+    let refused = harness
+        .manager
+        .open_view(
+            asking.id,
+            apex_proto::ViewTarget::Session { id: uuid::Uuid::new_v4() },
+        )
+        .await
+        .expect_err("a ghost session got opened");
+    assert!(format!("{refused:#}").contains("does not exist"));
+}
+
+#[tokio::test]
+async fn a_broadcast_starts_one_session_per_agent() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let started = harness
+        .manager
+        .broadcast(
+            parent.id,
+            vec!["shell".into(), "shell".into()],
+            "look at the readme".into(),
+            Isolation::Directory,
+        )
+        .await
+        .expect("broadcast");
+
+    assert_eq!(started.len(), 2);
+    assert!(started.iter().all(|session| session.parent == Some(parent.id)));
+    assert_ne!(started[0].id, started[1].id);
+}
+
+#[tokio::test]
+async fn a_broadcast_that_names_nobody_is_refused() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let refused = harness
+        .manager
+        .broadcast(parent.id, Vec::new(), "do it".into(), Isolation::Directory)
+        .await
+        .expect_err("an empty broadcast got through");
+    assert!(format!("{refused:#}").contains("at least one agent"));
+}
+
+#[tokio::test]
 async fn an_agent_cannot_spawn_a_third_generation() {
     let harness = Harness::start().await;
     let parent = harness

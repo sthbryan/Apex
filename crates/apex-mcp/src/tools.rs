@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use apex_proto::{Command, Isolation, SessionSummary};
+use apex_proto::{Command, Isolation, SessionSummary, ViewTarget};
 use serde_json::{Value, json};
 use uuid::Uuid;
 
@@ -91,6 +91,39 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_broadcast",
+        description: "Hand the same task to several agents at once, each in its own session. \
+                      Read what each one did with apex_session_transcript.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["agents", "task"],
+                "properties": {
+                    "agents": { "type": "array", "items": { "type": "string" } },
+                    "task": { "type": "string" },
+                    "isolation": { "type": "string", "enum": ["directory", "worktree"] }
+                }
+            })
+        },
+    },
+    Tool {
+        name: "apex_open_view",
+        description: "Ask Apex to open something for the person watching: another session, \
+                      a file of this project, or a url. They decide where it lands.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["kind"],
+                "properties": {
+                    "kind": { "type": "string", "enum": ["session", "file", "url"] },
+                    "session": { "type": "string", "description": "Session id, for kind session" },
+                    "path": { "type": "string", "description": "Path in the project, for kind file" },
+                    "url": { "type": "string", "description": "Address, for kind url" }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_worktree_info",
         description: "Report which branch and folder this session is working in.",
         schema: || json!({ "type": "object", "properties": {} }),
@@ -120,15 +153,40 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
             contents: text("content").context("content is required")?,
         }),
         "apex_sessions_list" => Ok(Command::ListSessions),
+        "apex_open_view" => Ok(Command::OpenView {
+            asked_by: caller.session,
+            target: match text("kind").as_deref() {
+                Some("session") => {
+                    let raw = text("session").context("session is required")?;
+                    let id = Uuid::parse_str(&raw)
+                        .with_context(|| format!("{raw} is not a session id"))?;
+                    ViewTarget::Session { id }
+                }
+                Some("file") => ViewTarget::File {
+                    project: caller.project,
+                    path: text("path").context("path is required")?,
+                },
+                Some("url") => ViewTarget::Url {
+                    url: text("url").context("url is required")?,
+                },
+                other => bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing")),
+            },
+        }),
+        "apex_broadcast" => Ok(Command::SessionBroadcast {
+            parent: caller.session,
+            agents: arguments
+                .get("agents")
+                .and_then(Value::as_array)
+                .map(|named| named.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+                .unwrap_or_default(),
+            task: text("task").context("task is required")?,
+            isolation: isolation_from(text("isolation").as_deref())?,
+        }),
         "apex_spawn_agent" => Ok(Command::SessionSpawn {
             parent: caller.session,
             agent: text("agent").context("agent is required")?,
             task: text("task"),
-            isolation: match text("isolation").as_deref() {
-                Some("worktree") => Isolation::Worktree,
-                Some("directory") | None => Isolation::Directory,
-                Some(other) => bail!("{other} is not an isolation, use directory or worktree"),
-            },
+            isolation: isolation_from(text("isolation").as_deref())?,
         }),
         "apex_session_transcript" => {
             let raw = text("session").context("session is required")?;
@@ -179,6 +237,23 @@ pub fn describe_sessions(caller: &Caller, sessions: &[SessionSummary]) -> String
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+fn isolation_from(wanted: Option<&str>) -> Result<Isolation> {
+    match wanted {
+        Some("worktree") => Ok(Isolation::Worktree),
+        Some("directory") | None => Ok(Isolation::Directory),
+        Some(other) => bail!("{other} is not an isolation, use directory or worktree"),
+    }
+}
+
+pub fn describe_broadcast(sessions: &[SessionSummary]) -> String {
+    let started = sessions
+        .iter()
+        .map(|session| format!("- {} ({}), id {}", session.title, session.agent, session.id))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("{} agents took the task:\n{started}", sessions.len())
 }
 
 pub fn describe_spawn(session: &SessionSummary) -> String {

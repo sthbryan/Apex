@@ -63,6 +63,10 @@ impl SessionRegistry {
         Self { paths, profiles, base_env, resolver, store, sessions, events }
     }
 
+    pub fn announce(&self, event: Event) {
+        let _ = self.events.send(event);
+    }
+
     pub fn subscribe(&self) -> broadcast::Receiver<Event> {
         self.events.subscribe()
     }

@@ -109,6 +109,7 @@ async fn call<D: Daemon>(daemon: &mut D, caller: &Caller, params: &Value) -> Res
             .join("\n"),
         Reply::Sessions { sessions } => tools::describe_sessions(caller, &sessions),
         Reply::Session { session } => tools::describe_spawn(&session),
+        Reply::Spawned { sessions } => tools::describe_broadcast(&sessions),
         Reply::Done => "Done.".to_owned(),
         other => format!("Unexpected answer from the daemon: {other:?}"),
     })
