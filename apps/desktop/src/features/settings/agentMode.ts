@@ -56,3 +56,25 @@ export function setViewLanding(landing: ViewLanding): void {
   viewLanding.value = landing;
   localStorage.setItem(LANDING, landing);
 }
+
+const CAPS = "apex.agent-view-caps";
+
+export type SplitCaps = { yours: number; spare: number };
+
+const DEFAULT_CAPS: SplitCaps = { yours: 4, spare: 6 };
+
+function restoreCaps(): SplitCaps {
+  try {
+    const raw = localStorage.getItem(CAPS);
+    return raw ? { ...DEFAULT_CAPS, ...(JSON.parse(raw) as Partial<SplitCaps>) } : DEFAULT_CAPS;
+  } catch {
+    return DEFAULT_CAPS;
+  }
+}
+
+export const splitCaps = signal<SplitCaps>(restoreCaps());
+
+export function setSplitCap(which: keyof SplitCaps, panes: number): void {
+  splitCaps.value = { ...splitCaps.value, [which]: panes };
+  localStorage.setItem(CAPS, JSON.stringify(splitCaps.value));
+}

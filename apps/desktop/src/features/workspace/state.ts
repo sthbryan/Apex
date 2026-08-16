@@ -4,6 +4,7 @@ import { reconcileDock, returnPanelToDock } from "@/app/layout/state";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { sameTarget } from "@/features/git/state";
+import { splitCaps } from "@/features/settings/agentMode";
 
 let onCloseRequest: ((sessionId: string) => void) | null = null;
 
@@ -184,9 +185,6 @@ function openView(view: PaneView, focus = true): string {
   return tab.id;
 }
 
-export const SPLITS_IN_YOUR_TAB = 4;
-export const SPLITS_IN_A_SPARE_TAB = 6;
-
 let spareTabId: string | null = null;
 
 export function openQuietly(view: PaneView, asSplit: boolean): void {
@@ -196,13 +194,13 @@ export function openQuietly(view: PaneView, asSplit: boolean): void {
   }
 
   const yours = activeTab.value;
-  if (yours && yours.id !== spareTabId && leaves(yours.root).length < SPLITS_IN_YOUR_TAB) {
+  if (yours && yours.id !== spareTabId && leaves(yours.root).length < splitCaps.value.yours) {
     splitQuietly(yours, view);
     return;
   }
 
   const spare = tabs.value.find((tab) => tab.id === spareTabId);
-  if (spare && leaves(spare.root).length < SPLITS_IN_A_SPARE_TAB) {
+  if (spare && leaves(spare.root).length < splitCaps.value.spare) {
     splitQuietly(spare, view);
     return;
   }

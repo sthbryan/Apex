@@ -97,6 +97,13 @@ export const es: Messages = {
       "Dónde pone Apex lo que un agente pide abrir. Nunca te roba el foco. Los splits paran en 4 en la tuya y luego juntan 6 en una aparte.",
     agentViewsTab: "Pestaña nueva",
     agentViewsSplit: "Partir la pestaña",
+    agentSplits: "Cuántos paneles antes de otra pestaña",
+    agentSplitsHint:
+      "Las vistas de agente parten tu pestaña hasta el primer número y luego se juntan en una aparte hasta el segundo.",
+    agentSplitsYours: "Paneles en tu pestaña",
+    agentSplitsYoursOption: "{panes} en la tuya",
+    agentSplitsSpare: "Paneles en la pestaña aparte",
+    agentSplitsSpareOption: "{panes} en la aparte",
     shareContext: "comparte contexto",
   },
   shortcuts: {

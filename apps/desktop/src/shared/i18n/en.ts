@@ -95,6 +95,13 @@ export const en = {
       "Where Apex puts what an agent asks to open. It never steals your focus. Splits stop at 4 in your tab, then gather 6 to a spare one.",
     agentViewsTab: "New tab",
     agentViewsSplit: "Split the tab",
+    agentSplits: "How many panes before a new tab",
+    agentSplitsHint:
+      "Agent views split your tab up to the first number, then gather in a spare tab up to the second.",
+    agentSplitsYours: "Panes in your tab",
+    agentSplitsYoursOption: "{panes} in yours",
+    agentSplitsSpare: "Panes in the spare tab",
+    agentSplitsSpareOption: "{panes} in the spare one",
     shareContext: "shares context",
   },
   shortcuts: {

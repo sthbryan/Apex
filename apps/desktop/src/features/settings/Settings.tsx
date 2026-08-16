@@ -6,8 +6,10 @@ import {
   agentModes,
   setAgentMode,
   setSharedContext,
+  setSplitCap,
   setViewLanding,
   sharedContext,
+  splitCaps,
   viewLanding,
 } from "@/features/settings/agentMode";
 import { DockOrder } from "@/features/settings/DockOrder";
@@ -30,6 +32,8 @@ const LANGUAGES: { value: Locale; label: string }[] = [
   { value: "en", label: "English" },
   { value: "es", label: "Español" },
 ];
+
+const PANE_CAPS = [2, 3, 4, 5, 6, 8];
 
 const THEME_HINT = {
   system: "settings.themeHint",
@@ -108,6 +112,31 @@ export function Settings() {
             </Choice>
           </Segmented>
         </SettingsRow>
+
+        {viewLanding.value === "split" && (
+          <SettingsRow label={t("settings.agentSplits")} hint={t("settings.agentSplitsHint")}>
+            <div class="flex items-center gap-2">
+              <Select
+                label={t("settings.agentSplitsYours")}
+                value={String(splitCaps.value.yours)}
+                onSelect={(value) => setSplitCap("yours", Number(value))}
+                options={PANE_CAPS.map((panes) => ({
+                  value: String(panes),
+                  label: t("settings.agentSplitsYoursOption", { panes: String(panes) }),
+                }))}
+              />
+              <Select
+                label={t("settings.agentSplitsSpare")}
+                value={String(splitCaps.value.spare)}
+                onSelect={(value) => setSplitCap("spare", Number(value))}
+                options={PANE_CAPS.map((panes) => ({
+                  value: String(panes),
+                  label: t("settings.agentSplitsSpareOption", { panes: String(panes) }),
+                }))}
+              />
+            </div>
+          </SettingsRow>
+        )}
 
         <SettingsRow label={t("settings.sidebar")} hint={t("settings.sidebarHint")}>
           <DockOrder />
