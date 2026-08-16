@@ -5,12 +5,12 @@
 </p>
 
 <p align="center">
-  <strong>The desktop multiplexer for AI agent CLIs.</strong>
+  <strong>Run a team of AI agents, not a wall of terminals.</strong>
 </p>
 
 <p align="center">
-  Every agent in one window. Visible state.<br />
-  No more tab roulette.
+  Apex knows which agent is stuck, which one is done,<br />
+  and lets them hand work to each other.
 </p>
 
 <p align="center">
@@ -21,11 +21,11 @@
 
 ---
 
-Your agents already live in the terminal: **Claude Code, Codex, Gemini, Copilot, opencode**, and whatever ships next month. Each one in its own tab, its own directory, its own half-remembered state.
+Three agents running. One is waiting on a permission prompt you never saw. One finished twenty minutes ago. One burned through your weekly quota. You find out by tabbing through terminals and reading scrollback.
 
-**The problem?** You lose the thread. Which agent is running, which branch it touched, what it was doing before you switched away — all of it lives in your head instead of on screen.
+**A multiplexer that only draws panes doesn't fix that.** tmux doesn't know what `❯ 1. Yes` means. Your shell doesn't know Claude is at 90% of its window.
 
-**Apex gives you the full picture.** One window where every session is visible, isolated by git worktree, and still running when you come back.
+**Apex reads the sessions it runs.** Each agent gets a profile — how to launch it, how to resume it, which output means *blocked*, which means *done*, where its quota lives. So the window can tell you what's happening without you looking.
 
 ---
 
@@ -37,27 +37,33 @@ Your agents already live in the terminal: **Claude Code, Codex, Gemini, Copilot,
 
 ---
 
-## Why people open Apex
+## What it actually does
 
-**Every agent, one window**  
-Claude Code, Codex, Gemini, Copilot, opencode, or any CLI you point at it. Same panes, same shortcuts.
+**Reads state, doesn't just render bytes**  
+Per-agent patterns mark a session *blocked*, *working*, or *done*. Notifications when one needs you. No more discovering a stalled prompt an hour late.
 
-**Sessions that outlive the UI**  
-A daemon owns every session. Close the app, reopen it, your agents are still there.
+**Quota before you hit the wall**  
+Usage windows per agent, cached and polled, so you know what's left before an agent stops mid-task.
 
-**Isolation without ceremony**  
-Each session gets its own git worktree. Agents don't step on each other, and neither do you.
+**Agents that talk to each other**  
+Apex exposes an MCP server to every session: shared project context they can read and write, sessions they can spawn, transcripts they can inspect. One agent finds something, the others have it. A spawned agent can stand down without taking the session with it.
 
-**Shared context where it fits**  
-Apex merges into the agent's own config instead of inventing a parallel one.
+**Worktrees, not crossed wires**  
+Each session can run in its own git worktree. Parallel agents on the same repo stop overwriting each other's work.
+
+**A daemon owns the sessions**  
+`apexd` holds every process. Close the window, reopen it, resume where the agent was — including its own native `--resume`.
+
+**Bring your own CLI**  
+Claude Code, Codex, Gemini, Copilot, Grok, opencode, or a plain shell. Each is a TOML file; adding the next one is writing another.
 
 ---
 
 ## Built for
 
-- Devs running more than one agent at a time
-- Anyone tired of losing an agent's state to a closed terminal
-- People who want worktree isolation without wiring it up by hand
+- Anyone running more than one agent and losing track of all of them
+- Work that's worth parallelizing across agents on the same repo
+- People who want their agents sharing findings instead of rediscovering them
 
 ---
 
@@ -66,9 +72,9 @@ Apex merges into the agent's own config instead of inventing a parallel one.
 | | |
 |---|---|
 | **Download** | [GitHub Releases](https://github.com/sthbryan/apex/releases) |
-| **From source** | `cargo run -p apexd` + `bun run tauri dev` in `apps/desktop` |
+| **From source** | `cargo run -p apexd`, then `bun run tauri dev` in `apps/desktop` |
 
-Apex talks to the CLIs you already have installed. It doesn't wrap them in a new protocol — your agents keep behaving exactly as they do in a terminal.
+Apex drives the CLIs you already have installed, through a real PTY. Your agents behave exactly as they do in a terminal — Apex just watches.
 
 ---
 
@@ -76,28 +82,12 @@ Apex talks to the CLIs you already have installed. It doesn't wrap them in a new
 
 - `crates/apex-proto` — command and event protocol over a transport trait.
 - `crates/apex-core` — projects, sessions, agent profiles, and the SQLite store.
+- `crates/apex-pty` — PTY processes, output ring buffers, state detection.
+- `crates/apex-mcp` — the MCP surface agents use to reach Apex and each other.
 - `crates/apexd` — daemon that owns every session and outlives the UI.
 - `apps/desktop` — Tauri v2 client.
 
 The daemon owns all state. The app is a thin client that attaches over a Unix socket.
-
----
-
-## Roadmap
-
-**Shipped**
-
-- [x] Multiple agent panes in one workspace
-- [x] Sessions that survive app restarts
-- [x] Git worktree isolation per session
-- [x] Shared context merged into agent configs
-- [x] Split panes to the side
-
-**Next up**
-
-- [ ] Signed installers and auto-update
-- [ ] Per-project agent presets
-- [ ] Task queue across agents
 
 ---
 
