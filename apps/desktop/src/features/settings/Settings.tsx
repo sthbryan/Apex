@@ -1,3 +1,4 @@
+import cn from "cnfast";
 import { useEffect } from "preact/hooks";
 
 import { closePage } from "@/app/view";
@@ -158,35 +159,52 @@ export function Settings() {
         <SettingsRow label={t("settings.agents")} hint={t("settings.agentsHint2")}>
           <div class="flex flex-col gap-1.5">
             {agents.value
-              .filter((agent) => agent.speaks_acp && agent.resolved_path !== null)
-              .map((agent) => (
-                <div key={agent.name} class="flex items-center justify-end gap-3">
-                  <span class="text-muted">{agent.name}</span>
-                  <label class="flex items-center gap-1.5 text-faint">
-                    <input
-                      type="checkbox"
-                      checked={sharedContext.value[agent.name] === true}
-                      onChange={(event) => {
-                        void setSharedContext(agent.name, event.currentTarget.checked).catch(
-                          complain,
-                        );
+              .filter((agent) => agent.resolved_path !== null)
+              .map((agent) => {
+                const sharing = sharedContext.value[agent.name] === true;
+                return (
+                  <div key={agent.name} class="flex items-center justify-end gap-3">
+                    <span class="text-muted">{agent.name}</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={sharing}
+                      title={t(sharing ? "settings.shareContextOn" : "settings.shareContextOff", {
+                        agent: agent.name,
+                      })}
+                      onClick={() => {
+                        void setSharedContext(agent.name, !sharing).catch(complain);
                       }}
-                    />
-                    {t("settings.shareContext")}
-                  </label>
-                  <Segmented label={t("settings.agentMode", { agent: agent.name })}>
-                    {(["pty", "acp"] as const).map((option) => (
-                      <Choice
-                        key={option}
-                        selected={(agentModes.value[agent.name] ?? agent.mode) === option}
-                        onSelect={() => setAgentMode(agent.name, option)}
-                      >
-                        {t(`isolation.${option}`)}
-                      </Choice>
-                    ))}
-                  </Segmented>
-                </div>
-              ))}
+                      class={cn(
+                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition active:scale-[0.97]",
+                        sharing
+                          ? "border-focus text-focus"
+                          : "border-border text-faint hover:text-text",
+                      )}
+                    >
+                      <Icon name="context" size={12} />
+                      {t("settings.shareContext")}
+                    </button>
+                    <Segmented label={t("settings.agentMode", { agent: agent.name })}>
+                      {(["pty", "acp"] as const).map((option) => (
+                        <Choice
+                          key={option}
+                          selected={(agentModes.value[agent.name] ?? agent.mode) === option}
+                          disabled={option === "acp" && !agent.speaks_acp}
+                          title={
+                            option === "acp" && !agent.speaks_acp
+                              ? t("settings.agentNoAcp", { agent: agent.name })
+                              : undefined
+                          }
+                          onSelect={() => setAgentMode(agent.name, option)}
+                        >
+                          {t(`isolation.${option}`)}
+                        </Choice>
+                      ))}
+                    </Segmented>
+                  </div>
+                );
+              })}
           </div>
         </SettingsRow>
       </div>
