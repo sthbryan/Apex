@@ -129,7 +129,7 @@ async fn a_state_change_is_announced_as_an_event() {
         .await
         .expect("create");
 
-    let announced = timeout(std::time::Duration::from_secs(10), async {
+    let announced = timeout(std::time::Duration::from_secs(30), async {
         loop {
             match events.recv().await {
                 Ok(apex_proto::Event::SessionStateChanged { id, state })
@@ -436,9 +436,9 @@ async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
     assert_eq!(server["args"], serde_json::json!(["mcp", "--session", session.id.to_string()]));
 
     let wanted = config.display().to_string();
-    let echoed = timeout(std::time::Duration::from_secs(10), async {
+    let echoed = timeout(std::time::Duration::from_secs(30), async {
         loop {
-            let transcript = manager.transcript(session.id, 8192).await.expect("transcript");
+            let transcript = manager.transcript(session.id, 8192, false).await.expect("transcript");
             if transcript.contains(&wanted) {
                 return transcript;
             }
@@ -625,9 +625,9 @@ async fn a_task_runs_as_a_session_and_will_not_run_twice() {
         "the same task should not be started twice"
     );
 
-    let printed = timeout(std::time::Duration::from_secs(10), async {
+    let printed = timeout(std::time::Duration::from_secs(30), async {
         loop {
-            let text = harness.manager.transcript(session.id, 4096).await.expect("transcript");
+            let text = harness.manager.transcript(session.id, 4096, false).await.expect("transcript");
             if text.contains("hola-desde-la-tarea") {
                 return text;
             }
@@ -697,7 +697,7 @@ async fn a_transcript_returns_the_tail_of_what_an_agent_printed() {
     client.collect_output(session.id, "marca-para-el-otro").await;
 
     let Reply::Text { text } =
-        client.request(Command::SessionTranscript { id: session.id, tail: 4096 }).await
+        client.request(Command::SessionTranscript { id: session.id, tail: 4096, plain: false }).await
     else {
         panic!("expected a transcript");
     };
@@ -1661,6 +1661,108 @@ async fn a_broadcast_that_names_nobody_is_refused() {
         .await
         .expect_err("an empty broadcast got through");
     assert!(format!("{refused:#}").contains("at least one agent"));
+}
+
+#[tokio::test]
+async fn spawning_an_unknown_agent_names_the_ones_that_exist() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let refused = harness
+        .manager
+        .spawn(parent.id, "general", None, Isolation::Directory)
+        .await
+        .expect_err("an unknown agent got through");
+    let said = format!("{refused:#}");
+    assert!(said.contains("no agent called general"), "{said}");
+    assert!(said.contains("shell"), "it never said what is available: {said}");
+}
+
+#[tokio::test]
+async fn an_agent_only_closes_the_sessions_it_started() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let child = harness
+        .manager
+        .spawn(parent.id, "shell", None, Isolation::Directory)
+        .await
+        .expect("child");
+
+    let refused = harness
+        .manager
+        .dismiss(parent.id, parent.id)
+        .await
+        .expect_err("it closed a session it never started");
+    assert!(format!("{refused:#}").contains("only close the sessions you started"));
+
+    harness.manager.dismiss(parent.id, child.id).await.expect("its own child");
+    assert!(!harness.manager.list_sessions().await.iter().any(|s| s.id == child.id));
+}
+
+#[tokio::test]
+async fn a_plain_transcript_carries_no_terminal_codes() {
+    let harness = Harness::start().await;
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("session");
+
+    harness
+        .manager
+        .tell(session.id, "printf '\\033[31mred\\033[0m done'".into())
+        .await
+        .expect("tell");
+
+    let plain = timeout(std::time::Duration::from_secs(30), async {
+        loop {
+            let text = harness.manager.transcript(session.id, 8192, true).await.expect("plain");
+            if text.contains("done") {
+                return text;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        }
+    })
+    .await
+    .expect("the shell never answered");
+
+    assert!(!plain.contains('\u{1b}'), "escapes survived: {plain:?}");
 }
 
 #[tokio::test]

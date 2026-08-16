@@ -439,7 +439,7 @@ async fn session_transcript(
     id: Uuid,
     tail: u32,
 ) -> Answer<String> {
-    match state.daemon()?.request(Command::SessionTranscript { id, tail }).await.map_err(failed)? {
+    match state.daemon()?.request(Command::SessionTranscript { id, tail, plain: false }).await.map_err(failed)? {
         Reply::Text { text } => Ok(text),
         other => Err(format!("unexpected reply: {other:?}")),
     }

@@ -107,6 +107,7 @@ async fn call<D: Daemon>(daemon: &mut D, caller: &Caller, params: &Value) -> Res
             .map(|entry| format!("- {} ({} bytes)", entry.key, entry.bytes))
             .collect::<Vec<_>>()
             .join("\n"),
+        Reply::Agents { agents } => tools::describe_agents(&agents),
         Reply::Sessions { sessions } => tools::describe_sessions(caller, &sessions),
         Reply::Session { session } => tools::describe_spawn(&session),
         Reply::Spawned { sessions } => tools::describe_broadcast(&sessions),

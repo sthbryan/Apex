@@ -218,6 +218,9 @@ impl SessionManager {
         if started.is_empty() {
             bail!("none of them started — {}", refused.join("; "))
         }
+        if !refused.is_empty() {
+            tracing::warn!(refused = %refused.join("; "), "some agents did not take the task");
+        }
         Ok(started)
     }
 
@@ -243,6 +246,16 @@ impl SessionManager {
         task: Option<String>,
         isolation: Isolation,
     ) -> Result<SessionSummary> {
+        let known = self.list_agents().await;
+        if !known.iter().any(|found| found.name == agent) {
+            let named: Vec<&str> = known
+                .iter()
+                .filter(|found| found.is_available())
+                .map(|found| found.name.as_str())
+                .collect();
+            bail!("there is no agent called {agent} — you can use {}", named.join(", "))
+        }
+
         let sessions = self.list_sessions().await;
         let caller = sessions
             .iter()
@@ -317,8 +330,27 @@ impl SessionManager {
         self.registry.close(id, disposal).await
     }
 
-    pub async fn transcript(&self, id: Uuid, tail: usize) -> Result<String> {
-        self.registry.transcript(id, tail).await
+    pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
+        self.registry.transcript(id, tail, plain).await
+    }
+
+    pub async fn tell(&self, id: Uuid, text: String) -> Result<()> {
+        if self.acp.get(id).await.is_some() {
+            return self.acp_prompt(id, text).await;
+        }
+        self.write(id, &format!("{}\r", text.replace('\n', " "))).await
+    }
+
+    pub async fn dismiss(&self, asked_by: Uuid, id: Uuid) -> Result<()> {
+        let sessions = self.list_sessions().await;
+        let wanted = sessions
+            .iter()
+            .find(|session| session.id == id)
+            .with_context(|| format!("session {id} does not exist"))?;
+        if wanted.parent != Some(asked_by) {
+            bail!("you can only close the sessions you started yourself")
+        }
+        self.close(id, WorktreeDisposal::Keep).await
     }
 
     pub async fn read_metrics(&self, refresh_quota: bool) -> MetricsSnapshot {

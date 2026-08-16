@@ -172,8 +172,8 @@ async fn execute(
                 .map_err(not_found_error)?;
             Ok(Reply::Done)
         }
-        Command::SessionTranscript { id, tail } => Ok(Reply::Text {
-            text: manager.transcript(id, tail as usize).await.map_err(not_found_error)?,
+        Command::SessionTranscript { id, tail, plain } => Ok(Reply::Text {
+            text: manager.transcript(id, tail as usize, plain).await.map_err(not_found_error)?,
         }),
         Command::ListEditors => Ok(Reply::Editors { editors: manager.list_editors().await }),
         Command::FileOpenExternal { project, path, editor } => {
@@ -223,6 +223,15 @@ async fn execute(
                 .open_view(asked_by, target)
                 .await
                 .map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
+        Command::SessionTell { id, text } => {
+            manager.tell(id, text).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
+        Command::SessionDismiss { asked_by, id } => {
+            detach(subscriptions, id).await;
+            manager.dismiss(asked_by, id).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
         Command::SessionBroadcast { parent, agents, task, isolation } => {
@@ -374,6 +383,8 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::WorktreeMerge { .. }
             | Command::SessionCreate { .. }
             | Command::OpenView { .. }
+            | Command::SessionTell { .. }
+            | Command::SessionDismiss { .. }
             | Command::SessionBroadcast { .. }
             | Command::SessionSpawn { .. }
             | Command::SessionResume { .. }

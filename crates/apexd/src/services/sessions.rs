@@ -28,6 +28,44 @@ impl LiveSession {
     }
 }
 
+pub fn strip_terminal_codes(raw: &str) -> String {
+    let mut clean = String::with_capacity(raw.len());
+    let mut rest = raw.chars().peekable();
+    while let Some(letter) = rest.next() {
+        if letter != '\u{1b}' {
+            if letter != '\r' && letter != '\u{7}' {
+                clean.push(letter);
+            }
+            continue;
+        }
+        match rest.next() {
+            Some('[') => {
+                for ending in rest.by_ref() {
+                    if ending.is_ascii_alphabetic() || ending == '~' {
+                        break;
+                    }
+                }
+            }
+            Some(']') => {
+                while let Some(ending) = rest.next() {
+                    if ending == '\u{7}' {
+                        break;
+                    }
+                    if ending == '\u{1b}' && rest.peek() == Some(&'\\') {
+                        rest.next();
+                        break;
+                    }
+                }
+            }
+            Some('(') | Some(')') => {
+                rest.next();
+            }
+            _ => {}
+        }
+    }
+    clean
+}
+
 pub struct Spawn {
     pub project: Uuid,
     pub agent: String,
@@ -182,11 +220,12 @@ impl SessionRegistry {
         Ok(())
     }
 
-    pub async fn transcript(&self, id: Uuid, tail: usize) -> Result<String> {
+    pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
         let session = self.require(id).await?;
         let snapshot = session.process.snapshot();
         let start = snapshot.len().saturating_sub(tail);
-        Ok(String::from_utf8_lossy(&snapshot[start..]).into_owned())
+        let text = String::from_utf8_lossy(&snapshot[start..]).into_owned();
+        Ok(if plain { strip_terminal_codes(&text) } else { text })
     }
 
     pub async fn task_running(&self, project: Uuid, task: &str) -> bool {

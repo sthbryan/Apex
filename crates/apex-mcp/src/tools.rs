@@ -91,6 +91,37 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_agents_list",
+        description: "List the agents you can start here, and whether each one can take a \
+                      written task on its own or only works as an interactive terminal.",
+        schema: || json!({ "type": "object", "properties": {} }),
+    },
+    Tool {
+        name: "apex_session_tell",
+        description: "Send more instructions to a session that is already running.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["session", "message"],
+                "properties": {
+                    "session": { "type": "string" },
+                    "message": { "type": "string" }
+                }
+            })
+        },
+    },
+    Tool {
+        name: "apex_close_session",
+        description: "Close a session you started yourself. Its worktree, if any, stays on disk.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["session"],
+                "properties": { "session": { "type": "string" } }
+            })
+        },
+    },
+    Tool {
         name: "apex_broadcast",
         description: "Hand the same task to several agents at once, each in its own session. \
                       Read what each one did with apex_session_transcript.",
@@ -172,6 +203,15 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
                 other => bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing")),
             },
         }),
+        "apex_agents_list" => Ok(Command::ListAgents),
+        "apex_session_tell" => Ok(Command::SessionTell {
+            id: session_id(&text("session"))?,
+            text: text("message").context("message is required")?,
+        }),
+        "apex_close_session" => Ok(Command::SessionDismiss {
+            asked_by: caller.session,
+            id: session_id(&text("session"))?,
+        }),
         "apex_broadcast" => Ok(Command::SessionBroadcast {
             parent: caller.session,
             agents: arguments
@@ -191,7 +231,7 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_session_transcript" => {
             let raw = text("session").context("session is required")?;
             let id = Uuid::parse_str(&raw).with_context(|| format!("{raw} is not a session id"))?;
-            Ok(Command::SessionTranscript { id, tail: TRANSCRIPT_TAIL })
+            Ok(Command::SessionTranscript { id, tail: TRANSCRIPT_TAIL, plain: true })
         }
         "apex_note" => Ok(Command::ContextNote {
             project: caller.project,
@@ -225,8 +265,12 @@ pub fn describe_sessions(caller: &Caller, sessions: &[SessionSummary]) -> String
                 Some(_) => ", spawned by another agent",
                 None => "",
             };
+            let how = match session.mode {
+                apex_proto::AgentMode::Acp => "reachable with apex_session_tell",
+                apex_proto::AgentMode::Pty => "a terminal, only typed into",
+            };
             format!(
-                "- {} ({}) is {} on {}{}, id {}",
+                "- {} ({}, {how}) is {} on {}{}, id {}",
                 session.title,
                 session.agent,
                 session.state.as_str(),
@@ -234,6 +278,31 @@ pub fn describe_sessions(caller: &Caller, sessions: &[SessionSummary]) -> String
                 origin,
                 session.id
             )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn session_id(raw: &Option<String>) -> Result<Uuid> {
+    let raw = raw.as_deref().context("session is required")?;
+    Uuid::parse_str(raw).with_context(|| format!("{raw} is not a session id"))
+}
+
+pub fn describe_agents(agents: &[apex_proto::AgentSummary]) -> String {
+    let usable: Vec<&apex_proto::AgentSummary> =
+        agents.iter().filter(|agent| agent.is_available()).collect();
+    if usable.is_empty() {
+        return "No agents are installed here.".to_owned();
+    }
+    usable
+        .iter()
+        .map(|agent| {
+            let how = if agent.speaks_acp {
+                "takes a written task on its own"
+            } else {
+                "interactive terminal, a task is only typed into it"
+            };
+            format!("- {} — {how}", agent.name)
         })
         .collect::<Vec<_>>()
         .join("\n")
@@ -261,8 +330,14 @@ pub fn describe_spawn(session: &SessionSummary) -> String {
         Some(tree) => format!("on branch {} at {}", tree.branch, tree.path),
         None => format!("in the project folder at {}", session.cwd),
     };
+    let handed = match session.mode {
+        apex_proto::AgentMode::Acp => "It took your task as a prompt",
+        apex_proto::AgentMode::Pty => {
+            "It is an interactive terminal, so your task was only typed into it"
+        }
+    };
     format!(
-        "{} ({}) is running {}, id {}. Read what it does with apex_session_transcript.",
+        "{} ({}) is running {}, id {}. {handed}. Read what it does with apex_session_transcript.",
         session.title, session.agent, where_at, session.id
     )
 }
