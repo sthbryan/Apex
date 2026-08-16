@@ -210,7 +210,7 @@ export function openQuietly(view: PaneView, asSplit: boolean): void {
 
 function splitQuietly(tab: Tab, view: PaneView): void {
   const incoming = leaf(view);
-  const direction: Direction = leaves(tab.root).length % 2 === 0 ? "row" : "column";
+  const direction: Direction = leaves(tab.root).length % 2 === 1 ? "row" : "column";
   updateTab(tab.id, (current) => ({
     ...current,
     root: splitLeaf(current.root, current.activeLeafId, direction, incoming),
