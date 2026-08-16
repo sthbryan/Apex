@@ -92,7 +92,7 @@ export const en = {
       "How Apex talks to each one, and whether it writes its MCP server into their own config. Native (ACP) is beta.",
     agentViews: "Views an agent asks for",
     agentViewsHint:
-      "Where Apex puts what an agent asks to open. It never steals your focus. Splits stop at 4 per tab.",
+      "Where Apex puts what an agent asks to open. It never steals your focus. Splits stop at 4 in your tab, then gather 6 to a spare one.",
     agentViewsTab: "New tab",
     agentViewsSplit: "Split the tab",
     shareContext: "shares context",

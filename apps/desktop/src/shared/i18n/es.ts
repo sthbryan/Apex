@@ -94,7 +94,7 @@ export const es: Messages = {
       "Cómo les habla Apex, y si escribe su servidor MCP en la config propia de cada uno. Nativo (ACP) es beta.",
     agentViews: "Vistas que pide un agente",
     agentViewsHint:
-      "Dónde pone Apex lo que un agente pide abrir. Nunca te roba el foco. Los splits paran en 4 por pestaña.",
+      "Dónde pone Apex lo que un agente pide abrir. Nunca te roba el foco. Los splits paran en 4 en la tuya y luego juntan 6 en una aparte.",
     agentViewsTab: "Pestaña nueva",
     agentViewsSplit: "Partir la pestaña",
     shareContext: "comparte contexto",

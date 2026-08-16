@@ -174,23 +174,43 @@ export function replaceTabRoot(tabId: string, root: PaneNode, activeLeafId: stri
   updateTab(tabId, (current) => ({ ...current, root, activeLeafId }));
 }
 
-function openView(view: PaneView, focus = true): void {
+function openView(view: PaneView, focus = true): string {
   const root = leaf(view);
   const tab: Tab = { id: newId(), root, activeLeafId: root.id };
   tabs.value = [...tabs.value, tab];
   if (focus) {
     activeTabId.value = tab.id;
   }
+  return tab.id;
 }
 
-export const SPLITS_PER_TAB = 4;
+export const SPLITS_IN_YOUR_TAB = 4;
+export const SPLITS_IN_A_SPARE_TAB = 6;
+
+let spareTabId: string | null = null;
 
 export function openQuietly(view: PaneView, asSplit: boolean): void {
-  const tab = activeTab.value;
-  if (!asSplit || !tab || leaves(tab.root).length >= SPLITS_PER_TAB) {
+  if (!asSplit) {
     openView(view, false);
     return;
   }
+
+  const yours = activeTab.value;
+  if (yours && yours.id !== spareTabId && leaves(yours.root).length < SPLITS_IN_YOUR_TAB) {
+    splitQuietly(yours, view);
+    return;
+  }
+
+  const spare = tabs.value.find((tab) => tab.id === spareTabId);
+  if (spare && leaves(spare.root).length < SPLITS_IN_A_SPARE_TAB) {
+    splitQuietly(spare, view);
+    return;
+  }
+
+  spareTabId = openView(view, false);
+}
+
+function splitQuietly(tab: Tab, view: PaneView): void {
   const incoming = leaf(view);
   const direction: Direction = leaves(tab.root).length % 2 === 0 ? "row" : "column";
   updateTab(tab.id, (current) => ({
