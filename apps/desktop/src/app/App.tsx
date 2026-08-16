@@ -17,6 +17,7 @@ import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
+import { startViewIntents } from "@/features/workspace/intents";
 import { activeSessionId } from "@/features/workspace/state";
 import { agents, connect, failure, notice, platform, stale, status } from "@/shared/daemon";
 import { locale, t } from "@/shared/i18n";
@@ -49,6 +50,7 @@ export function App() {
     const stopGit = startGitWatch();
     const stopPeeking = startPeeking();
     const stopCleanup = startPaneCleanup();
+    const stopIntents = startViewIntents();
     const stopTheme = startThemeWatcher();
     const stopDockWidth = startDockWidth();
     return () => {
@@ -57,6 +59,7 @@ export function App() {
       stopGit();
       stopPeeking();
       stopCleanup();
+      stopIntents();
       stopTheme();
       stopDockWidth();
     };

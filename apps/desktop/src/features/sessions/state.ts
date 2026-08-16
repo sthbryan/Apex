@@ -81,8 +81,24 @@ export function onSessionExited(handler: (id: string, code: number) => void): ()
   };
 }
 
+const viewHandlers = new Set<(event: Extract<Event, { type: "open_view" }>) => void>();
+
+export function onOpenView(
+  handler: (event: Extract<Event, { type: "open_view" }>) => void,
+): () => void {
+  viewHandlers.add(handler);
+  return () => {
+    viewHandlers.delete(handler);
+  };
+}
+
 function applyEvent(event: Event): void {
   switch (event.type) {
+    case "open_view":
+      for (const handler of viewHandlers) {
+        handler(event);
+      }
+      break;
     case "session_opened":
       sessions.value = upsert(sessions.value, event.session);
       break;
