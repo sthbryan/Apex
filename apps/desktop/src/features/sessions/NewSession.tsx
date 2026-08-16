@@ -10,8 +10,8 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
 const CHOICES: { value: Isolation; icon: IconName }[] = [
-  { value: "worktree", icon: "branch" },
   { value: "directory", icon: "files" },
+  { value: "worktree", icon: "branch" },
 ];
 
 function Choices() {
@@ -99,8 +99,8 @@ function Choices() {
             </span>
             <Icon name={option.icon} size={14} class="shrink-0 text-faint" />
             <span class="min-w-0">
-              <span class="block text-[13px] text-text">{t(`isolation.${option.value}`)}</span>
-              <span class="block text-[11px] text-faint">{t(`isolation.${option.value}Hint`)}</span>
+              <span class="block text-code text-text">{t(`isolation.${option.value}`)}</span>
+              <span class="block text-micro text-faint">{t(`isolation.${option.value}Hint`)}</span>
             </span>
           </button>
         ))}
@@ -108,7 +108,7 @@ function Choices() {
 
       {CHOICES[cursor].value === "worktree" && (
         <label class="flex flex-col gap-0.5 px-3 pb-2">
-          <span class="text-[11px] text-faint">{t("isolation.name")}</span>
+          <span class="text-micro text-faint">{t("isolation.name")}</span>
           <input
             ref={field}
             type="text"
@@ -122,7 +122,7 @@ function Choices() {
                 confirm("worktree");
               }
             }}
-            class="rounded border border-border bg-raised px-2 py-1 text-[13px] text-text outline-none placeholder:text-faint focus:border-muted"
+            class="rounded border border-border bg-raised px-2 py-1 text-code text-text outline-none placeholder:text-faint focus:border-muted"
           />
           <span class="text-[10px] text-faint">
             {t("isolation.branch", { branch: `apex/${slugify(name)}` })}
@@ -130,7 +130,7 @@ function Choices() {
         </label>
       )}
 
-      {failure && <p class="px-3 pb-2 text-[11px] text-state-failed">{failure}</p>}
+      {failure && <p class="px-3 pb-2 text-micro text-state-failed">{failure}</p>}
     </>
   );
 }
@@ -174,7 +174,7 @@ export function NewSession() {
         )}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header class="border-b border-border px-3 py-2 text-[13px] text-text">
+        <header class="border-b border-border px-3 py-2 text-code text-text">
           {t("isolation.title", { agent: request?.agent ?? "" })}
         </header>
 
