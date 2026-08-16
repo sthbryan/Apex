@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 10;
+pub const PROTOCOL_VERSION: u32 = 11;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -91,7 +91,7 @@ pub struct AgentSummary {
     pub mode: AgentMode,
     pub supports_resume: bool,
     pub speaks_acp: bool,
-    pub takes_mcp: bool,
+    pub shares_config: bool,
 }
 
 impl AgentSummary {

@@ -82,3 +82,22 @@ fn summaries_mark_availability_from_the_resolver() {
     assert!(summary.is_available());
     assert_eq!(summary.resolved_path.as_deref(), Some("/bin/sh"));
 }
+
+#[test]
+fn only_an_agent_whose_config_we_can_merge_into_shares_it() {
+    let env = ShellEnvironment::from_search_path(vec![PathBuf::from("/bin")]);
+    let mut resolver = BinaryResolver::with_environment(env);
+    let builtin = ProfileSet::builtin().expect("builtin");
+
+    let mut says = |wanted: &str| {
+        builtin
+            .iter()
+            .find(|profile| profile.name == wanted)
+            .map(|profile| profile.summarize(&mut resolver).shares_config)
+    };
+
+    assert_eq!(says("pi"), Some(true), "pi names a config we can merge into");
+    assert_eq!(says("claude"), Some(false), "claude takes a flag but names no config");
+    assert_eq!(says("opencode"), Some(false), "opencode only takes a project file");
+    assert_eq!(says("shell"), Some(false), "shell has no config at all");
+}

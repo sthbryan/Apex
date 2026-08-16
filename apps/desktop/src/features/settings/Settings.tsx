@@ -169,9 +169,9 @@ export function Settings() {
                       type="button"
                       role="switch"
                       aria-checked={sharing}
-                      disabled={!agent.takes_mcp}
+                      disabled={!agent.shares_config}
                       title={t(
-                        !agent.takes_mcp
+                        !agent.shares_config
                           ? "settings.shareContextNone"
                           : sharing
                             ? "settings.shareContextOn"
@@ -186,7 +186,7 @@ export function Settings() {
                         sharing
                           ? "border-focus text-focus"
                           : "border-border text-faint enabled:hover:text-text",
-                        agent.takes_mcp ? "" : "cursor-not-allowed opacity-40",
+                        agent.shares_config ? "" : "cursor-not-allowed opacity-40",
                       )}
                     >
                       <Icon name="context" size={12} />
