@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 9;
+pub const PROTOCOL_VERSION: u32 = 10;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -553,6 +553,12 @@ pub enum Command {
         #[ts(type = "string")]
         id: Uuid,
         text: String,
+    },
+    SessionDone {
+        #[ts(type = "string")]
+        id: Uuid,
+        #[serde(default)]
+        summary: Option<String>,
     },
     SessionDismiss {
         #[ts(type = "string")]

@@ -111,6 +111,19 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_done",
+        description: "Say your task is finished. Your session stays alive so whoever \
+                      started you can still read it, but it stops showing as running.",
+        schema: || {
+            json!({
+                "type": "object",
+                "properties": {
+                    "summary": { "type": "string", "description": "What you did, for whoever started you" }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_close_session",
         description: "Close a session you started yourself. Its worktree, if any, stays on disk.",
         schema: || {
@@ -207,6 +220,10 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_session_tell" => Ok(Command::SessionTell {
             id: session_id(&text("session"))?,
             text: text("message").context("message is required")?,
+        }),
+        "apex_done" => Ok(Command::SessionDone {
+            id: caller.session,
+            summary: text("summary"),
         }),
         "apex_close_session" => Ok(Command::SessionDismiss {
             asked_by: caller.session,

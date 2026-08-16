@@ -19,7 +19,7 @@ import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
 import { activeSessionId } from "@/features/workspace/state";
-import { agents, connect, failure, notice, platform, stale, status } from "@/shared/daemon";
+import { agents, connect, failure, hush, notices, platform, stale, status } from "@/shared/daemon";
 import { locale, t } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
@@ -122,21 +122,27 @@ export function App() {
 }
 
 function Notice() {
-  if (!notice.value) {
+  if (notices.value.length === 0) {
     return null;
   }
   return (
-    <div class="-translate-x-1/2 fixed bottom-8 left-1/2 z-50 flex max-w-xl items-start gap-3 border border-state-failed bg-surface px-3 py-2 text-text shadow-lg">
-      <span class="min-w-0 whitespace-pre-wrap">{notice.value}</span>
-      <button
-        type="button"
-        onClick={() => {
-          notice.value = null;
-        }}
-        class="grid h-5 w-5 shrink-0 place-items-center text-faint transition-colors hover:text-text"
-      >
-        <Icon name="close" size={12} />
-      </button>
+    <div class="fixed right-4 bottom-8 z-50 flex w-80 flex-col gap-2">
+      {notices.value.map((notice) => (
+        <output
+          key={notice.id}
+          class="flex animate-row-in items-start gap-3 rounded-lg border border-state-failed bg-surface px-3 py-2 text-text shadow-lg"
+        >
+          <span class="min-w-0 flex-1 whitespace-pre-wrap">{notice.text}</span>
+          <button
+            type="button"
+            title={t("sessions.dismiss")}
+            onClick={() => hush(notice.id)}
+            class="grid h-5 w-5 shrink-0 place-items-center text-faint transition-colors hover:text-text"
+          >
+            <Icon name="close" size={12} />
+          </button>
+        </output>
+      ))}
     </div>
   );
 }

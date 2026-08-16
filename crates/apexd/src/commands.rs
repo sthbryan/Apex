@@ -229,6 +229,10 @@ async fn execute(
             manager.tell(id, text).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
+        Command::SessionDone { id, summary } => {
+            manager.call_it_done(id, summary).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::SessionDismiss { asked_by, id } => {
             detach(subscriptions, id).await;
             manager.dismiss(asked_by, id).await.map_err(not_found_error)?;
@@ -384,6 +388,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::SessionCreate { .. }
             | Command::OpenView { .. }
             | Command::SessionTell { .. }
+            | Command::SessionDone { .. }
             | Command::SessionDismiss { .. }
             | Command::SessionBroadcast { .. }
             | Command::SessionSpawn { .. }

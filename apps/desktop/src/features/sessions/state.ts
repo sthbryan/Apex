@@ -208,11 +208,18 @@ export async function closeSession(id: string, worktree: WorktreeDisposal = "kee
   try {
     await invoke("close_session", { id, worktree });
   } catch (cause) {
-    complain(cause);
-    throw cause;
+    if (!alreadyGone(cause)) {
+      complain(cause);
+      throw cause;
+    }
   } finally {
     forgetSession(id);
   }
+}
+
+function alreadyGone(cause: unknown): boolean {
+  const said = cause instanceof Error ? cause.message : String(cause);
+  return said.startsWith("NotFound:") && said.includes("does not exist");
 }
 
 export function forgetSession(id: string): void {

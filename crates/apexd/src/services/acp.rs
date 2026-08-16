@@ -756,6 +756,20 @@ impl AcpRegistry {
         }
     }
 
+    pub async fn finish(&self, id: Uuid) -> Result<()> {
+        let session = self.require(id).await?;
+        {
+            let mut summary = session.summary.lock().await;
+            if summary.exit_code.is_some() {
+                return Ok(());
+            }
+            summary.state = SessionState::Done;
+        }
+        let _ =
+            self.events.send(Event::SessionStateChanged { id, state: SessionState::Done });
+        Ok(())
+    }
+
     pub async fn require(&self, id: Uuid) -> Result<Arc<AcpSession>> {
         self.get(id).await.with_context(|| format!("session {id} does not exist"))
     }

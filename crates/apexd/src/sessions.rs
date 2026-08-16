@@ -369,6 +369,30 @@ impl SessionManager {
         self.write(id, "\r").await
     }
 
+    pub async fn call_it_done(&self, id: Uuid, summary: Option<String>) -> Result<()> {
+        let sessions = self.list_sessions().await;
+        let mine = sessions
+            .iter()
+            .find(|session| session.id == id)
+            .with_context(|| format!("session {id} does not exist"))?;
+        let parent = mine.parent.context("only a session an agent started can call itself done")?;
+
+        if let Some(summary) = summary.filter(|text| !text.trim().is_empty()) {
+            self.context_note(
+                mine.project_id,
+                &mine.title,
+                Some(&parent.to_string()),
+                &summary,
+            )
+            .await?;
+        }
+
+        if self.acp.get(id).await.is_some() {
+            return self.acp.finish(id).await;
+        }
+        self.registry.finish(id).await
+    }
+
     pub async fn dismiss(&self, asked_by: Uuid, id: Uuid) -> Result<()> {
         let sessions = self.list_sessions().await;
         let wanted = sessions

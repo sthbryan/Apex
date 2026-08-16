@@ -48,7 +48,9 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
   terminal.open(element);
 
   try {
-    terminal.loadAddon(new WebglAddon());
+    const webgl = new WebglAddon();
+    webgl.onContextLoss(() => webgl.dispose());
+    terminal.loadAddon(webgl);
   } catch {}
 
   const stopOutput = onSessionOutput(id, (data) => terminal.write(data));
@@ -104,6 +106,22 @@ export function refitTerminal(id: string): void {
     }),
   );
 }
+
+export function revealTerminal(id: string): void {
+  const entry = registry.get(id);
+  if (!entry) {
+    return;
+  }
+  entry.terminal.refresh(0, entry.terminal.rows - 1);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    for (const id of registry.keys()) {
+      revealTerminal(id);
+    }
+  }
+});
 
 export function focusTerminal(id: string): void {
   registry.get(id)?.terminal.focus();

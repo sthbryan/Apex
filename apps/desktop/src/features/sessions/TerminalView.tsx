@@ -5,6 +5,7 @@ import {
   focusTerminal,
   mountTerminal,
   refitTerminal,
+  revealTerminal,
 } from "@/features/sessions/registry";
 
 type Props = {
@@ -34,6 +35,7 @@ export function TerminalView({ id, active }: Props) {
   useEffect(() => {
     if (active) {
       refitTerminal(id);
+      revealTerminal(id);
       focusTerminal(id);
     }
   }, [active, id]);

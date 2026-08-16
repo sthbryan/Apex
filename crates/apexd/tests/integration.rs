@@ -1809,6 +1809,80 @@ async fn a_task_handed_to_a_terminal_agent_is_actually_submitted() {
 }
 
 #[tokio::test]
+async fn a_child_calls_itself_done_without_dying() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let child = harness
+        .manager
+        .spawn(parent.id, "shell", None, Isolation::Directory)
+        .await
+        .expect("child");
+
+    harness
+        .manager
+        .call_it_done(child.id, Some("read the readme, nothing to change".into()))
+        .await
+        .expect("done");
+
+    let still = harness
+        .manager
+        .list_sessions()
+        .await
+        .into_iter()
+        .find(|session| session.id == child.id)
+        .expect("it killed itself instead of standing down");
+    assert_eq!(still.state, apex_proto::SessionState::Done);
+    assert!(still.is_alive(), "the process should still be readable");
+
+    let notes = harness
+        .manager
+        .context_read(harness.project, "notes")
+        .await
+        .expect("notes");
+    assert!(notes.contains("read the readme"), "the summary never reached the parent: {notes}");
+}
+
+#[tokio::test]
+async fn only_a_spawned_session_can_call_itself_done() {
+    let harness = Harness::start().await;
+    let alone = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "shell".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("session");
+
+    let refused = harness
+        .manager
+        .call_it_done(alone.id, None)
+        .await
+        .expect_err("a session nobody started called itself done");
+    assert!(format!("{refused:#}").contains("an agent started"));
+}
+
+#[tokio::test]
 async fn an_agent_cannot_spawn_a_third_generation() {
     let harness = Harness::start().await;
     let parent = harness

@@ -427,6 +427,12 @@ impl SessionRegistry {
         });
     }
 
+    pub async fn finish(&self, id: Uuid) -> Result<()> {
+        let session = self.require(id).await?;
+        self.publish_state(id, &session, SessionState::Done).await;
+        Ok(())
+    }
+
     async fn publish_state(&self, id: Uuid, session: &LiveSession, state: SessionState) {
         {
             let mut summary = session.summary.lock().await;
