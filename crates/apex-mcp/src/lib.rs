@@ -108,6 +108,7 @@ async fn call<D: Daemon>(daemon: &mut D, caller: &Caller, params: &Value) -> Res
             .collect::<Vec<_>>()
             .join("\n"),
         Reply::Sessions { sessions } => tools::describe_sessions(caller, &sessions),
+        Reply::Session { session } => tools::describe_spawn(&session),
         Reply::Done => "Done.".to_owned(),
         other => format!("Unexpected answer from the daemon: {other:?}"),
     })
@@ -147,7 +148,10 @@ pub async fn caller_for<D: Daemon>(
     })
 }
 
-fn running_in(sessions: &[apex_proto::SessionSummary], cwd: &std::path::Path) -> Option<apex_proto::SessionSummary> {
+fn running_in(
+    sessions: &[apex_proto::SessionSummary],
+    cwd: &std::path::Path,
+) -> Option<apex_proto::SessionSummary> {
     let wanted = cwd.canonicalize().unwrap_or_else(|_| cwd.to_path_buf());
     sessions
         .iter()

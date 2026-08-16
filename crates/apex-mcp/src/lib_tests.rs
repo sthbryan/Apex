@@ -26,6 +26,7 @@ fn caller() -> Caller {
         worktree: None,
         task: None,
         mode: apex_proto::AgentMode::Pty,
+        parent: None,
     };
     Caller {
         session: summary.id,
@@ -54,6 +55,7 @@ fn summary_in(cwd: &str, title: &str) -> SessionSummary {
         worktree: None,
         task: None,
         mode: apex_proto::AgentMode::Pty,
+        parent: None,
     }
 }
 
@@ -104,11 +106,8 @@ async fn a_finished_session_does_not_answer_for_the_folder() {
 #[tokio::test]
 async fn initialize_announces_tools_and_the_protocol() {
     let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
-    let answer = exchange(
-        &mut daemon,
-        json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize" }),
-    )
-    .await;
+    let answer =
+        exchange(&mut daemon, json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize" })).await;
 
     assert_eq!(answer["result"]["protocolVersion"], PROTOCOL_VERSION);
     assert_eq!(answer["result"]["serverInfo"]["name"], SERVER_NAME);
@@ -118,11 +117,8 @@ async fn initialize_announces_tools_and_the_protocol() {
 #[tokio::test]
 async fn the_tool_list_carries_every_tool_with_its_schema() {
     let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
-    let answer = exchange(
-        &mut daemon,
-        json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" }),
-    )
-    .await;
+    let answer =
+        exchange(&mut daemon, json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" })).await;
 
     let listed = answer["result"]["tools"].as_array().expect("tools").len();
     assert_eq!(listed, TOOLS.len());
@@ -194,10 +190,7 @@ async fn a_listing_is_rendered_for_the_agent_to_read() {
     .await;
 
     assert!(
-        answer["result"]["content"][0]["text"]
-            .as_str()
-            .expect("text")
-            .contains("architecture")
+        answer["result"]["content"][0]["text"].as_str().expect("text").contains("architecture")
     );
 }
 
@@ -234,10 +227,7 @@ async fn the_worktree_tool_answers_without_touching_the_daemon() {
     .await;
 
     assert!(
-        answer["result"]["content"][0]["text"]
-            .as_str()
-            .expect("text")
-            .contains("/tmp/project")
+        answer["result"]["content"][0]["text"].as_str().expect("text").contains("/tmp/project")
     );
     assert!(daemon.seen.is_empty());
 }

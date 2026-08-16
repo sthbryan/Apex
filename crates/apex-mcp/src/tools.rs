@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use apex_proto::{Command, SessionSummary};
+use apex_proto::{Command, Isolation, SessionSummary};
 use serde_json::{Value, json};
 use uuid::Uuid;
 
@@ -71,6 +71,26 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_spawn_agent",
+        description: "Start another agent on this project and hand it a task. \
+                      Read what it does afterwards with apex_session_transcript.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["agent"],
+                "properties": {
+                    "agent": { "type": "string", "description": "Agent name, as apex knows it" },
+                    "task": { "type": "string", "description": "What it should do first" },
+                    "isolation": {
+                        "type": "string",
+                        "enum": ["directory", "worktree"],
+                        "description": "worktree gives it its own branch and folder"
+                    }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_worktree_info",
         description: "Report which branch and folder this session is working in.",
         schema: || json!({ "type": "object", "properties": {} }),
@@ -100,6 +120,16 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
             contents: text("content").context("content is required")?,
         }),
         "apex_sessions_list" => Ok(Command::ListSessions),
+        "apex_spawn_agent" => Ok(Command::SessionSpawn {
+            parent: caller.session,
+            agent: text("agent").context("agent is required")?,
+            task: text("task"),
+            isolation: match text("isolation").as_deref() {
+                Some("worktree") => Isolation::Worktree,
+                Some("directory") | None => Isolation::Directory,
+                Some(other) => bail!("{other} is not an isolation, use directory or worktree"),
+            },
+        }),
         "apex_session_transcript" => {
             let raw = text("session").context("session is required")?;
             let id = Uuid::parse_str(&raw).with_context(|| format!("{raw} is not a session id"))?;
@@ -132,17 +162,34 @@ pub fn describe_sessions(caller: &Caller, sessions: &[SessionSummary]) -> String
                 .as_ref()
                 .map(|tree| tree.branch.as_str())
                 .unwrap_or("the project folder");
+            let origin = match session.parent {
+                Some(id) if id == caller.session => ", spawned by you",
+                Some(_) => ", spawned by another agent",
+                None => "",
+            };
             format!(
-                "- {} ({}) is {} on {}, id {}",
+                "- {} ({}) is {} on {}{}, id {}",
                 session.title,
                 session.agent,
                 session.state.as_str(),
                 branch,
+                origin,
                 session.id
             )
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+pub fn describe_spawn(session: &SessionSummary) -> String {
+    let where_at = match &session.worktree {
+        Some(tree) => format!("on branch {} at {}", tree.branch, tree.path),
+        None => format!("in the project folder at {}", session.cwd),
+    };
+    format!(
+        "{} ({}) is running {}, id {}. Read what it does with apex_session_transcript.",
+        session.title, session.agent, where_at, session.id
+    )
 }
 
 pub fn describe_worktree(caller: &Caller) -> String {
