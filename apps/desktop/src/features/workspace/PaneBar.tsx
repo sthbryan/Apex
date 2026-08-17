@@ -11,6 +11,7 @@ import type { Leaf } from "@/features/workspace/tree";
 import { siblingOf } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+import cn from "cnfast";
 
 type Props = {
   tabId: string;
@@ -27,13 +28,9 @@ export function PaneBar({ tabId, leaf, extra, focused = false }: Props) {
 
   return (
     <header class="relative flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
-      {focused && (
-        <span
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-accent"
-        />
-      )}
-      <Icon name={paneIcon(leaf.view)} size={12} class="shrink-0 text-faint" />
+      <Icon name={paneIcon(leaf.view)} size={12} class={cn("shrink-0 text-faint", {
+        "text-accent": focused,
+      })} />
       <span class="min-w-0 truncate text-text">{paneTitle(leaf.view, sessions.value)}</span>
       {paneSubtitle(leaf.view) && (
         <span class="min-w-0 truncate text-faint">{paneSubtitle(leaf.view)}</span>
