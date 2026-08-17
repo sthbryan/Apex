@@ -7,6 +7,7 @@ import { sessions } from "@/features/sessions/state";
 import { countdown } from "@/features/usage/format";
 import { activeSessionId, focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
+import { metrics } from "@/shared/telemetry";
 import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
@@ -18,15 +19,24 @@ export function SessionRow({ session, depth = 0 }: Props) {
   const finished = session.exit_code !== null;
   const parent = sessions.value.find((candidate) => candidate.id === session.parent);
   const ago = countdown(Date.now() / 1000 - session.started_at) ?? t("sessions.justNow");
+  const report = (metrics.value?.quotas ?? []).find((entry) => entry.agent === session.agent);
+  const tight = report ? Math.max(0, ...report.windows.map((window) => window.used_percent)) : 0;
+  const overLimit = tight >= 100;
 
   return (
     <li
       class={cn(
-        "group flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised",
+        "group relative flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised",
         depth > 0 && "mt-0.5 ml-3",
         activeSessionId.value === session.id ? "bg-raised" : "",
       )}
     >
+      {overLimit && (
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-y-0 left-0 w-0.5 rounded-full bg-state-failed"
+        />
+      )}
       <button
         type="button"
         onClick={() => {
@@ -45,7 +55,7 @@ export function SessionRow({ session, depth = 0 }: Props) {
             <SessionStateDot session={session} />
             <AgentIcon agent={session.agent} class="shrink-0 text-faint" />
             <span
-              class="truncate"
+              class={cn("truncate", overLimit && "text-state-failed")}
               title={parent ? t("sessions.spawnedBy", { agent: parent.title }) : session.title}
             >
               {session.title}
