@@ -318,6 +318,7 @@ impl SessionRegistry {
             agent: profile.name.clone(),
             title,
             cwd: cwd_text,
+            started_at: record.created_at,
             state: SessionState::Idle,
             size,
             exit_code: None,

@@ -8,6 +8,7 @@ fn session(title: &str, worktree: Option<WorktreeInfo>) -> SessionSummary {
         agent: "claude".into(),
         title: title.into(),
         cwd: "/tmp/project".into(),
+        started_at: 1_700_000_000,
         state: SessionState::Working,
         size: TerminalSize::default(),
         exit_code: None,

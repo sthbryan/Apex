@@ -281,6 +281,8 @@ pub struct SessionSummary {
     pub agent: String,
     pub title: String,
     pub cwd: String,
+    #[ts(type = "number")]
+    pub started_at: i64,
     pub state: SessionState,
     pub size: TerminalSize,
     pub exit_code: Option<u32>,

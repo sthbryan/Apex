@@ -576,6 +576,7 @@ impl AcpRegistry {
             agent: profile.name.clone(),
             title,
             cwd: cwd.display().to_string(),
+            started_at: record.created_at,
             state: SessionState::Idle,
             size,
             exit_code: None,

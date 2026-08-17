@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
 use apex_proto::SessionState;
@@ -28,6 +29,7 @@ pub struct Session {
     pub cwd: String,
     pub state: SessionState,
     pub worktree: Option<(String, String)>,
+    pub created_at: i64,
 }
 
 pub struct Store {
@@ -164,10 +166,14 @@ impl Store {
     ) -> Result<Session> {
         let id = Uuid::new_v4();
         let state = SessionState::Idle;
+        let created_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock before 1970")
+            .as_secs() as i64;
         self.connection.execute(
             "INSERT INTO sessions
                  (id, project_id, agent, title, cwd, state, created_at, worktree_path, worktree_branch)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, unixepoch(), ?7, ?8)",
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 id.to_string(),
                 project_id.to_string(),
@@ -175,6 +181,7 @@ impl Store {
                 title,
                 cwd,
                 state.as_str(),
+                created_at,
                 worktree.map(|(path, _)| path),
                 worktree.map(|(_, branch)| branch)
             ],
@@ -187,6 +194,7 @@ impl Store {
             cwd: cwd.to_string(),
             state,
             worktree: worktree.map(|(path, branch)| (path.to_owned(), branch.to_owned())),
+            created_at,
         })
     }
 
@@ -215,7 +223,7 @@ impl Store {
 
     pub fn list_open_sessions(&self, project_id: Uuid) -> Result<Vec<Session>> {
         let mut statement = self.connection.prepare(
-            "SELECT id, project_id, agent, title, cwd, state, worktree_path, worktree_branch
+            "SELECT id, project_id, agent, title, cwd, state, created_at, worktree_path, worktree_branch
              FROM sessions WHERE project_id = ?1 AND closed_at IS NULL ORDER BY created_at",
         )?;
         let rows = statement.query_map(params![project_id.to_string()], map_session)?;
@@ -234,8 +242,8 @@ fn map_project(row: &rusqlite::Row<'_>) -> rusqlite::Result<Project> {
 
 fn map_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<Session> {
     let raw_state: String = row.get(5)?;
-    let path: Option<String> = row.get(6)?;
-    let branch: Option<String> = row.get(7)?;
+    let path: Option<String> = row.get(7)?;
+    let branch: Option<String> = row.get(8)?;
     Ok(Session {
         id: parse_uuid(row, 0)?,
         project_id: parse_uuid(row, 1)?,
@@ -244,6 +252,7 @@ fn map_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<Session> {
         cwd: row.get(4)?,
         state: SessionState::parse(&raw_state).unwrap_or_default(),
         worktree: path.zip(branch),
+        created_at: row.get(6)?,
     })
 }
 
