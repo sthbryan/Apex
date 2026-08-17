@@ -12,7 +12,7 @@ export function Workspace() {
     <>
       <TabBar tabs={tabs.value} sessions={sessions.value} />
 
-      <div class="relative min-h-0 flex-1">
+      <div class="relative min-h-0 flex-1 m-px">
         {tabs.value.length === 0 ? (
           activeProject.value ? <EmptySessions /> : <NoProject />
         ) : (
