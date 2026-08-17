@@ -10,7 +10,8 @@ export function Gauge({ icon, label, value }: Props) {
   return (
     <span class="flex items-center gap-1" title={label}>
       <Icon name={icon} size={11} />
-      {value}
+      <span class="text-faint">{label}</span>
+      <span class="tabular-nums">{value}</span>
     </span>
   );
 }
