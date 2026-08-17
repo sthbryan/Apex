@@ -48,6 +48,13 @@ jobs:
         working-directory: apps/desktop
         run: bun install --frozen-lockfile
 
+      - name: Build apex daemon
+        run: |
+          cargo build -p apexd --release
+          mkdir -p apps/desktop/src-tauri/binaries
+          cp target/release/apexd apps/desktop/src-tauri/binaries/apexd-$(rustc -vV | sed -n 's|host: ||p')
+          chmod +x apps/desktop/src-tauri/binaries/apexd-*
+
       - name: Build, sign and upload release
         uses: tauri-apps/tauri-action@v0
         env:

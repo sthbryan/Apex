@@ -6,3 +6,4 @@ dist
 .apex/
 apps/desktop/src/bindings/
 apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/binaries/
