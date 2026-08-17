@@ -237,6 +237,7 @@ export const en = {
     running: "Running",
     finished: "Finished",
     empty: "No sessions yet.",
+    startWith: "Start one with {agent}",
     exited: "exited {code}",
     close: "Close session",
     dismiss: "Dismiss",

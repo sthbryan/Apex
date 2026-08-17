@@ -9,6 +9,12 @@ export type ConnectionStatus = "connecting" | "ready" | "failed";
 export const status = signal<ConnectionStatus>("connecting");
 export const failure = signal<string | null>(null);
 export const agents = signal<AgentSummary[]>([]);
+
+export function isInstalled(agent: AgentSummary): boolean {
+  return agent.resolved_path !== null;
+}
+
+export const installedAgents = computed(() => agents.value.filter(isInstalled));
 export const daemonVersion = signal<string | null>(null);
 export type Notice = { id: number; text: string };
 

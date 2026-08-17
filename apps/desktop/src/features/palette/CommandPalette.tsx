@@ -14,6 +14,7 @@ import {
   openInNewTab,
 } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";
+import { isInstalled } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Picker, type PickerItem } from "@/shared/ui/Picker";
 
@@ -210,5 +211,5 @@ const SPLITS = [
 ] as const;
 
 function installed(agents: AgentSummary[]): AgentSummary[] {
-  return agents.filter((candidate) => candidate.resolved_path !== null);
+  return agents.filter(isInstalled);
 }

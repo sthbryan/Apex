@@ -2,12 +2,16 @@ import { Fragment } from "preact";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { waiting } from "@/features/notifications/state";
-import { projectSessions, projects } from "@/features/projects/state";
-import { requestClose } from "@/features/sessions/pending";
+import { activeProject, projectSessions, projects } from "@/features/projects/state";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
+import { requestClose, requestSession } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
 import { WaitingList } from "@/features/sessions/WaitingList";
+import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+
+const OFFERED_AGENTS = 3;
 
 export function SessionsPanel() {
   const sessions = projectSessions.value;
@@ -23,7 +27,7 @@ export function SessionsPanel() {
           <WaitingList sessions={waiting.value} projects={projects.value} />
         )}
 
-        {!hasSessions && <p class="px-1 text-faint">{t("sessions.empty")}</p>}
+        {!hasSessions && <StartHere />}
 
         {live.length > 0 && (
           <section class="mb-2">
@@ -64,6 +68,40 @@ export function SessionsPanel() {
           </section>
         )}
       </div>
+    </div>
+  );
+}
+
+function StartHere() {
+  const project = activeProject.value;
+  const offered = installedAgents.value.slice(0, OFFERED_AGENTS);
+
+  return (
+    <div class="flex flex-col gap-2">
+      <p class="px-1 text-faint">{t("sessions.empty")}</p>
+      {project && (
+        <ul class="flex flex-col gap-1">
+          {offered.map((agent) => (
+            <li key={agent.name}>
+              <button
+                type="button"
+                onClick={() =>
+                  requestSession({
+                    project: project.id,
+                    agent: agent.name,
+                    direction: null,
+                    isGit: project.is_git,
+                  })
+                }
+                class="flex w-full items-center gap-2 rounded border border-border bg-raised px-2 py-1.5 text-left transition-colors hover:border-muted"
+              >
+                <AgentIcon agent={agent.name} class="shrink-0 text-faint" />
+                <span class="truncate">{t("sessions.startWith", { agent: agent.name })}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
