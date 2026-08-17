@@ -204,7 +204,8 @@ async fn notify_client<C: Client>(client: &mut C, method: &str, params: Value) {
 
 pub struct Agent {
     connection: Connection,
-    child: Mutex<Child>,
+    child: Mutex<Option<Child>>,
+    pid: u32,
     complaints: Arc<Mutex<Vec<String>>>,
 }
 
@@ -230,6 +231,7 @@ impl Agent {
         }
 
         let mut child = process.spawn().with_context(|| format!("could not start {command}"))?;
+        let pid = child.id().unwrap_or(0);
         let stdin = child.stdin.take().context("the agent has no stdin")?;
         let stdout = child.stdout.take().context("the agent has no stdout")?;
         let complaints: Arc<Mutex<Vec<String>>> = Arc::default();
@@ -251,7 +253,8 @@ impl Agent {
 
         Ok(Self {
             connection: Connection::new(stdout, stdin, client),
-            child: Mutex::new(child),
+            child: Mutex::new(Some(child)),
+            pid,
             complaints,
         })
     }
@@ -319,8 +322,8 @@ impl Agent {
         self.connection.notify("session/cancel", json!({ "sessionId": session }))
     }
 
-    pub async fn pid(&self) -> Option<u32> {
-        self.child.lock().await.id()
+    pub fn pid(&self) -> Option<u32> {
+        (self.pid != 0).then_some(self.pid)
     }
 
     pub async fn complaints(&self) -> String {
@@ -328,24 +331,34 @@ impl Agent {
     }
 
     pub async fn wait(&self) -> i32 {
-        match self.child.lock().await.wait().await {
-            Ok(status) => status.code().unwrap_or(1),
-            Err(_) => 1,
+        let child = {
+            let mut guard = self.child.lock().await;
+            guard.take()
+        };
+        match child {
+            Some(mut child) => match child.wait().await {
+                Ok(status) => status.code().unwrap_or(1),
+                Err(_) => 1,
+            },
+            None => 1,
         }
     }
 
     pub async fn kill(&self) -> Result<()> {
-        let mut child = self.child.lock().await;
-        if let Some(pid) = child.id() {
+        if self.pid != 0 {
             let _ = Command::new("/bin/kill")
                 .arg("-KILL")
-                .arg(format!("-{pid}"))
+                .arg(format!("-{}", self.pid))
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status()
                 .await;
         }
-        child.kill().await.context("could not stop the agent")
+        let mut child = self.child.lock().await;
+        if let Some(child) = child.as_mut() {
+            child.kill().await.context("could not stop the agent")?;
+        }
+        Ok(())
     }
 }
 

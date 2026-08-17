@@ -522,7 +522,7 @@ impl AcpRegistry {
         let sessions = self.sessions.read().await;
         let mut found = Vec::with_capacity(sessions.len());
         for (id, session) in sessions.iter() {
-            if let Some(pid) = session.agent.pid().await {
+            if let Some(pid) = session.agent.pid() {
                 found.push((*id, session.summary.lock().await.title.clone(), pid));
             }
         }
