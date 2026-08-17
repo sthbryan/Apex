@@ -1,5 +1,6 @@
 import cn from "cnfast";
 import { useEffect } from "preact/hooks";
+import { getVersion } from "@tauri-apps/api/app";
 
 import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
@@ -18,7 +19,7 @@ import {
 } from "@/features/settings/agentMode";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import { agents, complain } from "@/shared/daemon";
+import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
@@ -246,6 +247,15 @@ export function Settings() {
                   </div>
                 );
               })}
+          </div>
+        </SettingsRow>
+
+        <SettingsRow label={t("settings.about")} hint={t("settings.aboutHint")}>
+          <div class="flex flex-col items-end gap-0.5 text-sm">
+            <span class="text-text">
+              {t("app.name")} {getVersion()}
+            </span>
+            <span class="text-faint">apexd {daemonVersion.value ?? "—"}</span>
           </div>
         </SettingsRow>
       </div>

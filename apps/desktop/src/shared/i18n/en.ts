@@ -114,6 +114,8 @@ export const en = {
     idleGrace0: "Stop on close",
     idleGrace60: "60 seconds",
     idleGrace7200: "2 hours",
+    about: "About",
+    aboutHint: "Versions of the app and the background daemon.",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

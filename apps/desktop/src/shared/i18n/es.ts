@@ -116,6 +116,8 @@ export const es: Messages = {
     idleGrace0: "Apagar al cerrar",
     idleGrace60: "60 segundos",
     idleGrace7200: "2 horas",
+    about: "Acerca de",
+    aboutHint: "Versiones de la app y del daemon.",
   },
   shortcuts: {
     title: "Atajos de teclado",
