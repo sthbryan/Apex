@@ -6,7 +6,11 @@ import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
-export function ProjectPicker() {
+type Props = {
+  variant?: "bar" | "dock";
+};
+
+export function ProjectPicker({ variant = "bar" }: Props) {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
   const menu = usePresence<HTMLDivElement>(open);
@@ -27,12 +31,16 @@ export function ProjectPicker() {
   const current = activeProject.value;
 
   return (
-    <div ref={holder} class="relative">
+    <div ref={holder} class={cn("relative", variant === "dock" && "px-2")}>
       <button
         type="button"
         onClick={() => setOpen((shown) => !shown)}
         title={current?.root ?? t("projects.none")}
-        class="flex max-w-56 items-center gap-1.5 rounded px-1.5 py-0.5 transition-colors hover:bg-raised"
+        class={cn("flex items-center gap-1.5 rounded transition-colors", {
+          "max-w-56 px-1.5 py-0.5 hover:bg-raised": variant === "bar",
+          "w-full border border-border bg-raised px-2 py-1 font-medium hover:border-muted":
+            variant === "dock",
+        })}
       >
         <span class="truncate">{current?.name ?? t("projects.none")}</span>
         {waitingElsewhere() > 0 && (
@@ -42,6 +50,7 @@ export function ProjectPicker() {
           name="chevron"
           size={12}
           class={cn("text-faint transition-transform", {
+            "ml-auto": variant === "dock",
             "rotate-180": open,
           })}
         />
@@ -51,8 +60,10 @@ export function ProjectPicker() {
         <div
           ref={menu.holder}
           class={cn(
-            `absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl`,
+            `absolute top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl`,
             {
+              "left-0 w-72": variant === "bar",
+              "inset-x-2": variant === "dock",
               "animate-drop-out": menu.leaving,
               "animate-drop-in": !menu.leaving,
             },

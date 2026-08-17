@@ -11,10 +11,11 @@ import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   header?: ComponentChildren;
+  children?: ComponentChildren;
   floating?: boolean;
 };
 
-export function Dock({ header, floating = false }: Props) {
+export function Dock({ header, children, floating = false }: Props) {
   const order = dockOrder.value;
   const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
   const View = active ? DOCK_PANELS[active].View : null;
@@ -35,6 +36,8 @@ export function Dock({ header, floating = false }: Props) {
       >
         {header}
       </div>
+
+      {children && <div class="shrink-0 pb-1">{children}</div>}
 
       {order.length > 0 && (
         <nav class="flex min-h-8.5 shrink-0 gap-1 border-b border-border px-1 py-1">

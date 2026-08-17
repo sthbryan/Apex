@@ -42,13 +42,13 @@ export function Layout({ onNewSession }: Props) {
             floating={overlay}
             header={
               <>
-                <span data-tauri-drag-region class="truncate font-semibold tracking-wide">
-                  {t("app.name")}
-                </span>
-                {!dockOpen.value && <span class="ml-auto pr-2">{sidebarToggle}</span>}
+                <span data-tauri-drag-region class="h-full flex-1" />
+                {!dockOpen.value && <span class="pr-2">{sidebarToggle}</span>}
               </>
             }
-          />
+          >
+            <ProjectPicker variant="dock" />
+          </Dock>
         </DockSlot>
 
         <div class="flex min-w-0 flex-1 flex-col">
@@ -57,7 +57,7 @@ export function Layout({ onNewSession }: Props) {
             lead={
               <>
                 {sidebarToggle}
-                <ProjectPicker />
+                {!dockVisible && <ProjectPicker />}
               </>
             }
           >
