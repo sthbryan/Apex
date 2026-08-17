@@ -1,4 +1,3 @@
-import cn from "cnfast";
 import { Fragment } from "preact";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
@@ -11,37 +10,12 @@ import { WaitingList } from "@/features/sessions/WaitingList";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-type Group = {
-  label: string;
-  dotClass: string;
-  sessions: SessionSummary[];
-};
-
 export function SessionsPanel() {
   const sessions = projectSessions.value;
   const elsewhere = foreignSessions.value;
-  const groups: Group[] = [
-    {
-      label: t("sessions.running"),
-      dotClass: "bg-state-working animate-pulse",
-      sessions: sessions.filter(
-        (session) => session.exit_code === null && session.state !== "idle",
-      ),
-    },
-    {
-      label: t("sessions.idle"),
-      dotClass: "border border-state-idle",
-      sessions: sessions.filter(
-        (session) => session.exit_code === null && session.state === "idle",
-      ),
-    },
-    {
-      label: t("sessions.finished"),
-      dotClass: "bg-state-done",
-      sessions: sessions.filter((session) => session.exit_code !== null),
-    },
-  ];
-  const hasSessions = groups.some((group) => group.sessions.length > 0);
+  const live = sessions.filter((session) => session.exit_code === null);
+  const finished = sessions.filter((session) => session.exit_code !== null);
+  const hasSessions = live.length > 0 || finished.length > 0;
 
   return (
     <div class="flex h-full flex-col">
@@ -53,46 +27,54 @@ export function SessionsPanel() {
 
         {!hasSessions && <p class="px-1 text-faint">{t("sessions.empty")}</p>}
 
-        {groups.map((group) => {
-          if (group.sessions.length === 0) {
-            return null;
-          }
-          const { roots, byParent } = treeOf(group.sessions);
-          return (
-            <section key={group.label} class={cn("animate-row-in", roots.length > 0 && "mb-2")}>
-              <div class="mb-1 flex items-center gap-2 px-1">
-                <span
-                  class={cn("size-1.5 shrink-0 rounded-full", group.dotClass)}
-                  aria-hidden="true"
-                />
-                <h2 class="text-micro uppercase tracking-wider text-faint">
-                  {group.label} · {group.sessions.length}
-                </h2>
-                {group.sessions.length > 0 &&
-                  group.sessions.every((session) => session.exit_code !== null) && (
-                    <button
-                      type="button"
-                      title={t("sessions.clearFinished")}
-                      onClick={() => {
-                        for (const session of group.sessions) {
-                          requestClose(session);
-                        }
-                      }}
-                      class="ml-auto text-faint transition-colors hover:text-text"
-                    >
-                      <Icon name="close" size={12} />
-                    </button>
-                  )}
-              </div>
-              <ul class="flex flex-col">{roots.map((session) => renderRow(session, byParent))}</ul>
-            </section>
-          );
-        })}
+        {live.length > 0 && (
+          <section class="mb-2">
+            <div class="mb-1 flex items-center gap-2 px-1">
+              <span
+                class="size-1.5 shrink-0 animate-pulse rounded-full bg-state-working"
+                aria-hidden="true"
+              />
+              <h2 class="text-micro uppercase tracking-wider text-faint">
+                {t("sessions.running")} · {live.length}
+              </h2>
+            </div>
+            <ul class="flex flex-col">{renderTree(live)}</ul>
+          </section>
+        )}
+
+        {finished.length > 0 && (
+          <section>
+            <div class="mb-1 flex items-center gap-2 px-1">
+              <span class="size-1.5 shrink-0 rounded-full bg-state-done" aria-hidden="true" />
+              <h2 class="text-micro uppercase tracking-wider text-faint">
+                {t("sessions.finished")} · {finished.length}
+              </h2>
+              <button
+                type="button"
+                title={t("sessions.clearFinished")}
+                onClick={() => {
+                  for (const session of finished) {
+                    requestClose(session);
+                  }
+                }}
+                class="ml-auto text-faint transition-colors hover:text-text"
+              >
+                <Icon name="close" size={12} />
+              </button>
+            </div>
+            <ul class="flex flex-col">{renderTree(finished)}</ul>
+          </section>
+        )}
 
         {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects.value} />}
       </div>
     </div>
   );
+}
+
+function renderTree(sessions: SessionSummary[]) {
+  const { roots, byParent } = treeOf(sessions);
+  return roots.map((session) => renderRow(session, byParent));
 }
 
 function treeOf(sessions: SessionSummary[]) {
