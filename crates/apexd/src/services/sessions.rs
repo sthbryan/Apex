@@ -220,6 +220,16 @@ impl SessionRegistry {
         Ok(())
     }
 
+    pub async fn kill_all(&self) {
+        let ids: Vec<Uuid> = self.sessions.read().await.keys().cloned().collect();
+        for id in ids {
+            match self.close(id, WorktreeDisposal::Keep).await {
+                Ok(()) => {}
+                Err(error) => tracing::warn!(%id, %error, "could not close session on shutdown"),
+            }
+        }
+    }
+
     pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
         let session = self.require(id).await?;
         let snapshot = session.process.snapshot();

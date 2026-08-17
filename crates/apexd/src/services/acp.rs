@@ -533,6 +533,16 @@ impl AcpRegistry {
         self.sessions.read().await.get(&id).cloned()
     }
 
+    pub async fn kill_all(&self) {
+        let ids: Vec<Uuid> = self.sessions.read().await.keys().cloned().collect();
+        for id in ids {
+            match self.close(id).await {
+                Ok(()) => {}
+                Err(error) => tracing::warn!(%id, %error, "could not close session on shutdown"),
+            }
+        }
+    }
+
     pub async fn speaks_acp(&self, agent: &str) -> bool {
         self.profiles.get(agent).is_some_and(|profile| profile.acp_command.is_some())
     }

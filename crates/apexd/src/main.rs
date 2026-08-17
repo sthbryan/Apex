@@ -1,8 +1,16 @@
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::{Duration, Instant};
+
 use anyhow::{Context, Result};
 use apexd::session;
 use apexd::state;
 use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
+use tokio::sync::watch;
+
+const IDLE_GRACE: Duration = Duration::from_secs(60);
+const IDLE_POLL: Duration = Duration::from_secs(1);
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,17 +32,72 @@ async fn main() -> Result<()> {
         .with_context(|| format!("listening on {}", paths.socket.display()))?;
     tracing::info!(transport = %transport.describe(), "apexd ready");
 
+    let clients = Arc::new(AtomicUsize::new(0));
+    let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+
+    let watchdog = tokio::spawn(watch_for_idle(
+        Arc::clone(&clients),
+        shutdown_tx,
+    ));
+
+    let shutdown = || async {
+        tracing::info!("apexd shutting down");
+        manager.shutdown().await;
+        watchdog.abort();
+    };
+
     loop {
         tokio::select! {
             accepted = transport.accept() => {
                 let (stream, peer) = accepted.context("accepting connection")?;
                 let manager = manager.clone();
-                tokio::spawn(session::serve(manager, Connection::new(stream, peer)));
+                let clients = Arc::clone(&clients);
+                tokio::spawn(async move {
+                    clients.fetch_add(1, Ordering::SeqCst);
+                    session::serve(manager, Connection::new(stream, peer)).await;
+                    clients.fetch_sub(1, Ordering::SeqCst);
+                });
             }
             _ = tokio::signal::ctrl_c() => {
-                tracing::info!("apexd shutting down");
+                shutdown().await;
                 return Ok(());
             }
+            _ = shutdown_rx.changed() => {
+                if *shutdown_rx.borrow() {
+                    shutdown().await;
+                    return Ok(());
+                }
+            }
+        }
+    }
+}
+
+async fn watch_for_idle(clients: Arc<AtomicUsize>, shutdown_tx: watch::Sender<bool>) {
+    let mut seen_client = false;
+    let mut idle_since: Option<Instant> = None;
+
+    loop {
+        tokio::time::sleep(IDLE_POLL).await;
+
+        let active = clients.load(Ordering::SeqCst);
+        if active > 0 {
+            seen_client = true;
+            idle_since = None;
+            continue;
+        }
+
+        if !seen_client {
+            continue;
+        }
+
+        match idle_since {
+            None => idle_since = Some(Instant::now()),
+            Some(start) if start.elapsed() >= IDLE_GRACE => {
+                tracing::info!("no clients for {IDLE_GRACE:?}, shutting down");
+                let _ = shutdown_tx.send(true);
+                return;
+            }
+            Some(_) => {}
         }
     }
 }

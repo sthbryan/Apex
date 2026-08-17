@@ -330,6 +330,11 @@ impl SessionManager {
         self.registry.close(id, disposal).await
     }
 
+    pub async fn shutdown(&self) {
+        self.acp.kill_all().await;
+        self.registry.kill_all().await;
+    }
+
     pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
         self.registry.transcript(id, tail, plain).await
     }
