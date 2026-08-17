@@ -40,5 +40,5 @@ export function TerminalView({ id, active }: Props) {
     }
   }, [active, id]);
 
-  return <div ref={host} class="h-full w-full overflow-hidden bg-bg px-2 pt-1.5 pb-2" />;
+  return <div ref={host} class="h-full w-full overflow-hidden bg-bg p-0.5" />;
 }
