@@ -2,8 +2,7 @@ import { Fragment } from "preact";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { waiting } from "@/features/notifications/state";
-import { foreignSessions, projectSessions, projects } from "@/features/projects/state";
-import { ElsewhereList } from "@/features/sessions/ElsewhereList";
+import { projectSessions, projects } from "@/features/projects/state";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
 import { WaitingList } from "@/features/sessions/WaitingList";
@@ -12,7 +11,6 @@ import { Icon } from "@/shared/ui/Icon";
 
 export function SessionsPanel() {
   const sessions = projectSessions.value;
-  const elsewhere = foreignSessions.value;
   const live = sessions.filter((session) => session.exit_code === null);
   const finished = sessions.filter((session) => session.exit_code !== null);
   const hasSessions = live.length > 0 || finished.length > 0;
@@ -65,8 +63,6 @@ export function SessionsPanel() {
             <ul class="flex flex-col">{renderTree(finished)}</ul>
           </section>
         )}
-
-        {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects.value} />}
       </div>
     </div>
   );

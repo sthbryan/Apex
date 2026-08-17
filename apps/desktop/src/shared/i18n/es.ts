@@ -42,7 +42,7 @@ export const es: Messages = {
     none: "Sin proyecto",
     open: "Abrir proyecto…",
     empty: "Abre un proyecto para empezar.",
-    elsewhere: "Otros proyectos",
+    live: "{count} corriendo",
   },
   usage: {
     title: "Uso de suscripción",

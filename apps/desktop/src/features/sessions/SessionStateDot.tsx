@@ -3,6 +3,7 @@ import type { SessionSummary } from "@/bindings/SessionSummary";
 
 type Props = {
   session: SessionSummary;
+  dimmed?: boolean;
 };
 
 const STATE_STYLES: Record<string, string> = {
@@ -12,10 +13,10 @@ const STATE_STYLES: Record<string, string> = {
   done: "bg-state-done",
 };
 
-export function SessionStateDot({ session }: Props) {
+export function SessionStateDot({ session, dimmed = false }: Props) {
   const live = session.exit_code === null;
   return (
-    <span class="relative flex size-2 shrink-0">
+    <span class={cn("relative flex size-2 shrink-0", dimmed && "opacity-50")}>
       {live && session.state === "working" && (
         <span class="absolute inset-0 animate-ping rounded-full bg-state-working opacity-60" />
       )}

@@ -21,10 +21,6 @@ export const projectSessions = computed(() =>
   sessions.value.filter((session) => session.project_id === activeProjectId.value),
 );
 
-export const foreignSessions = computed(() =>
-  sessions.value.filter((session) => session.project_id !== activeProjectId.value),
-);
-
 export async function loadProjects(): Promise<void> {
   projects.value = await invoke<ProjectSummary[]>("list_projects");
 

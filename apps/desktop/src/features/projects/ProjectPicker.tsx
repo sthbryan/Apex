@@ -1,7 +1,10 @@
 import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
+import type { SessionSummary } from "@/bindings/SessionSummary";
 import { activeProject, pickProject, projects, switchTo } from "@/features/projects/state";
+import { SessionStateDot } from "@/features/sessions/SessionStateDot";
 import { sessions } from "@/features/sessions/state";
+import { focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
@@ -70,30 +73,54 @@ export function ProjectPicker({ variant = "bar" }: Props) {
           )}
         >
           <ul class="max-h-72 overflow-y-auto py-1">
-            {projects.value.map((project) => (
-              <li key={project.id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    void switchTo(project.id);
-                  }}
-                  class={cn(
-                    `flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised`,
-                    {
-                      "text-text": project.id === current?.id,
-                      "text-muted": project.id !== current?.id,
-                    },
-                  )}
-                >
-                  <span class="truncate">{project.name}</span>
-                  {project.is_git && <span class="shrink-0 text-faint">git</span>}
-                  {pending(project.id) > 0 && (
-                    <span class="ml-auto shrink-0 text-state-blocked">{pending(project.id)}</span>
-                  )}
-                </button>
-              </li>
-            ))}
+            {projects.value.map((project) => {
+              const live = liveIn(project.id);
+              const blocked = pending(project.id);
+              return (
+                <li key={project.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      void switchTo(project.id);
+                    }}
+                    class={cn(
+                      `flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised`,
+                      {
+                        "text-text": project.id === current?.id,
+                        "text-muted": project.id !== current?.id,
+                      },
+                    )}
+                  >
+                    <span class="truncate">{project.name}</span>
+                    <span
+                      class={cn("ml-auto shrink-0 text-micro", {
+                        "text-state-blocked": blocked > 0,
+                        "text-faint": blocked === 0,
+                      })}
+                    >
+                      {live.length > 0 ? t("projects.live", { count: String(live.length) }) : "·"}
+                    </span>
+                  </button>
+
+                  {project.id !== current?.id &&
+                    live.map((session) => (
+                      <button
+                        key={session.id}
+                        type="button"
+                        onClick={() => {
+                          setOpen(false);
+                          void reveal(session);
+                        }}
+                        class="flex w-full items-center gap-2 py-1 pr-3 pl-6 text-left text-muted transition-colors hover:bg-raised hover:text-text"
+                      >
+                        <SessionStateDot session={session} dimmed />
+                        <span class="truncate">{session.title}</span>
+                      </button>
+                    ))}
+                </li>
+              );
+            })}
           </ul>
           <button
             type="button"
@@ -115,6 +142,19 @@ function pending(projectId: string): number {
   return sessions.value.filter(
     (session) => session.project_id === projectId && session.state === "blocked",
   ).length;
+}
+
+function liveIn(projectId: string): SessionSummary[] {
+  return sessions.value.filter(
+    (session) => session.project_id === projectId && session.exit_code === null,
+  );
+}
+
+async function reveal(session: SessionSummary): Promise<void> {
+  await switchTo(session.project_id);
+  if (!focusSession(session.id)) {
+    openInNewTab(session);
+  }
 }
 
 function waitingElsewhere(): number {
