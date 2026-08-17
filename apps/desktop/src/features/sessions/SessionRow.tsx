@@ -4,6 +4,7 @@ import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionStateDot } from "@/features/sessions/SessionStateDot";
 import { sessions } from "@/features/sessions/state";
+import { countdown } from "@/features/usage/format";
 import { activeSessionId, focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -16,6 +17,7 @@ type Props = {
 export function SessionRow({ session, depth = 0 }: Props) {
   const finished = session.exit_code !== null;
   const parent = sessions.value.find((candidate) => candidate.id === session.parent);
+  const ago = countdown(Date.now() / 1000 - session.started_at) ?? t("sessions.justNow");
 
   return (
     <li
@@ -38,17 +40,25 @@ export function SessionRow({ session, depth = 0 }: Props) {
         )}
       >
         {depth > 0 && <span class="w-2 shrink-0 border-l border-border" aria-hidden="true" />}
-        <SessionStateDot session={session} />
-        <AgentIcon agent={session.agent} class="shrink-0 text-faint" />
-        <span class="min-w-0">
-          <span
-            class="block truncate"
-            title={parent ? t("sessions.spawnedBy", { agent: parent.title }) : session.title}
-          >
-            {session.title}
-          </span>
-          <span class="block truncate text-micro text-faint">{detailOf(session)}</span>
-        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex min-w-0 items-center gap-2">
+            <SessionStateDot session={session} />
+            <AgentIcon agent={session.agent} class="shrink-0 text-faint" />
+            <span
+              class="truncate"
+              title={parent ? t("sessions.spawnedBy", { agent: parent.title }) : session.title}
+            >
+              {session.title}
+            </span>
+          </div>
+          <div class="truncate pl-[38px] text-micro text-faint">{session.cwd}</div>
+          {session.worktree && (
+            <div class="truncate pl-[38px] text-micro text-faint">{session.worktree.branch}</div>
+          )}
+          <div class="truncate pl-[38px] text-micro text-faint">
+            {t("sessions.startedAgo", { ago })}
+          </div>
+        </div>
         {finished && (
           <span class="ml-auto shrink-0 text-faint">
             {t("sessions.exited", { code: String(session.exit_code) })}
@@ -65,11 +75,4 @@ export function SessionRow({ session, depth = 0 }: Props) {
       </button>
     </li>
   );
-}
-
-function detailOf(session: SessionSummary): string {
-  if (session.worktree) {
-    return `${session.worktree.branch} · ${session.worktree.path}`;
-  }
-  return session.cwd;
 }

@@ -235,6 +235,8 @@ export const es: Messages = {
     close: "Cerrar sesión",
     dismiss: "Descartar",
     spawnedBy: "La lanzó {agent}",
+    startedAgo: "Empezó hace {ago}",
+    justNow: "recién",
     clearFinished: "Limpiar terminadas",
   },
   workspace: {

@@ -233,6 +233,8 @@ export const en = {
     close: "Close session",
     dismiss: "Dismiss",
     spawnedBy: "Started by {agent}",
+    startedAgo: "Started {ago} ago",
+    justNow: "just now",
     clearFinished: "Clear finished",
   },
   workspace: {
