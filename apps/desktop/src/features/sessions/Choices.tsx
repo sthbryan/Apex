@@ -85,17 +85,17 @@ export function Choices() {
             onMouseEnter={() => setCursor(index)}
             onClick={() => confirm(option.value)}
             class={cn(
-              "group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-1.5 text-left transition-colors",
+              "group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-1.5 text-left outline-none transition-colors",
               index === cursor ? "bg-raised" : "hover:bg-raised",
             )}
           >
             <span
               class={cn(
-                "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                index === cursor ? "border-state-done text-state-done" : "border-faint text-faint",
+                "flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                index === cursor ? "border-accent" : "border-border",
               )}
             >
-              {index === cursor && <Icon name="check" size={10} />}
+              {index === cursor && <span class="size-1.5 rounded-full bg-accent" />}
             </span>
             <Icon name={option.icon} size={14} class="shrink-0 text-faint" />
             <span class="min-w-0">
