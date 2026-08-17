@@ -45,6 +45,7 @@
   --animate-dock-veil-out: apex-veil-out var(--apex-dock) var(--apex-ease) both;
   --animate-dock-view: apex-dock-view var(--apex-view) var(--apex-ease) both;
   --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
+  --animate-shrink: apex-shrink 6s linear forwards;
 
   @keyframes apex-veil-in {
     from {
@@ -128,6 +129,14 @@
     50% {
       opacity: 0.35;
       transform: scale(0.8);
+    }
+  }
+  @keyframes apex-shrink {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
     }
   }
 }
