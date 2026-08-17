@@ -112,7 +112,12 @@ fn mcp_request() -> Result<Option<Option<uuid::Uuid>>> {
     if args.next().as_deref() != Some("mcp") {
         return Ok(None);
     }
-    let Some(session) = args.next().filter(|flag| flag == "--session").and(args.next()) else {
+    let Some(session) = args
+        .next()
+        .filter(|flag| flag == "--session")
+        .and_then(|_| args.next())
+        .or_else(|| std::env::var("APEX_SESSION").ok())
+    else {
         return Ok(Some(None));
     };
     Ok(Some(Some(
