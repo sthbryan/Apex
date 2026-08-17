@@ -4,7 +4,7 @@
   "version": "0.4.0",
   "identifier": "com.justcallmebryan.apex",
   "build": {
-    "beforeDevCommand": "cargo build -p apexd && vite",
+    "beforeDevCommand": "cargo build -p apexd && mkdir -p src-tauri/binaries && cp ../../target/debug/apexd src-tauri/binaries/apexd-$(rustc -vV | sed -n 's|host: ||p') && chmod +x src-tauri/binaries/apexd-* && vite",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
