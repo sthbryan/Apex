@@ -179,6 +179,15 @@ export function since(when: number): string {
   return roughly(Date.now() / 1000 - when) ?? t("git.now");
 }
 
+export async function dropWorktree(path: string, branch: string): Promise<void> {
+  await invoke("remove_worktree", { project: activeProjectId.value, path, branch });
+  if (gitTarget.value.type === "worktree" && gitTarget.value.path === path) {
+    gitTarget.value = { type: "project" };
+    void readLog();
+  }
+  await refreshGit();
+}
+
 export async function mergeWorktree(target: GitTarget): Promise<MergeReport> {
   return invoke<MergeReport>("merge_worktree", {
     project: activeProjectId.value,

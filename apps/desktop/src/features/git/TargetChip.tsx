@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import {
+  dropWorktree,
   gitStatus,
   gitTarget,
   selectTarget,
   sessionOfWorktree,
   worktrees,
 } from "@/features/git/state";
+import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
@@ -90,6 +92,14 @@ export function TargetChip({ project }: Props) {
                 selected={target.type === "worktree" && target.path === candidate.path}
                 live={sessionOfWorktree.value.has(candidate.path)}
                 onPick={() => setOpen(false)}
+                onDrop={
+                  sessionOfWorktree.value.has(candidate.path)
+                    ? undefined
+                    : () => {
+                        setOpen(false);
+                        void dropWorktree(candidate.path, candidate.branch).catch(complain);
+                      }
+                }
               />
             ))}
           </ul>
@@ -106,11 +116,12 @@ type TargetProps = {
   selected: boolean;
   live?: boolean;
   onPick: () => void;
+  onDrop?: () => void;
 };
 
-function Target({ target, label, branch, selected, live, onPick }: TargetProps) {
+function Target({ target, label, branch, selected, live, onPick, onDrop }: TargetProps) {
   return (
-    <li>
+    <li class="group flex items-center">
       <button
         type="button"
         onClick={() => {
@@ -118,7 +129,7 @@ function Target({ target, label, branch, selected, live, onPick }: TargetProps) 
           selectTarget(target);
         }}
         class={cn(
-          "flex w-full items-center gap-2 px-2 py-1 text-left transition-colors hover:bg-raised",
+          "flex min-w-0 flex-1 items-center gap-2 px-2 py-1 text-left transition-colors group-hover:bg-raised",
           selected ? "bg-raised text-text" : "text-muted",
         )}
       >
@@ -130,6 +141,16 @@ function Target({ target, label, branch, selected, live, onPick }: TargetProps) 
         <span class="truncate">{label}</span>
         {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
       </button>
+      {onDrop && (
+        <button
+          type="button"
+          title={t("git.dropWorktree", { branch })}
+          onClick={onDrop}
+          class="shrink-0 px-1.5 py-1 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-state-failed"
+        >
+          <Icon name="close" size={12} />
+        </button>
+      )}
     </li>
   );
 }

@@ -188,6 +188,7 @@ export const en = {
   git: {
     noRepo: "This project is not a git repository.",
     target: "Choose a worktree",
+    dropWorktree: "Delete this worktree and {branch}",
     chip: "On {branch} — open the git panel",
     chipTracking: "On {branch}, tracking {upstream} — open the git panel",
     trees: "{count} worktrees",

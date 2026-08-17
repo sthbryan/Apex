@@ -542,6 +542,26 @@ impl SessionManager {
         self.git.merge(&root, &dir).await
     }
 
+    pub async fn remove_worktree(
+        &self,
+        project: Uuid,
+        path: String,
+        branch: Option<String>,
+    ) -> Result<()> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let busy = self.list_sessions().await.into_iter().any(|session| {
+            session.exit_code.is_none()
+                && session.worktree.is_some_and(|tree| tree.path == path)
+        });
+        if busy {
+            bail!("a session is still running in {path}")
+        }
+        tokio::task::spawn_blocking(move || {
+            apex_git::remove_worktree(&root, &PathBuf::from(&path), branch.as_deref())
+        })
+        .await?
+    }
+
     pub async fn context_list(&self, project: Uuid) -> Result<Vec<ContextEntry>> {
         self.context.list(project).await
     }

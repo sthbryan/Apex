@@ -548,6 +548,19 @@ async fn merge_worktree(
 }
 
 #[tauri::command]
+async fn remove_worktree(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    path: String,
+    branch: Option<String>,
+) -> Answer<()> {
+    state.daemon()?.request(Command::WorktreeRemove { project, path, branch })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn set_idle_grace(
     state: tauri::State<'_, AppState>,
     seconds: u32,
@@ -621,6 +634,7 @@ pub fn run() {
             git_stage_hunk,
             git_commit,
             merge_worktree,
+            remove_worktree,
             list_tasks,
             run_task,
             session_transcript,

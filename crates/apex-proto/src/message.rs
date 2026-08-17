@@ -706,6 +706,12 @@ pub enum Command {
         project: Uuid,
         target: GitTarget,
     },
+    WorktreeRemove {
+        #[ts(type = "string")]
+        project: Uuid,
+        path: String,
+        branch: Option<String>,
+    },
     AcpTranscript {
         #[ts(type = "string")]
         id: Uuid,

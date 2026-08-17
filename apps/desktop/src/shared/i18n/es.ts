@@ -190,6 +190,7 @@ export const es: Messages = {
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
     target: "Elige un worktree",
+    dropWorktree: "Borrar este worktree y {branch}",
     chip: "En {branch} — abrir el panel de git",
     chipTracking: "En {branch}, siguiendo a {upstream} — abrir el panel de git",
     trees: "{count} worktrees",
