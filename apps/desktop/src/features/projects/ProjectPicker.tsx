@@ -1,10 +1,15 @@
 import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { activeProject, pickProject, projects, switchTo } from "@/features/projects/state";
+import {
+  activeProject,
+  pickProject,
+  projects,
+  revealSession,
+  switchTo,
+} from "@/features/projects/state";
 import { SessionStateDot } from "@/features/sessions/SessionStateDot";
 import { sessions } from "@/features/sessions/state";
-import { focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
@@ -110,7 +115,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
                         type="button"
                         onClick={() => {
                           setOpen(false);
-                          void reveal(session);
+                          void revealSession(session);
                         }}
                         class="flex w-full items-center gap-2 py-1 pr-3 pl-6 text-left text-muted transition-colors hover:bg-raised hover:text-text"
                       >
@@ -148,13 +153,6 @@ function liveIn(projectId: string): SessionSummary[] {
   return sessions.value.filter(
     (session) => session.project_id === projectId && session.exit_code === null,
   );
-}
-
-async function reveal(session: SessionSummary): Promise<void> {
-  await switchTo(session.project_id);
-  if (!focusSession(session.id)) {
-    openInNewTab(session);
-  }
 }
 
 function waitingElsewhere(): number {

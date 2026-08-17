@@ -2,7 +2,6 @@ import { cn } from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Gauge } from "@/features/resources/Gauge";
 import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
-import { t } from "@/shared/i18n";
 import { compactBytes, metrics } from "@/shared/telemetry";
 import { usePresence } from "@/shared/ui/presence";
 

@@ -41,6 +41,7 @@ export const en = {
     open: "Open project…",
     empty: "Open a project to get started.",
     live: "{count} running",
+    elsewhere: "Other projects",
   },
   usage: {
     title: "Subscription usage",

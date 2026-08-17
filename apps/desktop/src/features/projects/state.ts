@@ -4,8 +4,16 @@ import { open } from "@tauri-apps/plugin-dialog";
 
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
+import type { SessionSummary } from "@/bindings/SessionSummary";
 import { sessions } from "@/features/sessions/state";
-import { clearWorkspace, restoreLayout, serializeLayout, tabs } from "@/features/workspace/state";
+import {
+  clearWorkspace,
+  focusSession,
+  openInNewTab,
+  restoreLayout,
+  serializeLayout,
+  tabs,
+} from "@/features/workspace/state";
 
 const STORAGE_KEY = "apex.project";
 
@@ -20,6 +28,19 @@ export const activeProject = computed(
 export const projectSessions = computed(() =>
   sessions.value.filter((session) => session.project_id === activeProjectId.value),
 );
+
+export const foreignSessions = computed(() =>
+  sessions.value.filter(
+    (session) => session.project_id !== activeProjectId.value && session.exit_code === null,
+  ),
+);
+
+export async function revealSession(session: SessionSummary): Promise<void> {
+  await switchTo(session.project_id);
+  if (!focusSession(session.id)) {
+    openInNewTab(session);
+  }
+}
 
 export async function loadProjects(): Promise<void> {
   projects.value = await invoke<ProjectSummary[]>("list_projects");
