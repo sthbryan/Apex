@@ -1,5 +1,5 @@
 import cn from "cnfast";
-import { useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { cancelClose, finishClose, pendingClose } from "@/features/sessions/pending";
@@ -47,7 +47,7 @@ export function CloseSession() {
         )}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header class="border-b border-border px-4 py-2.5 text-text">
+        <header class="border-b border-border px-3 py-2 text-code text-text">
           {t("closing.title", { title: request?.title ?? "" })}
         </header>
         <Choices key={request?.id ?? 0} />
@@ -57,11 +57,12 @@ export function CloseSession() {
 }
 
 function Choices() {
-  const [choice, setChoice] = useState<WorktreeDisposal>("keep");
+  const [cursor, setCursor] = useState(0);
   const [failure, setFailure] = useState<string | null>(null);
   const branch = pendingClose.value?.branch ?? "";
+  const list = useRef<HTMLDivElement>(null);
 
-  const confirm = (disposal: WorktreeDisposal) => {
+  const confirm = useCallback((disposal: WorktreeDisposal) => {
     const current = pendingClose.value;
     if (!current) {
       return;
@@ -69,33 +70,67 @@ function Choices() {
     void finishClose(current.sessionId, disposal).catch((error: unknown) =>
       setFailure(String(error)),
     );
-  };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!pendingClose.value) {
+        return;
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setCursor((current) => (current + 1) % CHOICES.length);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setCursor((current) => (current - 1 + CHOICES.length) % CHOICES.length);
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        confirm(CHOICES[cursor].value);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cursor, confirm]);
+
+  useEffect(() => {
+    list.current?.querySelector<HTMLButtonElement>(`[data-cursor='${cursor}']`)?.focus();
+  }, [cursor]);
 
   return (
     <>
-      <div class="flex flex-col gap-1 p-2">
-        {CHOICES.map((option) => (
+      <div ref={list} class="flex flex-col p-1">
+        {CHOICES.map((option, index) => (
           <button
             key={option.value}
             type="button"
-            autofocus={option.value === choice}
-            onMouseEnter={() => setChoice(option.value)}
+            data-cursor={index}
+            onMouseEnter={() => setCursor(index)}
             onClick={() => confirm(option.value)}
             class={cn(
-              "flex items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-colors",
-              option.value === choice ? "bg-raised" : "hover:bg-raised",
+              "group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-1.5 text-left outline-none transition-colors",
+              index === cursor ? "bg-raised" : "hover:bg-raised",
             )}
           >
-            <Icon name={option.icon} class="mt-0.5 shrink-0 text-faint" />
+            <span
+              class={cn(
+                "flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                index === cursor ? "border-accent" : "border-border",
+              )}
+            >
+              {index === cursor && <span class="size-1.5 rounded-full bg-accent" />}
+            </span>
+            <Icon name={option.icon} size={14} class="shrink-0 text-faint" />
             <span class="min-w-0">
-              <span class="block text-text">{t(`closing.${option.value}`)}</span>
-              <span class="block text-faint">{t(`closing.${option.value}Hint`, { branch })}</span>
+              <span class="block text-code text-text">{t(`closing.${option.value}`)}</span>
+              <span class="block text-micro text-faint">
+                {t(`closing.${option.value}Hint`, { branch })}
+              </span>
             </span>
           </button>
         ))}
       </div>
 
-      {failure && <p class="px-4 pb-3 text-state-failed">{failure}</p>}
+      {failure && <p class="px-3 pb-2 text-micro text-state-failed">{failure}</p>}
     </>
   );
 }
