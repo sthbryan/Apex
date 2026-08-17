@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
-import { Terminal } from "@xterm/xterm";
+import type { FitAddon } from "@xterm/addon-fit";
+import type { Terminal } from "@xterm/xterm";
 
 import {
   attachSession,
@@ -41,7 +40,7 @@ const webglSupported: Promise<boolean> = (async () => {
   }
 })();
 
-export function mountTerminal(id: string, host: HTMLElement): Entry {
+export async function mountTerminal(id: string, host: HTMLElement): Promise<Entry> {
   const existing = registry.get(id);
   if (existing) {
     host.appendChild(existing.element);
@@ -53,6 +52,11 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
   const element = document.createElement("div");
   element.className = "h-full w-full";
   host.appendChild(element);
+
+  const [{ Terminal }, { FitAddon }] = await Promise.all([
+    import("@xterm/xterm"),
+    import("@xterm/addon-fit"),
+  ]);
 
   const terminal = new Terminal({
     allowProposedApi: true,
@@ -69,11 +73,15 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
   terminal.open(element);
 
   let disposed = false;
-  void webglSupported.then((supported) => {
+  void webglSupported.then(async (supported) => {
     if (!supported || disposed) {
       return;
     }
     try {
+      const { WebglAddon } = await import("@xterm/addon-webgl");
+      if (disposed) {
+        return;
+      }
       const webgl = new WebglAddon();
       webgl.onContextLoss(() => webgl.dispose());
       terminal.loadAddon(webgl);

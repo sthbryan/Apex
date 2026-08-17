@@ -22,7 +22,7 @@ export function TerminalView({ id, active }: Props) {
       return;
     }
 
-    mountTerminal(id, container);
+    void mountTerminal(id, container);
     const observer = new ResizeObserver(() => refitTerminal(id));
     observer.observe(container);
 
