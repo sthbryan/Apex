@@ -19,6 +19,7 @@ export const sessions = signal<SessionSummary[]>([]);
 
 const listeners = new Map<string, Set<OutputListener>>();
 const pendingOutput = new Map<string, Uint8Array[]>();
+const suspended = new Set<string>();
 
 export async function startSessionBridge(): Promise<void> {
   const output = new Channel<ArrayBuffer>();
@@ -41,6 +42,9 @@ function routeOutput(payload: Uint8Array): void {
 
   const targets = listeners.get(id);
   if (!targets || targets.size === 0) {
+    if (suspended.has(id)) {
+      return;
+    }
     const queued = pendingOutput.get(id) ?? [];
     queued.push(data);
     pendingOutput.set(id, queued);
@@ -228,4 +232,14 @@ export function forgetSession(id: string): void {
   disposeTerminal(id);
   listeners.delete(id);
   pendingOutput.delete(id);
+  suspended.delete(id);
+}
+
+export function suspendTerminal(id: string): void {
+  suspended.add(id);
+  pendingOutput.delete(id);
+}
+
+export function resumeTerminal(id: string): void {
+  suspended.delete(id);
 }

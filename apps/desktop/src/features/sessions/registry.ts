@@ -7,7 +7,9 @@ import {
   attachSession,
   onSessionOutput,
   resizeSession,
+  resumeTerminal,
   sendInput,
+  suspendTerminal,
 } from "@/features/sessions/state";
 import { fontFamily, readTerminalTheme } from "@/shared/theme/xterm";
 
@@ -46,6 +48,7 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
     resize(existing, id);
     return existing;
   }
+  resumeTerminal(id);
 
   const element = document.createElement("div");
   element.className = "h-full w-full";
@@ -57,7 +60,7 @@ export function mountTerminal(id: string, host: HTMLElement): Entry {
     fontFamily: fontFamily(),
     fontSize: 13,
     lineHeight: 1.2,
-    scrollback: 10000,
+    scrollback: 2000,
     theme: readTerminalTheme(),
   });
 
@@ -106,7 +109,8 @@ export function detachTerminal(id: string, host?: HTMLElement): void {
   if (host && !host.contains(entry.element)) {
     return;
   }
-  entry.element.remove();
+  suspendTerminal(id);
+  disposeTerminal(id);
 }
 
 export function disposeTerminal(id: string): void {
