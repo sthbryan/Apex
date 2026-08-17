@@ -25,6 +25,28 @@ export function setAgentMode(agent: string, mode: AgentMode): void {
   localStorage.setItem(STORE, JSON.stringify(agentModes.value));
 }
 
+const IDLE_GRACE = "apex.idle-grace";
+
+function restoreIdleGrace(): number {
+  try {
+    const raw = localStorage.getItem(IDLE_GRACE);
+    return raw ? parseInt(raw, 10) : 60;
+  } catch {
+    return 60;
+  }
+}
+
+export const idleGrace = signal<number>(restoreIdleGrace());
+
+export function setIdleGrace(seconds: number): void {
+  idleGrace.value = seconds;
+  localStorage.setItem(IDLE_GRACE, String(seconds));
+}
+
+export function applyIdleGrace(): void {
+  invoke("set_idle_grace", { seconds: idleGrace.value });
+}
+
 const SHARED = "apex.agent-context";
 
 function restoreShared(): Record<string, boolean> {

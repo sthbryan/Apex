@@ -5,7 +5,10 @@ import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import {
   agentModes,
+  applyIdleGrace,
+  idleGrace,
   setAgentMode,
+  setIdleGrace,
   setSharedContext,
   setSplitCap,
   setViewLanding,
@@ -154,6 +157,37 @@ export function Settings() {
                 {option.label}
               </Choice>
             ))}
+          </Segmented>
+        </SettingsRow>
+        <SettingsRow label={t("settings.idleGrace")} hint={t("settings.idleGraceHint")}>
+          <Segmented label={t("settings.idleGrace")}>
+            <Choice
+              selected={idleGrace.value === 0}
+              onSelect={() => {
+                setIdleGrace(0);
+                applyIdleGrace();
+              }}
+            >
+              {t("settings.idleGrace0")}
+            </Choice>
+            <Choice
+              selected={idleGrace.value === 60}
+              onSelect={() => {
+                setIdleGrace(60);
+                applyIdleGrace();
+              }}
+            >
+              {t("settings.idleGrace60")}
+            </Choice>
+            <Choice
+              selected={idleGrace.value === 7200}
+              onSelect={() => {
+                setIdleGrace(7200);
+                applyIdleGrace();
+              }}
+            >
+              {t("settings.idleGrace7200")}
+            </Choice>
           </Segmented>
         </SettingsRow>
         <SettingsRow label={t("settings.agents")} hint={t("settings.agentsHint2")}>

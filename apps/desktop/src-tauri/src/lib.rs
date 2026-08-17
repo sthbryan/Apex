@@ -547,6 +547,22 @@ async fn merge_worktree(
     }
 }
 
+#[tauri::command]
+async fn set_idle_grace(
+    state: tauri::State<'_, AppState>,
+    seconds: u32,
+) -> Answer<()> {
+    let daemon = state
+        .daemon
+        .lock()
+        .map_err(|e| e.to_string())?
+        .clone();
+    if let Some(daemon) = daemon {
+        let _ = daemon.request(Command::SetIdleGrace { seconds }).await;
+    }
+    Ok(())
+}
+
 pub fn run() {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -616,7 +632,8 @@ pub fn run() {
             mcp_adopt,
             context_list,
             context_read,
-            context_write
+            context_write,
+            set_idle_grace,
         ])
         .run(tauri::generate_context!())
         .expect("failed to start Apex");

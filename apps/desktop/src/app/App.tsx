@@ -15,6 +15,7 @@ import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
+import { applyIdleGrace } from "@/features/settings/agentMode";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
@@ -35,7 +36,7 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.lang = locale.value;
-    void connect().then(loadProjects).then(loadEditors);
+    void connect().then(loadProjects).then(loadEditors).then(applyIdleGrace);
 
     let stopNotifications: (() => void) | undefined;
     void startNotifications().then((stop) => {

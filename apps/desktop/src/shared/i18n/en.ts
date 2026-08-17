@@ -108,6 +108,12 @@ export const en = {
     shareContextOff: "Let {agent} reach the shared context through its own config.",
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",
     shareContext: "shares context",
+    idleGrace: "Daemon background time",
+    idleGraceHint:
+      "How long the daemon keeps running after you close Apex. After this it shuts down and your agents stop. Close and reopen within the window to resume sessions.",
+    idleGrace0: "Stop on close",
+    idleGrace60: "60 seconds",
+    idleGrace7200: "2 hours",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

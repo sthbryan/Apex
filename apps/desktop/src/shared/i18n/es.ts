@@ -110,6 +110,12 @@ export const es: Messages = {
     shareContextOff: "Deja que {agent} llegue al contexto compartido desde su propia config.",
     agentNoAcp: "{agent} no habla ACP, así que Apex solo puede manejarlo como terminal.",
     shareContext: "comparte contexto",
+    idleGrace: "Tiempo del daemon en fondo",
+    idleGraceHint:
+      "Cuánto tiempo sigue el daemon después de cerrar Apex. Después de esto se apaga y los agentes paran. Cierra y reabre dentro de la ventana para reanudar las sesiones.",
+    idleGrace0: "Apagar al cerrar",
+    idleGrace60: "60 segundos",
+    idleGrace7200: "2 horas",
   },
   shortcuts: {
     title: "Atajos de teclado",
