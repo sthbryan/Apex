@@ -1,5 +1,5 @@
 import cn from "cnfast";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { getVersion } from "@tauri-apps/api/app";
 
 import { closePage } from "@/app/view";
@@ -47,6 +47,12 @@ const THEME_HINT = {
 } as const;
 
 export function Settings() {
+  const [appVersion, setAppVersion] = useState("");
+
+  useEffect(() => {
+    void getVersion().then(setAppVersion);
+  }, []);
+
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -253,7 +259,7 @@ export function Settings() {
         <SettingsRow label={t("settings.about")} hint={t("settings.aboutHint")}>
           <div class="flex flex-col items-end gap-0.5 text-sm">
             <span class="text-text">
-              {t("app.name")} {getVersion()}
+              {t("app.name")} {appVersion}
             </span>
             <span class="text-faint">apexd {daemonVersion.value ?? "—"}</span>
           </div>
