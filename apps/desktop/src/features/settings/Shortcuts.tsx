@@ -51,7 +51,7 @@ export function Shortcuts() {
         </button>
       </header>
 
-      <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div class="mx-auto min-h-0 w-full max-w-2xl flex-1 overflow-y-auto px-4 py-4">
         {GROUPS.map((group, index) => (
           <div key={group} class={index > 0 ? "pt-4" : ""}>
             <p class="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
@@ -60,7 +60,7 @@ export function Shortcuts() {
             {SHORTCUTS.filter((shortcut) => shortcut.group === group).map((shortcut) => (
               <div
                 key={shortcut.id}
-                class="flex items-center justify-between gap-4 border-b border-border px-3 py-2.5 last:border-0"
+                class="flex items-center justify-between gap-4 border-b border-border px-3 py-1.5 last:border-0"
               >
                 <span class="min-w-0 truncate text-[13px] text-text">{t(shortcut.label)}</span>
                 <KeycapRow keys={shortcut.keys} />
