@@ -380,7 +380,7 @@ export function Settings() {
         </nav>
 
         <div class="min-h-0 flex-1 overflow-y-auto px-6 py-3">
-          <div class="mx-auto w-full max-w-xl">
+          <div class="mx-auto w-full max-w-5xl">
             {shown.length === 0 && <p class="text-faint">{t("settings.noMatch")}</p>}
             {shown.map((entry) => (
               <section key={entry.id}>
