@@ -13,7 +13,7 @@ import {
 import { activeProject } from "@/features/projects/state";
 import { openFile } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
-import { Icon } from "@/shared/ui/Icon";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 
 export function FilesPanel() {
   const project = activeProject.value;
@@ -106,8 +106,86 @@ function Row({ project, entry, depth }: { project: string; entry: FileEntry; dep
           />
         )}
       </span>
-      <Icon name={entry.is_dir ? "files" : "file"} size={12} class="shrink-0 text-faint" />
+      <Icon
+        name={entry.is_dir ? iconForDir(entry.name) : iconForFile(entry.name)}
+        size={12}
+        class="shrink-0 text-faint"
+      />
       <span class="truncate">{entry.name}</span>
     </button>
   );
+}
+
+function iconForDir(name: string): IconName {
+  if (name === ".git") return "folderGit";
+  return "files";
+}
+
+function iconForFile(name: string): IconName {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  switch (ext) {
+    case "ts":
+    case "tsx":
+    case "js":
+    case "jsx":
+    case "mjs":
+    case "cjs":
+    case "py":
+    case "rs":
+    case "go":
+    case "java":
+    case "c":
+    case "cpp":
+    case "h":
+    case "hpp":
+    case "rb":
+    case "php":
+    case "swift":
+    case "kt":
+    case "scala":
+    case "sh":
+    case "bash":
+    case "zsh":
+      return "fileCode";
+    case "json":
+    case "jsonc":
+      return "fileJson";
+    case "md":
+    case "mdx":
+    case "txt":
+    case "rst":
+      return "fileText";
+    case "toml":
+    case "yaml":
+    case "yml":
+    case "ini":
+    case "env":
+    case "conf":
+    case "config":
+      return "fileCog";
+    case "lock":
+      return "fileLock";
+    case "png":
+    case "jpg":
+    case "jpeg":
+    case "gif":
+    case "webp":
+    case "bmp":
+    case "ico":
+    case "svg":
+      return "fileImage";
+    case "zip":
+    case "tar":
+    case "gz":
+    case "tgz":
+    case "7z":
+    case "rar":
+      return "fileArchive";
+    case "sql":
+    case "db":
+    case "sqlite":
+      return "database";
+    default:
+      return "file";
+  }
 }
