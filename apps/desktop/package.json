@@ -3,8 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cargo build -p apexd && vite",
+    "dev": "pkill -x apexd || true && bun tauri dev",
     "build": "tsc --noEmit && vite build",
+    "daemon": "cargo run -p apexd",
+    "daemon:kill": "pkill -x apexd",
     "tauri": "tauri",
     "lint": "biome check",
     "format": "biome check --write"

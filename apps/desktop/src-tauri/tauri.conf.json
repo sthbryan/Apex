@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "dev.apex.desktop",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "cargo build -p apexd && vite",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
