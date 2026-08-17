@@ -95,7 +95,7 @@ export function TabBar({ tabs, sessions }: Props) {
               tabEls.current[index] = el;
             }}
             class={cn(
-              "group relative flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors rounded-t-md hover:bg-surface hover:text-text",
+              "group relative flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors hover:bg-surface hover:text-text",
               overflowed && "invisible pointer-events-none absolute",
               active ? "bg-surface text-text" : "text-muted hover:text-text",
             )}
