@@ -15,7 +15,7 @@ export function PanelHeader({ title, children }: Props) {
     <div class="flex shrink-0 items-center gap-2 px-2 py-1">
       <span class="size-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
       <h2 class="min-w-0 truncate text-micro font-medium text-text">{title}</h2>
-      <div class="ml-auto flex shrink-0 items-center gap-2">
+      <div class="ml-auto flex min-w-0 items-center gap-2">
         {children}
         <button
           type="button"

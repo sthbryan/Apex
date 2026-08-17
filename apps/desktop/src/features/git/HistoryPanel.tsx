@@ -3,7 +3,7 @@ import { useEffect } from "preact/hooks";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { GitTarget } from "@/bindings/GitTarget";
 import { commits, gitFailure, gitTarget, readLog, since } from "@/features/git/state";
-import { TargetList } from "@/features/git/TargetList";
+import { TargetChip } from "@/features/git/TargetChip";
 import { activeProject } from "@/features/projects/state";
 import { openDiff } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -27,6 +27,7 @@ export function HistoryPanel() {
   return (
     <div class="flex h-full flex-col">
       <PanelHeader title={t("git.history")}>
+        <TargetChip project={project} />
         <button
           type="button"
           title={t("git.refresh")}
@@ -36,8 +37,6 @@ export function HistoryPanel() {
           <Icon name="refresh" size={12} />
         </button>
       </PanelHeader>
-
-      <TargetList project={project} />
 
       {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
 
