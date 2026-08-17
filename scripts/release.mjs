@@ -242,9 +242,9 @@ const existing = await $`git -C ${root} tag -l ${tag}`.text();
 if (existing.trim()) fail(`tag ${tag} already exists`);
 
 const tauri = readJson(tauriPath);
-if (tauri.identifier !== "dev.apex.desktop") {
+if (tauri.identifier !== "com.justcallmebryan.apex") {
   fail(
-    `identifier is "${tauri.identifier}" but releases expect "dev.apex.desktop". ` +
+    `identifier is "${tauri.identifier}" but releases expect "com.justcallmebryan.apex". ` +
       `Changing the bundle identifier breaks upgrades for users on previous versions.`,
   );
 }
