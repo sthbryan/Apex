@@ -2,15 +2,13 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 
 type Props = {
   icon: IconName;
-  label: string;
   value: string;
 };
 
-export function Gauge({ icon, label, value }: Props) {
+export function Gauge({ icon, value }: Props) {
   return (
-    <span class="flex items-center gap-1" title={label}>
-      <Icon name={icon} size={11} />
-      <span class="text-faint">{label}</span>
+    <span class="flex items-center gap-1">
+      <Icon name={icon} size={12} />
       <span class="tabular-nums">{value}</span>
     </span>
   );

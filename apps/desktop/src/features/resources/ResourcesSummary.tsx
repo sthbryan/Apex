@@ -62,12 +62,10 @@ export function ResourcesSummary() {
       >
         <Gauge
           icon="sparkles"
-          label={t("resources.apex")}
           value={`${snapshot.apex.cpu_percent.toFixed(0)}%`}
         />
         <Gauge
           icon="memory"
-          label={t("resources.memory")}
           value={compactBytes(snapshot.apex.memory)}
         />
       </button>
