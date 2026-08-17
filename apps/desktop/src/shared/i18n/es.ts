@@ -228,7 +228,8 @@ export const es: Messages = {
   },
   sessions: {
     waiting: "Te esperan",
-    live: "Corriendo",
+    running: "Corriendo",
+    idle: "Inactivas",
     finished: "Terminadas",
     empty: "Todavía no hay sesiones.",
     exited: "salió {code}",

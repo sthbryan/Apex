@@ -226,7 +226,8 @@ export const en = {
   },
   sessions: {
     waiting: "Waiting for you",
-    live: "Running",
+    running: "Running",
+    idle: "Idle",
     finished: "Finished",
     empty: "No sessions yet.",
     exited: "exited {code}",
