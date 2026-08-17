@@ -9,7 +9,7 @@ import { Views } from "@/app/Views";
 import { page, togglePage } from "@/app/view";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { UsageChip } from "@/features/usage/UsageChip";
-import { daemonVersion, status } from "@/shared/daemon";
+import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 
 type Props = {
@@ -62,11 +62,7 @@ export function Layout({ onNewSession }: Props) {
             }
           >
             <Toolbar
-              status={
-                status.value === "ready"
-                  ? `apexd ${daemonVersion.value ?? ""}`
-                  : t("status.connecting")
-              }
+              status={status.value === "ready" ? "" : t("status.connecting")}
             >
               <UsageChip />
               <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
