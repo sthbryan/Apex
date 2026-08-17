@@ -51,7 +51,7 @@ export function ProjectPicker() {
         <div
           ref={menu.holder}
           class={cn(
-            `absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl`,
+            `absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl`,
             {
               "animate-drop-out": menu.leaving,
               "animate-drop-in": !menu.leaving,

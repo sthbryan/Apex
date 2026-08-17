@@ -84,7 +84,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
     >
       <div
         class={cn(
-          "w-lg max-w-[90vw] overflow-hidden rounded-lg border border-border bg-surface shadow-2xl",
+          "w-lg max-w-[90vw] overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl",
           overlay.leaving ? "animate-pop-out" : "animate-pop-in",
         )}
         onMouseDown={(event) => event.stopPropagation()}

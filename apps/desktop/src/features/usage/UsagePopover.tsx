@@ -25,7 +25,7 @@ export function UsagePopover({ reports, onClose }: Props) {
     : null;
 
   return (
-    <div class="w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl">
+    <div class="w-72 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl">
       <header class="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
         <Icon name="activity" size={12} class="text-faint" />
         <span class="truncate text-[12px] font-medium text-text">{t("usage.title")}</span>

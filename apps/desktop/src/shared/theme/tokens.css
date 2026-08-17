@@ -13,6 +13,7 @@
   --apex-bg: #ffffff;
   --apex-surface: #f6f7f9;
   --apex-raised: #ffffff;
+  --apex-overlay: #ffffff;
   --apex-border: #dfe2e6;
   --apex-text: #1c1e21;
   --apex-muted: #656d76;
@@ -52,6 +53,7 @@
     --apex-bg: #0c0d10;
     --apex-surface: #131519;
     --apex-raised: #1a1d22;
+    --apex-overlay: #1f2228;
     --apex-border: #24272e;
     --apex-text: #e4e6eb;
     --apex-muted: #8b919c;
@@ -91,6 +93,7 @@
   --apex-bg: #0c0d10;
   --apex-surface: #131519;
   --apex-raised: #1a1d22;
+  --apex-overlay: #1f2228;
   --apex-border: #24272e;
   --apex-text: #e4e6eb;
   --apex-muted: #8b919c;
