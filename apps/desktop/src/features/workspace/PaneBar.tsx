@@ -1,5 +1,5 @@
+import cn from "cnfast";
 import type { ComponentChildren } from "preact";
-
 import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
@@ -11,7 +11,6 @@ import type { Leaf } from "@/features/workspace/tree";
 import { siblingOf } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import cn from "cnfast";
 
 type Props = {
   tabId: string;
@@ -27,15 +26,29 @@ export function PaneBar({ tabId, leaf, extra, focused = false }: Props) {
   const swapable = Boolean(currentTab && siblingOf(currentTab.root, leaf.id));
 
   return (
-    <header class="relative flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
-      <Icon name={paneIcon(leaf.view)} size={12} class={cn("shrink-0 text-faint", {
-        "text-accent": focused,
-      })} />
-      <span class="min-w-0 truncate text-text">{paneTitle(leaf.view, sessions.value)}</span>
+    <header
+      class={cn(
+        "relative flex h-7 shrink-0 items-center gap-2 border-b border-border px-2 transition-colors",
+        focused ? "bg-raised" : "",
+      )}
+    >
+      <Icon
+        name={paneIcon(leaf.view)}
+        size={12}
+        class={cn("shrink-0", focused ? "text-accent" : "text-faint")}
+      />
+      <span class={cn("min-w-0 truncate", focused ? "text-text" : "text-muted")}>
+        {paneTitle(leaf.view, sessions.value)}
+      </span>
       {paneSubtitle(leaf.view) && (
         <span class="min-w-0 truncate text-faint">{paneSubtitle(leaf.view)}</span>
       )}
-      <div class="ml-auto flex shrink-0 items-center gap-1">
+      <div
+        class={cn(
+          "ml-auto flex shrink-0 items-center gap-1 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
+          focused ? "opacity-100" : "opacity-0",
+        )}
+      >
         {extra}
         {leaf.view.type === "session" && (
           <>
