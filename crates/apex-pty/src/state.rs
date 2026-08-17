@@ -62,7 +62,12 @@ impl StateDetector {
     }
 
     pub fn observe(&mut self, chunk: &[u8], now: Instant) -> Option<SessionState> {
-        self.push_tail(chunk);
+        let visible = strip_ansi(chunk);
+        if visible.trim().is_empty() {
+            return None;
+        }
+        self.tail.push_str(&visible);
+        self.trim_tail();
         self.last_output = now;
         self.resting = self.classify_tail();
         self.transition(SessionState::Working)
@@ -100,8 +105,7 @@ impl StateDetector {
         SessionState::Idle
     }
 
-    fn push_tail(&mut self, chunk: &[u8]) {
-        self.tail.push_str(&strip_ansi(chunk));
+    fn trim_tail(&mut self) {
         if self.tail.len() > TAIL_LIMIT {
             let cut = self.tail.len() - TAIL_LIMIT;
             let boundary = (cut..self.tail.len())

@@ -17,6 +17,22 @@ fn output_moves_the_session_to_working() {
 }
 
 #[test]
+fn a_redraw_with_nothing_readable_is_not_work() {
+    let (mut detector, now) = detector(&[], &[]);
+    assert_eq!(detector.observe(b"\x1b[2K\x1b[1G\x1b[?25l", now), None);
+    assert_eq!(detector.state(), SessionState::Idle);
+}
+
+#[test]
+fn a_redraw_does_not_hold_a_session_in_working() {
+    let (mut detector, now) = detector(&[], &[]);
+    detector.observe(b"thinking", now);
+    let later = now + Duration::from_millis(40);
+    detector.observe(b"\x1b[2K\x1b[1G", later);
+    assert_eq!(detector.poll(now + Duration::from_millis(60)), Some(SessionState::Idle));
+}
+
+#[test]
 fn repeated_output_does_not_re_announce_working() {
     let (mut detector, now) = detector(&[], &[]);
     detector.observe(b"one", now);
