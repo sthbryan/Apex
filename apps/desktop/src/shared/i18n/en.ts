@@ -239,6 +239,7 @@ export const en = {
     finished: "Finished",
     empty: "No sessions yet.",
     startWith: "Start one with {agent}",
+    spawned: "{count} agents",
     exited: "exited {code}",
     close: "Close session",
     dismiss: "Dismiss",

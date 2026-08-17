@@ -241,6 +241,7 @@ export const es: Messages = {
     finished: "Terminadas",
     empty: "Todavía no hay sesiones.",
     startWith: "Empieza una con {agent}",
+    spawned: "{count} agentes",
     exited: "salió {code}",
     close: "Cerrar sesión",
     dismiss: "Descartar",

@@ -1,4 +1,6 @@
+import cn from "cnfast";
 import { Fragment } from "preact";
+import { useState } from "preact/hooks";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { waiting } from "@/features/notifications/state";
@@ -108,7 +110,7 @@ function StartHere() {
 
 function renderTree(sessions: SessionSummary[]) {
   const { roots, byParent } = treeOf(sessions);
-  return roots.map((session) => renderRow(session, byParent));
+  return roots.map((session) => <Branch key={session.id} session={session} byParent={byParent} />);
 }
 
 function treeOf(sessions: SessionSummary[]) {
@@ -125,11 +127,39 @@ function treeOf(sessions: SessionSummary[]) {
   return { roots, byParent };
 }
 
-function renderRow(session: SessionSummary, byParent: Map<string, SessionSummary[]>, depth = 0) {
+type BranchProps = {
+  session: SessionSummary;
+  byParent: Map<string, SessionSummary[]>;
+  depth?: number;
+};
+
+function Branch({ session, byParent, depth = 0 }: BranchProps) {
+  const [open, setOpen] = useState(true);
+  const children = byParent.get(session.id) ?? [];
+
   return (
-    <Fragment key={session.id}>
+    <Fragment>
       <SessionRow session={session} depth={depth} />
-      {(byParent.get(session.id) ?? []).map((child) => renderRow(child, byParent, depth + 1))}
+      {children.length > 0 && (
+        <li class="flex">
+          <button
+            type="button"
+            onClick={() => setOpen((shown) => !shown)}
+            class="ml-3 flex items-center gap-1 py-0.5 pl-2 text-micro text-faint transition-colors hover:text-text"
+          >
+            <Icon
+              name="chevron"
+              size={11}
+              class={cn("transition-transform", open ? "" : "-rotate-90")}
+            />
+            {t("sessions.spawned", { count: String(children.length) })}
+          </button>
+        </li>
+      )}
+      {open &&
+        children.map((child) => (
+          <Branch key={child.id} session={child} byParent={byParent} depth={depth + 1} />
+        ))}
     </Fragment>
   );
 }
