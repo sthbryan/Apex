@@ -75,7 +75,7 @@ export function TabBar({ tabs, sessions }: Props) {
   return (
     <div
       ref={holder}
-      class="relative flex h-8 min-h-8.5 shrink-0 items-stretch border-b border-border bg-surface"
+      class="relative flex h-8 min-h-8.5 shrink-0 items-stretch border-b border-border"
     >
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId.value;
@@ -95,11 +95,17 @@ export function TabBar({ tabs, sessions }: Props) {
               tabEls.current[index] = el;
             }}
             class={cn(
-              "group flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors",
+              "group relative flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors rounded-t-md hover:bg-surface hover:text-text",
               overflowed && "invisible pointer-events-none absolute",
-              active ? "bg-bg text-text" : "text-muted hover:text-text",
+              active ? "bg-surface text-text" : "text-muted hover:text-text",
             )}
           >
+            {active && (
+              <span
+                aria-hidden="true"
+                class="pointer-events-none absolute inset-x-2 top-0 h-0.5 rounded-full bg-accent"
+              />
+            )}
             <span class="flex shrink-0 items-center gap-0.5">{identities(tab, sessions)}</span>
             <button
               type="button"
