@@ -17,9 +17,9 @@
   --apex-text: #1c1e21;
   --apex-muted: #656d76;
   --apex-faint: #8c959f;
-  --apex-accent: #0969da;
-  --apex-focus: #c9303e;
-  --apex-selection: #0969da33;
+  --apex-accent: #b45309;
+  --apex-focus: #92400e;
+  --apex-selection: #f59e0b33;
 
   --apex-state-idle: #8c959f;
   --apex-state-working: #0969da;
@@ -56,9 +56,9 @@
     --apex-text: #e4e6eb;
     --apex-muted: #8b919c;
     --apex-faint: #5c626d;
-    --apex-accent: #4a9eff;
-    --apex-focus: #e05561;
-    --apex-selection: #4a9eff40;
+    --apex-accent: #f59e0b;
+    --apex-focus: #fbbf24;
+    --apex-selection: #f59e0b40;
 
     --apex-state-idle: #6e7681;
     --apex-state-working: #4a9eff;
@@ -95,9 +95,9 @@
   --apex-text: #e4e6eb;
   --apex-muted: #8b919c;
   --apex-faint: #5c626d;
-  --apex-accent: #4a9eff;
-  --apex-focus: #e05561;
-  --apex-selection: #4a9eff40;
+  --apex-accent: #f59e0b;
+  --apex-focus: #fbbf24;
+  --apex-selection: #f59e0b40;
 
   --apex-state-idle: #6e7681;
   --apex-state-working: #4a9eff;
