@@ -103,7 +103,7 @@ export function TabBar({ tabs, sessions }: Props) {
             {active && (
               <span
                 aria-hidden="true"
-                class="pointer-events-none absolute inset-x-2 top-0 h-0.5 rounded-full bg-accent"
+                class="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-accent"
               />
             )}
             <span class="flex shrink-0 items-center gap-0.5">{identities(tab, sessions)}</span>
