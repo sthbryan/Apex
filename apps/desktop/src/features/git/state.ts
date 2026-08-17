@@ -52,14 +52,21 @@ export async function refreshGit(): Promise<void> {
   const project = activeProjectId.value;
   if (!project) {
     gitStatus.value = null;
+    worktrees.value = [];
     return;
   }
   try {
+    const trees = await invoke<WorktreeInfo[]>("list_worktrees", { project });
+    worktrees.value = trees;
+    const target = gitTarget.value;
+    if (target.type === "worktree" && !trees.some((tree) => tree.path === target.path)) {
+      gitTarget.value = { type: "project" };
+      void readLog();
+    }
     gitStatus.value = await invoke<GitStatus>("git_status", {
       project,
       target: gitTarget.value,
     });
-    worktrees.value = await invoke<WorktreeInfo[]>("list_worktrees", { project });
     gitFailure.value = null;
   } catch (error) {
     gitStatus.value = null;
@@ -76,7 +83,13 @@ export function startGitWatch(): () => void {
   tick();
   const timer = setInterval(tick, INTERVAL);
   const unsub = activeProjectId.subscribe(() => {
+    gitTarget.value = { type: "project" };
+    commits.value = [];
+    gitStatus.value = null;
+    gitFailure.value = null;
+    worktrees.value = [];
     tick();
+    void readLog();
   });
   return () => {
     clearInterval(timer);
