@@ -1,7 +1,11 @@
 import {
   Activity,
   ArrowRightLeft,
+  Atom,
   BookMarked,
+  Bot,
+  Braces,
+  Brain,
   Check,
   ChevronDown,
   CirclePlay,
@@ -11,6 +15,7 @@ import {
   ExternalLink,
   File,
   Folder,
+  Gem,
   GitBranch,
   Gpu,
   History,
@@ -24,6 +29,7 @@ import {
   PencilRuler,
   Plus,
   RefreshCw,
+  Rocket,
   Settings2,
   Sparkles,
   SquareSplitHorizontal,
@@ -65,6 +71,12 @@ const ICONS = {
   splitRight: SquareSplitHorizontal,
   splitDown: SquareSplitVertical,
   sparkles: Sparkles,
+  bot: Bot,
+  braces: Braces,
+  rocket: Rocket,
+  brain: Brain,
+  atom: Atom,
+  gem: Gem,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
