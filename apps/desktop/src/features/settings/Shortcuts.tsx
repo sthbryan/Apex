@@ -71,7 +71,7 @@ export function Shortcuts() {
             autocomplete="off"
             spellcheck={false}
             onInput={(event) => setQuery(event.currentTarget.value)}
-            class="mb-1 rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
+            class="mb-1 rounded border border-border bg-overlay px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
           />
           {GROUPS.map((option) => (
             <button

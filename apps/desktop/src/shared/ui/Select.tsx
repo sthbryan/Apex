@@ -15,7 +15,7 @@ type Props = {
 
 export function Select({ value, options, onSelect, label }: Props) {
   return (
-    <div class="relative flex items-center rounded border border-border bg-raised transition-colors hover:border-muted">
+    <div class="relative flex items-center rounded border border-border bg-overlay transition-colors hover:border-muted">
       <select
         aria-label={label}
         value={value}

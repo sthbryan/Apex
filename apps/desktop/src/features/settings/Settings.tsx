@@ -246,7 +246,7 @@ export function Settings() {
                         class={cn(
                           "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
                           sharing
-                            ? "border-focus text-focus"
+                            ? "border-accent bg-overlay text-accent"
                             : "border-border text-faint enabled:hover:text-text",
                           agent.shares_config ? "" : "cursor-not-allowed opacity-40",
                         )}
@@ -357,7 +357,7 @@ export function Settings() {
             autocomplete="off"
             spellcheck={false}
             onInput={(event) => setQuery(event.currentTarget.value)}
-            class="mb-1 rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
+            class="mb-1 rounded border border-border bg-overlay px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
           />
           {sections.map((entry) => (
             <button

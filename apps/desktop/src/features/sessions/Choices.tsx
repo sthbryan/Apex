@@ -122,7 +122,7 @@ export function Choices() {
                 confirm("worktree");
               }
             }}
-            class="rounded border border-border bg-raised px-2 py-1 text-code text-text outline-none placeholder:text-faint focus:border-muted"
+            class="rounded border border-border bg-overlay px-2 py-1 text-code text-text outline-none placeholder:text-faint focus:border-muted"
           />
           <span class="text-[10px] text-faint">
             {t("isolation.branch", { branch: `apex/${slugify(name)}` })}
