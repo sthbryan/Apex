@@ -9,7 +9,7 @@ import type { SessionSummary } from "@/bindings/SessionSummary";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { activeTabId, closeTab, mergeTabInto, type Tab } from "@/features/workspace/state";
 import { paneIcon, paneTitle } from "@/features/workspace/title";
-import { leaves } from "@/features/workspace/tree";
+import { type Leaf, leaves } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
@@ -106,7 +106,7 @@ export function TabBar({ tabs, sessions }: Props) {
                 class="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-accent"
               />
             )}
-            <span class="flex shrink-0 items-center gap-0.5">{identities(tab, sessions)}</span>
+            <span class="flex shrink-0 items-center">{identity(tab, sessions)}</span>
             <button
               type="button"
               onClick={() => {
@@ -116,6 +116,11 @@ export function TabBar({ tabs, sessions }: Props) {
             >
               {titleOf(tab, sessions)}
             </button>
+            {leaves(tab.root).length > 1 && (
+              <span class="shrink-0 text-micro text-faint tabular-nums">
+                +{leaves(tab.root).length - 1}
+              </span>
+            )}
             {panel && (
               <button
                 type="button"
@@ -183,8 +188,8 @@ export function TabBar({ tabs, sessions }: Props) {
                       }}
                       class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition-colors hover:bg-raised"
                     >
-                      <span class="flex shrink-0 items-center gap-0.5 text-faint">
-                        {identities(tab, sessions)}
+                      <span class="flex shrink-0 items-center text-faint">
+                        {identity(tab, sessions)}
                       </span>
                       <span class="truncate text-[12px] text-text">{titleOf(tab, sessions)}</span>
                       {active && (
@@ -202,17 +207,18 @@ export function TabBar({ tabs, sessions }: Props) {
   );
 }
 
-function identities(tab: Tab, sessions: SessionSummary[]): VNode[] {
-  return leaves(tab.root)
-    .slice(0, 3)
-    .map((node) => {
-      if (node.view.type === "session") {
-        const sessionId = node.view.sessionId;
-        const session = sessions.find((candidate) => candidate.id === sessionId);
-        return <AgentIcon key={node.id} agent={session?.agent ?? ""} size={12} />;
-      }
-      return <Icon key={node.id} name={paneIcon(node.view)} size={12} />;
-    });
+function identity(tab: Tab, sessions: SessionSummary[]): VNode {
+  const view = frontPane(tab).view;
+  if (view.type === "session") {
+    const session = sessions.find((candidate) => candidate.id === view.sessionId);
+    return <AgentIcon agent={session?.agent ?? ""} size={12} />;
+  }
+  return <Icon name={paneIcon(view)} size={12} />;
+}
+
+function frontPane(tab: Tab): Leaf {
+  const panes = leaves(tab.root);
+  return panes.find((pane) => pane.id === tab.activeLeafId) ?? panes[0];
 }
 
 function panelOf(tab: Tab): DockPanel | null {
@@ -225,5 +231,5 @@ function panelOf(tab: Tab): DockPanel | null {
 }
 
 function titleOf(tab: Tab, sessions: SessionSummary[]): string {
-  return paneTitle(leaves(tab.root)[0].view, sessions);
+  return paneTitle(frontPane(tab).view, sessions);
 }
