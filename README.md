@@ -69,8 +69,15 @@ Claude Code, Codex, Gemini, Copilot, Grok, opencode, or a plain shell. Each is a
 
 ## Get it
 
+**macOS / Linux — one-liner**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sthbryan/apex/main/install.sh | bash
+```
+
 | | |
 |---|---|
+| **Install script** | One-liner above (macOS Apple Silicon · Linux x86_64) |
 | **Download** | [GitHub Releases](https://github.com/sthbryan/apex/releases) |
 | **From source** | `cargo run -p apexd`, then `bun run tauri dev` in `apps/desktop` |
 
