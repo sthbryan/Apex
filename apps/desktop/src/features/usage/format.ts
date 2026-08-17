@@ -61,3 +61,18 @@ export function countdown(seconds: number): string | null {
   }
   return `${Math.max(1, minutes)}m`;
 }
+
+export function roughly(seconds: number): string | null {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return null;
+  }
+  const days = Math.floor(seconds / 86400);
+  if (days > 0) {
+    return `${days}d`;
+  }
+  const hours = Math.floor(seconds / 3600);
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+  return `${Math.max(1, Math.floor(seconds / 60))}m`;
+}

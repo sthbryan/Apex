@@ -8,7 +8,7 @@ import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
 import type { WorktreeInfo } from "@/bindings/WorktreeInfo";
 import { activeProjectId, projectSessions } from "@/features/projects/state";
-import { countdown } from "@/features/usage/format";
+import { roughly } from "@/features/usage/format";
 import { t } from "@/shared/i18n";
 
 const INTERVAL = 5000;
@@ -163,7 +163,7 @@ export async function readLog(): Promise<void> {
 }
 
 export function since(when: number): string {
-  return countdown(Date.now() / 1000 - when) ?? t("git.now");
+  return roughly(Date.now() / 1000 - when) ?? t("git.now");
 }
 
 export async function mergeWorktree(target: GitTarget): Promise<MergeReport> {
