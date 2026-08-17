@@ -59,34 +59,6 @@ fn host_platform() -> &'static str {
     std::env::consts::OS
 }
 
-fn macos_version() -> Option<(u32, u32, u32)> {
-    #[cfg(target_os = "macos")]
-    {
-        static VERSION: std::sync::OnceLock<Option<(u32, u32, u32)>> = std::sync::OnceLock::new();
-        return *VERSION.get_or_init(|| {
-            let raw = std::process::Command::new("/usr/bin/sw_vers")
-                .arg("-productVersion")
-                .output()
-                .ok()?;
-            let text = String::from_utf8(raw.stdout).ok()?;
-            let mut parts = text.trim().split('.');
-            let major: u32 = parts.next()?.parse().ok()?;
-            let minor: u32 = parts.next()?.parse().ok()?;
-            let patch: u32 = parts.next().unwrap_or("0").parse().unwrap_or(0);
-            Some((major, minor, patch))
-        });
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-        None
-    }
-}
-
-#[tauri::command]
-fn host_os_version() -> Option<String> {
-    macos_version().map(|(major, minor, patch)| format!("{major}.{minor}.{patch}"))
-}
-
 #[tauri::command]
 fn set_badge(window: tauri::WebviewWindow, count: u32) -> Answer<()> {
     let value = (count > 0).then_some(i64::from(count));
@@ -601,7 +573,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             daemon_version,
             host_platform,
-            host_os_version,
             set_badge,
             subscribe_output,
             subscribe_events,

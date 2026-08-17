@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import type { FitAddon } from "@xterm/addon-fit";
 import type { Terminal } from "@xterm/xterm";
 
@@ -22,23 +21,6 @@ type Entry = {
 
 const registry = new Map<string, Entry>();
 const scheduled = new Map<string, number>();
-
-const webglSupported: Promise<boolean> = (async () => {
-  try {
-    const platform = await invoke<string>("host_platform");
-    if (platform !== "macos") {
-      return true;
-    }
-    const version = await invoke<string>("host_os_version");
-    if (!version) {
-      return true;
-    }
-    const [major, minor] = version.split(".").map(Number);
-    return !(major > 26 || (major === 26 && minor >= 5));
-  } catch {
-    return true;
-  }
-})();
 
 export async function mountTerminal(id: string, host: HTMLElement): Promise<Entry> {
   const existing = registry.get(id);
@@ -73,10 +55,7 @@ export async function mountTerminal(id: string, host: HTMLElement): Promise<Entr
   terminal.open(element);
 
   let disposed = false;
-  void webglSupported.then(async (supported) => {
-    if (!supported || disposed) {
-      return;
-    }
+  void (async () => {
     try {
       const { WebglAddon } = await import("@xterm/addon-webgl");
       if (disposed) {
@@ -86,7 +65,7 @@ export async function mountTerminal(id: string, host: HTMLElement): Promise<Entr
       webgl.onContextLoss(() => webgl.dispose());
       terminal.loadAddon(webgl);
     } catch {}
-  });
+  })();
 
   const stopOutput = onSessionOutput(id, (data) => terminal.write(data));
   const input = terminal.onData((data) => void sendInput(id, data));
