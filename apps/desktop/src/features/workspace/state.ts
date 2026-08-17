@@ -3,7 +3,8 @@ import { computed, signal } from "@preact/signals";
 import { reconcileDock, returnPanelToDock } from "@/app/layout/state";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { sameTarget } from "@/features/git/state";
+import { gitTarget, sameTarget, selectTarget } from "@/features/git/state";
+import { sessions } from "@/features/sessions/state";
 import { splitCaps } from "@/features/settings/agentMode";
 
 let onCloseRequest: ((sessionId: string) => void) | null = null;
@@ -419,3 +420,14 @@ export function dropSession(sessionId: string): void {
 function updateTab(tabId: string, change: (tab: Tab) => Tab): void {
   tabs.value = tabs.value.map((tab) => (tab.id === tabId ? change(tab) : tab));
 }
+
+activeSessionId.subscribe((sessionId) => {
+  const worktree = sessions.value.find((session) => session.id === sessionId)?.worktree;
+  if (!worktree) {
+    return;
+  }
+  const wanted: GitTarget = { type: "worktree", path: worktree.path };
+  if (!sameTarget(gitTarget.value, wanted)) {
+    selectTarget(wanted);
+  }
+});
