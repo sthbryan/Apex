@@ -248,6 +248,7 @@ export const en = {
     resize: "Resize panes",
     empty: "Nothing open.",
     emptyHint: "Press {shortcut} to start a session.",
+    moreTabs: "{count} more tabs",
   },
   layout: {
     twoColumns: "Two columns",

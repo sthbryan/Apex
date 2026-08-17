@@ -250,6 +250,7 @@ export const es: Messages = {
     resize: "Cambiar el tamaño de los panes",
     empty: "No hay nada abierto.",
     emptyHint: "Pulsa {shortcut} para arrancar una sesión.",
+    moreTabs: "{count} pestañas más",
   },
   layout: {
     twoColumns: "Dos columnas",
