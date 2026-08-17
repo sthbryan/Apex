@@ -27,7 +27,7 @@ export function SessionRow({ session, depth = 0 }: Props) {
     <li
       class={cn(
         "group relative flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised",
-        depth > 0 && "mt-0.5 ml-3",
+        depth > 0 && "ml-3 border-l border-border pl-2",
         activeSessionId.value === session.id ? "bg-raised" : "",
       )}
     >
@@ -39,6 +39,7 @@ export function SessionRow({ session, depth = 0 }: Props) {
       )}
       <button
         type="button"
+        title={parent ? t("sessions.spawnedBy", { agent: parent.title }) : session.cwd}
         onClick={() => {
           if (!focusSession(session.id)) {
             openInNewTab(session);
@@ -49,31 +50,19 @@ export function SessionRow({ session, depth = 0 }: Props) {
           finished ? "text-muted" : "",
         )}
       >
-        {depth > 0 && <span class="w-2 shrink-0 border-l border-border" aria-hidden="true" />}
+        <SessionStateDot session={session} />
+        <AgentIcon agent={session.agent} class="shrink-0 text-faint" />
         <div class="min-w-0 flex-1">
-          <div class="flex min-w-0 items-center gap-2">
-            <SessionStateDot session={session} />
-            <AgentIcon agent={session.agent} class="shrink-0 text-faint" />
-            <span
-              class={cn("truncate", overLimit && "text-state-failed")}
-              title={parent ? t("sessions.spawnedBy", { agent: parent.title }) : session.title}
-            >
-              {session.title}
-            </span>
-          </div>
-          <div class="truncate pl-[38px] text-micro text-faint">{session.cwd}</div>
-          {session.worktree && (
-            <div class="truncate pl-[38px] text-micro text-faint">{session.worktree.branch}</div>
-          )}
-          <div class="truncate pl-[38px] text-micro text-faint">
-            {t("sessions.startedAgo", { ago })}
-          </div>
-        </div>
-        {finished && (
-          <span class="ml-auto shrink-0 text-faint">
-            {t("sessions.exited", { code: String(session.exit_code) })}
+          <span class={cn("block truncate", overLimit && "text-state-failed")}>
+            {session.title}
           </span>
-        )}
+          {session.worktree && (
+            <span class="block truncate text-micro text-faint">{session.worktree.branch}</span>
+          )}
+        </div>
+        <span class="shrink-0 text-micro text-faint tabular-nums">
+          {finished ? t("sessions.exited", { code: String(session.exit_code) }) : ago}
+        </span>
       </button>
       <button
         type="button"
