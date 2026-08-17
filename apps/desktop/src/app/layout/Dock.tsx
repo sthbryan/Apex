@@ -1,5 +1,6 @@
 import cn from "cnfast";
 import type { ComponentChildren } from "preact";
+import { Suspense } from "preact/compat";
 
 import { popPanelToTab } from "@/app/layout/actions";
 import { DockResize } from "@/app/layout/DockResize";
@@ -68,7 +69,9 @@ export function Dock({ header, floating = false }: Props) {
       <div class="min-h-0 flex-1 overflow-hidden">
         {View && active ? (
           <div key={active} class="h-full animate-dock-view">
-            <View />
+            <Suspense fallback={<p class="p-3 text-faint">{t("dock.loading")}</p>}>
+              <View />
+            </Suspense>
           </div>
         ) : (
           <p class="p-3 text-faint">{t("dock.empty")}</p>

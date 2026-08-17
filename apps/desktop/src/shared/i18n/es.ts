@@ -21,6 +21,7 @@ export const es: Messages = {
     popOut: "Abrir como pestaña",
     popIn: "Mover a la barra lateral",
     empty: "Suelta un panel aquí.",
+    loading: "Cargando…",
     sessions: "Sesiones",
     files: "Archivos",
     git: "Git",

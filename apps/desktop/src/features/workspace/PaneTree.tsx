@@ -1,12 +1,10 @@
 import cn from "cnfast";
+import { lazy, Suspense } from "preact/compat";
 import { useState } from "preact/hooks";
 
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
-import { AcpView } from "@/features/acp/AcpView";
 import { openExternally } from "@/features/files/editors";
-import { FileView } from "@/features/files/FileView";
-import { DiffView } from "@/features/git/DiffView";
 import { activeProject } from "@/features/projects/state";
 import { sessions } from "@/features/sessions/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
@@ -17,6 +15,14 @@ import type { Leaf, PaneNode } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Boundary } from "@/shared/ui/Boundary";
 import { Icon } from "@/shared/ui/Icon";
+
+const AcpView = lazy(async () => ({ default: (await import("@/features/acp/AcpView")).AcpView }));
+const FileView = lazy(async () => ({
+  default: (await import("@/features/files/FileView")).FileView,
+}));
+const DiffView = lazy(async () => ({
+  default: (await import("@/features/git/DiffView")).DiffView,
+}));
 
 type Props = {
   tabId: string;
@@ -92,22 +98,24 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
       />
       <div class="min-h-0 flex-1">
         <Boundary key={node.id}>
-          {node.view.type === "session" && (
-            <SessionView id={node.view.sessionId} focused={focused} />
-          )}
-          {node.view.type === "file" && (
-            <FileView key={reload} path={node.view.path} chrome={false} />
-          )}
-          {node.view.type === "diff" && (
-            <DiffView
-              key={reload}
-              target={node.view.target}
-              path={node.view.path}
-              commit={node.view.commit}
-              chrome={false}
-            />
-          )}
-          {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+          <Suspense fallback={<PanePlaceholder />}>
+            {node.view.type === "session" && (
+              <SessionView id={node.view.sessionId} focused={focused} />
+            )}
+            {node.view.type === "file" && (
+              <FileView key={reload} path={node.view.path} chrome={false} />
+            )}
+            {node.view.type === "diff" && (
+              <DiffView
+                key={reload}
+                target={node.view.target}
+                path={node.view.path}
+                commit={node.view.commit}
+                chrome={false}
+              />
+            )}
+            {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+          </Suspense>
         </Boundary>
       </div>
     </div>
@@ -166,4 +174,8 @@ function DockPanelView({ id }: { id: string }) {
       <View />
     </div>
   );
+}
+
+function PanePlaceholder() {
+  return <div class="h-full w-full animate-pulse bg-bg" />;
 }

@@ -19,6 +19,7 @@ export const en = {
     popOut: "Open as tab",
     popIn: "Move to sidebar",
     empty: "Drop a panel here.",
+    loading: "Loading…",
     sessions: "Sessions",
     files: "Files",
     git: "Git",
