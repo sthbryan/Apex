@@ -163,7 +163,7 @@ export const en = {
     close: "Close",
     saving: "Saving…",
     unsaved: "Unsaved",
-    shared: "Every agent here can read this",
+    shared: "Shared with every agent",
   },
   tasks: {
     empty: "No tasks found in this project.",

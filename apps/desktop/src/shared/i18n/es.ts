@@ -165,7 +165,7 @@ export const es: Messages = {
     close: "Cerrar",
     saving: "Guardando…",
     unsaved: "Sin guardar",
-    shared: "Todos los agentes de aquí pueden leerlo",
+    shared: "Lo leen todos los agentes",
   },
   tasks: {
     empty: "No hay tareas en este proyecto.",
