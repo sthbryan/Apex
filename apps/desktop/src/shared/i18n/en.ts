@@ -240,6 +240,7 @@ export const en = {
     empty: "No sessions yet.",
     startWith: "Start one with {agent}",
     spawned: "{count} agents",
+    quiet: "Waiting for the first output…",
     exited: "exited {code}",
     close: "Close session",
     dismiss: "Dismiss",

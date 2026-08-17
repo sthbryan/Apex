@@ -242,6 +242,7 @@ export const es: Messages = {
     empty: "Todavía no hay sesiones.",
     startWith: "Empieza una con {agent}",
     spawned: "{count} agentes",
+    quiet: "Esperando la primera salida…",
     exited: "salió {code}",
     close: "Cerrar sesión",
     dismiss: "Descartar",

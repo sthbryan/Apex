@@ -6,7 +6,9 @@ import {
   mountTerminal,
   refitTerminal,
   revealTerminal,
+  spoken,
 } from "@/features/sessions/registry";
+import { t } from "@/shared/i18n";
 
 type Props = {
   id: string;
@@ -15,6 +17,7 @@ type Props = {
 
 export function TerminalView({ id, active }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const quiet = !spoken.value.has(id);
 
   useEffect(() => {
     const container = host.current;
@@ -40,5 +43,14 @@ export function TerminalView({ id, active }: Props) {
     }
   }, [active, id]);
 
-  return <div ref={host} class="h-full w-full overflow-hidden bg-bg p-0.5" />;
+  return (
+    <div class="relative h-full w-full">
+      <div ref={host} class="h-full w-full overflow-hidden bg-bg p-0.5" />
+      {quiet && (
+        <p class="pointer-events-none absolute inset-x-0 top-2 text-center text-faint">
+          {t("sessions.quiet")}
+        </p>
+      )}
+    </div>
+  );
 }

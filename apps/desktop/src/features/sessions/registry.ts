@@ -1,3 +1,4 @@
+import { signal } from "@preact/signals";
 import type { FitAddon } from "@xterm/addon-fit";
 import type { Terminal } from "@xterm/xterm";
 
@@ -21,6 +22,8 @@ type Entry = {
 
 const registry = new Map<string, Entry>();
 const scheduled = new Map<string, number>();
+
+export const spoken = signal<ReadonlySet<string>>(new Set());
 
 export async function mountTerminal(id: string, host: HTMLElement): Promise<Entry> {
   const existing = registry.get(id);
@@ -67,7 +70,12 @@ export async function mountTerminal(id: string, host: HTMLElement): Promise<Entr
     } catch {}
   })();
 
-  const stopOutput = onSessionOutput(id, (data) => terminal.write(data));
+  const stopOutput = onSessionOutput(id, (data) => {
+    if (data.length > 0 && !spoken.value.has(id)) {
+      spoken.value = new Set(spoken.value).add(id);
+    }
+    terminal.write(data);
+  });
   const input = terminal.onData((data) => void sendInput(id, data));
 
   const entry: Entry = {
