@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
@@ -9,7 +9,6 @@ use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
 use tokio::sync::watch;
 
-const IDLE_GRACE: Duration = Duration::from_secs(60);
 const IDLE_POLL: Duration = Duration::from_secs(1);
 
 #[tokio::main]
@@ -37,6 +36,7 @@ async fn main() -> Result<()> {
 
     let watchdog = tokio::spawn(watch_for_idle(
         Arc::clone(&clients),
+        manager.idle_grace(),
         shutdown_tx,
     ));
 
@@ -72,7 +72,11 @@ async fn main() -> Result<()> {
     }
 }
 
-async fn watch_for_idle(clients: Arc<AtomicUsize>, shutdown_tx: watch::Sender<bool>) {
+async fn watch_for_idle(
+    clients: Arc<AtomicUsize>,
+    idle_grace: Arc<AtomicU64>,
+    shutdown_tx: watch::Sender<bool>,
+) {
     let mut seen_client = false;
     let mut idle_since: Option<Instant> = None;
 
@@ -90,10 +94,11 @@ async fn watch_for_idle(clients: Arc<AtomicUsize>, shutdown_tx: watch::Sender<bo
             continue;
         }
 
+        let grace = Duration::from_secs(idle_grace.load(Ordering::Relaxed));
         match idle_since {
             None => idle_since = Some(Instant::now()),
-            Some(start) if start.elapsed() >= IDLE_GRACE => {
-                tracing::info!("no clients for {IDLE_GRACE:?}, shutting down");
+            Some(start) if start.elapsed() >= grace => {
+                tracing::info!("no clients for {grace:?}, shutting down");
                 let _ = shutdown_tx.send(true);
                 return;
             }

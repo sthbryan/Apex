@@ -288,6 +288,10 @@ async fn execute(
         Command::McpAdopt { agent, enabled } => Ok(Reply::Text {
             text: manager.mcp_adopt(&agent, enabled).await.map_err(internal_error)?,
         }),
+        Command::SetIdleGrace { seconds } => {
+            manager.set_idle_grace(seconds);
+            Ok(Reply::Done)
+        }
         Command::SessionClose { id, worktree } => {
             detach(subscriptions, id).await;
             manager.close(id, worktree).await.map_err(not_found_error)?;
@@ -407,7 +411,12 @@ pub fn runs_detached(command: &Command) -> bool {
 pub fn scope_allows(scope: Scope, command: &Command) -> bool {
     match scope {
         Scope::Local => true,
-        Scope::Remote => !matches!(command, Command::SessionCreate { .. }),
+        Scope::Remote => {
+            !matches!(
+                command,
+                Command::SessionCreate { .. } | Command::SetIdleGrace { .. }
+            )
+        }
     }
 }
 

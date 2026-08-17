@@ -735,6 +735,9 @@ pub enum Command {
         agent: String,
         enabled: bool,
     },
+    SetIdleGrace {
+        seconds: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]

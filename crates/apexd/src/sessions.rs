@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
@@ -24,6 +25,7 @@ const SPAWN_DEPTH_CAP: usize = 1;
 const STARTUP_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
 const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis(600);
 const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
+pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
 
 pub struct NewSession {
     pub project: Uuid,
@@ -47,6 +49,7 @@ pub struct SessionManager {
     metrics: MetricsService,
     registry: Arc<SessionRegistry>,
     acp: Arc<AcpRegistry>,
+    idle_grace: Arc<AtomicU64>,
 }
 
 impl SessionManager {
@@ -100,6 +103,7 @@ impl SessionManager {
             metrics,
             registry,
             acp,
+            idle_grace: Arc::new(AtomicU64::new(DEFAULT_IDLE_GRACE_SECONDS)),
         });
         let dispatch: Arc<dyn crate::commands::Dispatch> = manager.clone();
         manager.acp.bind(Arc::downgrade(&dispatch));
@@ -333,6 +337,14 @@ impl SessionManager {
     pub async fn shutdown(&self) {
         self.acp.kill_all().await;
         self.registry.kill_all().await;
+    }
+
+    pub fn set_idle_grace(&self, seconds: u32) {
+        self.idle_grace.store(seconds as u64, Ordering::Relaxed);
+    }
+
+    pub fn idle_grace(&self) -> Arc<AtomicU64> {
+        Arc::clone(&self.idle_grace)
     }
 
     pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
