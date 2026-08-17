@@ -49,7 +49,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "apex-acp"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -61,7 +61,7 @@ dependencies = [
 
 [[package]]
 name = "apex-core"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "apex-proto",
@@ -81,7 +81,7 @@ dependencies = [
 
 [[package]]
 name = "apex-desktop"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "apex-core",
@@ -99,7 +99,7 @@ dependencies = [
 
 [[package]]
 name = "apex-git"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "tempfile",
@@ -107,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "apex-mcp"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "apex-proto",
@@ -121,14 +121,14 @@ dependencies = [
 
 [[package]]
 name = "apex-metrics"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "sysinfo",
 ]
 
 [[package]]
 name = "apex-proto"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "apex-pty"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "apex-proto",
@@ -159,7 +159,7 @@ dependencies = [
 
 [[package]]
 name = "apex-quota"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "apex-core",
  "serde_json",
@@ -169,7 +169,7 @@ dependencies = [
 
 [[package]]
 name = "apex-tasks"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "serde",
@@ -180,7 +180,7 @@ dependencies = [
 
 [[package]]
 name = "apexd"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "apex-acp",
