@@ -113,10 +113,16 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
                   onClick={item.run}
                   title={item.hint ?? item.label}
                   class={cn(
-                    "flex w-full items-baseline gap-2 px-3 py-1.5 text-left transition-colors",
+                    "relative flex w-full items-baseline gap-2 px-3 py-1.5 text-left transition-colors",
                     index === cursor ? "bg-raised text-text" : "text-muted",
                   )}
                 >
+                  {index === cursor && (
+                    <span
+                      aria-hidden="true"
+                      class="pointer-events-none absolute inset-y-1 left-0 w-0.5 rounded-full bg-accent"
+                    />
+                  )}
                   <span class="shrink-0 truncate">{item.label}</span>
                   {item.hint && <span class="truncate text-faint">{item.hint}</span>}
                   {item.preview && (
