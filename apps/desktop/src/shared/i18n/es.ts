@@ -254,8 +254,10 @@ export const es: Messages = {
     splitRight: "Dividir a la derecha",
     splitDown: "Dividir abajo",
     resize: "Cambiar el tamaño de los panes",
-    empty: "No hay nada abierto.",
-    emptyHint: "Pulsa {shortcut} para arrancar una sesión.",
+    emptyTitle: "Corré un equipo de agentes de IA, no una pared de terminales.",
+    emptySubtitle: "Apex vigila cada sesión por vos.",
+    emptyHintBefore: "Pulsa",
+    emptyHintAfter: "para arrancar una sesión.",
     moreTabs: "{count} pestañas más",
   },
   layout: {

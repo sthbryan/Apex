@@ -252,8 +252,10 @@ export const en = {
     splitRight: "Split right",
     splitDown: "Split down",
     resize: "Resize panes",
-    empty: "Nothing open.",
-    emptyHint: "Press {shortcut} to start a session.",
+    emptyTitle: "Run a team of AI agents, not a wall of terminals.",
+    emptySubtitle: "Apex watches each session for you.",
+    emptyHintBefore: "Press",
+    emptyHintAfter: "to start a session.",
     moreTabs: "{count} more tabs",
   },
   layout: {
