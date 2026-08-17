@@ -42,7 +42,7 @@ export function CommitBox({ status }: { status: GitStatus }) {
             commit();
           }
         }}
-        class="field-sizing-content max-h-56 min-h-20 w-full resize-none rounded-md border border-border bg-bg px-2 py-1.5 text-text outline-none transition-colors placeholder:text-faint focus:border-focus"
+        class="field-sizing-content max-h-56 min-h-20 w-full resize-none border-0 bg-transparent px-2 py-1.5 text-text outline-none placeholder:text-faint"
       />
       <div class="flex items-center gap-2 px-2 pb-1.5">
         <span class="min-w-0 flex-1 truncate text-faint">
