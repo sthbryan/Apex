@@ -127,6 +127,8 @@ export const en = {
   shortcuts: {
     title: "Keyboard shortcuts",
     close: "Close keyboard shortcuts",
+    search: "Search shortcuts…",
+    noMatch: "Nothing matches.",
     groups: {
       navigation: "Navigation",
       panes: "Panes",

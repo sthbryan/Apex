@@ -129,6 +129,8 @@ export const es: Messages = {
   shortcuts: {
     title: "Atajos de teclado",
     close: "Cerrar atajos de teclado",
+    search: "Buscar atajos…",
+    noMatch: "No hay coincidencias.",
     groups: {
       navigation: "Navegación",
       panes: "Paneles",

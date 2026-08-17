@@ -1,4 +1,5 @@
-import { useEffect } from "preact/hooks";
+import cn from "cnfast";
+import { useEffect, useState } from "preact/hooks";
 import { SHORTCUTS, type Shortcut } from "@/app/keymap";
 import { closePage } from "@/app/view";
 import { t } from "@/shared/i18n";
@@ -25,6 +26,9 @@ function KeycapRow({ keys }: { keys: string }) {
 }
 
 export function Shortcuts() {
+  const [group, setGroup] = useState<Shortcut["group"]>("navigation");
+  const [query, setQuery] = useState("");
+
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -35,6 +39,13 @@ export function Shortcuts() {
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
   }, []);
+
+  const needle = query.trim().toLowerCase();
+  const shown = needle
+    ? SHORTCUTS.filter((shortcut) =>
+        `${t(shortcut.label)} ${shortcut.keys}`.toLowerCase().includes(needle),
+      )
+    : SHORTCUTS.filter((shortcut) => shortcut.group === group);
 
   return (
     <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("shortcuts.title")}>
@@ -51,23 +62,66 @@ export function Shortcuts() {
         </button>
       </header>
 
-      <div class="mx-auto min-h-0 w-full max-w-2xl flex-1 overflow-y-auto px-4 py-4">
-        {GROUPS.map((group, index) => (
-          <div key={group} class={index > 0 ? "pt-4" : ""}>
-            <p class="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
-              {t(`shortcuts.groups.${group}` as const)}
-            </p>
-            {SHORTCUTS.filter((shortcut) => shortcut.group === group).map((shortcut) => (
-              <div
-                key={shortcut.id}
-                class="flex items-center justify-between gap-4 border-b border-border px-3 py-1.5 last:border-0"
-              >
-                <span class="min-w-0 truncate text-[13px] text-text">{t(shortcut.label)}</span>
-                <KeycapRow keys={shortcut.keys} />
-              </div>
-            ))}
+      <div class="flex min-h-0 flex-1">
+        <nav class="flex w-44 shrink-0 flex-col gap-0.5 border-r border-border p-2">
+          <input
+            type="search"
+            value={query}
+            placeholder={t("shortcuts.search")}
+            autocomplete="off"
+            spellcheck={false}
+            onInput={(event) => setQuery(event.currentTarget.value)}
+            class="mb-1 rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
+          />
+          {GROUPS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setGroup(option);
+              }}
+              class={cn(
+                "rounded px-2 py-1 text-left transition-colors",
+                !needle && option === group
+                  ? "bg-raised text-text"
+                  : "text-muted hover:bg-raised hover:text-text",
+              )}
+            >
+              {t(`shortcuts.groups.${option}` as const)}
+            </button>
+          ))}
+        </nav>
+
+        <div class="min-h-0 flex-1 overflow-y-auto px-6 py-3">
+          <div class="mx-auto w-full max-w-xl">
+            {shown.length === 0 && <p class="text-faint">{t("shortcuts.noMatch")}</p>}
+            {GROUPS.map((option) => {
+              const rows = shown.filter((shortcut) => shortcut.group === option);
+              if (rows.length === 0) {
+                return null;
+              }
+              return (
+                <section key={option}>
+                  {needle && (
+                    <h3 class="pt-3 pb-1 text-micro uppercase tracking-wider text-faint first:pt-0">
+                      {t(`shortcuts.groups.${option}` as const)}
+                    </h3>
+                  )}
+                  {rows.map((shortcut) => (
+                    <div
+                      key={shortcut.id}
+                      class="flex items-center justify-between gap-4 border-b border-border py-1.5 last:border-0"
+                    >
+                      <span class="min-w-0 truncate text-text">{t(shortcut.label)}</span>
+                      <KeycapRow keys={shortcut.keys} />
+                    </div>
+                  ))}
+                </section>
+              );
+            })}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
