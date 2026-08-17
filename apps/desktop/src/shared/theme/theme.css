@@ -10,6 +10,7 @@
   --color-bg: var(--apex-bg);
   --color-surface: var(--apex-surface);
   --color-raised: var(--apex-raised);
+  --color-overlay: var(--apex-overlay);
   --color-border: var(--apex-border);
   --color-text: var(--apex-text);
   --color-muted: var(--apex-muted);
