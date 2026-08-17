@@ -9,6 +9,23 @@ export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes("/node_modules/preact") || id.includes("/node_modules/@preact/")) {
+            return "preact";
+          }
+          if (id.includes("/node_modules/@xterm/")) {
+            return "xterm";
+          }
+          if (id.includes("/node_modules/highlight.js")) {
+            return "highlight";
+          }
+        },
+      },
+    },
+  },
   clearScreen: false,
   server: {
     port: 1420,
