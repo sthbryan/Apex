@@ -67,10 +67,10 @@ export function Choices() {
   }, [cursor, confirm]);
 
   useEffect(() => {
-    if (cursor === 0) {
+    if (cursor === 1) {
       field.current?.focus();
     } else {
-      list.current?.querySelector<HTMLButtonElement>("[data-cursor='1']")?.focus();
+      list.current?.querySelector<HTMLButtonElement>("[data-cursor='0']")?.focus();
     }
   }, [cursor]);
 
@@ -86,7 +86,7 @@ export function Choices() {
             onClick={() => confirm(option.value)}
             class={cn(
               "group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-1.5 text-left transition-colors",
-              index === cursor ? "border-border bg-raised" : "hover:bg-raised",
+              index === cursor ? "bg-raised" : "hover:bg-raised",
             )}
           >
             <span
