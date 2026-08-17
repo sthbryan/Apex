@@ -22,7 +22,7 @@ export function UsageChip() {
     };
     window.addEventListener("mousedown", dismiss);
     return () => window.removeEventListener("mousedown", dismiss);
-  }, []);
+  }, [usageOpen.value]);
 
   if (tightestUsage.value === null) {
     return null;
