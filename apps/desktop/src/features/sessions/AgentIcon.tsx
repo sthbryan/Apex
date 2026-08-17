@@ -1,13 +1,24 @@
+import cn from "cnfast";
+import claude from "@/features/sessions/agent-icons/claude.svg?raw";
+import codex from "@/features/sessions/agent-icons/codex.svg?raw";
+import gemini from "@/features/sessions/agent-icons/gemini.svg?raw";
+import githubcopilot from "@/features/sessions/agent-icons/githubcopilot.svg?raw";
+import grok from "@/features/sessions/agent-icons/grok.svg?raw";
+import opencode from "@/features/sessions/agent-icons/opencode.svg?raw";
+import pi from "@/features/sessions/agent-icons/pi.svg?raw";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
-const AGENT_ICONS: Record<string, IconName> = {
-  claude: "sparkles",
-  opencode: "braces",
-  codex: "cpu",
-  gemini: "gem",
-  copilot: "rocket",
-  grok: "brain",
-  pi: "atom",
+const BRAND_SVGS: Record<string, string> = {
+  claude,
+  codex,
+  gemini,
+  copilot: githubcopilot,
+  grok,
+  opencode,
+  pi,
+};
+
+const FALLBACK_ICONS: Record<string, IconName> = {
   shell: "sessions",
 };
 
@@ -18,5 +29,15 @@ type Props = {
 };
 
 export function AgentIcon({ agent, size = 14, class: className }: Props) {
-  return <Icon name={AGENT_ICONS[agent] ?? "bot"} size={size} class={className} />;
+  const svg = BRAND_SVGS[agent];
+  if (!svg) {
+    return <Icon name={FALLBACK_ICONS[agent] ?? "bot"} size={size} class={className} />;
+  }
+  return (
+    <span
+      class={cn("inline-flex shrink-0", className)}
+      style={{ fontSize: size, lineHeight: 1 }}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
 }
