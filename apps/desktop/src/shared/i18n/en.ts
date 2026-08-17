@@ -75,6 +75,8 @@ export const en = {
     groupAgents: "Agents",
     groupDaemon: "Daemon",
     close: "Close settings",
+    search: "Search settings…",
+    noMatch: "Nothing matches.",
     theme: "Theme",
     themeHint: "Follows your system.",
     themeHintLight: "Always uses the light theme.",

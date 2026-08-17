@@ -1,5 +1,6 @@
 import { getVersion } from "@tauri-apps/api/app";
 import cn from "cnfast";
+import type { VNode } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
 import { closePage } from "@/app/view";
@@ -40,14 +41,35 @@ const LANGUAGES: { value: Locale; label: string }[] = [
 
 const PANE_CAPS = [2, 3, 4, 5, 6, 8];
 
+const IDLE_GRACES = [
+  { value: 0, key: "settings.idleGrace0" },
+  { value: 60, key: "settings.idleGrace60" },
+  { value: 7200, key: "settings.idleGrace7200" },
+] as const;
+
 const THEME_HINT = {
   system: "settings.themeHint",
   light: "settings.themeHintLight",
   dark: "settings.themeHintDark",
 } as const;
 
+type Entry = {
+  id: string;
+  label: string;
+  hint: string;
+  control: VNode;
+};
+
+type Section = {
+  id: string;
+  label: string;
+  entries: Entry[];
+};
+
 export function Settings() {
   const [appVersion, setAppVersion] = useState("");
+  const [section, setSection] = useState("look");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     void getVersion().then(setAppVersion);
@@ -64,6 +86,253 @@ export function Settings() {
     return () => window.removeEventListener("keydown", onEscape);
   }, []);
 
+  const sections: Section[] = [
+    {
+      id: "look",
+      label: t("settings.groupLook"),
+      entries: [
+        {
+          id: "theme",
+          label: t("settings.theme"),
+          hint: t(THEME_HINT[themeMode.value]),
+          control: (
+            <Segmented label={t("settings.theme")}>
+              {THEMES.map((option) => (
+                <Choice
+                  key={option.value}
+                  selected={themeMode.value === option.value}
+                  onSelect={() => setThemeMode(option.value)}
+                >
+                  <Icon name={option.icon} />
+                  {t(`theme.${option.value}`)}
+                </Choice>
+              ))}
+            </Segmented>
+          ),
+        },
+        {
+          id: "language",
+          label: t("settings.language"),
+          hint: t("settings.languageHint"),
+          control: (
+            <Segmented label={t("settings.language")}>
+              {LANGUAGES.map((option) => (
+                <Choice
+                  key={option.value}
+                  selected={locale.value === option.value}
+                  onSelect={() => setLocale(option.value)}
+                >
+                  {option.label}
+                </Choice>
+              ))}
+            </Segmented>
+          ),
+        },
+      ],
+    },
+    {
+      id: "space",
+      label: t("settings.groupSpace"),
+      entries: [
+        {
+          id: "editor",
+          label: t("settings.editor"),
+          hint: t("settings.editorHint"),
+          control: (
+            <Select
+              label={t("settings.editor")}
+              value={preferredEditor.value ?? ""}
+              onSelect={(value) => setPreferredEditor(value === "" ? null : value)}
+              options={[
+                { value: "", label: t("settings.editorSystem") },
+                ...installedEditors().map((editor) => ({
+                  value: editor.id,
+                  label: editor.name,
+                })),
+              ]}
+            />
+          ),
+        },
+        {
+          id: "agentViews",
+          label: t("settings.agentViews"),
+          hint: t("settings.agentViewsHint"),
+          control: (
+            <Segmented label={t("settings.agentViews")}>
+              <Choice selected={viewLanding.value === "tab"} onSelect={() => setViewLanding("tab")}>
+                {t("settings.agentViewsTab")}
+              </Choice>
+              <Choice
+                selected={viewLanding.value === "split"}
+                onSelect={() => setViewLanding("split")}
+              >
+                {t("settings.agentViewsSplit")}
+              </Choice>
+            </Segmented>
+          ),
+        },
+        ...(viewLanding.value === "split"
+          ? [
+              {
+                id: "agentSplits",
+                label: t("settings.agentSplits"),
+                hint: t("settings.agentSplitsHint"),
+                control: (
+                  <div class="flex items-center gap-2">
+                    <Select
+                      label={t("settings.agentSplitsYours")}
+                      value={String(splitCaps.value.yours)}
+                      onSelect={(value) => setSplitCap("yours", Number(value))}
+                      options={PANE_CAPS.map((panes) => ({
+                        value: String(panes),
+                        label: t("settings.agentSplitsYoursOption", { panes: String(panes) }),
+                      }))}
+                    />
+                    <Select
+                      label={t("settings.agentSplitsSpare")}
+                      value={String(splitCaps.value.spare)}
+                      onSelect={(value) => setSplitCap("spare", Number(value))}
+                      options={PANE_CAPS.map((panes) => ({
+                        value: String(panes),
+                        label: t("settings.agentSplitsSpareOption", { panes: String(panes) }),
+                      }))}
+                    />
+                  </div>
+                ),
+              },
+            ]
+          : []),
+        {
+          id: "sidebar",
+          label: t("settings.sidebar"),
+          hint: t("settings.sidebarHint"),
+          control: <DockOrder />,
+        },
+      ],
+    },
+    {
+      id: "agents",
+      label: t("settings.groupAgents"),
+      entries: [
+        {
+          id: "agents",
+          label: t("settings.agents"),
+          hint: t("settings.agentsHint2"),
+          control: (
+            <div class="flex flex-col gap-1.5">
+              {agents.value
+                .filter((agent) => agent.resolved_path !== null)
+                .map((agent) => {
+                  const sharing = sharedContext.value[agent.name] === true;
+                  return (
+                    <div key={agent.name} class="flex items-center justify-end gap-3">
+                      <span class="text-muted">{agent.name}</span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={sharing}
+                        disabled={!agent.shares_config}
+                        title={t(
+                          !agent.shares_config
+                            ? "settings.shareContextNone"
+                            : sharing
+                              ? "settings.shareContextOn"
+                              : "settings.shareContextOff",
+                          { agent: agent.name },
+                        )}
+                        onClick={() => {
+                          void setSharedContext(agent.name, !sharing).catch(complain);
+                        }}
+                        class={cn(
+                          "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
+                          sharing
+                            ? "border-focus text-focus"
+                            : "border-border text-faint enabled:hover:text-text",
+                          agent.shares_config ? "" : "cursor-not-allowed opacity-40",
+                        )}
+                      >
+                        <Icon name="context" size={12} />
+                        {t("settings.shareContext")}
+                      </button>
+                      <Segmented label={t("settings.agentMode", { agent: agent.name })}>
+                        {(["pty", "acp"] as const).map((option) => (
+                          <Choice
+                            key={option}
+                            selected={(agentModes.value[agent.name] ?? agent.mode) === option}
+                            disabled={option === "acp" && !agent.speaks_acp}
+                            title={
+                              option === "acp" && !agent.speaks_acp
+                                ? t("settings.agentNoAcp", { agent: agent.name })
+                                : undefined
+                            }
+                            onSelect={() => setAgentMode(agent.name, option)}
+                          >
+                            {t(`isolation.${option}`)}
+                          </Choice>
+                        ))}
+                      </Segmented>
+                    </div>
+                  );
+                })}
+            </div>
+          ),
+        },
+      ],
+    },
+    {
+      id: "daemon",
+      label: t("settings.groupDaemon"),
+      entries: [
+        {
+          id: "idleGrace",
+          label: t("settings.idleGrace"),
+          hint: t("settings.idleGraceHint"),
+          control: (
+            <Segmented label={t("settings.idleGrace")}>
+              {IDLE_GRACES.map((option) => (
+                <Choice
+                  key={option.value}
+                  selected={idleGrace.value === option.value}
+                  onSelect={() => {
+                    setIdleGrace(option.value);
+                    applyIdleGrace();
+                  }}
+                >
+                  {t(option.key)}
+                </Choice>
+              ))}
+            </Segmented>
+          ),
+        },
+        {
+          id: "about",
+          label: t("settings.about"),
+          hint: t("settings.aboutHint"),
+          control: (
+            <div class="flex flex-col items-end gap-0.5">
+              <span class="text-text">
+                {t("app.name")} {appVersion}
+              </span>
+              <span class="text-faint">apexd {daemonVersion.value ?? "—"}</span>
+            </div>
+          ),
+        },
+      ],
+    },
+  ];
+
+  const needle = query.trim().toLowerCase();
+  const shown = needle
+    ? sections
+        .map((entry) => ({
+          ...entry,
+          entries: entry.entries.filter((row) =>
+            `${row.label} ${row.hint}`.toLowerCase().includes(needle),
+          ),
+        }))
+        .filter((entry) => entry.entries.length > 0)
+    : sections.filter((entry) => entry.id === section);
+
   return (
     <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("settings.title")}>
       <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-surface px-3">
@@ -79,213 +348,61 @@ export function Settings() {
         </button>
       </header>
 
-      <div class="mx-auto min-h-0 w-full max-w-2xl flex-1 overflow-y-auto px-4">
-        <Group label={t("settings.groupLook")} />
-
-        <SettingsRow label={t("settings.theme")} hint={t(THEME_HINT[themeMode.value])}>
-          <Segmented label={t("settings.theme")}>
-            {THEMES.map((option) => (
-              <Choice
-                key={option.value}
-                selected={themeMode.value === option.value}
-                onSelect={() => setThemeMode(option.value)}
-              >
-                <Icon name={option.icon} />
-                {t(`theme.${option.value}`)}
-              </Choice>
-            ))}
-          </Segmented>
-        </SettingsRow>
-
-        <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>
-          <Segmented label={t("settings.language")}>
-            {LANGUAGES.map((option) => (
-              <Choice
-                key={option.value}
-                selected={locale.value === option.value}
-                onSelect={() => setLocale(option.value)}
-              >
-                {option.label}
-              </Choice>
-            ))}
-          </Segmented>
-        </SettingsRow>
-
-        <Group label={t("settings.groupSpace")} />
-
-        <SettingsRow label={t("settings.editor")} hint={t("settings.editorHint")}>
-          <Select
-            label={t("settings.editor")}
-            value={preferredEditor.value ?? ""}
-            onSelect={(value) => setPreferredEditor(value === "" ? null : value)}
-            options={[
-              { value: "", label: t("settings.editorSystem") },
-              ...installedEditors().map((editor) => ({
-                value: editor.id,
-                label: editor.name,
-              })),
-            ]}
+      <div class="flex min-h-0 flex-1">
+        <nav class="flex w-44 shrink-0 flex-col gap-0.5 border-r border-border p-2">
+          <input
+            type="search"
+            value={query}
+            placeholder={t("settings.search")}
+            autocomplete="off"
+            spellcheck={false}
+            onInput={(event) => setQuery(event.currentTarget.value)}
+            class="mb-1 rounded border border-border bg-raised px-2 py-1 text-text outline-none placeholder:text-faint focus:border-muted"
           />
-        </SettingsRow>
-
-        <SettingsRow label={t("settings.agentViews")} hint={t("settings.agentViewsHint")}>
-          <Segmented label={t("settings.agentViews")}>
-            <Choice selected={viewLanding.value === "tab"} onSelect={() => setViewLanding("tab")}>
-              {t("settings.agentViewsTab")}
-            </Choice>
-            <Choice
-              selected={viewLanding.value === "split"}
-              onSelect={() => setViewLanding("split")}
-            >
-              {t("settings.agentViewsSplit")}
-            </Choice>
-          </Segmented>
-        </SettingsRow>
-
-        {viewLanding.value === "split" && (
-          <SettingsRow label={t("settings.agentSplits")} hint={t("settings.agentSplitsHint")}>
-            <div class="flex items-center gap-2">
-              <Select
-                label={t("settings.agentSplitsYours")}
-                value={String(splitCaps.value.yours)}
-                onSelect={(value) => setSplitCap("yours", Number(value))}
-                options={PANE_CAPS.map((panes) => ({
-                  value: String(panes),
-                  label: t("settings.agentSplitsYoursOption", { panes: String(panes) }),
-                }))}
-              />
-              <Select
-                label={t("settings.agentSplitsSpare")}
-                value={String(splitCaps.value.spare)}
-                onSelect={(value) => setSplitCap("spare", Number(value))}
-                options={PANE_CAPS.map((panes) => ({
-                  value: String(panes),
-                  label: t("settings.agentSplitsSpareOption", { panes: String(panes) }),
-                }))}
-              />
-            </div>
-          </SettingsRow>
-        )}
-
-        <SettingsRow label={t("settings.sidebar")} hint={t("settings.sidebarHint")}>
-          <DockOrder />
-        </SettingsRow>
-
-        <Group label={t("settings.groupDaemon")} />
-
-        <SettingsRow label={t("settings.idleGrace")} hint={t("settings.idleGraceHint")}>
-          <Segmented label={t("settings.idleGrace")}>
-            <Choice
-              selected={idleGrace.value === 0}
-              onSelect={() => {
-                setIdleGrace(0);
-                applyIdleGrace();
+          {sections.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setSection(entry.id);
               }}
+              class={cn(
+                "rounded px-2 py-1 text-left transition-colors",
+                !needle && entry.id === section
+                  ? "bg-raised text-text"
+                  : "text-muted hover:bg-raised hover:text-text",
+              )}
             >
-              {t("settings.idleGrace0")}
-            </Choice>
-            <Choice
-              selected={idleGrace.value === 60}
-              onSelect={() => {
-                setIdleGrace(60);
-                applyIdleGrace();
-              }}
-            >
-              {t("settings.idleGrace60")}
-            </Choice>
-            <Choice
-              selected={idleGrace.value === 7200}
-              onSelect={() => {
-                setIdleGrace(7200);
-                applyIdleGrace();
-              }}
-            >
-              {t("settings.idleGrace7200")}
-            </Choice>
-          </Segmented>
-        </SettingsRow>
-        <Group label={t("settings.groupAgents")} />
+              {entry.label}
+            </button>
+          ))}
+        </nav>
 
-        <SettingsRow label={t("settings.agents")} hint={t("settings.agentsHint2")}>
-          <div class="flex flex-col gap-1.5">
-            {agents.value
-              .filter((agent) => agent.resolved_path !== null)
-              .map((agent) => {
-                const sharing = sharedContext.value[agent.name] === true;
-                return (
-                  <div key={agent.name} class="flex items-center justify-end gap-3">
-                    <span class="text-muted">{agent.name}</span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={sharing}
-                      disabled={!agent.shares_config}
-                      title={t(
-                        !agent.shares_config
-                          ? "settings.shareContextNone"
-                          : sharing
-                            ? "settings.shareContextOn"
-                            : "settings.shareContextOff",
-                        { agent: agent.name },
-                      )}
-                      onClick={() => {
-                        void setSharedContext(agent.name, !sharing).catch(complain);
-                      }}
-                      class={cn(
-                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
-                        sharing
-                          ? "border-focus text-focus"
-                          : "border-border text-faint enabled:hover:text-text",
-                        agent.shares_config ? "" : "cursor-not-allowed opacity-40",
-                      )}
-                    >
-                      <Icon name="context" size={12} />
-                      {t("settings.shareContext")}
-                    </button>
-                    <Segmented label={t("settings.agentMode", { agent: agent.name })}>
-                      {(["pty", "acp"] as const).map((option) => (
-                        <Choice
-                          key={option}
-                          selected={(agentModes.value[agent.name] ?? agent.mode) === option}
-                          disabled={option === "acp" && !agent.speaks_acp}
-                          title={
-                            option === "acp" && !agent.speaks_acp
-                              ? t("settings.agentNoAcp", { agent: agent.name })
-                              : undefined
-                          }
-                          onSelect={() => setAgentMode(agent.name, option)}
-                        >
-                          {t(`isolation.${option}`)}
-                        </Choice>
-                      ))}
-                    </Segmented>
-                  </div>
-                );
-              })}
+        <div class="min-h-0 flex-1 overflow-y-auto px-6 py-3">
+          <div class="mx-auto w-full max-w-xl">
+            {shown.length === 0 && <p class="text-faint">{t("settings.noMatch")}</p>}
+            {shown.map((entry) => (
+              <section key={entry.id}>
+                {needle && (
+                  <h3 class="pt-3 pb-1 text-micro uppercase tracking-wider text-faint first:pt-0">
+                    {entry.label}
+                  </h3>
+                )}
+                {entry.entries.map((row) => (
+                  <SettingsRow key={row.id} label={row.label} hint={row.hint}>
+                    {row.control}
+                  </SettingsRow>
+                ))}
+              </section>
+            ))}
           </div>
-        </SettingsRow>
-
-        <SettingsRow label={t("settings.about")} hint={t("settings.aboutHint")}>
-          <div class="flex flex-col items-end gap-0.5 text-sm">
-            <span class="text-text">
-              {t("app.name")} {appVersion}
-            </span>
-            <span class="text-faint">apexd {daemonVersion.value ?? "—"}</span>
-          </div>
-        </SettingsRow>
+        </div>
       </div>
 
       <footer class="shrink-0 border-t border-border px-4 py-2 text-faint">
-        <span class="mx-auto block w-full max-w-2xl">
-          {t("settings.agentsHint", { path: "~/.apex/agents" })}
-        </span>
+        {t("settings.agentsHint", { path: "~/.apex/agents" })}
       </footer>
     </div>
-  );
-}
-
-function Group({ label }: { label: string }) {
-  return (
-    <h3 class="pt-4 pb-1 text-micro uppercase tracking-wider text-faint first:pt-2">{label}</h3>
   );
 }

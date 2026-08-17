@@ -77,6 +77,8 @@ export const es: Messages = {
     groupAgents: "Agentes",
     groupDaemon: "Daemon",
     close: "Cerrar preferencias",
+    search: "Buscar en preferencias…",
+    noMatch: "No hay coincidencias.",
     theme: "Tema",
     themeHint: "Sigue al sistema.",
     themeHintLight: "Usa siempre el tema claro.",

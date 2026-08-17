@@ -59,14 +59,8 @@ export function ResourcesSummary() {
         onClick={() => setOpen((current) => !current)}
         class="flex items-center gap-3 rounded px-1 transition-colors hover:bg-raised hover:text-muted"
       >
-        <Gauge
-          icon="sparkles"
-          value={`${snapshot.apex.cpu_percent.toFixed(0)}%`}
-        />
-        <Gauge
-          icon="memory"
-          value={compactBytes(snapshot.apex.memory)}
-        />
+        <Gauge icon="sparkles" value={`${snapshot.apex.cpu_percent.toFixed(0)}%`} />
+        <Gauge icon="memory" value={compactBytes(snapshot.apex.memory)} />
       </button>
     </div>
   );
