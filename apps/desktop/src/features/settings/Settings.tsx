@@ -1,6 +1,6 @@
+import { getVersion } from "@tauri-apps/api/app";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
-import { getVersion } from "@tauri-apps/api/app";
 
 import { closePage } from "@/app/view";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
@@ -79,7 +79,9 @@ export function Settings() {
         </button>
       </header>
 
-      <div class="min-h-0 flex-1 overflow-y-auto px-4">
+      <div class="mx-auto min-h-0 w-full max-w-2xl flex-1 overflow-y-auto px-4">
+        <Group label={t("settings.groupLook")} />
+
         <SettingsRow label={t("settings.theme")} hint={t(THEME_HINT[themeMode.value])}>
           <Segmented label={t("settings.theme")}>
             {THEMES.map((option) => (
@@ -94,6 +96,22 @@ export function Settings() {
             ))}
           </Segmented>
         </SettingsRow>
+
+        <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>
+          <Segmented label={t("settings.language")}>
+            {LANGUAGES.map((option) => (
+              <Choice
+                key={option.value}
+                selected={locale.value === option.value}
+                onSelect={() => setLocale(option.value)}
+              >
+                {option.label}
+              </Choice>
+            ))}
+          </Segmented>
+        </SettingsRow>
+
+        <Group label={t("settings.groupSpace")} />
 
         <SettingsRow label={t("settings.editor")} hint={t("settings.editorHint")}>
           <Select
@@ -153,19 +171,8 @@ export function Settings() {
           <DockOrder />
         </SettingsRow>
 
-        <SettingsRow label={t("settings.language")} hint={t("settings.languageHint")}>
-          <Segmented label={t("settings.language")}>
-            {LANGUAGES.map((option) => (
-              <Choice
-                key={option.value}
-                selected={locale.value === option.value}
-                onSelect={() => setLocale(option.value)}
-              >
-                {option.label}
-              </Choice>
-            ))}
-          </Segmented>
-        </SettingsRow>
+        <Group label={t("settings.groupDaemon")} />
+
         <SettingsRow label={t("settings.idleGrace")} hint={t("settings.idleGraceHint")}>
           <Segmented label={t("settings.idleGrace")}>
             <Choice
@@ -197,6 +204,8 @@ export function Settings() {
             </Choice>
           </Segmented>
         </SettingsRow>
+        <Group label={t("settings.groupAgents")} />
+
         <SettingsRow label={t("settings.agents")} hint={t("settings.agentsHint2")}>
           <div class="flex flex-col gap-1.5">
             {agents.value
@@ -267,8 +276,16 @@ export function Settings() {
       </div>
 
       <footer class="shrink-0 border-t border-border px-4 py-2 text-faint">
-        {t("settings.agentsHint", { path: "~/.apex/agents" })}
+        <span class="mx-auto block w-full max-w-2xl">
+          {t("settings.agentsHint", { path: "~/.apex/agents" })}
+        </span>
       </footer>
     </div>
+  );
+}
+
+function Group({ label }: { label: string }) {
+  return (
+    <h3 class="pt-4 pb-1 text-micro uppercase tracking-wider text-faint first:pt-2">{label}</h3>
   );
 }

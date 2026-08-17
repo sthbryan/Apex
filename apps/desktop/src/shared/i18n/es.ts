@@ -71,6 +71,10 @@ export const es: Messages = {
   },
   settings: {
     title: "Preferencias",
+    groupLook: "Aspecto",
+    groupSpace: "Espacio de trabajo",
+    groupAgents: "Agentes",
+    groupDaemon: "Daemon",
     close: "Cerrar preferencias",
     theme: "Tema",
     themeHint: "Sigue al sistema.",

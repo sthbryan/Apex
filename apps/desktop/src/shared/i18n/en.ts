@@ -69,6 +69,10 @@ export const en = {
   },
   settings: {
     title: "Settings",
+    groupLook: "Look",
+    groupSpace: "Workspace",
+    groupAgents: "Agents",
+    groupDaemon: "Daemon",
     close: "Close settings",
     theme: "Theme",
     themeHint: "Follows your system.",
