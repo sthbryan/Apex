@@ -22,6 +22,7 @@ type Props = {
 
 export function TargetChip({ project }: Props) {
   const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState<string | null>(null);
   const holder = useRef<HTMLDivElement>(null);
   const menu = usePresence<HTMLDivElement>(open);
   const target = gitTarget.value;
@@ -34,6 +35,7 @@ export function TargetChip({ project }: Props) {
     const dismiss = (event: MouseEvent) => {
       if (!holder.current?.contains(event.target as Node)) {
         setOpen(false);
+        setAsking(null);
       }
     };
     window.addEventListener("mousedown", dismiss);
@@ -92,14 +94,17 @@ export function TargetChip({ project }: Props) {
                 selected={target.type === "worktree" && target.path === candidate.path}
                 live={sessionOfWorktree.value.has(candidate.path)}
                 onPick={() => setOpen(false)}
-                onDrop={
+                asking={asking === candidate.path}
+                onAsk={
                   sessionOfWorktree.value.has(candidate.path)
                     ? undefined
-                    : () => {
-                        setOpen(false);
-                        void dropWorktree(candidate.path, candidate.branch).catch(complain);
-                      }
+                    : () => setAsking(asking === candidate.path ? null : candidate.path)
                 }
+                onDrop={() => {
+                  setAsking(null);
+                  setOpen(false);
+                  void dropWorktree(candidate.path, candidate.branch).catch(complain);
+                }}
               />
             ))}
           </ul>
@@ -116,10 +121,46 @@ type TargetProps = {
   selected: boolean;
   live?: boolean;
   onPick: () => void;
+  onAsk?: () => void;
   onDrop?: () => void;
+  asking?: boolean;
 };
 
-function Target({ target, label, branch, selected, live, onPick, onDrop }: TargetProps) {
+function Target({
+  target,
+  label,
+  branch,
+  selected,
+  live,
+  onPick,
+  onAsk,
+  onDrop,
+  asking = false,
+}: TargetProps) {
+  if (asking && onDrop) {
+    return (
+      <li class="flex items-center gap-2 bg-raised px-2 py-1">
+        <span class="min-w-0 flex-1 truncate text-micro text-muted">
+          {t("git.dropWorktreeAsk", { branch })}
+        </span>
+        <button
+          type="button"
+          onClick={onDrop}
+          class="shrink-0 text-state-failed transition-colors hover:underline"
+        >
+          {t("git.dropWorktreeYes")}
+        </button>
+        <button
+          type="button"
+          onClick={onAsk}
+          class="shrink-0 text-faint transition-colors hover:text-text"
+        >
+          {t("git.dropWorktreeNo")}
+        </button>
+      </li>
+    );
+  }
+
   return (
     <li class="group flex items-center">
       <button
@@ -141,11 +182,11 @@ function Target({ target, label, branch, selected, live, onPick, onDrop }: Targe
         <span class="truncate">{label}</span>
         {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
       </button>
-      {onDrop && (
+      {onAsk && (
         <button
           type="button"
           title={t("git.dropWorktree", { branch })}
-          onClick={onDrop}
+          onClick={onAsk}
           class="shrink-0 px-1.5 py-1 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-state-failed"
         >
           <Icon name="close" size={12} />
