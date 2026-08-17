@@ -41,6 +41,9 @@ jobs:
             libssl-dev \
             librsvg2-dev
 
+      - name: Generate TS bindings
+        run: cargo test -p apex-proto --lib
+
       - name: Install JS deps
         working-directory: apps/desktop
         run: bun install --frozen-lockfile
