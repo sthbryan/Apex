@@ -16,16 +16,23 @@ type Props = {
   tabId: string;
   leaf: Leaf;
   extra?: ComponentChildren;
+  focused?: boolean;
 };
 
-export function PaneBar({ tabId, leaf, extra }: Props) {
+export function PaneBar({ tabId, leaf, extra, focused = false }: Props) {
   const currentTab = tabs.value.find((tab) => tab.id === tabId);
   const split = (currentTab?.root.kind ?? "leaf") === "split";
   const panel = leaf.view.type === "panel" && leaf.view.panel in DOCK_PANELS;
   const swapable = Boolean(currentTab && siblingOf(currentTab.root, leaf.id));
 
   return (
-    <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
+    <header class="relative flex h-7 shrink-0 items-center gap-2 border-b border-border px-2">
+      {focused && (
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-accent"
+        />
+      )}
       <Icon name={paneIcon(leaf.view)} size={12} class="shrink-0 text-faint" />
       <span class="min-w-0 truncate text-text">{paneTitle(leaf.view, sessions.value)}</span>
       {paneSubtitle(leaf.view) && (

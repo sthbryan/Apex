@@ -67,8 +67,10 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
   return (
     <div
       class={cn(
-        "group flex h-full w-full flex-col overflow-hidden border transition-colors",
-        focused ? "border-focus" : "border-transparent",
+        "group flex h-full w-full flex-col overflow-hidden border transition-[border-color,box-shadow]",
+        focused
+          ? "border-focus shadow-[0_0_0_1px_var(--apex-focus)]"
+          : "border-transparent",
       )}
       tabIndex={-1}
       onFocusCapture={() => focusLeaf(tabId, node.id)}
@@ -77,6 +79,7 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
       <PaneBar
         tabId={tabId}
         leaf={node}
+        focused={focused}
         extra={
           node.view.type === "file" ? (
             <FileExtras
