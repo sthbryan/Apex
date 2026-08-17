@@ -163,6 +163,7 @@ async fn ensure_running(socket: &Path) -> Result<()> {
     let binary = daemon_binary()?;
     tracing::info!(binary = %binary.display(), "starting apexd");
     tokio::process::Command::new(&binary)
+        .env("APEX_HOST_PID", std::process::id().to_string())
         .stdin(std::process::Stdio::null())
         .spawn()
         .with_context(|| format!("spawning {}", binary.display()))?;

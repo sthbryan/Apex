@@ -53,7 +53,11 @@ impl MetricsService {
             let mut sampler = self.sampler.lock().await;
             sampler.refresh();
 
-            let apex_tree = sampler.tree_usage(std::process::id());
+            let root = std::env::var("APEX_HOST_PID")
+                .ok()
+                .and_then(|pid| pid.parse::<u32>().ok())
+                .unwrap_or_else(std::process::id);
+            let apex_tree = sampler.tree_usage(root);
             let apex = ApexUsage {
                 cpu_percent: apex_tree.cpu_percent,
                 memory: apex_tree.memory as f64,
