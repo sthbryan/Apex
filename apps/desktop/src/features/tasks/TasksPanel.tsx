@@ -92,9 +92,15 @@ function Row({ task, session }: { task: TaskSummary; session: SessionSummary | n
               openInNewTab(session);
             }
           }}
-          class="flex min-w-0 flex-1 items-baseline gap-2 py-px text-left"
+          class="flex min-w-0 flex-1 items-center gap-2 py-px text-left"
         >
-          <span class={cn("truncate", session ? "text-text" : "text-muted")}>{task.name}</span>
+          {session && (
+            <span
+              aria-hidden="true"
+              class="size-1.5 shrink-0 animate-pulse rounded-full bg-state-working"
+            />
+          )}
+          <span class={cn("min-w-0 truncate", session ? "text-text" : "text-muted")}>{task.name}</span>
           {port !== null && <span class="shrink-0 text-state-done">:{port}</span>}
           <span class="ml-auto shrink-0 truncate text-faint opacity-0 transition-opacity group-hover:opacity-100">
             {task.command}
