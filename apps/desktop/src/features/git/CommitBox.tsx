@@ -26,7 +26,7 @@ export function CommitBox({ status }: { status: GitStatus }) {
   };
 
   return (
-    <div class="shrink-0 border-t border-border bg-surface">
+    <div class="shrink-0 border-t border-border bg-surface mt-auto">
       <textarea
         rows={5}
         value={message}
