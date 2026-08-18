@@ -5,7 +5,7 @@ acp_command = "npx"
 acp_args = ["@zed-industries/codex-acp"]
 
 [state_patterns]
-blocked = ["\\(y/n\\)", "Allow command"]
+blocked = ["\\(y/n\\)", "Allow command", "Do you trust"]
 
 [quota]
 source = "command"
