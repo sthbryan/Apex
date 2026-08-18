@@ -123,3 +123,18 @@ fn ansi_stripping_keeps_the_readable_text() {
     assert_eq!(strip_ansi(b"\x1b]0;titulo\x07visible"), "visible");
     assert_eq!(strip_ansi(b"line\r\nnext"), "line\nnext");
 }
+
+#[test]
+fn spacing_drawn_with_cursor_moves_survives_stripping() {
+    assert_eq!(strip_ansi(b"\x1b[2GDo\x1b[5Gyou\x1b[9Gtrust"), " Do you trust");
+    assert_eq!(strip_ansi(b"uno\x1b[3Cdos"), "uno   dos");
+    assert_eq!(strip_ansi(b"\x1b[1;1H>\x1b[1;3HYou\x1b[2;3Hare"), "\n> You\n  are");
+}
+
+#[test]
+fn a_prompt_drawn_word_by_word_still_blocks() {
+    let (mut waiting, now) = detector(&["Do you trust"], &[]);
+    waiting.observe(b"\x1b[3;3HDo\x1b[3;6Hyou\x1b[3;10Htrust\x1b[3;16Hthis", now);
+    waiting.poll(now + Duration::from_millis(80));
+    assert_eq!(waiting.state(), SessionState::Blocked);
+}
