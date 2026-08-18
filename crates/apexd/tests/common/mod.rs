@@ -121,6 +121,17 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
     );
     profiles.upsert(
         AgentProfile::parse(
+            "name = \"mcp-overrides\"\n\
+             command = \"echo\"\n\
+             [mcp]\n\
+             kind = \"overrides\"\n\
+             flag = \"-c\"\n\
+             key = \"mcp_servers.apex\"\n",
+        )
+        .expect("overrides mcp profile"),
+    );
+    profiles.upsert(
+        AgentProfile::parse(
             "name = \"unreachable\"\n\
              command = \"sh\"\n\
              [quota]\n\

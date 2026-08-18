@@ -29,6 +29,7 @@ pub enum McpDelivery {
         prefix: Option<String>,
     },
     Project { path: String, format: McpFormat },
+    Overrides { flag: String, key: String },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

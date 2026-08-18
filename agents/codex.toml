@@ -4,6 +4,11 @@ mode = "pty"
 acp_command = "npx"
 acp_args = ["@zed-industries/codex-acp"]
 
+[mcp]
+kind = "overrides"
+flag = "-c"
+key = "mcp_servers.apex"
+
 [env]
 TERM = ""
 

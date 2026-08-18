@@ -32,6 +32,15 @@ pub fn offer(
             let value = format!("{}{}", prefix.as_deref().unwrap_or_default(), path.display());
             Ok(Some(vec![flag.clone(), value]))
         }
+        McpDelivery::Overrides { flag, key } => {
+            let args = vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()];
+            Ok(Some(vec![
+                flag.clone(),
+                format!("{key}.command={}", serde_json::to_string(&launcher)?),
+                flag.clone(),
+                format!("{key}.args={}", serde_json::to_string(&args)?),
+            ]))
+        }
         McpDelivery::Project { path, format } => {
             let args = vec!["mcp".to_owned()];
             let target = cwd.join(path);
