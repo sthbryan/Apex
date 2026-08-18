@@ -2,6 +2,11 @@ name = "copilot"
 command = "copilot"
 mode = "pty"
 
+[mcp]
+kind = "flag"
+flag = "--additional-mcp-config"
+prefix = "@"
+
 [state_patterns]
 blocked = ["\\(y/n\\)", "Do you trust", "Confirm folder trust"]
 

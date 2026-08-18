@@ -450,6 +450,43 @@ async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
 }
 
 #[tokio::test]
+async fn an_agent_that_wants_a_marked_path_gets_the_flag_prefixed() {
+    let home = tempfile::tempdir().expect("tempdir");
+    let paths = apex_core::ApexPaths::rooted_at(home.path());
+    let manager = manager_at(&paths);
+    let root = tempfile::tempdir().expect("project");
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
+
+    let session = manager
+        .create(NewSession {
+            project,
+            agent: "mcp-prefixed".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("session");
+
+    let wanted = format!("@{}", paths.mcp_dir().join(format!("{}.json", session.id)).display());
+    let echoed = timeout(std::time::Duration::from_secs(30), async {
+        loop {
+            let transcript = manager.transcript(session.id, 8192, false).await.expect("transcript");
+            if transcript.contains(&wanted) {
+                return transcript;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        }
+    })
+    .await;
+    assert!(echoed.is_ok(), "the prefixed flag never reached the agent");
+}
+
+#[tokio::test]
 async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
     let home = tempfile::tempdir().expect("tempdir");
     let paths = apex_core::ApexPaths::rooted_at(home.path());

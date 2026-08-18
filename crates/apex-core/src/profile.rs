@@ -25,6 +25,8 @@ pub enum McpDelivery {
         flag: String,
         #[serde(default)]
         merge_from: Option<String>,
+        #[serde(default)]
+        prefix: Option<String>,
     },
     Project { path: String, format: McpFormat },
 }

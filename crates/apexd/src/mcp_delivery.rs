@@ -15,7 +15,7 @@ pub fn offer(
     let launcher = binary.display().to_string();
 
     match delivery {
-        McpDelivery::Flag { flag, merge_from } => {
+        McpDelivery::Flag { flag, merge_from, prefix } => {
             let dir = paths.mcp_dir();
             std::fs::create_dir_all(&dir)
                 .with_context(|| format!("creating {}", dir.display()))?;
@@ -29,7 +29,8 @@ pub fn offer(
 
             std::fs::write(&path, render(McpFormat::Claude, &launcher, &args, existing)?)
                 .with_context(|| format!("writing {}", path.display()))?;
-            Ok(Some(vec![flag.clone(), path.display().to_string()]))
+            let value = format!("{}{}", prefix.as_deref().unwrap_or_default(), path.display());
+            Ok(Some(vec![flag.clone(), value]))
         }
         McpDelivery::Project { path, format } => {
             let args = vec!["mcp".to_owned()];

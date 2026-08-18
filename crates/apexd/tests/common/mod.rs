@@ -110,6 +110,17 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
     );
     profiles.upsert(
         AgentProfile::parse(
+            "name = \"mcp-prefixed\"\n\
+             command = \"echo\"\n\
+             [mcp]\n\
+             kind = \"flag\"\n\
+             flag = \"--additional-mcp-config\"\n\
+             prefix = \"@\"\n",
+        )
+        .expect("prefixed mcp profile"),
+    );
+    profiles.upsert(
+        AgentProfile::parse(
             "name = \"unreachable\"\n\
              command = \"sh\"\n\
              [quota]\n\
