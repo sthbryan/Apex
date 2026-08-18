@@ -177,3 +177,21 @@ fn a_layout_round_trips_and_overwrites() {
 fn a_layout_needs_an_existing_project() {
     assert!(store().save_layout(Uuid::new_v4(), "{}").is_err());
 }
+
+#[test]
+fn deleting_a_project_takes_its_sessions_and_layout_with_it() {
+    let store = store();
+    let dir = tempfile::tempdir().expect("tempdir");
+    let project = store.open_project(dir.path()).expect("project");
+    store
+        .insert_session(project.id, "claude", "refactor", "/tmp/apex", None)
+        .expect("session");
+    store.save_layout(project.id, "{\"tabs\":[]}").expect("save");
+
+    store.delete_project(project.id).expect("delete");
+
+    assert_eq!(store.project(project.id).expect("lookup"), None);
+    assert_eq!(store.list_projects().expect("list"), vec![]);
+    assert_eq!(store.load_layout(project.id).expect("layout"), None);
+    assert_eq!(store.list_open_sessions(project.id).expect("sessions"), vec![]);
+}

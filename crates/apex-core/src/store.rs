@@ -126,6 +126,12 @@ impl Store {
             .optional()?)
     }
 
+    pub fn delete_project(&self, id: Uuid) -> Result<()> {
+        self.connection
+            .execute("DELETE FROM projects WHERE id = ?1", params![id.to_string()])?;
+        Ok(())
+    }
+
     pub fn list_projects(&self) -> Result<Vec<Project>> {
         let mut statement = self.connection.prepare(
             "SELECT id, name, root, is_git FROM projects
