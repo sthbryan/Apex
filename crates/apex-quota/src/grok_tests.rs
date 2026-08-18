@@ -14,6 +14,35 @@ fn the_billing_answer_yields_one_window() {
 }
 
 #[test]
+fn a_plan_with_a_limit_yields_the_share_it_spent() {
+    let payload: serde_json::Value = serde_json::from_str(
+        r#"{"config":{"monthlyLimit":{"val":200},"used":{"val":44},
+            "billingPeriodEnd":"2026-09-01T00:00:00+00:00"}}"#,
+    )
+    .expect("payload");
+    let report = parse("grok", &payload).expect("report");
+    assert_eq!(report.windows[0].used_percent, 22);
+    assert_eq!(report.windows[0].resets_at.as_deref(), Some("2026-09-01T00:00:00+00:00"));
+}
+
+#[test]
+fn the_spent_amount_is_read_under_either_name() {
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"config":{"monthlyLimit":{"val":50},"totalUsed":{"val":5}}}"#)
+            .expect("payload");
+    assert_eq!(parse("grok", &payload).expect("report").windows[0].used_percent, 10);
+}
+
+#[test]
+fn a_plan_without_a_limit_reports_nothing_instead_of_zero() {
+    let payload: serde_json::Value = serde_json::from_str(
+        r#"{"config":{"monthlyLimit":{"val":0},"used":{"val":44},"isUnifiedBillingUser":true}}"#,
+    )
+    .expect("payload");
+    assert!(parse("grok", &payload).is_none());
+}
+
+#[test]
 fn a_token_is_found_however_the_auth_file_nests_it() {
     let flat: serde_json::Value = serde_json::from_str(r#"{"key":"plano"}"#).expect("flat");
     assert_eq!(read_token(&flat).as_deref(), Some("plano"));
@@ -30,6 +59,5 @@ fn a_token_is_found_however_the_auth_file_nests_it() {
 #[ignore = "needs a signed-in grok"]
 async fn the_real_billing_answers() {
     let env: std::collections::BTreeMap<String, String> = std::env::vars().collect();
-    let report = read("grok", &env).await.expect("report");
-    println!("{report:?}");
+    println!("{:?}", read("grok", &env).await);
 }

@@ -3,18 +3,21 @@ use std::path::PathBuf;
 
 use crate::{QuotaReport, QuotaWindow, get_json, home, iso_from_epoch, percent};
 
-const BILLING: &str = "https://cli-chat-proxy.grok.com/v1/billing?format=credits";
+const CREDITS: &str = "https://cli-chat-proxy.grok.com/v1/billing?format=credits";
+const BILLING: &str = "https://cli-chat-proxy.grok.com/v1/billing";
 
 pub async fn read(agent: &str, env: &BTreeMap<String, String>) -> Option<QuotaReport> {
     let token = token(env)?;
-    let payload = get_json(
-        BILLING,
-        &[
-            ("authorization", format!("Bearer {token}")),
-            ("x-xai-token-auth", "xai-grok-cli".to_string()),
-        ],
-    )
-    .await?;
+    let headers = [
+        ("authorization", format!("Bearer {token}")),
+        ("x-xai-token-auth", "xai-grok-cli".to_string()),
+    ];
+    if let Some(report) =
+        get_json(CREDITS, &headers).await.and_then(|payload| parse(agent, &payload))
+    {
+        return Some(report);
+    }
+    let payload = get_json(BILLING, &headers).await?;
     parse(agent, &payload)
 }
 
@@ -46,7 +49,7 @@ fn read_token(value: &serde_json::Value) -> Option<String> {
 
 fn parse(agent: &str, payload: &serde_json::Value) -> Option<QuotaReport> {
     let config = payload.get("config").unwrap_or(payload);
-    let used = config.get("creditUsagePercent")?.as_f64()?;
+    let used = used_percent(config)?;
     let window = QuotaWindow {
         label: None,
         used_percent: percent(used),
@@ -56,10 +59,27 @@ fn parse(agent: &str, payload: &serde_json::Value) -> Option<QuotaReport> {
         resets_at: config
             .get("currentPeriod")
             .and_then(|period| period.get("end"))
+            .or_else(|| config.get("billingPeriodEnd"))
             .and_then(reset_time),
         reset_description: None,
     };
     Some(QuotaReport { agent: agent.to_string(), windows: vec![window], updated_at: None })
+}
+
+fn used_percent(config: &serde_json::Value) -> Option<f64> {
+    if let Some(direct) = config.get("creditUsagePercent").and_then(serde_json::Value::as_f64) {
+        return Some(direct);
+    }
+    let limit = amount(config.get("monthlyLimit")?)?;
+    if limit <= 0.0 {
+        return None;
+    }
+    let used = config.get("used").or_else(|| config.get("totalUsed")).and_then(amount)?;
+    Some(used / limit * 100.0)
+}
+
+fn amount(value: &serde_json::Value) -> Option<f64> {
+    value.get("val").and_then(serde_json::Value::as_f64)
 }
 
 fn reset_time(value: &serde_json::Value) -> Option<String> {
