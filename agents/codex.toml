@@ -4,6 +4,9 @@ mode = "pty"
 acp_command = "npx"
 acp_args = ["@zed-industries/codex-acp"]
 
+[env]
+TERM = ""
+
 [state_patterns]
 blocked = ["\\(y/n\\)", "Allow command", "Do you trust"]
 

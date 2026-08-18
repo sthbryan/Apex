@@ -74,10 +74,15 @@ impl PtyProcess {
         builder.args(&spec.args);
         builder.cwd(&spec.cwd);
         builder.env_clear();
-        builder.env("TERM", "xterm-256color");
-        builder.env("COLORTERM", "truecolor");
+        for (key, value) in [("TERM", "dumb"), ("COLORTERM", "truecolor")] {
+            if !spec.env.contains_key(key) {
+                builder.env(key, value);
+            }
+        }
         for (key, value) in &spec.env {
-            builder.env(key, value);
+            if !value.is_empty() {
+                builder.env(key, value);
+            }
         }
 
         let mut child = pair

@@ -110,6 +110,15 @@ async fn the_parent_environment_does_not_leak_into_the_child() {
 }
 
 #[tokio::test]
+async fn an_empty_spec_value_unsets_the_variable() {
+    let mut spec = shell("echo colour:[${COLORTERM}]");
+    spec.env.insert("COLORTERM".into(), String::new());
+    let process = PtyProcess::spawn(spec).expect("spawn");
+    let text = wait_for(&process, "colour:").await;
+    assert!(text.contains("colour:[]"), "{text}");
+}
+
+#[tokio::test]
 async fn the_spec_environment_reaches_the_child() {
     let mut spec = shell("echo value:[${APEX_INJECTED}]");
     spec.env.insert("APEX_INJECTED".into(), "present".into());
