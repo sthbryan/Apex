@@ -12,11 +12,3 @@ format = "opencode"
 [state_patterns]
 blocked = ["\\(y/n\\)"]
 
-[quota]
-cache_ttl_secs = 900
-
-[[quota.sources]]
-kind = "command"
-format = "codexbar"
-command = "codexbar"
-args = ["usage", "--json", "--provider", "opencode"]
