@@ -136,7 +136,10 @@ async fn run_env_probe(shell: &Path, flags: &[&str]) -> Option<BTreeMap<String, 
     if !output.status.success() {
         return None;
     }
-    Some(parse_env(&output.stdout))
+    let mut env = parse_env(&output.stdout);
+    env.remove("TERM");
+    env.remove("COLORTERM");
+    Some(env)
 }
 
 fn parse_env(raw: &[u8]) -> BTreeMap<String, String> {

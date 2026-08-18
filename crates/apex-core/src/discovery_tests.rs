@@ -81,6 +81,15 @@ async fn the_probe_does_not_inherit_the_parent_environment() {
 }
 
 #[tokio::test]
+async fn the_probe_does_not_hand_back_its_dumb_terminal() {
+    let env = ShellEnvironment::probe_with_shell(Path::new("/bin/sh")).await;
+    if env.source() == ProbeSource::InheritedPath {
+        return;
+    }
+    assert!(!env.env().contains_key("TERM"));
+}
+
+#[tokio::test]
 async fn probing_a_real_shell_captures_the_whole_environment() {
     let env = ShellEnvironment::probe_with_shell(Path::new("/bin/sh")).await;
     assert!(!env.search_path().is_empty());
