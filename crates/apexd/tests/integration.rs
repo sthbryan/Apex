@@ -1257,7 +1257,11 @@ async fn a_provider_that_cannot_be_reached_does_not_hide_the_others() {
     };
 
     let reported: Vec<&str> = snapshot.quotas.iter().map(|q| q.agent.as_str()).collect();
-    assert!(!reported.contains(&"unreachable"), "the failing provider should report nothing");
+    assert!(!reported.contains(&"unreachable"), "the failing provider should report no windows");
+    assert!(
+        snapshot.quota_failures.contains(&"unreachable".to_string()),
+        "the failing provider should say so instead of vanishing"
+    );
     assert!(snapshot.system.memory_total > 0.0, "system metrics broke alongside quota");
 }
 

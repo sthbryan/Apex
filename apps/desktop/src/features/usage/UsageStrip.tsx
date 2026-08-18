@@ -7,6 +7,7 @@ import { resetText, tone } from "@/features/usage/format";
 import { UsagePopover } from "@/features/usage/UsagePopover";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
+import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
 const SHOWN = 2;
@@ -32,7 +33,8 @@ export function UsageStrip() {
     return () => window.removeEventListener("mousedown", dismiss);
   }, [open]);
 
-  if (reports.length === 0) {
+  const failures = metrics.value?.quota_failures ?? [];
+  if (reports.length === 0 && failures.length === 0) {
     return null;
   }
 
@@ -57,6 +59,9 @@ export function UsageStrip() {
           <Chip key={`${entry.agent}:${entry.window.label ?? ""}`} entry={entry} />
         ))}
         {hidden > 0 && <span class="shrink-0 text-faint">+{hidden}</span>}
+        {failures.length > 0 && (
+          <Icon size={11} name="activity" class="shrink-0 text-state-failed" />
+        )}
       </button>
 
       {popover.mounted && (
@@ -67,7 +72,11 @@ export function UsageStrip() {
             "animate-drop-in": !popover.leaving,
           })}
         >
-          <UsagePopover reports={reports} onClose={() => setOpen(false)} />
+          <UsagePopover
+            reports={reports}
+            failures={metrics.value?.quota_failures ?? []}
+            onClose={() => setOpen(false)}
+          />
         </div>
       )}
     </div>

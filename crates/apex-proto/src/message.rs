@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 11;
+pub const PROTOCOL_VERSION: u32 = 12;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -470,6 +470,7 @@ pub struct MetricsSnapshot {
     pub system: SystemUsage,
     pub sessions: Vec<SessionUsage>,
     pub quotas: Vec<QuotaReport>,
+    pub quota_failures: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

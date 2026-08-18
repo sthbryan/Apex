@@ -9,10 +9,11 @@ import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   reports: QuotaReport[];
+  failures: string[];
   onClose: () => void;
 };
 
-export function UsagePopover({ reports, onClose }: Props) {
+export function UsagePopover({ reports, failures, onClose }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const updatedAgo = reports.some((report) => report.updated_at)
     ? countdown(
@@ -55,7 +56,25 @@ export function UsagePopover({ reports, onClose }: Props) {
       </header>
 
       <div class="max-h-80 overflow-y-auto py-1">
-        {reports.length === 0 ? (
+        {failures.map((agent) => (
+          <section key={agent} class="flex items-baseline gap-1 px-2.5 py-1">
+            <h3 class="text-micro uppercase tracking-wider text-faint">{agent}</h3>
+            <span class="ml-auto shrink-0 text-[11px] text-state-failed">
+              {t("usage.unavailable")}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setRefreshing(true);
+                void refreshQuota().finally(() => setRefreshing(false));
+              }}
+              class="shrink-0 text-[11px] text-faint underline transition-colors hover:text-text"
+            >
+              {t("usage.retry")}
+            </button>
+          </section>
+        ))}
+        {reports.length === 0 && failures.length === 0 ? (
           <p class="px-2.5 py-2 text-faint">{t("resources.noQuota")}</p>
         ) : (
           reports.map((report) => {

@@ -52,6 +52,8 @@ export const en = {
     resetsIn: "resets in {away} · {when}",
     resetsAt: "resets {when}",
     overPace: "over pace",
+    unavailable: "no data",
+    retry: "Retry",
   },
   resources: {
     sampling: "Sampling…",

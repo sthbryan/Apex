@@ -128,17 +128,17 @@ impl MetricsService {
             }
         };
 
-        let quotas = if refresh_quota {
+        let (quotas, quota_failures) = if refresh_quota {
             self.refresh_quotas().await
         } else {
             let cached = self.cached_quotas().await;
-            if cached.is_empty() {
+            if cached.0.is_empty() && cached.1.is_empty() {
                 self.kick_refresh().await;
             }
             cached
         };
 
-        MetricsSnapshot { apex, system, sessions, quotas }
+        MetricsSnapshot { apex, system, sessions, quotas, quota_failures }
     }
 
     pub async fn kill_process(&self, pid: u32) -> Result<()> {
@@ -149,20 +149,22 @@ impl MetricsService {
         Ok(())
     }
 
-    async fn cached_quotas(&self) -> Vec<QuotaReport> {
+    async fn cached_quotas(&self) -> (Vec<QuotaReport>, Vec<String>) {
         let cache = self.quotas.lock().await;
-        self.profiles
-            .iter()
-            .filter_map(|profile| {
-                let ttl = profile
-                    .quota
-                    .as_ref()
-                    .map(|config| Duration::from_secs(config.cache_ttl_secs.max(1)))
-                    .unwrap_or(Duration::from_secs(900));
-                cache.peek(&profile.name, ttl).flatten()
-            })
-            .map(proto_report)
-            .collect()
+        let mut reports = Vec::new();
+        let mut failures = Vec::new();
+        for profile in self.profiles.iter() {
+            let Some(config) = &profile.quota else {
+                continue;
+            };
+            let ttl = Duration::from_secs(config.cache_ttl_secs.max(1));
+            match cache.peek(&profile.name, ttl) {
+                Some(Some(report)) => reports.push(proto_report(report)),
+                Some(None) => failures.push(profile.name.clone()),
+                None => {}
+            }
+        }
+        (reports, failures)
     }
 
     async fn kick_refresh(&self) {
@@ -174,7 +176,7 @@ impl MetricsService {
         *running = Some(handle);
     }
 
-    async fn refresh_quotas(&self) -> Vec<QuotaReport> {
+    async fn refresh_quotas(&self) -> (Vec<QuotaReport>, Vec<String>) {
         let handle = {
             let mut running = self.running.lock().await;
             match running.take() {
@@ -223,6 +225,7 @@ async fn run_quota_refresh(
                 .collect::<Vec<Prepared>>()
         };
         if prepared.is_empty() {
+            quotas.lock().await.store(&profile.name, None);
             continue;
         }
         targets.push((profile.name.clone(), prepared));

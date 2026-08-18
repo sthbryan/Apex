@@ -53,6 +53,7 @@ export function UsageChip() {
         >
           <UsagePopover
             reports={metrics.value?.quotas ?? []}
+            failures={metrics.value?.quota_failures ?? []}
             onClose={() => {
               usageOpen.value = false;
             }}

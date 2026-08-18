@@ -54,6 +54,8 @@ export const es: Messages = {
     resetsIn: "reinicia en {away} · {when}",
     resetsAt: "reinicia {when}",
     overPace: "acelerado",
+    unavailable: "sin datos",
+    retry: "Reintentar",
   },
   resources: {
     sampling: "Midiendo…",
