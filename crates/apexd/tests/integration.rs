@@ -527,6 +527,53 @@ async fn an_agent_configured_by_overrides_gets_them_on_its_command_line() {
 }
 
 #[tokio::test]
+async fn an_agent_with_one_shared_config_gets_it_merged_and_taken_back_out() {
+    let home = tempfile::tempdir().expect("tempdir");
+    let paths = apex_core::ApexPaths::rooted_at(home.path());
+    let shared = home.path().join(".apex-test-shared-mcp.json");
+    std::fs::write(&shared, r#"{"mcpServers":{"theirs":{"command":"keep-me"}}}"#).expect("seed");
+
+    let manager = manager_at(&paths);
+    let root = tempfile::tempdir().expect("project");
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
+
+    let spawn = || async {
+        manager
+            .create(NewSession {
+                project,
+                agent: "mcp-shared".into(),
+                cwd: None,
+                size: TerminalSize::default(),
+                isolation: Isolation::Directory,
+                slug: None,
+                mode: None,
+                parent: None,
+            })
+            .await
+            .expect("session")
+    };
+    let first = spawn().await;
+    let second = spawn().await;
+
+    let written: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&shared).expect("read")).expect("json");
+    assert_eq!(written["mcpServers"]["theirs"]["command"], "keep-me");
+    assert_eq!(written["mcpServers"]["apex"]["args"], serde_json::json!(["mcp"]));
+
+    manager.close(first.id, WorktreeDisposal::Keep).await.expect("close");
+    let midway: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&shared).expect("read")).expect("json");
+    assert!(midway["mcpServers"]["apex"].is_object(), "the last session still needs it");
+
+    manager.close(second.id, WorktreeDisposal::Keep).await.expect("close");
+    let after: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&shared).expect("read")).expect("json");
+    assert!(after["mcpServers"]["apex"].is_null(), "ours should be gone");
+    assert_eq!(after["mcpServers"]["theirs"]["command"], "keep-me");
+}
+
+#[tokio::test]
 async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
     let home = tempfile::tempdir().expect("tempdir");
     let paths = apex_core::ApexPaths::rooted_at(home.path());

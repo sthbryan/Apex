@@ -41,6 +41,20 @@ pub fn offer(
                 format!("{key}.args={}", serde_json::to_string(&args)?),
             ]))
         }
+        McpDelivery::Shared { path } => {
+            let target = expand_home(path, &paths.home);
+            if let Some(parent) = target.parent() {
+                std::fs::create_dir_all(parent)
+                    .with_context(|| format!("creating {}", parent.display()))?;
+            }
+            let existing = std::fs::read(&target)
+                .ok()
+                .and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok());
+            let args = vec!["mcp".to_owned()];
+            std::fs::write(&target, render(McpFormat::Claude, &launcher, &args, existing)?)
+                .with_context(|| format!("writing {}", target.display()))?;
+            Ok(None)
+        }
         McpDelivery::Project { path, format } => {
             let args = vec!["mcp".to_owned()];
             let target = cwd.join(path);
@@ -63,6 +77,28 @@ pub fn offer(
             Ok(None)
         }
     }
+}
+
+pub fn withdraw(delivery: &McpDelivery, home: &Path) -> Result<()> {
+    let McpDelivery::Shared { path } = delivery else {
+        return Ok(());
+    };
+    let target = expand_home(path, home);
+    let Some(mut config) = std::fs::read(&target)
+        .ok()
+        .and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok())
+    else {
+        return Ok(());
+    };
+    let Some(servers) = config.get_mut("mcpServers").and_then(|servers| servers.as_object_mut())
+    else {
+        return Ok(());
+    };
+    if servers.remove("apex").is_none() {
+        return Ok(());
+    }
+    std::fs::write(&target, serde_json::to_string_pretty(&config)?)
+        .with_context(|| format!("writing {}", target.display()))
 }
 
 pub fn launcher() -> Result<String> {

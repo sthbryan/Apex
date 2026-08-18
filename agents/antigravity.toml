@@ -2,6 +2,10 @@ name = "antigravity"
 command = "agy"
 mode = "pty"
 
+[mcp]
+kind = "shared"
+path = "~/.gemini/config/mcp_config.json"
+
 [state_patterns]
 blocked = ["\\(y/n\\)", "Allow this", "Approve", "Do you trust"]
 

@@ -132,6 +132,16 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
     );
     profiles.upsert(
         AgentProfile::parse(
+            "name = \"mcp-shared\"\n\
+             command = \"echo\"\n\
+             [mcp]\n\
+             kind = \"shared\"\n\
+             path = \"~/.apex-test-shared-mcp.json\"\n",
+        )
+        .expect("shared mcp profile"),
+    );
+    profiles.upsert(
+        AgentProfile::parse(
             "name = \"unreachable\"\n\
              command = \"sh\"\n\
              [quota]\n\

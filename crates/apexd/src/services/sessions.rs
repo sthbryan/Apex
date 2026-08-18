@@ -98,6 +98,13 @@ impl SessionRegistry {
         events: broadcast::Sender<Event>,
     ) -> Self {
         let sessions = Arc::new(RwLock::new(HashMap::new()));
+        for profile in profiles.iter() {
+            if let Some(delivery) = &profile.mcp
+                && let Err(error) = crate::mcp_delivery::withdraw(delivery, &paths.home)
+            {
+                tracing::warn!(agent = %profile.name, %error, "could not clear a stale MCP entry");
+            }
+        }
         Self { paths, profiles, base_env, resolver, store, sessions, events }
     }
 
@@ -214,10 +221,28 @@ impl SessionRegistry {
             }
         }
 
+        self.withdraw_shared_mcp(&summary.agent).await;
+
         let store = self.store.lock().await;
         store.close_session(id)?;
         let _ = self.events.send(Event::SessionClosed { id });
         Ok(())
+    }
+
+    async fn withdraw_shared_mcp(&self, agent: &str) {
+        let Some(delivery) = self.profiles.get(agent).and_then(|profile| profile.mcp.clone()) else {
+            return;
+        };
+        let sessions = self.sessions.read().await;
+        for session in sessions.values() {
+            if session.summary.lock().await.agent == agent {
+                return;
+            }
+        }
+        drop(sessions);
+        if let Err(error) = crate::mcp_delivery::withdraw(&delivery, &self.paths.home) {
+            tracing::warn!(%agent, %error, "could not take our MCP entry back out");
+        }
     }
 
     pub async fn kill_all(&self) {
