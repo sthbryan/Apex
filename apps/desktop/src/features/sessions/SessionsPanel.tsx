@@ -85,7 +85,7 @@ export function SessionsPanel() {
 
 function StartHere() {
   const project = activeProject.value;
-  const offered = installedAgents.value.slice(0, OFFERED_AGENTS);
+  const offered = installedAgents.value.sort(() => Math.random() - 0.5).slice(0, OFFERED_AGENTS);
 
   return (
     <div class="flex flex-col gap-2">
