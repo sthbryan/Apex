@@ -4,7 +4,7 @@ use apex_proto::SessionState;
 use regex::Regex;
 
 pub const QUIESCENCE: Duration = Duration::from_millis(600);
-const TAIL_LIMIT: usize = 4096;
+const SCROLLBACK: usize = 0;
 
 #[derive(Debug, Default)]
 pub struct StatePatterns {
@@ -34,18 +34,18 @@ fn compile_all(sources: &[String]) -> Vec<Regex> {
 pub struct StateDetector {
     patterns: StatePatterns,
     quiescence: Duration,
-    tail: String,
+    screen: vt100::Parser,
     last_output: Instant,
     resting: SessionState,
     state: SessionState,
 }
 
 impl StateDetector {
-    pub fn new(patterns: StatePatterns, now: Instant) -> Self {
+    pub fn new(patterns: StatePatterns, rows: u16, cols: u16, now: Instant) -> Self {
         Self {
             patterns,
             quiescence: QUIESCENCE,
-            tail: String::new(),
+            screen: vt100::Parser::new(rows.max(1), cols.max(1), SCROLLBACK),
             last_output: now,
             resting: SessionState::Idle,
             state: SessionState::Idle,
@@ -61,15 +61,20 @@ impl StateDetector {
         self.state
     }
 
+    pub fn resize(&mut self, rows: u16, cols: u16) {
+        self.screen.screen_mut().set_size(rows.max(1), cols.max(1));
+    }
+
     pub fn observe(&mut self, chunk: &[u8], now: Instant) -> Option<SessionState> {
-        let visible = strip_ansi(chunk);
-        if visible.trim().is_empty() {
+        if chunk.is_empty() {
             return None;
         }
-        self.tail.push_str(&visible);
-        self.trim_tail();
+        self.screen.process(chunk);
+        self.resting = self.classify();
+        if strip_ansi(chunk).trim().is_empty() {
+            return None;
+        }
         self.last_output = now;
-        self.resting = self.classify_tail();
         self.transition(SessionState::Working)
     }
 
@@ -95,27 +100,17 @@ impl StateDetector {
         Some(next)
     }
 
-    fn classify_tail(&self) -> SessionState {
-        if self.patterns.blocked.iter().any(|pattern| pattern.is_match(&self.tail)) {
+    fn classify(&self) -> SessionState {
+        let visible = self.screen.screen().contents();
+        if self.patterns.blocked.iter().any(|pattern| pattern.is_match(&visible)) {
             return SessionState::Blocked;
         }
-        if self.patterns.done.iter().any(|pattern| pattern.is_match(&self.tail)) {
+        if self.patterns.done.iter().any(|pattern| pattern.is_match(&visible)) {
             return SessionState::Done;
         }
         SessionState::Idle
     }
-
-    fn trim_tail(&mut self) {
-        if self.tail.len() > TAIL_LIMIT {
-            let cut = self.tail.len() - TAIL_LIMIT;
-            let boundary = (cut..self.tail.len())
-                .find(|index| self.tail.is_char_boundary(*index))
-                .unwrap_or(self.tail.len());
-            self.tail.drain(..boundary);
-        }
-    }
 }
-
 pub fn strip_ansi(raw: &[u8]) -> String {
     let text = String::from_utf8_lossy(raw);
     let mut out = String::with_capacity(text.len());

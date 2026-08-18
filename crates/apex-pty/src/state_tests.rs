@@ -6,7 +6,7 @@ fn detector(blocked: &[&str], done: &[&str]) -> (StateDetector, Instant) {
         &blocked.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
         &done.iter().map(|s| (*s).to_string()).collect::<Vec<_>>(),
     );
-    (StateDetector::new(patterns, now).with_quiescence(Duration::from_millis(50)), now)
+    (StateDetector::new(patterns, 40, 120, now).with_quiescence(Duration::from_millis(50)), now)
 }
 
 #[test]
@@ -81,11 +81,20 @@ fn answering_a_prompt_returns_the_session_to_working() {
 }
 
 #[test]
-fn a_prompt_that_scrolled_out_of_the_tail_stops_counting() {
+fn a_prompt_that_scrolled_off_the_screen_stops_counting() {
     let (mut detector, now) = detector(&["PROMPT-MARKER"], &[]);
     detector.observe(b"PROMPT-MARKER", now);
-    detector.observe(&vec![b'x'; TAIL_LIMIT + 100], now);
+    detector.observe(&vec![b'\n'; 60], now);
     assert_eq!(detector.poll(now + Duration::from_millis(80)), Some(SessionState::Idle));
+}
+
+#[test]
+fn a_prompt_painted_over_by_a_redraw_stops_counting() {
+    let (mut detector, now) = detector(&["Do you trust"], &[]);
+    detector.observe(b"\x1b[3;3HDo you trust this folder", now);
+    detector.poll(now + Duration::from_millis(80));
+    detector.observe(b"\x1b[3;3H\x1b[KAntigravity CLI 1.1.14", now);
+    assert_eq!(detector.poll(now + Duration::from_millis(200)), Some(SessionState::Idle));
 }
 
 #[test]

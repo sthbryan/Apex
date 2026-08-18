@@ -342,7 +342,7 @@ impl SessionRegistry {
         let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
         self.sessions.write().await.insert(record.id, session.clone());
         let _ = self.events.send(Event::SessionOpened { session: summary.clone() });
-        self.watch_state(record.id, session.clone(), &profile);
+        self.watch_state(record.id, session.clone(), &profile, size);
         self.watch_exit(record.id, session);
 
         Ok(summary)
@@ -389,7 +389,13 @@ impl SessionRegistry {
         Ok(WorktreeInfo { path: created.path.display().to_string(), branch: created.branch })
     }
 
-    fn watch_state(self: &Arc<Self>, id: Uuid, session: Arc<LiveSession>, profile: &AgentProfile) {
+    fn watch_state(
+        self: &Arc<Self>,
+        id: Uuid,
+        session: Arc<LiveSession>,
+        profile: &AgentProfile,
+        size: TerminalSize,
+    ) {
         let patterns =
             StatePatterns::compile(&profile.state_patterns.blocked, &profile.state_patterns.done);
         let manager = self.clone();
@@ -397,7 +403,7 @@ impl SessionRegistry {
         let produced_before_subscribing = session.process.snapshot();
 
         tokio::spawn(async move {
-            let mut detector = StateDetector::new(patterns, Instant::now());
+            let mut detector = StateDetector::new(patterns, size.rows, size.cols, Instant::now());
             if !produced_before_subscribing.is_empty()
                 && let Some(state) = detector.observe(&produced_before_subscribing, Instant::now())
             {

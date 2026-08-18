@@ -3,7 +3,7 @@ command = "copilot"
 mode = "pty"
 
 [state_patterns]
-blocked = ["\\(y/n\\)"]
+blocked = ["\\(y/n\\)", "Do you trust", "Confirm folder trust"]
 
 [quota]
 source = "command"
