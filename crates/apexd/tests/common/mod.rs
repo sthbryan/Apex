@@ -13,9 +13,6 @@ use apexd::sessions::SessionManager;
 use tokio::time::timeout;
 use uuid::Uuid;
 
-const QUOTA_SAMPLE: &str =
-    r#"[{"provider":"answering","usage":{"primary":{"windowMinutes":300,"usedPercent":42}}}]"#;
-
 pub fn manager() -> Arc<SessionManager> {
     manager_at(&ApexPaths::rooted_at(&std::env::temp_dir().join("apex-test-home")))
 }
@@ -75,18 +72,6 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         PathBuf::from("/bin"),
         PathBuf::from("/usr/bin"),
     ]));
-    let answering = format!(
-        "name = \"answering\"\n\
-         command = \"sh\"\n\
-         [quota]\n\
-         cache_ttl_secs = 60\n\
-         [[quota.sources]]\n\
-         kind = \"command\"\n\
-         format = \"codexbar\"\n\
-         command = \"echo\"\n\
-         args = ['{QUOTA_SAMPLE}']\n"
-    );
-    profiles.upsert(AgentProfile::parse(&answering).expect("answering profile"));
     profiles.upsert(
         AgentProfile::parse(
             "name = \"mcp-project\"\n\
@@ -148,9 +133,7 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
              [quota]\n\
              cache_ttl_secs = 60\n\
              [[quota.sources]]\n\
-             kind = \"command\"\n\
-             format = \"codexbar\"\n\
-             command = \"false\"\n",
+             kind = \"native\"\n",
         )
         .expect("unreachable profile"),
     );

@@ -1,19 +1,12 @@
 mod antigravity;
 mod claude;
 mod codex;
-mod codexbar;
 mod grok;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
-
-use apex_core::QuotaFormat;
-use tokio::process::Command;
-use tokio::time::timeout;
-
-pub use codexbar::parse;
 
 const RUN_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -37,7 +30,6 @@ pub struct QuotaReport {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Prepared {
-    Command { format: QuotaFormat, binary: PathBuf, args: Vec<String> },
     CodexAppServer { binary: PathBuf },
     AntigravityLanguageServer { binary: PathBuf },
     GrokBilling,
@@ -87,9 +79,6 @@ pub async fn read_first(
 ) -> Option<QuotaReport> {
     for source in sources {
         let report = match source {
-            Prepared::Command { format, binary, args } => run_command(binary, args, env)
-                .await
-                .and_then(|raw| codexbar::parse(*format, agent, &raw)),
             Prepared::CodexAppServer { binary } => codex::read(agent, binary, env).await,
             Prepared::AntigravityLanguageServer { binary } => {
                 antigravity::read(agent, binary, env).await
@@ -102,36 +91,6 @@ pub async fn read_first(
         }
     }
     None
-}
-
-async fn run_command(
-    binary: &Path,
-    args: &[String],
-    env: &BTreeMap<String, String>,
-) -> Option<String> {
-    let mut command = Command::new(binary);
-    command.args(args);
-    command.env_clear();
-    command.envs(env);
-    command.stdin(std::process::Stdio::null());
-    command.kill_on_drop(true);
-
-    let output = match timeout(RUN_TIMEOUT, command.output()).await {
-        Ok(Ok(output)) => output,
-        Ok(Err(error)) => {
-            tracing::debug!(binary = %binary.display(), %error, "failed to read quota");
-            return None;
-        }
-        Err(_) => {
-            tracing::debug!(binary = %binary.display(), "quota read timed out");
-            return None;
-        }
-    };
-
-    if !output.status.success() {
-        return None;
-    }
-    Some(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
 pub(crate) fn window_label(minutes: Option<u64>) -> Option<String> {

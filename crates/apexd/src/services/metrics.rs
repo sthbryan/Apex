@@ -250,11 +250,6 @@ fn prepare(
     resolver: &mut BinaryResolver,
 ) -> Option<Prepared> {
     match source {
-        QuotaSource::Command { format, command, args } => Some(Prepared::Command {
-            format: *format,
-            binary: resolver.resolve(command)?,
-            args: args.clone(),
-        }),
         QuotaSource::Native => Prepared::native(&profile.name, resolver.resolve(&profile.command)?),
     }
 }

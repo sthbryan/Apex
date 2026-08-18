@@ -119,19 +119,7 @@ fn default_label_key() -> String {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum QuotaSource {
-    Command {
-        format: QuotaFormat,
-        command: String,
-        #[serde(default)]
-        args: Vec<String>,
-    },
     Native,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum QuotaFormat {
-    Codexbar,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
