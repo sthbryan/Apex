@@ -1,3 +1,4 @@
+mod codex;
 mod codexbar;
 
 use std::collections::BTreeMap;
@@ -34,6 +35,7 @@ pub struct QuotaReport {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Prepared {
     Command { format: QuotaFormat, binary: PathBuf, args: Vec<String> },
+    CodexAppServer { binary: PathBuf },
 }
 
 #[derive(Default)]
@@ -70,6 +72,7 @@ pub async fn read_first(
             Prepared::Command { format, binary, args } => run_command(binary, args, env)
                 .await
                 .and_then(|raw| codexbar::parse(*format, agent, &raw)),
+            Prepared::CodexAppServer { binary } => codex::read(agent, binary, env).await,
         };
         if report.is_some() {
             return report;
@@ -116,6 +119,14 @@ pub(crate) fn window_label(minutes: Option<u64>) -> Option<String> {
         value if value % 60 == 0 => format!("{}h", value / 60),
         value => format!("{value}m"),
     })
+}
+
+pub(crate) fn iso_from_epoch(seconds: i64) -> Option<String> {
+    chrono::DateTime::from_timestamp(seconds, 0).map(|when| when.to_rfc3339())
+}
+
+pub(crate) fn percent(value: f64) -> u8 {
+    value.clamp(0.0, 100.0).round() as u8
 }
 
 #[cfg(test)]

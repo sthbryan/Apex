@@ -219,7 +219,7 @@ async fn run_quota_refresh(
             config
                 .sources
                 .iter()
-                .filter_map(|source| prepare(source, &mut resolver))
+                .filter_map(|source| prepare(source, &profile.command, &mut resolver))
                 .collect::<Vec<Prepared>>()
         };
         if prepared.is_empty() {
@@ -244,13 +244,20 @@ async fn run_quota_refresh(
     }
 }
 
-fn prepare(source: &QuotaSource, resolver: &mut BinaryResolver) -> Option<Prepared> {
+fn prepare(
+    source: &QuotaSource,
+    agent_command: &str,
+    resolver: &mut BinaryResolver,
+) -> Option<Prepared> {
     match source {
         QuotaSource::Command { format, command, args } => Some(Prepared::Command {
             format: *format,
             binary: resolver.resolve(command)?,
             args: args.clone(),
         }),
+        QuotaSource::CodexAppServer => {
+            Some(Prepared::CodexAppServer { binary: resolver.resolve(agent_command)? })
+        }
     }
 }
 
