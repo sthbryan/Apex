@@ -1,3 +1,4 @@
+mod antigravity;
 mod claude;
 mod codex;
 mod codexbar;
@@ -38,6 +39,7 @@ pub struct QuotaReport {
 pub enum Prepared {
     Command { format: QuotaFormat, binary: PathBuf, args: Vec<String> },
     CodexAppServer { binary: PathBuf },
+    AntigravityLanguageServer { binary: PathBuf },
     GrokBilling,
     ClaudeOauth,
 }
@@ -46,6 +48,7 @@ impl Prepared {
     pub fn native(agent: &str, binary: PathBuf) -> Option<Self> {
         match agent {
             "codex" => Some(Self::CodexAppServer { binary }),
+            "antigravity" => Some(Self::AntigravityLanguageServer { binary }),
             "grok" => Some(Self::GrokBilling),
             "claude" => Some(Self::ClaudeOauth),
             _ => None,
@@ -88,6 +91,9 @@ pub async fn read_first(
                 .await
                 .and_then(|raw| codexbar::parse(*format, agent, &raw)),
             Prepared::CodexAppServer { binary } => codex::read(agent, binary, env).await,
+            Prepared::AntigravityLanguageServer { binary } => {
+                antigravity::read(agent, binary, env).await
+            }
             Prepared::GrokBilling => grok::read(agent, env).await,
             Prepared::ClaudeOauth => claude::read(agent, env).await,
         };
@@ -136,6 +142,10 @@ pub(crate) fn window_label(minutes: Option<u64>) -> Option<String> {
         value if value % 60 == 0 => format!("{}h", value / 60),
         value => format!("{value}m"),
     })
+}
+
+pub(crate) fn loopback_client() -> Option<reqwest::Client> {
+    reqwest::Client::builder().danger_accept_invalid_certs(true).timeout(RUN_TIMEOUT).build().ok()
 }
 
 pub(crate) async fn get_json(url: &str, headers: &[(&str, String)]) -> Option<serde_json::Value> {

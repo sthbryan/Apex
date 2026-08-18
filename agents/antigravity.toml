@@ -13,7 +13,4 @@ blocked = ["\\(y/n\\)", "Allow this", "Approve", "Do you trust"]
 cache_ttl_secs = 900
 
 [[quota.sources]]
-kind = "command"
-format = "codexbar"
-command = "codexbar"
-args = ["usage", "--json", "--provider", "antigravity"]
+kind = "native"

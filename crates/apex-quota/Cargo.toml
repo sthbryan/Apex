@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 apex-core.workspace = true
+apex-pty.workspace = true
 
 chrono.workspace = true
 reqwest.workspace = true
