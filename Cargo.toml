@@ -23,6 +23,7 @@ chrono = { version = "0.4", default-features = false, features = ["std", "clock"
 async-trait = "0.1"
 bytes = "1"
 regex = "1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "http2", "charset", "system-proxy"] }
 futures-util = { version = "0.3", features = ["sink"] }
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }

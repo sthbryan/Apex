@@ -20,6 +20,8 @@ resume_args = ["--resume", "{session_id}"]
 [quota]
 cache_ttl_secs = 900
 
+[[quota.sources]]
+kind = "claude_oauth"
 
 [[quota.sources]]
 kind = "command"

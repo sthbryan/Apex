@@ -1,3 +1,4 @@
+mod claude;
 mod codex;
 mod codexbar;
 
@@ -36,6 +37,7 @@ pub struct QuotaReport {
 pub enum Prepared {
     Command { format: QuotaFormat, binary: PathBuf, args: Vec<String> },
     CodexAppServer { binary: PathBuf },
+    ClaudeOauth,
 }
 
 #[derive(Default)]
@@ -73,6 +75,7 @@ pub async fn read_first(
                 .await
                 .and_then(|raw| codexbar::parse(*format, agent, &raw)),
             Prepared::CodexAppServer { binary } => codex::read(agent, binary, env).await,
+            Prepared::ClaudeOauth => claude::read(agent, env).await,
         };
         if report.is_some() {
             return report;
@@ -119,6 +122,30 @@ pub(crate) fn window_label(minutes: Option<u64>) -> Option<String> {
         value if value % 60 == 0 => format!("{}h", value / 60),
         value => format!("{value}m"),
     })
+}
+
+pub(crate) async fn get_json(url: &str, headers: &[(&str, String)]) -> Option<serde_json::Value> {
+    let client = reqwest::Client::builder().timeout(RUN_TIMEOUT).build().ok()?;
+    let mut request = client.get(url);
+    for (name, value) in headers {
+        request = request.header(*name, value);
+    }
+    let response = match request.send().await {
+        Ok(response) => response,
+        Err(error) => {
+            tracing::debug!(url, %error, "quota request failed");
+            return None;
+        }
+    };
+    if !response.status().is_success() {
+        tracing::debug!(url, status = %response.status(), "quota request rejected");
+        return None;
+    }
+    response.json().await.ok()
+}
+
+pub(crate) fn home(env: &BTreeMap<String, String>) -> Option<PathBuf> {
+    env.get("HOME").map(PathBuf::from)
 }
 
 pub(crate) fn iso_from_epoch(seconds: i64) -> Option<String> {
