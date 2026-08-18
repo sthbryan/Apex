@@ -196,6 +196,10 @@ async fn execute(
         Command::ProjectOpen { root } => Ok(Reply::Project {
             project: manager.open_project(&root).await.map_err(not_found_error)?,
         }),
+        Command::ProjectRemove { project } => {
+            manager.remove_project(project).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::LayoutSave { project, payload } => {
             manager.save_layout(project, &payload).await.map_err(not_found_error)?;
             Ok(Reply::Done)

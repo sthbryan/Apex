@@ -483,6 +483,10 @@ pub enum Command {
     ProjectOpen {
         root: String,
     },
+    ProjectRemove {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
     ReadMetrics {
         #[serde(default)]
         refresh_quota: bool,

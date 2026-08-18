@@ -47,6 +47,14 @@ impl ProjectsService {
         })
     }
 
+    pub async fn remove(&self, id: Uuid) -> Result<()> {
+        let store = self.store.lock().await;
+        if store.project(id)?.is_none() {
+            bail!("unknown project {id}")
+        }
+        store.delete_project(id)
+    }
+
     pub async fn save_layout(&self, project: Uuid, payload: &str) -> Result<()> {
         self.store.lock().await.save_layout(project, payload)
     }

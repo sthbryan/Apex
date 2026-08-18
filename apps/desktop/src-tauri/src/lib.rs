@@ -116,6 +116,12 @@ async fn open_project(state: tauri::State<'_, AppState>, root: String) -> Answer
 }
 
 #[tauri::command]
+async fn remove_project(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<()> {
+    state.daemon()?.request(Command::ProjectRemove { project }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn save_layout(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -609,6 +615,7 @@ pub fn run() {
             list_sessions,
             list_projects,
             open_project,
+            remove_project,
             save_layout,
             load_layout,
             read_metrics,

@@ -614,6 +614,19 @@ impl SessionManager {
         self.projects.open(root).await
     }
 
+    pub async fn remove_project(&self, project: Uuid) -> Result<()> {
+        let live = self
+            .list_sessions()
+            .await
+            .into_iter()
+            .filter(|session| session.project_id == project && session.exit_code.is_none())
+            .count();
+        if live > 0 {
+            bail!("close the {live} running sessions before removing this project")
+        }
+        self.projects.remove(project).await
+    }
+
     pub async fn save_layout(&self, project: Uuid, payload: &str) -> Result<()> {
         self.projects.save_layout(project, payload).await
     }
