@@ -89,6 +89,11 @@ function Chip({ entry }: { entry: Entry }) {
 
 function tightest(reports: QuotaReport[]): Entry[] {
   return reports
-    .flatMap((report) => report.windows.map((window) => ({ agent: report.agent, window })))
+    .map((report) => ({
+      agent: report.agent,
+      window: report.windows.reduce((tight, window) =>
+        window.used_percent > tight.used_percent ? window : tight,
+      ),
+    }))
     .sort((left, right) => right.window.used_percent - left.window.used_percent);
 }
