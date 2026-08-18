@@ -79,11 +79,12 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         "name = \"answering\"\n\
          command = \"sh\"\n\
          [quota]\n\
-         source = \"command\"\n\
+         cache_ttl_secs = 60\n\
+         [[quota.sources]]\n\
+         kind = \"command\"\n\
          format = \"codexbar\"\n\
          command = \"echo\"\n\
-         args = ['{QUOTA_SAMPLE}']\n\
-         cache_ttl_secs = 60\n"
+         args = ['{QUOTA_SAMPLE}']\n"
     );
     profiles.upsert(AgentProfile::parse(&answering).expect("answering profile"));
     profiles.upsert(
@@ -145,10 +146,11 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
             "name = \"unreachable\"\n\
              command = \"sh\"\n\
              [quota]\n\
-             source = \"command\"\n\
+             cache_ttl_secs = 60\n\
+             [[quota.sources]]\n\
+             kind = \"command\"\n\
              format = \"codexbar\"\n\
-             command = \"false\"\n\
-             cache_ttl_secs = 60\n",
+             command = \"false\"\n",
         )
         .expect("unreachable profile"),
     );

@@ -1,11 +1,15 @@
+mod codexbar;
+
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use apex_core::{AgentProfile, QuotaFormat, QuotaSource};
+use apex_core::QuotaFormat;
 use tokio::process::Command;
 use tokio::time::timeout;
+
+pub use codexbar::parse;
 
 const RUN_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -27,6 +31,11 @@ pub struct QuotaReport {
     pub updated_at: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Prepared {
+    Command { format: QuotaFormat, binary: PathBuf, args: Vec<String> },
+}
+
 #[derive(Default)]
 pub struct QuotaCache {
     entries: HashMap<String, (Instant, Option<QuotaReport>)>,
@@ -37,42 +46,9 @@ impl QuotaCache {
         Self::default()
     }
 
-    pub async fn read(
-        &mut self,
-        profile: &AgentProfile,
-        binary: PathBuf,
-        env: &BTreeMap<String, String>,
-        force: bool,
-    ) -> Option<QuotaReport> {
-        let config = profile.quota.as_ref()?;
-        let ttl = Duration::from_secs(config.cache_ttl_secs.max(1));
-
-        if !force
-            && let Some((taken, cached)) = self.entries.get(&profile.name)
-            && taken.elapsed() < ttl
-        {
-            return cached.clone();
-        }
-
-        let fresh = match config.source {
-            QuotaSource::Command => {
-                run_command(&binary, &config.args, env)
-                    .await
-                    .and_then(|raw| parse(config.format, &profile.name, &raw))
-            }
-        };
-
-        self.entries.insert(profile.name.clone(), (Instant::now(), fresh.clone()));
-        fresh
-    }
-
     pub fn peek(&self, name: &str, ttl: Duration) -> Option<Option<QuotaReport>> {
         let (taken, cached) = self.entries.get(name)?;
-        if taken.elapsed() < ttl {
-            Some(cached.clone())
-        } else {
-            None
-        }
+        if taken.elapsed() < ttl { Some(cached.clone()) } else { None }
     }
 
     pub fn store(&mut self, name: &str, report: Option<QuotaReport>) {
@@ -84,23 +60,26 @@ impl QuotaCache {
     }
 }
 
-pub async fn read_quota_command(
-    profile: &AgentProfile,
-    binary: PathBuf,
+pub async fn read_first(
+    agent: &str,
+    sources: &[Prepared],
     env: &BTreeMap<String, String>,
 ) -> Option<QuotaReport> {
-    let config = profile.quota.as_ref()?;
-    match config.source {
-        QuotaSource::Command => {
-            run_command(&binary, &config.args, env)
+    for source in sources {
+        let report = match source {
+            Prepared::Command { format, binary, args } => run_command(binary, args, env)
                 .await
-                .and_then(|raw| parse(config.format, &profile.name, &raw))
+                .and_then(|raw| codexbar::parse(*format, agent, &raw)),
+        };
+        if report.is_some() {
+            return report;
         }
     }
+    None
 }
 
 async fn run_command(
-    binary: &PathBuf,
+    binary: &Path,
     args: &[String],
     env: &BTreeMap<String, String>,
 ) -> Option<String> {
@@ -129,57 +108,7 @@ async fn run_command(
     Some(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
-pub fn parse(format: QuotaFormat, agent: &str, raw: &str) -> Option<QuotaReport> {
-    match format {
-        QuotaFormat::Codexbar => parse_codexbar(agent, raw),
-    }
-}
-
-fn parse_codexbar(agent: &str, raw: &str) -> Option<QuotaReport> {
-    let parsed: serde_json::Value = serde_json::from_str(raw.trim()).ok()?;
-    let first = parsed.as_array()?.first()?;
-    let usage = first.get("usage")?;
-    let pace = first.get("pace");
-
-    let windows: Vec<QuotaWindow> = ["primary", "secondary", "tertiary"]
-        .iter()
-        .filter_map(|key| read_window(usage.get(*key)?, pace.and_then(|entry| entry.get(*key))))
-        .collect();
-
-    if windows.is_empty() {
-        return None;
-    }
-    Some(QuotaReport {
-        agent: agent.to_string(),
-        windows,
-        updated_at: usage.get("updatedAt").and_then(|value| value.as_str()).map(str::to_string),
-    })
-}
-
-fn read_window(value: &serde_json::Value, pace: Option<&serde_json::Value>) -> Option<QuotaWindow> {
-    let used = value.get("usedPercent")?.as_f64()?;
-    Some(QuotaWindow {
-        label: window_label(value.get("windowMinutes").and_then(serde_json::Value::as_u64)),
-        used_percent: used.clamp(0.0, 100.0).round() as u8,
-        expected_percent: pace
-            .and_then(|entry| entry.get("expectedUsedPercent"))
-            .and_then(serde_json::Value::as_f64)
-            .map(|value| value.clamp(0.0, 100.0).round() as u8),
-        lasts_to_reset: pace
-            .and_then(|entry| entry.get("willLastToReset"))
-            .and_then(serde_json::Value::as_bool),
-        eta_seconds: pace
-            .and_then(|entry| entry.get("etaSeconds"))
-            .and_then(serde_json::Value::as_u64),
-        resets_at: value.get("resetsAt").and_then(|entry| entry.as_str()).map(str::to_string),
-        reset_description: value
-            .get("resetDescription")
-            .and_then(|entry| entry.as_str())
-            .map(str::to_string),
-    })
-}
-
-fn window_label(minutes: Option<u64>) -> Option<String> {
+pub(crate) fn window_label(minutes: Option<u64>) -> Option<String> {
     let value = minutes?;
     Some(match value {
         value if value % 10080 == 0 => format!("{}w", value / 10080),

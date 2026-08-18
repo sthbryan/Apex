@@ -20,8 +20,11 @@ label_key = "prompt"
 resume_args = ["--resume", "{session_id}"]
 
 [quota]
-source = "command"
+cache_ttl_secs = 900
+
+
+[[quota.sources]]
+kind = "command"
 format = "codexbar"
 command = "codexbar"
 args = ["usage", "--json", "--provider", "grok"]
-cache_ttl_secs = 900

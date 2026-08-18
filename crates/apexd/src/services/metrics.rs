@@ -3,12 +3,12 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{Result, bail};
-use apex_core::{AgentProfile, BinaryResolver, ProfileSet};
+use apex_core::{BinaryResolver, ProfileSet, QuotaSource};
 use apex_metrics::Sampler;
 use apex_proto::{
     ApexUsage, MetricsSnapshot, ProcessUsage, QuotaReport, QuotaWindow, SessionUsage, SystemUsage,
 };
-use apex_quota::{QuotaCache, read_quota_command};
+use apex_quota::{Prepared, QuotaCache, read_first};
 use tokio::sync::{Mutex, RwLock};
 use tokio::task::{JoinHandle, JoinSet};
 use uuid::Uuid;
@@ -58,10 +58,8 @@ impl MetricsService {
                 .and_then(|pid| pid.parse::<u32>().ok())
                 .unwrap_or_else(std::process::id);
             let apex_tree = sampler.tree_usage(root);
-            let apex = ApexUsage {
-                cpu_percent: apex_tree.cpu_percent,
-                memory: apex_tree.memory as f64,
-            };
+            let apex =
+                ApexUsage { cpu_percent: apex_tree.cpu_percent, memory: apex_tree.memory as f64 };
 
             let live = self.sessions.read().await;
             let mut usage = Vec::with_capacity(live.len());
@@ -207,33 +205,35 @@ async fn run_quota_refresh(
     quotas: &Mutex<QuotaCache>,
     base_env: &BTreeMap<String, String>,
 ) {
-    let mut targets: Vec<(AgentProfile, std::path::PathBuf)> = Vec::new();
+    let mut targets: Vec<(String, Vec<Prepared>)> = Vec::new();
     for profile in profiles.iter() {
         let Some(config) = &profile.quota else {
             continue;
         };
 
-        let binary = {
+        let prepared = {
             let mut resolver = resolver.lock().await;
             if resolver.resolve(&profile.command).is_none() {
                 continue;
             }
-            match resolver.resolve(&config.command) {
-                Some(binary) => binary,
-                None => continue,
-            }
+            config
+                .sources
+                .iter()
+                .filter_map(|source| prepare(source, &mut resolver))
+                .collect::<Vec<Prepared>>()
         };
-        targets.push((profile.clone(), binary));
+        if prepared.is_empty() {
+            continue;
+        }
+        targets.push((profile.name.clone(), prepared));
     }
 
     let mut set = JoinSet::new();
-    for (profile, binary) in targets {
-        let profile = profile.clone();
-        let binary = binary.clone();
+    for (name, sources) in targets {
         let env = base_env.clone();
         set.spawn(async move {
-            let report = read_quota_command(&profile, binary, &env).await;
-            (profile.name, report)
+            let report = read_first(&name, &sources, &env).await;
+            (name, report)
         });
     }
     while let Some(joined) = set.join_next().await {
@@ -241,6 +241,16 @@ async fn run_quota_refresh(
             continue;
         };
         quotas.lock().await.store(&name, report);
+    }
+}
+
+fn prepare(source: &QuotaSource, resolver: &mut BinaryResolver) -> Option<Prepared> {
+    match source {
+        QuotaSource::Command { format, command, args } => Some(Prepared::Command {
+            format: *format,
+            binary: resolver.resolve(command)?,
+            args: args.clone(),
+        }),
     }
 }
 

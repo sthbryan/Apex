@@ -28,9 +28,17 @@ pub enum McpDelivery {
         #[serde(default)]
         prefix: Option<String>,
     },
-    Project { path: String, format: McpFormat },
-    Overrides { flag: String, key: String },
-    Shared { path: String },
+    Project {
+        path: String,
+        format: McpFormat,
+    },
+    Overrides {
+        flag: String,
+        key: String,
+    },
+    Shared {
+        path: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,10 +116,15 @@ fn default_label_key() -> String {
     "content".to_string()
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
 pub enum QuotaSource {
-    Command,
+    Command {
+        format: QuotaFormat,
+        command: String,
+        #[serde(default)]
+        args: Vec<String>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -122,11 +135,7 @@ pub enum QuotaFormat {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct QuotaConfig {
-    pub source: QuotaSource,
-    pub format: QuotaFormat,
-    pub command: String,
-    #[serde(default)]
-    pub args: Vec<String>,
+    pub sources: Vec<QuotaSource>,
     #[serde(default = "default_quota_ttl")]
     pub cache_ttl_secs: u64,
 }
@@ -148,16 +157,11 @@ impl AgentProfile {
         AgentSummary {
             name: self.name.clone(),
             command: self.command.clone(),
-            resolved_path: resolver
-                .resolve(&self.command)
-                .map(|path| path.display().to_string()),
+            resolved_path: resolver.resolve(&self.command).map(|path| path.display().to_string()),
             mode: self.mode,
             supports_resume: self.supports_resume(),
             speaks_acp: self.acp_command.is_some(),
-            shares_config: matches!(
-                self.mcp,
-                Some(McpDelivery::Flag { merge_from: Some(_), .. })
-            ),
+            shares_config: matches!(self.mcp, Some(McpDelivery::Flag { merge_from: Some(_), .. })),
         }
     }
 }

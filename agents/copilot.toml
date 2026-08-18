@@ -11,8 +11,10 @@ prefix = "@"
 blocked = ["\\(y/n\\)", "Do you trust", "Confirm folder trust"]
 
 [quota]
-source = "command"
+cache_ttl_secs = 900
+
+[[quota.sources]]
+kind = "command"
 format = "codexbar"
 command = "codexbar"
 args = ["usage", "--json", "--provider", "copilot"]
-cache_ttl_secs = 900

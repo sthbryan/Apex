@@ -10,8 +10,10 @@ path = "~/.gemini/config/mcp_config.json"
 blocked = ["\\(y/n\\)", "Allow this", "Approve", "Do you trust"]
 
 [quota]
-source = "command"
+cache_ttl_secs = 900
+
+[[quota.sources]]
+kind = "command"
 format = "codexbar"
 command = "codexbar"
 args = ["usage", "--json", "--provider", "antigravity"]
-cache_ttl_secs = 900

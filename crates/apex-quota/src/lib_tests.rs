@@ -1,4 +1,5 @@
 use super::*;
+use apex_core::QuotaFormat;
 
 const SAMPLE: &str = r#"[{"provider":"claude",
     "pace":{"primary":{"expectedUsedPercent":43,"willLastToReset":false,"etaSeconds":1919}},
@@ -72,46 +73,30 @@ fn a_provider_without_a_declared_window_still_reports_usage() {
 }
 
 #[tokio::test]
-async fn a_profile_without_quota_reads_nothing() {
-    let bare = AgentProfile::parse("name = \"sh\"\ncommand = \"sh\"\n").expect("profile");
-    let mut cache = QuotaCache::new();
-    assert!(
-        cache
-            .read(&bare, PathBuf::from("/bin/true"), &BTreeMap::new(), false)
-            .await
-            .is_none()
-    );
-}
-
-#[tokio::test]
-async fn a_failing_command_is_cached_as_no_data() {
-    let profile = AgentProfile::parse(
-        "name = \"x\"\ncommand = \"x\"\n[quota]\nsource = \"command\"\nformat = \"codexbar\"\ncommand = \"false\"\ncache_ttl_secs = 60\n",
-    )
-    .expect("profile");
-
-    let mut cache = QuotaCache::new();
-    assert!(
-        cache
-            .read(&profile, PathBuf::from("/usr/bin/false"), &BTreeMap::new(), false)
-            .await
-            .is_none()
-    );
-    assert_eq!(cache.entries.len(), 1);
-}
-
-#[tokio::test]
-async fn a_command_that_prints_a_report_is_parsed() {
-    let profile = AgentProfile::parse(&format!(
-        "name = \"claude\"\ncommand = \"x\"\n[quota]\nsource = \"command\"\nformat = \"codexbar\"\ncommand = \"echo\"\nargs = [{:?}]\ncache_ttl_secs = 60\n",
-        SAMPLE.replace('\n', "")
-    ))
-    .expect("profile");
-
-    let mut cache = QuotaCache::new();
-    let report = cache
-        .read(&profile, PathBuf::from("/bin/echo"), &BTreeMap::new(), false)
-        .await
-        .expect("report");
+async fn the_first_source_that_answers_wins() {
+    let sources = vec![
+        Prepared::Command {
+            format: QuotaFormat::Codexbar,
+            binary: PathBuf::from("/usr/bin/false"),
+            args: Vec::new(),
+        },
+        Prepared::Command {
+            format: QuotaFormat::Codexbar,
+            binary: PathBuf::from("/bin/echo"),
+            args: vec![SAMPLE.replace('\n', "")],
+        },
+    ];
+    let report = read_first("claude", &sources, &BTreeMap::new()).await.expect("report");
     assert_eq!(report.windows.len(), 2);
+}
+
+#[tokio::test]
+async fn no_source_answering_is_no_report() {
+    let sources = vec![Prepared::Command {
+        format: QuotaFormat::Codexbar,
+        binary: PathBuf::from("/usr/bin/false"),
+        args: Vec::new(),
+    }];
+    assert!(read_first("x", &sources, &BTreeMap::new()).await.is_none());
+    assert!(read_first("x", &[], &BTreeMap::new()).await.is_none());
 }

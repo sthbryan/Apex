@@ -13,8 +13,10 @@ format = "opencode"
 blocked = ["\\(y/n\\)"]
 
 [quota]
-source = "command"
+cache_ttl_secs = 900
+
+[[quota.sources]]
+kind = "command"
 format = "codexbar"
 command = "codexbar"
 args = ["usage", "--json", "--provider", "opencode"]
-cache_ttl_secs = 900
