@@ -3,7 +3,7 @@ command = "agy"
 mode = "pty"
 
 [state_patterns]
-blocked = ["\\(y/n\\)", "Allow this", "Approve"]
+blocked = ["\\(y/n\\)", "Allow this", "Approve", "Do you trust"]
 
 [quota]
 source = "command"
