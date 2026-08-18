@@ -55,7 +55,7 @@ Each session can run in its own git worktree. Parallel agents on the same repo s
 `apexd` holds every process. Close the window, reopen it, resume where the agent was — including its own native `--resume`.
 
 **Bring your own CLI**  
-Claude Code, Codex, Gemini, Copilot, Grok, opencode, or a plain shell. Each is a TOML file; adding the next one is writing another.
+Claude Code, Codex, Antigravity, Copilot, Grok, opencode, or a plain shell. Each is a TOML file; adding the next one is writing another.
 
 ---
 

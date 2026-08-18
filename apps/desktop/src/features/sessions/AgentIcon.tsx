@@ -1,7 +1,6 @@
 import cn from "cnfast";
 import claude from "@/features/sessions/agent-icons/claude.svg?raw";
 import codex from "@/features/sessions/agent-icons/codex.svg?raw";
-import gemini from "@/features/sessions/agent-icons/gemini.svg?raw";
 import githubcopilot from "@/features/sessions/agent-icons/githubcopilot.svg?raw";
 import grok from "@/features/sessions/agent-icons/grok.svg?raw";
 import opencode from "@/features/sessions/agent-icons/opencode.svg?raw";
@@ -11,7 +10,6 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 const BRAND_SVGS: Record<string, string> = {
   claude,
   codex,
-  gemini,
   copilot: githubcopilot,
   grok,
   opencode,
@@ -19,6 +17,7 @@ const BRAND_SVGS: Record<string, string> = {
 };
 
 const FALLBACK_ICONS: Record<string, IconName> = {
+  antigravity: "rocket",
   shell: "sessions",
 };
 

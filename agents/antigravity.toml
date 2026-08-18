@@ -1,0 +1,13 @@
+name = "antigravity"
+command = "agy"
+mode = "pty"
+
+[state_patterns]
+blocked = ["\\(y/n\\)", "Allow this", "Approve"]
+
+[quota]
+source = "command"
+format = "codexbar"
+command = "codexbar"
+args = ["usage", "--json", "--provider", "antigravity"]
+cache_ttl_secs = 900

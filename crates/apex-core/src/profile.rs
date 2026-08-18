@@ -10,7 +10,7 @@ use crate::discovery::BinaryResolver;
 const BUILTIN_PROFILES: &[(&str, &str)] = &[
     ("claude", include_str!("../../../agents/claude.toml")),
     ("codex", include_str!("../../../agents/codex.toml")),
-    ("gemini", include_str!("../../../agents/gemini.toml")),
+    ("antigravity", include_str!("../../../agents/antigravity.toml")),
     ("grok", include_str!("../../../agents/grok.toml")),
     ("copilot", include_str!("../../../agents/copilot.toml")),
     ("opencode", include_str!("../../../agents/opencode.toml")),
