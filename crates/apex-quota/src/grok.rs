@@ -70,6 +70,19 @@ fn used_percent(config: &serde_json::Value) -> Option<f64> {
     if let Some(direct) = config.get("creditUsagePercent").and_then(serde_json::Value::as_f64) {
         return Some(direct);
     }
+    if let Some(product) =
+        config.get("productUsage").and_then(serde_json::Value::as_array).and_then(|entries| {
+            entries
+                .iter()
+                .filter_map(|entry| entry.get("usagePercent").and_then(serde_json::Value::as_f64))
+                .max_by(f64::total_cmp)
+        })
+    {
+        return Some(product);
+    }
+    if config.get("currentPeriod").is_some() {
+        return Some(0.0);
+    }
     let limit = amount(config.get("monthlyLimit")?)?;
     if limit <= 0.0 {
         return None;
