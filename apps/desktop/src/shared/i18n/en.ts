@@ -42,6 +42,9 @@ export const en = {
     empty: "Open a project to get started.",
     live: "{count} running",
     elsewhere: "Other projects",
+    remove: "Remove from Apex",
+    removeAsk: "Remove it from Apex? The folder stays on disk.",
+    removeCancel: "Cancel",
   },
   usage: {
     title: "Subscription usage",

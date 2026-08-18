@@ -44,6 +44,9 @@ export const es: Messages = {
     empty: "Abre un proyecto para empezar.",
     live: "{count} corriendo",
     elsewhere: "Otros proyectos",
+    remove: "Quitar de Apex",
+    removeAsk: "¿Quitarlo de Apex? La carpeta sigue en el disco.",
+    removeCancel: "Cancelar",
   },
   usage: {
     title: "Uso de suscripción",

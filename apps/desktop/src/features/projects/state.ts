@@ -63,6 +63,24 @@ export async function pickProject(): Promise<void> {
   await switchTo(project.id);
 }
 
+export async function removeProject(id: string): Promise<void> {
+  await invoke("remove_project", { project: id });
+  projects.value = projects.value.filter((project) => project.id !== id);
+
+  if (id !== activeProjectId.value) {
+    return;
+  }
+  const next = projects.value[0] ?? null;
+  if (next) {
+    await activate(next.id);
+    return;
+  }
+  clearWorkspace();
+  activeProjectId.value = null;
+  history.value = [];
+  clearStored();
+}
+
 export async function switchTo(id: string): Promise<void> {
   if (id === activeProjectId.value) {
     return;
@@ -115,6 +133,12 @@ function readStored(): string | null {
   } catch {
     return null;
   }
+}
+
+function clearStored(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {}
 }
 
 function writeStored(id: string): void {

@@ -5,6 +5,7 @@ import {
   activeProject,
   pickProject,
   projects,
+  removeProject,
   revealSession,
   switchTo,
 } from "@/features/projects/state";
@@ -20,6 +21,7 @@ type Props = {
 
 export function ProjectPicker({ variant = "bar" }: Props) {
   const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState<string | null>(null);
   const holder = useRef<HTMLDivElement>(null);
   const menu = usePresence<HTMLDivElement>(open);
 
@@ -30,6 +32,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
     const dismiss = (event: MouseEvent) => {
       if (!holder.current?.contains(event.target as Node)) {
         setOpen(false);
+        setAsking(null);
       }
     };
     window.addEventListener("mousedown", dismiss);
@@ -42,7 +45,10 @@ export function ProjectPicker({ variant = "bar" }: Props) {
     <div ref={holder} class={cn("relative", variant === "dock" && "px-2")}>
       <button
         type="button"
-        onClick={() => setOpen((shown) => !shown)}
+        onClick={() => {
+          setOpen((shown) => !shown);
+          setAsking(null);
+        }}
         title={current?.root ?? t("projects.none")}
         class={cn("flex items-center gap-1.5 rounded transition-colors", {
           "max-w-56 px-1.5 py-0.5 hover:bg-raised": variant === "bar",
@@ -82,7 +88,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
               const live = liveIn(project.id);
               const blocked = pending(project.id);
               return (
-                <li key={project.id}>
+                <li key={project.id} class="group relative">
                   <button
                     type="button"
                     onClick={() => {
@@ -107,6 +113,39 @@ export function ProjectPicker({ variant = "bar" }: Props) {
                       {live.length > 0 ? t("projects.live", { count: String(live.length) }) : "·"}
                     </span>
                   </button>
+                  {live.length === 0 && asking !== project.id && (
+                    <button
+                      type="button"
+                      title={t("projects.remove")}
+                      onClick={() => setAsking(project.id)}
+                      class="absolute inset-y-0 right-1 hidden items-center px-1.5 text-faint transition-colors hover:text-text group-hover:flex"
+                    >
+                      <Icon name="close" size={12} />
+                    </button>
+                  )}
+
+                  {asking === project.id && (
+                    <div class="flex items-center gap-2 border-border border-y bg-raised px-3 py-1.5">
+                      <span class="truncate text-micro text-muted">{t("projects.removeAsk")}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAsking(null);
+                          void removeProject(project.id);
+                        }}
+                        class="ml-auto shrink-0 text-state-blocked transition-opacity hover:opacity-70"
+                      >
+                        {t("projects.remove")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAsking(null)}
+                        class="shrink-0 text-faint transition-colors hover:text-text"
+                      >
+                        {t("projects.removeCancel")}
+                      </button>
+                    </div>
+                  )}
 
                   {project.id !== current?.id &&
                     live.map((session) => (
