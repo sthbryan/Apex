@@ -123,6 +123,7 @@ export const en = {
     idleGrace7200: "2 hours",
     about: "About",
     aboutHint: "Versions of the app and the background daemon.",
+    agentsPath: "Agent files",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

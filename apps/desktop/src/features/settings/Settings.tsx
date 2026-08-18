@@ -64,6 +64,7 @@ type Section = {
   id: string;
   label: string;
   entries: Entry[];
+  panel?: VNode;
 };
 
 export function Settings() {
@@ -304,20 +305,19 @@ export function Settings() {
             </Segmented>
           ),
         },
-        {
-          id: "about",
-          label: t("settings.about"),
-          hint: t("settings.aboutHint"),
-          control: (
-            <div class="flex flex-col items-end gap-0.5">
-              <span class="text-text">
-                {t("app.name")} {appVersion}
-              </span>
-              <span class="text-faint">apexd {daemonVersion.value ?? "—"}</span>
-            </div>
-          ),
-        },
       ],
+    },
+    {
+      id: "about",
+      label: t("settings.about"),
+      entries: [],
+      panel: (
+        <dl class="flex flex-col gap-2">
+          <Fact term={t("app.name")} value={appVersion || "—"} />
+          <Fact term="apexd" value={daemonVersion.value ?? "—"} />
+          <Fact term={t("settings.agentsPath")} value="~/.apex/agents" />
+        </dl>
+      ),
     },
   ];
 
@@ -332,6 +332,7 @@ export function Settings() {
         }))
         .filter((entry) => entry.entries.length > 0)
     : sections.filter((entry) => entry.id === section);
+  const panel = needle ? null : shown[0]?.panel;
 
   return (
     <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("settings.title")}>
@@ -382,6 +383,7 @@ export function Settings() {
         <div class="min-h-0 flex-1 overflow-y-auto px-6 py-3">
           <div class="mx-auto w-full max-w-5xl">
             {shown.length === 0 && <p class="text-faint">{t("settings.noMatch")}</p>}
+            {panel}
             {shown.map((entry) => (
               <section key={entry.id}>
                 {needle && (
@@ -399,10 +401,15 @@ export function Settings() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      <footer class="shrink-0 border-t border-border px-4 py-2 text-faint">
-        {t("settings.agentsHint", { path: "~/.apex/agents" })}
-      </footer>
+function Fact({ term, value }: { term: string; value: string }) {
+  return (
+    <div class="flex items-baseline gap-3 border-b border-border pb-2 last:border-0">
+      <dt class="min-w-0 flex-1 truncate text-muted">{term}</dt>
+      <dd class="shrink-0 font-mono text-text tabular-nums">{value}</dd>
     </div>
   );
 }

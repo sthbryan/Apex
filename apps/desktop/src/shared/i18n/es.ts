@@ -125,6 +125,7 @@ export const es: Messages = {
     idleGrace7200: "2 horas",
     about: "Acerca de",
     aboutHint: "Versiones de la app y del daemon.",
+    agentsPath: "Archivos de agentes",
   },
   shortcuts: {
     title: "Atajos de teclado",
