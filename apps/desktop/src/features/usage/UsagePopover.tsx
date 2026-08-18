@@ -1,6 +1,7 @@
 import cn from "cnfast";
 import { useState } from "preact/hooks";
 import type { QuotaReport } from "@/bindings/QuotaReport";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { countdown, tone } from "@/features/usage/format";
 import { UsageRow } from "@/features/usage/UsageRow";
 import { t } from "@/shared/i18n";
@@ -57,7 +58,8 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
 
       <div class="max-h-80 overflow-y-auto py-1">
         {failures.map((agent) => (
-          <section key={agent} class="flex items-baseline gap-1 px-2.5 py-1">
+          <section key={agent} class="flex items-center gap-1.5 px-2.5 py-1">
+            <AgentIcon agent={agent} size={12} class="shrink-0 text-faint" />
             <h3 class="text-micro uppercase tracking-wider text-faint">{agent}</h3>
             <span class="ml-auto shrink-0 text-[11px] text-state-failed">
               {t("usage.unavailable")}
@@ -82,7 +84,8 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
             const level = tone(tight);
             return (
               <section key={report.agent} class="px-2.5 py-1">
-                <div class="mb-0.5 flex items-baseline gap-1">
+                <div class="mb-0.5 flex items-center gap-1.5">
+                  <AgentIcon agent={report.agent} size={12} class="shrink-0 text-faint" />
                   <h3 class="text-micro uppercase tracking-wider text-faint">{report.agent}</h3>
                   <span class={cn("ml-auto shrink-0 text-[11px] font-medium", level.text)}>
                     {tight}%
