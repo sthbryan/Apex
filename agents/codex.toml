@@ -19,7 +19,7 @@ blocked = ["\\(y/n\\)", "Allow command", "Do you trust"]
 cache_ttl_secs = 900
 
 [[quota.sources]]
-kind = "codex_app_server"
+kind = "native"
 
 [[quota.sources]]
 kind = "command"

@@ -42,6 +42,17 @@ pub enum Prepared {
     ClaudeOauth,
 }
 
+impl Prepared {
+    pub fn native(agent: &str, binary: PathBuf) -> Option<Self> {
+        match agent {
+            "codex" => Some(Self::CodexAppServer { binary }),
+            "grok" => Some(Self::GrokBilling),
+            "claude" => Some(Self::ClaudeOauth),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct QuotaCache {
     entries: HashMap<String, (Instant, Option<QuotaReport>)>,

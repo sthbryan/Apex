@@ -23,7 +23,7 @@ resume_args = ["--resume", "{session_id}"]
 cache_ttl_secs = 900
 
 [[quota.sources]]
-kind = "grok_billing"
+kind = "native"
 
 [[quota.sources]]
 kind = "command"

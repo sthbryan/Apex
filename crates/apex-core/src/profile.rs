@@ -125,9 +125,7 @@ pub enum QuotaSource {
         #[serde(default)]
         args: Vec<String>,
     },
-    CodexAppServer,
-    GrokBilling,
-    ClaudeOauth,
+    Native,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

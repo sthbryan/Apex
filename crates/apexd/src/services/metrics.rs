@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{Result, bail};
-use apex_core::{BinaryResolver, ProfileSet, QuotaSource};
+use apex_core::{AgentProfile, BinaryResolver, ProfileSet, QuotaSource};
 use apex_metrics::Sampler;
 use apex_proto::{
     ApexUsage, MetricsSnapshot, ProcessUsage, QuotaReport, QuotaWindow, SessionUsage, SystemUsage,
@@ -219,7 +219,7 @@ async fn run_quota_refresh(
             config
                 .sources
                 .iter()
-                .filter_map(|source| prepare(source, &profile.command, &mut resolver))
+                .filter_map(|source| prepare(source, profile, &mut resolver))
                 .collect::<Vec<Prepared>>()
         };
         if prepared.is_empty() {
@@ -246,7 +246,7 @@ async fn run_quota_refresh(
 
 fn prepare(
     source: &QuotaSource,
-    agent_command: &str,
+    profile: &AgentProfile,
     resolver: &mut BinaryResolver,
 ) -> Option<Prepared> {
     match source {
@@ -255,11 +255,7 @@ fn prepare(
             binary: resolver.resolve(command)?,
             args: args.clone(),
         }),
-        QuotaSource::CodexAppServer => {
-            Some(Prepared::CodexAppServer { binary: resolver.resolve(agent_command)? })
-        }
-        QuotaSource::GrokBilling => Some(Prepared::GrokBilling),
-        QuotaSource::ClaudeOauth => Some(Prepared::ClaudeOauth),
+        QuotaSource::Native => Prepared::native(&profile.name, resolver.resolve(&profile.command)?),
     }
 }
 
