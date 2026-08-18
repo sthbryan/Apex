@@ -258,6 +258,7 @@ fn prepare(
         QuotaSource::CodexAppServer => {
             Some(Prepared::CodexAppServer { binary: resolver.resolve(agent_command)? })
         }
+        QuotaSource::GrokBilling => Some(Prepared::GrokBilling),
         QuotaSource::ClaudeOauth => Some(Prepared::ClaudeOauth),
     }
 }

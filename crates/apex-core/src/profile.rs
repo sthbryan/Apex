@@ -126,6 +126,7 @@ pub enum QuotaSource {
         args: Vec<String>,
     },
     CodexAppServer,
+    GrokBilling,
     ClaudeOauth,
 }
 

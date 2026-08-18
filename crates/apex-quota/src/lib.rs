@@ -1,6 +1,7 @@
 mod claude;
 mod codex;
 mod codexbar;
+mod grok;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -37,6 +38,7 @@ pub struct QuotaReport {
 pub enum Prepared {
     Command { format: QuotaFormat, binary: PathBuf, args: Vec<String> },
     CodexAppServer { binary: PathBuf },
+    GrokBilling,
     ClaudeOauth,
 }
 
@@ -75,6 +77,7 @@ pub async fn read_first(
                 .await
                 .and_then(|raw| codexbar::parse(*format, agent, &raw)),
             Prepared::CodexAppServer { binary } => codex::read(agent, binary, env).await,
+            Prepared::GrokBilling => grok::read(agent, env).await,
             Prepared::ClaudeOauth => claude::read(agent, env).await,
         };
         if report.is_some() {
