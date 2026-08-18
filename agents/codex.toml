@@ -21,8 +21,3 @@ cache_ttl_secs = 900
 [[quota.sources]]
 kind = "native"
 
-[[quota.sources]]
-kind = "command"
-format = "codexbar"
-command = "codexbar"
-args = ["usage", "--json", "--provider", "codex"]
