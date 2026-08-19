@@ -68,7 +68,11 @@
 :root[data-veil="on"] {
   --apex-shell: transparent;
   --apex-chrome: color-mix(in oklab, light-dark(#f6f7f9, #131519) var(--apex-veil), transparent);
-  --apex-pane: color-mix(in oklab, light-dark(#ffffff, #0c0d10) var(--apex-veil), transparent);
-  --apex-raised: color-mix(in oklab, light-dark(#eceef0, #1a1d22) var(--apex-veil), transparent);
-  --apex-overlay: color-mix(in oklab, light-dark(#ffffff, #1f2228) var(--apex-veil), transparent);
+  --apex-pane: color-mix(in oklab, light-dark(#ffffff, #0c0d10) var(--apex-readable), transparent);
+  --apex-raised: color-mix(in oklab, light-dark(#eceef0, #1a1d22) var(--apex-readable), transparent);
+  --apex-overlay: color-mix(in oklab, light-dark(#ffffff, #1f2228) var(--apex-readable), transparent);
+  --apex-readable: max(var(--apex-veil), 70%);
+  --apex-muted: light-dark(#3d434a, #c3c9d3);
+  --apex-faint: light-dark(#4c5259, #aeb4be);
+  --apex-border: light-dark(#c7ccd3, #363b45);
 }
