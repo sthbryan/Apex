@@ -34,17 +34,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     spec: { type: "split", direction: "column", first: pane(), second: pane() },
   },
   {
-    id: "grid",
-    nameKey: "layout.grid",
-    preview: ["┌─────┬─────┐", "├─────┼─────┤", "└─────┴─────┘"],
-    spec: {
-      type: "split",
-      direction: "row",
-      first: { type: "split", direction: "column", first: pane(), second: pane() },
-      second: { type: "split", direction: "column", first: pane(), second: pane() },
-    },
-  },
-  {
     id: "mainLeft",
     nameKey: "layout.mainLeft",
     preview: ["┌─────┬─────┐", "│     ├─────┤", "│     │     │", "└─────┴─────┘"],
@@ -66,6 +55,17 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
       ratio: 0.6,
       first: main(),
       second: { type: "split", direction: "row", first: pane(), second: pane() },
+    },
+  },
+  {
+    id: "grid",
+    nameKey: "layout.grid",
+    preview: ["┌─────┬─────┐", "├─────┼─────┤", "└─────┴─────┘"],
+    spec: {
+      type: "split",
+      direction: "row",
+      first: { type: "split", direction: "column", first: pane(), second: pane() },
+      second: { type: "split", direction: "column", first: pane(), second: pane() },
     },
   },
 ];
