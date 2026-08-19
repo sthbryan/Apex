@@ -8,7 +8,6 @@ import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
 import { page, togglePage } from "@/app/view";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
-import { UsageChip } from "@/features/usage/UsageChip";
 import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 
@@ -61,10 +60,7 @@ export function Layout({ onNewSession }: Props) {
               </>
             }
           >
-            <Toolbar
-              status={status.value === "ready" ? "" : t("status.connecting")}
-            >
-              <UsageChip />
+            <Toolbar status={status.value === "ready" ? "" : t("status.connecting")}>
               <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
               <ToolbarButton
                 label={t("settings.title")}

@@ -1,9 +1,10 @@
 import cn from "cnfast";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import type { QuotaReport } from "@/bindings/QuotaReport";
 import type { QuotaWindow } from "@/bindings/QuotaWindow";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { resetText, tone } from "@/features/usage/format";
+import { toggleUsagePopover, usageOpen } from "@/features/usage/state";
 import { UsagePopover } from "@/features/usage/UsagePopover";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
@@ -16,22 +17,21 @@ type Entry = { agent: string; window: QuotaWindow };
 
 export function UsageStrip() {
   const holder = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const popover = usePresence<HTMLDivElement>(open);
+  const popover = usePresence<HTMLDivElement>(usageOpen.value);
   const reports = (metrics.value?.quotas ?? []).filter((report) => report.windows.length > 0);
 
   useEffect(() => {
-    if (!open) {
+    if (!usageOpen.value) {
       return;
     }
     const dismiss = (event: MouseEvent) => {
       if (!holder.current?.contains(event.target as Node)) {
-        setOpen(false);
+        usageOpen.value = false;
       }
     };
     window.addEventListener("mousedown", dismiss);
     return () => window.removeEventListener("mousedown", dismiss);
-  }, [open]);
+  }, [usageOpen.value]);
 
   const failures = metrics.value?.quota_failures ?? [];
   if (reports.length === 0 && failures.length === 0) {
@@ -43,16 +43,11 @@ export function UsageStrip() {
   const hidden = entries.length - shown.length;
 
   return (
-    <div
-      ref={holder}
-      class="relative flex min-w-0 items-center"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
+    <div ref={holder} class="relative flex min-w-0 items-center">
       <button
         type="button"
         title={t("usage.title")}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggleUsagePopover}
         class="flex h-5 items-center gap-2 rounded px-1 transition-colors hover:bg-raised"
       >
         {shown.map((entry) => (
@@ -75,7 +70,9 @@ export function UsageStrip() {
           <UsagePopover
             reports={reports}
             failures={metrics.value?.quota_failures ?? []}
-            onClose={() => setOpen(false)}
+            onClose={() => {
+              usageOpen.value = false;
+            }}
           />
         </div>
       )}
