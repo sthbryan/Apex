@@ -147,6 +147,23 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
       },
     },
   },
+  {
+    id: "sixGrid",
+    nameKey: "layout.sixGrid",
+    preview: ["┌───┬───┬───┐", "├───┼───┼───┤", "└───┴───┴───┘"],
+    spec: {
+      type: "split",
+      direction: "row",
+      ratio: 1 / 3,
+      first: { type: "split", direction: "column", first: pane(), second: pane() },
+      second: {
+        type: "split",
+        direction: "row",
+        first: { type: "split", direction: "column", first: pane(), second: pane() },
+        second: { type: "split", direction: "column", first: pane(), second: pane() },
+      },
+    },
+  },
 ];
 
 export function countPanes(spec: LayoutSpec): number {

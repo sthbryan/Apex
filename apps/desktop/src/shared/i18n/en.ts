@@ -305,6 +305,7 @@ export const en = {
     grid: "Grid",
     mainStackThree: "Main + 3",
     mainStackFour: "Main + 4",
+    sixGrid: "Six grid",
     mainLeft: "Main left",
     mainTop: "Main top",
     mainRight: "Main right",
