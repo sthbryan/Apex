@@ -29,6 +29,7 @@ import {
   setTranslucent,
   setUiScale,
   setVeilOpacity,
+  translucencySupported,
   translucent,
   type UiScale,
   uiScale,
@@ -36,7 +37,7 @@ import {
 } from "@/features/settings/appearance";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import { agents, complain, daemonVersion, platform } from "@/shared/daemon";
+import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
@@ -154,7 +155,7 @@ export function Settings() {
             </Segmented>
           ),
         },
-        ...(platform.value === "macos"
+        ...(translucencySupported.value
           ? [
               {
                 id: "translucent",
@@ -173,7 +174,7 @@ export function Settings() {
               },
             ]
           : []),
-        ...(platform.value === "macos" && translucent.value
+        ...(translucencySupported.value && translucent.value
           ? [
               {
                 id: "opacity",

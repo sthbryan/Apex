@@ -1,8 +1,8 @@
-import { signal } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import { retheme } from "@/features/sessions/registry";
-import { complain } from "@/shared/daemon";
+import { complain, platform } from "@/shared/daemon";
 
 export type UiScale = "compact" | "normal" | "roomy";
 
@@ -34,6 +34,9 @@ function restoreScale(): UiScale {
     return "normal";
   }
 }
+
+// TODO: Missing testing on Windows and Linux for translucency support
+export const translucencySupported = computed(() => platform.value === "macos");
 
 export const uiScale = signal<UiScale>(restoreScale());
 export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) === "on");
