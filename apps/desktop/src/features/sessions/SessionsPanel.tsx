@@ -1,6 +1,6 @@
 import cn from "cnfast";
 import { Fragment } from "preact";
-import { useState } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { waiting } from "@/features/notifications/state";
@@ -20,6 +20,15 @@ import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 const OFFERED_AGENTS = 3;
+
+function shuffled<T>(items: readonly T[]): T[] {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index--) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[swap]] = [copy[swap], copy[index]];
+  }
+  return copy;
+}
 
 export function SessionsPanel() {
   const sessions = projectSessions.value;
@@ -85,7 +94,8 @@ export function SessionsPanel() {
 
 function StartHere() {
   const project = activeProject.value;
-  const offered = installedAgents.value.sort(() => Math.random() - 0.5).slice(0, OFFERED_AGENTS);
+  const agents = installedAgents.value;
+  const offered = useMemo(() => shuffled(agents).slice(0, OFFERED_AGENTS), [agents]);
 
   return (
     <div class="flex flex-col gap-2">
