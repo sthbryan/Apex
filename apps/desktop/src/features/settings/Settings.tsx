@@ -20,16 +20,30 @@ import {
   splitCaps,
   viewLanding,
 } from "@/features/settings/agentMode";
-import { setUiScale, type UiScale, uiScale } from "@/features/settings/appearance";
+import {
+  blur,
+  MAX_BLUR,
+  MIN_BLUR,
+  MIN_OPACITY,
+  setBlur,
+  setTranslucent,
+  setUiScale,
+  setVeilOpacity,
+  translucent,
+  type UiScale,
+  uiScale,
+  veilOpacity,
+} from "@/features/settings/appearance";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import { agents, complain, daemonVersion } from "@/shared/daemon";
+import { agents, complain, daemonVersion, platform } from "@/shared/daemon";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Select } from "@/shared/ui/Select";
+import { Slider } from "@/shared/ui/Slider";
 
 const THEMES: { value: ThemeMode; icon: IconName }[] = [
   { value: "system", icon: "monitor" },
@@ -140,6 +154,59 @@ export function Settings() {
             </Segmented>
           ),
         },
+        ...(platform.value === "macos"
+          ? [
+              {
+                id: "translucent",
+                label: t("settings.translucent"),
+                hint: t("settings.translucentHint"),
+                control: (
+                  <Segmented label={t("settings.translucent")}>
+                    <Choice selected={translucent.value} onSelect={() => setTranslucent(true)}>
+                      {t("settings.translucentOn")}
+                    </Choice>
+                    <Choice selected={!translucent.value} onSelect={() => setTranslucent(false)}>
+                      {t("settings.translucentOff")}
+                    </Choice>
+                  </Segmented>
+                ),
+              },
+            ]
+          : []),
+        ...(platform.value === "macos" && translucent.value
+          ? [
+              {
+                id: "opacity",
+                label: t("settings.opacity"),
+                hint: t("settings.opacityHint"),
+                control: (
+                  <Slider
+                    label={t("settings.opacity")}
+                    value={100 - veilOpacity.value}
+                    min={0}
+                    max={100 - MIN_OPACITY}
+                    format={(value) => `${value}%`}
+                    onChange={(value) => setVeilOpacity(100 - value)}
+                  />
+                ),
+              },
+              {
+                id: "blur",
+                label: t("settings.blur"),
+                hint: t("settings.blurHint"),
+                control: (
+                  <Slider
+                    label={t("settings.blur")}
+                    value={blur.value}
+                    min={MIN_BLUR}
+                    max={MAX_BLUR}
+                    format={(value) => `${value}/${MAX_BLUR}`}
+                    onChange={setBlur}
+                  />
+                ),
+              },
+            ]
+          : []),
         {
           id: "language",
           label: t("settings.language"),
@@ -379,8 +446,12 @@ export function Settings() {
   const panel = needle ? null : shown[0]?.panel;
 
   return (
-    <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("settings.title")}>
-      <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-surface px-3">
+    <div
+      class="flex h-full min-h-0 flex-col bg-pane"
+      role="region"
+      aria-label={t("settings.title")}
+    >
+      <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-chrome px-3">
         <Icon name="settings" size={14} class="shrink-0 text-faint" />
         <span class="truncate text-text">{t("settings.title")}</span>
         <button
