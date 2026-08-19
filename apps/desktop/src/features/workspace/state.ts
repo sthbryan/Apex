@@ -55,6 +55,17 @@ export const activeSessionId = computed(() => {
   return pane ? sessionOf(pane) : null;
 });
 
+export const visibleSessions = computed(() => {
+  const tab = activeTab.value;
+  if (!tab) {
+    return new Set<string>();
+  }
+  const shown = leaves(tab.root)
+    .map(sessionOf)
+    .filter((id): id is string => id !== null);
+  return new Set(shown);
+});
+
 export function openInNewTab(session: SessionSummary): void {
   openView({ type: "session", sessionId: session.id });
 }

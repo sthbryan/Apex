@@ -100,3 +100,35 @@ export function setSplitCap(which: keyof SplitCaps, panes: number): void {
   splitCaps.value = { ...splitCaps.value, [which]: panes };
   localStorage.setItem(CAPS, JSON.stringify(splitCaps.value));
 }
+
+const NOTIFY = "apex.notify";
+
+export const notifyEnabled = signal<boolean>(localStorage.getItem(NOTIFY) !== "off");
+
+export function setNotifyEnabled(enabled: boolean): void {
+  notifyEnabled.value = enabled;
+  localStorage.setItem(NOTIFY, enabled ? "on" : "off");
+}
+
+const MUTED = "apex.notify-muted";
+
+function restoreMuted(): string[] {
+  try {
+    const raw = localStorage.getItem(MUTED);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export const mutedSessions = signal<string[]>(restoreMuted());
+
+export function isMuted(sessionId: string): boolean {
+  return mutedSessions.value.includes(sessionId);
+}
+
+export function setMuted(sessionId: string, muted: boolean): void {
+  const rest = mutedSessions.value.filter((id) => id !== sessionId);
+  mutedSessions.value = muted ? [...rest, sessionId] : rest;
+  localStorage.setItem(MUTED, JSON.stringify(mutedSessions.value));
+}

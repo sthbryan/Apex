@@ -165,6 +165,16 @@ export const es: Messages = {
   notify: {
     blocked: "Un agente te está esperando",
     done: "Un agente terminó",
+    terminal: "Un agente te avisa",
+    exited: "Un agente salió con error",
+    quota: "{agent} se quedó sin margen",
+    title: "Notificaciones",
+    empty: "Nada que repasar.",
+    clear: "Vaciar la bandeja",
+    mute: "Silenciar esta sesión",
+    unmute: "Devolverle la voz a esta sesión",
+    enabled: "Notificaciones",
+    enabledHint: "Solo cuando la sesión no está a la vista.",
   },
   context: {
     empty: "Todavía no hay nada compartido. Los agentes escriben aquí por MCP.",

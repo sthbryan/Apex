@@ -163,6 +163,16 @@ export const en = {
   notify: {
     blocked: "An agent is waiting for you",
     done: "An agent finished",
+    terminal: "An agent rang",
+    exited: "An agent exited badly",
+    quota: "{agent} ran out of room",
+    title: "Notifications",
+    empty: "Nothing to catch up on.",
+    clear: "Clear the tray",
+    mute: "Silence this session",
+    unmute: "Let this session speak",
+    enabled: "Notifications",
+    enabledHint: "Only when the session is out of sight.",
   },
   context: {
     empty: "Nothing shared yet. Agents write here through MCP.",

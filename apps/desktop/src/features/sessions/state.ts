@@ -85,6 +85,15 @@ export function onSessionExited(handler: (id: string, code: number) => void): ()
   };
 }
 
+const noticeHandlers = new Set<(event: Extract<Event, { type: "notify" }>) => void>();
+
+export function onNotice(handler: (event: Extract<Event, { type: "notify" }>) => void): () => void {
+  noticeHandlers.add(handler);
+  return () => {
+    noticeHandlers.delete(handler);
+  };
+}
+
 const viewHandlers = new Set<(event: Extract<Event, { type: "open_view" }>) => void>();
 
 export function onOpenView(
@@ -127,6 +136,11 @@ function applyEvent(event: Event): void {
       break;
     case "session_closed":
       forgetSession(event.id);
+      break;
+    case "notify":
+      for (const handler of noticeHandlers) {
+        handler(event);
+      }
       break;
     case "daemon_shutdown":
       sessions.value = [];
