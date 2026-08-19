@@ -845,6 +845,21 @@ pub enum Event {
         id: Uuid,
         commands: Vec<AcpCommand>,
     },
+    Notify {
+        #[ts(type = "string | null")]
+        session: Option<Uuid>,
+        kind: NotifyKind,
+        title: Option<String>,
+        body: String,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum NotifyKind {
+    Terminal,
+    Exited,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
