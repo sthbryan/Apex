@@ -6,10 +6,10 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, history};
 use apex_proto::{
-    AgentSummary, Event, Isolation, SessionState, SessionSummary, TerminalSize, WorktreeDisposal,
-    WorktreeInfo,
+    AgentSummary, Event, Isolation, NotifyKind, SessionState, SessionSummary, TerminalSize,
+    WorktreeDisposal, WorktreeInfo,
 };
-use apex_pty::{PtyProcess, PtySpec, StateDetector, StatePatterns};
+use apex_pty::{OscScanner, PtyProcess, PtySpec, StateDetector, StatePatterns, TerminalNotice};
 use bytes::Bytes;
 use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio::time::{MissedTickBehavior, interval};
@@ -423,12 +423,14 @@ impl SessionRegistry {
     ) {
         let patterns =
             StatePatterns::compile(&profile.state_patterns.blocked, &profile.state_patterns.done);
+        let bell = profile.notify.as_ref().is_some_and(|notify| notify.bell);
         let manager = self.clone();
         let mut output = session.process.subscribe();
         let produced_before_subscribing = session.process.snapshot();
 
         tokio::spawn(async move {
             let mut detector = StateDetector::new(patterns, size.rows, size.cols, Instant::now());
+            let mut scanner = OscScanner::new(bell);
             if !produced_before_subscribing.is_empty()
                 && let Some(state) = detector.observe(&produced_before_subscribing, Instant::now())
             {
@@ -441,7 +443,13 @@ impl SessionRegistry {
             loop {
                 let change = tokio::select! {
                     chunk = output.recv() => match chunk {
-                        Ok(data) => detector.observe(&data, Instant::now()),
+                        Ok(data) => {
+                            let now = Instant::now();
+                            for notice in scanner.scan(&data, now) {
+                                manager.announce(notice_event(id, notice));
+                            }
+                            detector.observe(&data, now)
+                        }
                         Err(broadcast::error::RecvError::Lagged(_)) => {
                             detector.observe(b"", Instant::now())
                         }
@@ -467,6 +475,14 @@ impl SessionRegistry {
                 summary.state = SessionState::Done;
             }
             let _ = manager.events.send(Event::SessionExited { id, code: status.code });
+            if status.code != 0 {
+                manager.announce(Event::Notify {
+                    session: Some(id),
+                    kind: NotifyKind::Exited,
+                    title: None,
+                    body: status.code.to_string(),
+                });
+            }
         });
     }
 
@@ -485,5 +501,14 @@ impl SessionRegistry {
             summary.state = state;
         }
         let _ = self.events.send(Event::SessionStateChanged { id, state });
+    }
+}
+
+fn notice_event(id: Uuid, notice: TerminalNotice) -> Event {
+    Event::Notify {
+        session: Some(id),
+        kind: NotifyKind::Terminal,
+        title: notice.title,
+        body: notice.body,
     }
 }
