@@ -478,7 +478,7 @@ impl SessionRegistry {
             if status.code != 0 {
                 manager.announce(Event::Notify {
                     session: Some(id),
-                    kind: NotifyKind::Exited,
+                    notice: NotifyKind::Exited,
                     title: None,
                     body: status.code.to_string(),
                 });
@@ -507,7 +507,7 @@ impl SessionRegistry {
 fn notice_event(id: Uuid, notice: TerminalNotice) -> Event {
     Event::Notify {
         session: Some(id),
-        kind: NotifyKind::Terminal,
+        notice: NotifyKind::Terminal,
         title: notice.title,
         body: notice.body,
     }

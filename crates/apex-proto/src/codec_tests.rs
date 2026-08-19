@@ -1,5 +1,7 @@
 use super::*;
-use crate::message::{ClientMessage, Command, Hello, PROTOCOL_VERSION, RequestId};
+use crate::message::{
+    ClientMessage, Command, Event, Hello, NotifyKind, PROTOCOL_VERSION, RequestId, ServerMessage,
+};
 
 fn roundtrip(frame: Frame) -> Frame {
     let mut codec = FrameCodec::default();
@@ -52,4 +54,18 @@ fn unknown_kind_is_rejected() {
     let mut inner = LengthDelimitedCodec::new();
     inner.encode(Bytes::from_static(&[0xaa, 0x01]), &mut buf).expect("encode");
     assert!(codec.decode(&mut buf).is_err());
+}
+
+#[test]
+fn a_notice_survives_the_server_envelope() {
+    let event = Event::Notify {
+        session: Some(uuid::Uuid::nil()),
+        notice: NotifyKind::Terminal,
+        title: Some("Apex".into()),
+        body: "ready".into(),
+    };
+    let message = ServerMessage::Event(event.clone());
+    let decoded: ServerMessage =
+        roundtrip(Frame::control(&message).expect("encode")).parse_control().expect("parse");
+    assert_eq!(decoded, ServerMessage::Event(event));
 }

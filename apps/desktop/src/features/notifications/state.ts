@@ -136,8 +136,8 @@ export async function startNotifications(): Promise<() => void> {
   const stopListening = onNotice((event) => {
     push({
       sessionId: event.session,
-      kind: event.kind,
-      title: event.title ?? headline(event.kind),
+      kind: event.notice,
+      title: event.title ?? headline(event.notice),
       body: event.body.length > 0 ? event.body : scopeOf(event.session),
     });
   });

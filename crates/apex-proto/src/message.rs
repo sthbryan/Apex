@@ -848,7 +848,7 @@ pub enum Event {
     Notify {
         #[ts(type = "string | null")]
         session: Option<Uuid>,
-        kind: NotifyKind,
+        notice: NotifyKind,
         title: Option<String>,
         body: String,
     },
