@@ -31,8 +31,10 @@ export type Notice = {
 
 const KEPT = 50;
 const COOLDOWN_MS = 4000;
+const TOAST_MS = 6000;
 
 export const notices = signal<Notice[]>([]);
+export const live = signal<number[]>([]);
 export const unread = computed(() => notices.value.filter((notice) => !notice.read).length);
 
 export const waiting = computed(() =>
@@ -51,9 +53,37 @@ let lastComplaint = 0;
 export function push(entry: Omit<Notice, "id" | "at" | "read">): void {
   const notice: Notice = { ...entry, id: ++nextNotice, at: Date.now(), read: false };
   notices.value = [...notices.value, notice].slice(-KEPT);
+  if (shouldToast(notice)) {
+    live.value = [...live.value, notice.id];
+    if (notice.kind !== "error") {
+      setTimeout(() => dismissToast(notice.id), TOAST_MS);
+    }
+  }
   if (shouldDisturb(notice)) {
     sendNotification({ title: notice.title, body: notice.body });
   }
+}
+
+export function dismissToast(id: number): void {
+  live.value = live.value.filter((candidate) => candidate !== id);
+}
+
+export function dismissToasts(): void {
+  live.value = [];
+}
+
+export function lasting(kind: NoticeKind): boolean {
+  return kind === "error";
+}
+
+function shouldToast(notice: Notice): boolean {
+  if (notice.sessionId === null) {
+    return true;
+  }
+  if (mutedSessions.peek().includes(notice.sessionId)) {
+    return false;
+  }
+  return !(focused && visibleSessions.peek().has(notice.sessionId));
 }
 
 export function markAllRead(): void {

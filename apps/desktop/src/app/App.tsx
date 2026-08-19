@@ -5,11 +5,11 @@ import { DaemonFailed } from "@/app/DaemonFailed";
 import { useKeymap } from "@/app/keymap";
 import { Layout } from "@/app/layout/Layout";
 import { startDockWidth } from "@/app/layout/state";
-import { Notice } from "@/app/Notice";
 import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
 import { startGitWatch } from "@/features/git/state";
 import { startNotifications } from "@/features/notifications/state";
+import { Toasts } from "@/features/notifications/Toasts";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { activeProject, history, loadProjects } from "@/features/projects/state";
 import { CloseSession } from "@/features/sessions/CloseSession";
@@ -107,7 +107,7 @@ export function App() {
   return (
     <>
       <Layout onNewSession={() => setPaletteOpen(true)} />
-      <Notice />
+      <Toasts />
       <NewSession />
       <CloseSession />
       <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
