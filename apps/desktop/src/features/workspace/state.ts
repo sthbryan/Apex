@@ -31,6 +31,7 @@ import {
   siblingOf,
   splitLeaf,
   swapViews,
+  withMain,
 } from "@/features/workspace/tree";
 
 export type Tab = {
@@ -220,13 +221,37 @@ export function openQuietly(view: PaneView, asSplit: boolean): void {
   spareTabId = openView(view, false);
 }
 
+function parentLeafOf(tab: Tab, view: PaneView): Leaf | null {
+  if (view.type !== "session") {
+    return null;
+  }
+  const parent = sessions.value.find((session) => session.id === view.sessionId)?.parent;
+  if (!parent) {
+    return null;
+  }
+  return leaves(tab.root).find((pane) => sessionOf(pane) === parent) ?? null;
+}
+
 function splitQuietly(tab: Tab, view: PaneView): void {
   const incoming = leaf(view);
-  const direction: Direction = leaves(tab.root).length % 2 === 1 ? "row" : "column";
-  updateTab(tab.id, (current) => ({
-    ...current,
-    root: splitLeaf(current.root, current.activeLeafId, direction, incoming),
-  }));
+  const mainId = parentLeafOf(tab, view)?.id ?? null;
+  if (!mainId) {
+    const direction: Direction = leaves(tab.root).length % 2 === 1 ? "row" : "column";
+    updateTab(tab.id, (current) => ({
+      ...current,
+      root: splitLeaf(current.root, current.activeLeafId, direction, incoming),
+    }));
+    return;
+  }
+  updateTab(tab.id, (current) => {
+    const main = findLeaf(current.root, mainId);
+    if (!main) {
+      return current;
+    }
+    const others = leaves(current.root).filter((pane) => pane.id !== mainId);
+    const splitId = current.root.kind === "split" ? current.root.id : undefined;
+    return { ...current, root: withMain(main, [...others, incoming], "row", splitId) };
+  });
 }
 
 function focusPane(matches: (view: PaneView) => boolean): boolean {
