@@ -25,6 +25,8 @@ export type Split = {
 
 export type PaneNode = Leaf | Split;
 
+export const MAIN_RATIO = 0.5;
+
 const MIN_RATIO = 0.1;
 const MAX_RATIO = 0.9;
 
@@ -161,4 +163,42 @@ export function siblingOf(node: PaneNode, leafId: string): Leaf | null {
     return node.first.kind === "leaf" ? node.first : null;
   }
   return null;
+}
+
+export function opposite(direction: Direction): Direction {
+  return direction.startsWith("row") ? "column" : "row";
+}
+
+export function stack(panes: Leaf[], direction: Direction): PaneNode {
+  if (panes.length <= 1) {
+    return panes[0];
+  }
+  const half = Math.ceil(panes.length / 2);
+  return {
+    kind: "split",
+    id: newId(),
+    direction,
+    ratio: clampRatio(half / panes.length),
+    first: stack(panes.slice(0, half), opposite(direction)),
+    second: stack(panes.slice(half), opposite(direction)),
+  };
+}
+
+export function withMain(
+  main: Leaf,
+  others: Leaf[],
+  direction: Direction,
+  splitId: string = newId(),
+): PaneNode {
+  if (others.length === 0) {
+    return main;
+  }
+  return {
+    kind: "split",
+    id: splitId,
+    direction,
+    ratio: MAIN_RATIO,
+    first: main,
+    second: stack(others, opposite(direction)),
+  };
 }
