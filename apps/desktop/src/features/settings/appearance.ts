@@ -2,6 +2,7 @@ import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import { retheme } from "@/features/sessions/registry";
+import { complain } from "@/shared/daemon";
 
 export type Veil = "solid" | "chrome" | "full";
 export type Material = "subtle" | "medium" | "deep";
@@ -16,7 +17,7 @@ const VEILS: Veil[] = ["solid", "chrome", "full"];
 const MATERIALS: Material[] = ["subtle", "medium", "deep"];
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
-export const MIN_OPACITY = 40;
+export const MIN_OPACITY = 60;
 
 function restore<T extends string>(key: string, allowed: T[], fallback: T): T {
   try {
@@ -29,7 +30,7 @@ function restore<T extends string>(key: string, allowed: T[], fallback: T): T {
 
 function restoreOpacity(): number {
   const raw = Number.parseInt(localStorage.getItem(OPACITY) ?? "", 10);
-  return Number.isFinite(raw) ? Math.min(100, Math.max(MIN_OPACITY, raw)) : 72;
+  return Number.isFinite(raw) ? Math.min(100, Math.max(MIN_OPACITY, raw)) : 85;
 }
 
 export const veil = signal<Veil>(restore(VEIL, VEILS, "solid"));
@@ -75,7 +76,7 @@ export function applyAppearance(): void {
 
   void invoke("set_window_material", {
     material: translucent ? material.value : null,
-  }).catch(() => {});
+  }).catch(complain);
 
   retheme();
 }
