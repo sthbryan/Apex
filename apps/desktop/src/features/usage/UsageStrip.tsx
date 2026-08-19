@@ -11,7 +11,7 @@ import { metrics } from "@/shared/telemetry";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
-const SHOWN = 3;
+const SHOWN = 2;
 
 type Entry = { agent: string; window: QuotaWindow };
 
