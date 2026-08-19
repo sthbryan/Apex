@@ -303,6 +303,8 @@ export const en = {
     grid: "Grid",
     mainLeft: "Main left",
     mainTop: "Main top",
+    mainRight: "Main right",
+    mainBottom: "Main bottom",
   },
   palette: {
     placeholder: "Type a command…",

@@ -305,6 +305,8 @@ export const es: Messages = {
     grid: "Cuadrícula",
     mainLeft: "Principal a la izquierda",
     mainTop: "Principal arriba",
+    mainRight: "Principal a la derecha",
+    mainBottom: "Principal abajo",
   },
   palette: {
     placeholder: "Escribe un comando…",
