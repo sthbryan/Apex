@@ -71,6 +71,14 @@ pub struct AgentProfile {
     pub history: Option<HistoryConfig>,
     #[serde(default)]
     pub quota: Option<QuotaConfig>,
+    #[serde(default)]
+    pub notify: Option<NotifyConfig>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NotifyConfig {
+    #[serde(default)]
+    pub bell: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
