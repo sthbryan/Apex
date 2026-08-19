@@ -17,6 +17,7 @@ import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { applyIdleGrace } from "@/features/settings/agentMode";
+import { applyAppearance } from "@/features/settings/appearance";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
@@ -53,6 +54,7 @@ export function App() {
     const stopCleanup = startPaneCleanup();
     const stopIntents = startViewIntents();
     const stopTheme = startThemeWatcher();
+    applyAppearance();
     const stopDockWidth = startDockWidth();
     return () => {
       stopNotifications?.();
