@@ -13,7 +13,7 @@ import { projects } from "@/features/projects/state";
 import { onNotice, sessions } from "@/features/sessions/state";
 import { mutedSessions, notifyEnabled } from "@/features/settings/agentMode";
 import { visibleSessions } from "@/features/workspace/state";
-import { notices as toasts } from "@/shared/daemon";
+import { complain, notices as toasts } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
 
@@ -42,7 +42,8 @@ export const waiting = computed(() =>
 const announced = new Map<string, SessionState>();
 const lastSent = new Map<string, number>();
 const lastQuota = new Map<string, number>();
-let allowed = false;
+export const permitted = signal(false);
+
 let focused = true;
 let nextNotice = 0;
 let lastComplaint = 0;
@@ -64,7 +65,7 @@ export function forgetNotices(): void {
 }
 
 function shouldDisturb(notice: Notice): boolean {
-  if (!allowed || !notifyEnabled.peek()) {
+  if (!permitted.peek() || !notifyEnabled.peek()) {
     return false;
   }
   if (notice.sessionId === null) {
@@ -103,7 +104,7 @@ export function scopeOf(sessionId: string | null): string {
 }
 
 export async function startNotifications(): Promise<() => void> {
-  allowed = await ensurePermission();
+  permitted.value = await ensurePermission();
   for (const session of sessions.value) {
     announced.set(session.id, session.state);
   }
@@ -182,13 +183,18 @@ export async function startNotifications(): Promise<() => void> {
   };
 }
 
+export async function askForPermission(): Promise<void> {
+  permitted.value = await ensurePermission();
+}
+
 async function ensurePermission(): Promise<boolean> {
   try {
     if (await isPermissionGranted()) {
       return true;
     }
     return (await requestPermission()) === "granted";
-  } catch {
+  } catch (cause) {
+    complain(cause);
     return false;
   }
 }

@@ -1,6 +1,11 @@
 import cn from "cnfast";
 import type { Notice } from "@/features/notifications/state";
-import { forgetNotices, notices } from "@/features/notifications/state";
+import {
+  askForPermission,
+  forgetNotices,
+  notices,
+  permitted,
+} from "@/features/notifications/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { sessions } from "@/features/sessions/state";
 import { roughly } from "@/features/usage/format";
@@ -36,6 +41,17 @@ export function NotifyPanel({ onClose }: Props) {
           <Icon name="close" size={12} />
         </button>
       </header>
+
+      {!permitted.value && (
+        <button
+          type="button"
+          onClick={() => void askForPermission()}
+          class="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5 text-left text-micro text-state-blocked transition-colors hover:bg-raised"
+        >
+          <Icon name="bellOff" size={12} class="shrink-0" />
+          {t("notify.denied")}
+        </button>
+      )}
 
       <div class="min-h-0 flex-1 overflow-y-auto py-1">
         {latest.length === 0 ? (

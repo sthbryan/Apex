@@ -166,6 +166,7 @@ export const en = {
     terminal: "An agent rang",
     exited: "An agent exited badly",
     quota: "{agent} ran out of room",
+    denied: "The system is not letting Apex through. Ask again.",
     error: "Apex hit an error",
     title: "Notifications",
     empty: "Nothing to catch up on.",
