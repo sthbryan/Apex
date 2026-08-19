@@ -76,6 +76,12 @@
   --apex-muted: light-dark(#3d434a, #c3c9d3);
   --apex-faint: light-dark(#393d42, #aeb4be);
   --apex-border: light-dark(#c7ccd3, #363b45);
+
+  --apex-state-idle: light-dark(#67717c, #9ca2aa);
+  --apex-state-working: light-dark(#0751a9, #9ccaff);
+  --apex-state-blocked: light-dark(#704f00, #efbe76);
+  --apex-state-done: light-dark(#14612a, #8bd796);
+  --apex-state-failed: light-dark(#a61b25, #ffb2b2);
 }
 
 :root[data-veil="on"][data-theme="light"] {
