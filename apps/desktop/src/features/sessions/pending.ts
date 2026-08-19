@@ -11,6 +11,7 @@ import {
   buildLayout,
   countPanes,
   LAYOUT_PRESETS,
+  type LayoutPreset,
   type LayoutSpec,
 } from "@/features/workspace/layouts";
 import {
@@ -228,21 +229,28 @@ export async function applyLayout(spec: LayoutSpec): Promise<void> {
 
 let layoutCycle = 0;
 
+function smallestAbove(slots: number): LayoutPreset[] {
+  const bigger = LAYOUT_PRESETS.filter((preset) => countPanes(preset.spec) > slots);
+  if (bigger.length === 0) {
+    return [];
+  }
+  const smallest = Math.min(...bigger.map((preset) => countPanes(preset.spec)));
+  return bigger.filter((preset) => countPanes(preset.spec) === smallest);
+}
+
 export function cycleLayout(): void {
   const tab = activeTab.value;
   if (!tab) {
     return;
   }
   const slots = leaves(tab.root).length;
-  for (let step = 1; step <= LAYOUT_PRESETS.length; step += 1) {
-    const index = (layoutCycle + step) % LAYOUT_PRESETS.length;
-    const preset = LAYOUT_PRESETS[index];
-    if (countPanes(preset.spec) >= slots) {
-      layoutCycle = index;
-      void applyLayout(preset.spec);
-      return;
-    }
+  const fitting = LAYOUT_PRESETS.filter((preset) => countPanes(preset.spec) === slots);
+  const options = fitting.length > 0 ? fitting : smallestAbove(slots);
+  if (options.length === 0) {
+    return;
   }
+  layoutCycle = (layoutCycle + 1) % options.length;
+  void applyLayout(options[layoutCycle].spec);
 }
 
 whenClosingSession((sessionId) => {
