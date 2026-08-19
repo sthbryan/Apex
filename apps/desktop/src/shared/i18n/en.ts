@@ -309,7 +309,6 @@ export const en = {
     splitDown: "Split down",
     resize: "Resize panes",
     emptyTitle: "Run a team of AI agents, not a wall of terminals.",
-    emptySubtitle: "Apex watches each session for you.",
     emptyHintBefore: "Press",
     emptyHintAfter: "to start a session.",
     moreTabs: "{count} more tabs",

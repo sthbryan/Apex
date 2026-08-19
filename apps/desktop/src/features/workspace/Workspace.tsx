@@ -1,11 +1,16 @@
 import type { ComponentChildren } from "preact";
 
 import { activeProject } from "@/features/projects/state";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
+import { requestSession } from "@/features/sessions/pending";
 import { sessions } from "@/features/sessions/state";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
+import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
+
+const OFFERED_AGENTS = 4;
 
 export function Workspace() {
   return (
@@ -45,34 +50,68 @@ export function Workspace() {
 
 function NoProject() {
   return (
-    <div class="flex h-full items-center justify-center px-8 text-center text-faint">
-      {t("projects.empty")}
-    </div>
+    <Splash>
+      <p class="text-pretty text-muted">{t("projects.empty")}</p>
+    </Splash>
   );
 }
 
 function EmptySessions() {
+  const project = activeProject.value;
+  const offered = installedAgents.value.slice(0, OFFERED_AGENTS);
+
   return (
-    <div class="flex h-full flex-col items-center justify-center gap-6 px-8 text-center">
+    <Splash>
+      <p class="max-w-md text-balance text-muted">{t("workspace.emptyTitle")}</p>
+      {project && offered.length > 0 && (
+        <ul class="flex flex-wrap items-center justify-center gap-2">
+          {offered.map((agent) => (
+            <li key={agent.name}>
+              <button
+                type="button"
+                onClick={() =>
+                  requestSession({
+                    project: project.id,
+                    agent: agent.name,
+                    direction: null,
+                    isGit: project.is_git,
+                  })
+                }
+                class="flex items-center gap-2 rounded-full border border-border bg-chrome px-3 py-1.5 text-muted transition-colors hover:border-muted hover:text-text"
+              >
+                <AgentIcon agent={agent.name} size={13} class="shrink-0" />
+                {agent.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p class="text-micro text-faint">
+        {t("workspace.emptyHintBefore")} <Kbd>⌘K</Kbd> {t("workspace.emptyHintAfter")}
+      </p>
+    </Splash>
+  );
+}
+
+function Splash({ children }: { children: ComponentChildren }) {
+  return (
+    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-pane px-8 text-center">
       <ApexMark />
-      <div class="flex max-w-md flex-col gap-2">
-        <h1 class="text-balance text-[22px] font-semibold leading-tight text-text">
-          {t("workspace.emptyTitle")}
-        </h1>
-        <p class="text-pretty text-sm leading-relaxed text-muted">{t("workspace.emptySubtitle")}</p>
-      </div>
-      <div class="mt-1 flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-muted">
-        <span>{t("workspace.emptyHintBefore")}</span>
-        <Kbd>⌘K</Kbd>
-        <span>{t("workspace.emptyHintAfter")}</span>
-      </div>
+      <h1 class="relative font-display text-[clamp(3rem,12vw,7rem)] leading-none font-normal tracking-tight text-text">
+        APEX
+      </h1>
+      {children}
     </div>
   );
 }
 
 function ApexMark() {
   return (
-    <svg viewBox="0 0 1024 1024" class="size-16 text-accent" aria-hidden="true">
+    <svg
+      viewBox="0 0 1024 1024"
+      class="pointer-events-none absolute w-[min(70vh,70vw)] text-accent opacity-[0.06]"
+      aria-hidden="true"
+    >
       <path
         d="M 512 230.4 L 793.6 512 L 512 793.6 L 230.4 512 Z"
         fill="none"
