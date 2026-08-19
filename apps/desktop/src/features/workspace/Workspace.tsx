@@ -95,7 +95,7 @@ function EmptySessions() {
 
 function Splash({ children }: { children: ComponentChildren }) {
   return (
-    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-bg px-8 text-center">
+    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-pane px-8 text-center">
       <ApexMark />
       <h1 class="relative font-display text-[clamp(3rem,12vw,7rem)] leading-none font-normal tracking-tight text-text">
         APEX

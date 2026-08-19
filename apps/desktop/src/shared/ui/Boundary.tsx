@@ -22,7 +22,7 @@ export class Boundary extends Component<Props, State> {
   render() {
     if (this.state.failure !== null) {
       return (
-        <div class="h-full overflow-auto bg-bg p-3">
+        <div class="h-full overflow-auto bg-pane p-3">
           <p class="text-state-failed">{this.state.failure}</p>
         </div>
       );

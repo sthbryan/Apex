@@ -10,7 +10,7 @@ export function TitleBar({ reserveControls, lead, children }: Props) {
   return (
     <header
       data-tauri-drag-region
-      class="flex h-9 shrink-0 select-none items-center justify-between gap-3"
+      class="flex h-9 shrink-0 select-none items-center justify-between gap-3 bg-chrome"
       style={{
         paddingLeft: reserveControls ? "max(var(--apex-controls-start, 0px), 12px)" : "12px",
         paddingRight: "max(var(--apex-controls-end, 0px), 12px)",

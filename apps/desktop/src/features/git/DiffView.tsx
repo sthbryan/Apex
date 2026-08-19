@@ -76,7 +76,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     : unstaged.length === 0 && staged.length === 0;
 
   return (
-    <div class="flex h-full flex-col bg-bg">
+    <div class="flex h-full flex-col bg-pane">
       {chrome && (
         <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
           <Icon name="branch" size={12} />

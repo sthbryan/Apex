@@ -18,7 +18,7 @@ function color(name: string): string {
 
 export function readTerminalTheme(): ITheme {
   return {
-    background: color("--apex-bg"),
+    background: color("--apex-tty"),
     foreground: color("--apex-text"),
     cursor: color("--apex-accent"),
     cursorAccent: color("--apex-bg"),

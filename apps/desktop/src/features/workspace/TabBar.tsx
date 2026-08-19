@@ -73,7 +73,10 @@ export function TabBar({ tabs, sessions }: Props) {
   const overflowTabs = hidden > 0 ? tabs.slice(tabs.length - hidden) : [];
 
   return (
-    <div ref={holder} class="relative flex min-h-8.5 shrink-0 items-stretch border-b border-border">
+    <div
+      ref={holder}
+      class="relative flex min-h-8.5 shrink-0 items-stretch border-b border-border bg-chrome"
+    >
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId.value;
         const overflowed = index >= tabs.length - hidden;
@@ -158,7 +161,7 @@ export function TabBar({ tabs, sessions }: Props) {
             onClick={() => setOpen((value) => !value)}
             class={cn(
               "flex items-center gap-0.5 border-r border-border px-2.5 text-muted transition-colors hover:text-text",
-              open && "bg-bg text-text",
+              open && "bg-pane text-text",
             )}
           >
             <Icon name="plus" size={12} />
@@ -172,7 +175,7 @@ export function TabBar({ tabs, sessions }: Props) {
                 "animate-drop-in": !popover.leaving,
               })}
             >
-              <div class="w-56 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-2xl">
+              <div class="w-56 overflow-hidden rounded-lg border border-border bg-float py-1 shadow-2xl">
                 {overflowTabs.map((tab) => {
                   const active = tab.id === activeTabId.value;
                   return (
