@@ -13,6 +13,7 @@ import { projects } from "@/features/projects/state";
 import { onNotice, sessions } from "@/features/sessions/state";
 import { mutedSessions, notifyEnabled } from "@/features/settings/agentMode";
 import { visibleSessions } from "@/features/workspace/state";
+import { notices as toasts } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
 
@@ -44,6 +45,7 @@ const lastQuota = new Map<string, number>();
 let allowed = false;
 let focused = true;
 let nextNotice = 0;
+let lastComplaint = 0;
 
 export function push(entry: Omit<Notice, "id" | "at" | "read">): void {
   const notice: Notice = { ...entry, id: ++nextNotice, at: Date.now(), read: false };
@@ -140,6 +142,16 @@ export async function startNotifications(): Promise<() => void> {
     });
   });
 
+  const stopComplaints = effect(() => {
+    for (const toast of toasts.value) {
+      if (toast.id <= lastComplaint) {
+        continue;
+      }
+      lastComplaint = toast.id;
+      push({ sessionId: null, kind: "error", title: t("notify.error"), body: toast.text });
+    }
+  });
+
   const stopQuota = effect(() => {
     for (const report of metrics.value?.quotas ?? []) {
       const tight = Math.max(0, ...report.windows.map((window) => window.used_percent));
@@ -165,6 +177,7 @@ export async function startNotifications(): Promise<() => void> {
     unlisten();
     stopWatching();
     stopListening();
+    stopComplaints();
     stopQuota();
   };
 }

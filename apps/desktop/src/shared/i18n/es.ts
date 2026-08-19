@@ -168,6 +168,7 @@ export const es: Messages = {
     terminal: "Un agente te avisa",
     exited: "Un agente salió con error",
     quota: "{agent} se quedó sin margen",
+    error: "Apex se topó con un error",
     title: "Notificaciones",
     empty: "Nada que repasar.",
     clear: "Vaciar la bandeja",
