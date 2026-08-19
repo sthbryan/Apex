@@ -13,7 +13,7 @@ const BLUR = "apex.blur";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
-export const MIN_OPACITY = 75;
+export const MIN_OPACITY = 50;
 export const MIN_BLUR = 1;
 export const MAX_BLUR = 4;
 
