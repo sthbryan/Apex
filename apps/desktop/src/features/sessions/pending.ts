@@ -23,7 +23,14 @@ import {
   tabs,
   whenClosingSession,
 } from "@/features/workspace/state";
-import { type Direction, findLeaf, leaves, type PaneView } from "@/features/workspace/tree";
+import {
+  type Direction,
+  findLeaf,
+  type Leaf,
+  leaves,
+  type PaneView,
+  sessionOf,
+} from "@/features/workspace/tree";
 import { agents, complain } from "@/shared/daemon";
 
 export type PendingSession = {
@@ -150,6 +157,24 @@ export async function splitWithShellAt(
   splitLeafWithView(tabId, leafId, { type: "session", sessionId: created.id }, direction);
 }
 
+function spawnerLeaf(panes: Leaf[]): Leaf | null {
+  const visible = new Set(panes.map(sessionOf).filter((id): id is string => id !== null));
+  const spawners = new Set(
+    sessions.value
+      .filter(
+        (session) =>
+          session.parent !== null && visible.has(session.id) && visible.has(session.parent),
+      )
+      .map((session) => session.parent as string),
+  );
+  return (
+    panes.find((pane) => {
+      const id = sessionOf(pane);
+      return id !== null && spawners.has(id);
+    }) ?? null
+  );
+}
+
 export async function applyLayout(spec: LayoutSpec): Promise<void> {
   const tab = activeTab.value;
   if (!tab) {
@@ -160,7 +185,8 @@ export async function applyLayout(spec: LayoutSpec): Promise<void> {
     return;
   }
   const existing = leaves(tab.root);
-  const seed = existing.find((pane) => pane.id === tab.activeLeafId) ?? existing[0];
+  const seed =
+    spawnerLeaf(existing) ?? existing.find((pane) => pane.id === tab.activeLeafId) ?? existing[0];
   if (!seed) {
     return;
   }
