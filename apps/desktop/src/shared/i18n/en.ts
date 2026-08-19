@@ -171,6 +171,8 @@ export const en = {
     clear: "Clear the tray",
     mute: "Silence this session",
     unmute: "Let this session speak",
+    on: "On",
+    off: "Off",
     enabled: "Notifications",
     enabledHint: "Only when the session is out of sight.",
   },

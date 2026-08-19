@@ -9,8 +9,10 @@ import {
   agentModes,
   applyIdleGrace,
   idleGrace,
+  notifyEnabled,
   setAgentMode,
   setIdleGrace,
+  setNotifyEnabled,
   setSharedContext,
   setSplitCap,
   setViewLanding,
@@ -203,6 +205,21 @@ export function Settings() {
               },
             ]
           : []),
+        {
+          id: "notify",
+          label: t("notify.enabled"),
+          hint: t("notify.enabledHint"),
+          control: (
+            <Segmented label={t("notify.enabled")}>
+              <Choice selected={notifyEnabled.value} onSelect={() => setNotifyEnabled(true)}>
+                {t("notify.on")}
+              </Choice>
+              <Choice selected={!notifyEnabled.value} onSelect={() => setNotifyEnabled(false)}>
+                {t("notify.off")}
+              </Choice>
+            </Segmented>
+          ),
+        },
         {
           id: "sidebar",
           label: t("settings.sidebar"),

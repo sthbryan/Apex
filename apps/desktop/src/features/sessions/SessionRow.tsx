@@ -4,6 +4,7 @@ import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionStateDot } from "@/features/sessions/SessionStateDot";
 import { sessions } from "@/features/sessions/state";
+import { mutedSessions, setMuted } from "@/features/settings/agentMode";
 import { countdown } from "@/features/usage/format";
 import { activeSessionId, focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -22,6 +23,7 @@ export function SessionRow({ session, depth = 0 }: Props) {
   const report = (metrics.value?.quotas ?? []).find((entry) => entry.agent === session.agent);
   const tight = report ? Math.max(0, ...report.windows.map((window) => window.used_percent)) : 0;
   const overLimit = tight >= 100;
+  const muted = mutedSessions.value.includes(session.id);
 
   return (
     <li
@@ -63,6 +65,17 @@ export function SessionRow({ session, depth = 0 }: Props) {
         <span class="shrink-0 text-micro text-faint tabular-nums">
           {finished ? t("sessions.exited", { code: String(session.exit_code) }) : ago}
         </span>
+      </button>
+      <button
+        type="button"
+        title={muted ? t("notify.unmute") : t("notify.mute")}
+        onClick={() => setMuted(session.id, !muted)}
+        class={cn(
+          "shrink-0 transition-[opacity,color] hover:text-text",
+          muted ? "text-faint" : "text-faint opacity-0 group-hover:opacity-100",
+        )}
+      >
+        <Icon name={muted ? "bellOff" : "bell"} size={12} />
       </button>
       <button
         type="button"

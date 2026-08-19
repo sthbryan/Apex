@@ -173,6 +173,8 @@ export const es: Messages = {
     clear: "Vaciar la bandeja",
     mute: "Silenciar esta sesión",
     unmute: "Devolverle la voz a esta sesión",
+    on: "Sí",
+    off: "No",
     enabled: "Notificaciones",
     enabledHint: "Solo cuando la sesión no está a la vista.",
   },
