@@ -11,7 +11,7 @@ import { metrics } from "@/shared/telemetry";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
 
-const SHOWN = 2;
+const SHOWN = 3;
 
 type Entry = { agent: string; window: QuotaWindow };
 
@@ -85,10 +85,13 @@ function Chip({ entry }: { entry: Entry }) {
   const level = tone(percent);
 
   return (
-    <span class="flex shrink-0 items-center gap-1" title={resetText(entry.window)}>
+    <span class="flex shrink-0 items-center gap-1.5" title={resetText(entry.window)}>
       <AgentIcon agent={entry.agent} class="shrink-0 text-faint" />
+      <span class="h-1 w-6 shrink-0 overflow-hidden rounded-full bg-raised">
+        <span class={cn("block h-full rounded-full", level.bar)} style={{ width: `${percent}%` }} />
+      </span>
       <span class={cn("tabular-nums", level.text)}>{percent}%</span>
-      {entry.window.label && <span class="text-faint">{entry.window.label}</span>}
+      {entry.window.label && <span class="text-tiny text-faint">{entry.window.label}</span>}
     </span>
   );
 }
