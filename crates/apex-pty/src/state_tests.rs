@@ -84,7 +84,7 @@ fn answering_a_prompt_returns_the_session_to_working() {
 fn a_prompt_that_scrolled_off_the_screen_stops_counting() {
     let (mut detector, now) = detector(&["PROMPT-MARKER"], &[]);
     detector.observe(b"PROMPT-MARKER", now);
-    detector.observe(&vec![b'\n'; 60], now);
+    detector.observe(&[b'\n'; 60], now);
     assert_eq!(detector.poll(now + Duration::from_millis(80)), Some(SessionState::Idle));
 }
 
