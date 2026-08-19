@@ -83,7 +83,7 @@ const CAPS = "apex.agent-view-caps";
 
 export type SplitCaps = { yours: number; spare: number };
 
-const DEFAULT_CAPS: SplitCaps = { yours: 4, spare: 6 };
+const DEFAULT_CAPS: SplitCaps = { yours: 5, spare: 6 };
 
 function restoreCaps(): SplitCaps {
   try {
