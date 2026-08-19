@@ -78,17 +78,16 @@ fn material_of(name: &str) -> Option<window_vibrancy::NSVisualEffectMaterial> {
 fn set_window_material(window: tauri::WebviewWindow, material: Option<String>) -> Answer<()> {
     #[cfg(target_os = "macos")]
     {
-        let chosen = material.as_deref().and_then(material_of);
-        let outcome = match chosen {
-            Some(effect) => window_vibrancy::apply_vibrancy(
+        window_vibrancy::clear_vibrancy(&window).map_err(|error| error.to_string())?;
+        if let Some(effect) = material.as_deref().and_then(material_of) {
+            window_vibrancy::apply_vibrancy(
                 &window,
                 effect,
                 Some(window_vibrancy::NSVisualEffectState::Active),
                 Some(WINDOW_RADIUS),
-            ),
-            None => window_vibrancy::clear_vibrancy(&window).map(|_| ()),
-        };
-        outcome.map_err(|error| error.to_string())?;
+            )
+            .map_err(|error| error.to_string())?;
+        }
     }
     Ok(())
 }
