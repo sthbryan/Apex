@@ -148,3 +148,24 @@ async fn massive_output_does_not_grow_the_buffer_past_capacity() {
     process.wait().await;
     assert!(process.snapshot().len() <= DEFAULT_CAPACITY);
 }
+
+#[tokio::test]
+async fn an_osc_notice_survives_a_real_pty() {
+    let process =
+        PtyProcess::spawn(shell("printf '\\033]777;notify;Apex;ready\\007'")).expect("spawn");
+    let mut stream = process.subscribe();
+    let mut scanner = crate::OscScanner::new(false);
+    let found = timeout(Duration::from_secs(10), async {
+        loop {
+            let chunk = stream.recv().await.expect("chunk");
+            let notices = scanner.scan(&chunk, std::time::Instant::now());
+            if let Some(notice) = notices.into_iter().next() {
+                return notice;
+            }
+        }
+    })
+    .await
+    .expect("a notice");
+    assert_eq!(found.title.as_deref(), Some("Apex"));
+    assert_eq!(found.body, "ready");
+}
