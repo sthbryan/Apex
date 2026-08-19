@@ -45,7 +45,7 @@ export function NotifyChip() {
         <div
           ref={popover.holder}
           class={cn(
-            "absolute right-0 bottom-[calc(100%+0.5rem)] z-50 w-80 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl",
+            "absolute right-0 bottom-[calc(100%+0.5rem)] z-50 w-80 overflow-hidden rounded-lg border border-border bg-float shadow-2xl",
             {
               "animate-rise-out": popover.leaving,
               "animate-rise-in": !popover.leaving,

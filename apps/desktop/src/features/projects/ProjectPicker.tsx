@@ -74,7 +74,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
         <div
           ref={menu.holder}
           class={cn(
-            `absolute top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl`,
+            `absolute top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-float shadow-2xl`,
             {
               "left-0 w-72": variant === "bar",
               "inset-x-2": variant === "dock",

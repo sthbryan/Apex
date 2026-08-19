@@ -175,7 +175,7 @@ export function TabBar({ tabs, sessions }: Props) {
                 "animate-drop-in": !popover.leaving,
               })}
             >
-              <div class="w-56 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-2xl">
+              <div class="w-56 overflow-hidden rounded-lg border border-border bg-float py-1 shadow-2xl">
                 {overflowTabs.map((tab) => {
                   const active = tab.id === activeTabId.value;
                   return (

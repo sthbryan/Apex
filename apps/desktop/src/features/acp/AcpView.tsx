@@ -236,7 +236,7 @@ function Composer({ id, working }: { id: string; working: boolean }) {
   return (
     <div class="relative flex shrink-0 flex-col border-t border-border">
       {matches.length > 0 && (
-        <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-surface">
+        <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-float">
           {matches.map((command, index) => (
             <li key={command.name}>
               <button

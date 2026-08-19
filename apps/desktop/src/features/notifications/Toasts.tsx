@@ -77,7 +77,7 @@ function Toast({ notice, depth, expanded }: { notice: Notice; depth: number; exp
         setDrag(0);
       }}
       class={cn(
-        "relative flex touch-none animate-drop-in items-start gap-2.5 overflow-hidden rounded-lg border bg-overlay px-3 py-2 shadow-2xl transition-[transform,opacity] duration-(--apex-quick)",
+        "relative flex touch-none animate-drop-in items-start gap-2.5 overflow-hidden rounded-lg border bg-float px-3 py-2 shadow-2xl transition-[transform,opacity] duration-(--apex-quick)",
         notice.kind === "error" ? "border-state-failed" : "border-border",
       )}
       style={{
