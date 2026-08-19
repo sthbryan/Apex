@@ -1,5 +1,8 @@
 import type { Direction, PaneNode, PaneView } from "@/features/workspace/tree";
 import { leaf, newId } from "@/features/workspace/tree";
+import type { MessageKey } from "@/shared/i18n";
+
+export type LayoutName = Extract<MessageKey, `layout.${string}`>;
 
 export type LayoutSpec =
   | { type: "pane"; main?: boolean }
@@ -7,12 +10,7 @@ export type LayoutSpec =
 
 export type LayoutPreset = {
   id: string;
-  nameKey:
-    | "layout.twoColumns"
-    | "layout.twoRows"
-    | "layout.grid"
-    | "layout.mainLeft"
-    | "layout.mainTop";
+  nameKey: LayoutName;
   preview: string[];
   spec: LayoutSpec;
 };
