@@ -13,7 +13,7 @@ const BLUR = "apex.blur";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
-export const MIN_OPACITY = 30;
+export const MIN_OPACITY = 75;
 export const MIN_BLUR = 1;
 export const MAX_BLUR = 4;
 
@@ -37,7 +37,7 @@ function restoreScale(): UiScale {
 
 export const uiScale = signal<UiScale>(restoreScale());
 export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) === "on");
-export const veilOpacity = signal<number>(restoreNumber(OPACITY, 80, MIN_OPACITY, 100));
+export const veilOpacity = signal<number>(restoreNumber(OPACITY, 85, MIN_OPACITY, 100));
 export const blur = signal<number>(restoreNumber(BLUR, 2, MIN_BLUR, MAX_BLUR));
 
 export function setUiScale(next: UiScale): void {
