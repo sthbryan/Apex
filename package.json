@@ -1,0 +1,27 @@
+{
+  "name": "apex",
+  "private": true,
+  "version": "0.5.0",
+  "scripts": {
+    "dev": "bun run dev:desktop",
+    "dev:desktop": "bun run --cwd apps/desktop dev",
+    "dev:daemon": "cargo run -p apexd",
+    "build:desktop": "bun run --cwd apps/desktop build",
+    "build:rust": "cargo build --workspace",
+    "build": "bun run build:desktop && bun run build:rust",
+    "bundle:desktop": "bun run --cwd apps/desktop tauri build",
+    "test": "bun run test:desktop && bun run test:rust",
+    "test:desktop": "bun run --cwd apps/desktop build",
+    "test:rust": "cargo test --workspace",
+    "lint": "bun run lint:desktop && bun run lint:rust",
+    "lint:desktop": "bun run --cwd apps/desktop lint",
+    "lint:rust": "cargo clippy --workspace --all-targets -- -D warnings",
+    "format": "bun run --cwd apps/desktop format && cargo fmt --all",
+    "ci": "bun run lint && bun run test",
+    "install:all": "bun install --cwd apps/desktop",
+    "clean": "cargo clean && rm -rf apps/desktop/dist apps/desktop/node_modules",
+    "kill": "pkill -x apexd || true",
+    "release": "bun scripts/release.mjs",
+    "release:dry": "bun scripts/release.mjs --dry-run"
+  }
+}
