@@ -79,13 +79,13 @@
 }
 
 :root[data-veil="on"][data-theme="light"] {
-  --apex-veil-chrome: max(var(--apex-veil), 60%);
-  --apex-readable: max(var(--apex-veil), 88%);
+  --apex-veil-chrome: max(var(--apex-veil), 45%);
+  --apex-readable: max(var(--apex-veil), 78%);
 }
 
 @media (prefers-color-scheme: light) {
   :root[data-veil="on"]:not([data-theme="dark"]) {
-    --apex-veil-chrome: max(var(--apex-veil), 60%);
-    --apex-readable: max(var(--apex-veil), 88%);
+    --apex-veil-chrome: max(var(--apex-veil), 45%);
+    --apex-readable: max(var(--apex-veil), 78%);
   }
 }
