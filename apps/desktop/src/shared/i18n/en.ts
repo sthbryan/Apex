@@ -303,6 +303,8 @@ export const en = {
     threeColumns: "Three columns",
     threeRows: "Three rows",
     grid: "Grid",
+    mainStackThree: "Main + 3",
+    mainStackFour: "Main + 4",
     mainLeft: "Main left",
     mainTop: "Main top",
     mainRight: "Main right",

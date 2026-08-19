@@ -305,6 +305,8 @@ export const es: Messages = {
     threeColumns: "Tres columnas",
     threeRows: "Tres filas",
     grid: "Cuadrícula",
+    mainStackThree: "Principal + 3",
+    mainStackFour: "Principal + 4",
     mainLeft: "Principal a la izquierda",
     mainTop: "Principal arriba",
     mainRight: "Principal a la derecha",

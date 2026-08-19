@@ -114,6 +114,39 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
       second: { type: "split", direction: "column", first: pane(), second: pane() },
     },
   },
+  {
+    id: "mainStackThree",
+    nameKey: "layout.mainStackThree",
+    preview: ["┌─────┬──┬──┐", "│     │  │  │", "│     ├──┴──┤", "│     │     │", "└─────┴─────┘"],
+    spec: {
+      type: "split",
+      direction: "row",
+      first: main(),
+      second: {
+        type: "split",
+        direction: "column",
+        ratio: 2 / 3,
+        first: { type: "split", direction: "row", first: pane(), second: pane() },
+        second: pane(),
+      },
+    },
+  },
+  {
+    id: "mainStackFour",
+    nameKey: "layout.mainStackFour",
+    preview: ["┌─────┬──┬──┐", "│     │  │  │", "│     ├──┼──┤", "│     │  │  │", "└─────┴──┴──┘"],
+    spec: {
+      type: "split",
+      direction: "row",
+      first: main(),
+      second: {
+        type: "split",
+        direction: "column",
+        first: { type: "split", direction: "row", first: pane(), second: pane() },
+        second: { type: "split", direction: "row", first: pane(), second: pane() },
+      },
+    },
+  },
 ];
 
 export function countPanes(spec: LayoutSpec): number {
