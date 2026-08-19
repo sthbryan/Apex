@@ -32,6 +32,30 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     spec: { type: "split", direction: "column", first: pane(), second: pane() },
   },
   {
+    id: "threeColumns",
+    nameKey: "layout.threeColumns",
+    preview: ["┌───┬───┬───┐", "│   │   │   │", "└───┴───┴───┘"],
+    spec: {
+      type: "split",
+      direction: "row",
+      ratio: 1 / 3,
+      first: pane(),
+      second: { type: "split", direction: "row", first: pane(), second: pane() },
+    },
+  },
+  {
+    id: "threeRows",
+    nameKey: "layout.threeRows",
+    preview: ["┌─────────┐", "├─────────┤", "├─────────┤", "└─────────┘"],
+    spec: {
+      type: "split",
+      direction: "column",
+      ratio: 1 / 3,
+      first: pane(),
+      second: { type: "split", direction: "column", first: pane(), second: pane() },
+    },
+  },
+  {
     id: "mainLeft",
     nameKey: "layout.mainLeft",
     preview: ["┌─────┬─────┐", "│     ├─────┤", "│     │     │", "└─────┴─────┘"],

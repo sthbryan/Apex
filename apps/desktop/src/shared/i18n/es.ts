@@ -302,6 +302,8 @@ export const es: Messages = {
   layout: {
     twoColumns: "Dos columnas",
     twoRows: "Dos filas",
+    threeColumns: "Tres columnas",
+    threeRows: "Tres filas",
     grid: "Cuadrícula",
     mainLeft: "Principal a la izquierda",
     mainTop: "Principal arriba",

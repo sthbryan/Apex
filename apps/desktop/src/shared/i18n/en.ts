@@ -300,6 +300,8 @@ export const en = {
   layout: {
     twoColumns: "Two columns",
     twoRows: "Two rows",
+    threeColumns: "Three columns",
+    threeRows: "Three rows",
     grid: "Grid",
     mainLeft: "Main left",
     mainTop: "Main top",
