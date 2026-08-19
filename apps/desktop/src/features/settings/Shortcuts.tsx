@@ -9,7 +9,7 @@ const GROUPS: Shortcut["group"][] = ["navigation", "panes"];
 
 function Keycap({ value }: { value: string }) {
   return (
-    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-[11px] font-medium leading-none text-text shadow-[0_1px_0_0_var(--color-border)]">
+    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-micro font-medium leading-none text-text shadow-[0_1px_0_0_var(--color-border)]">
       {value}
     </kbd>
   );
@@ -48,7 +48,11 @@ export function Shortcuts() {
     : SHORTCUTS.filter((shortcut) => shortcut.group === group);
 
   return (
-    <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("shortcuts.title")}>
+    <div
+      class="flex h-full min-h-0 flex-col bg-pane"
+      role="region"
+      aria-label={t("shortcuts.title")}
+    >
       <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-surface px-3">
         <Icon name="keyboard" size={14} class="shrink-0 text-faint" />
         <span class="truncate text-text">{t("shortcuts.title")}</span>

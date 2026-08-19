@@ -45,7 +45,7 @@ export function TerminalView({ id, active }: Props) {
 
   return (
     <div class="relative h-full w-full">
-      <div ref={host} class="h-full w-full overflow-hidden bg-bg p-0.5" />
+      <div ref={host} class="h-full w-full overflow-hidden bg-pane p-0.5" />
       {quiet && (
         <p class="pointer-events-none absolute inset-x-0 top-2 text-center text-faint">
           {t("sessions.quiet")}

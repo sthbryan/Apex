@@ -68,7 +68,7 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
         }}
         class={cn(
           "absolute top-0 left-0 z-30 w-(--apex-dock-width) transition-[bottom] duration-(--apex-dock) ease-(--apex-ease)",
-          shownAsOverlay ? "bottom-0" : "bottom-6",
+          shownAsOverlay ? "bottom-0" : "bottom-(--apex-statusbar-h)",
           panel.leaving ? "animate-dock-out" : enterKind.current === "slide" && "animate-dock-in",
         )}
       >

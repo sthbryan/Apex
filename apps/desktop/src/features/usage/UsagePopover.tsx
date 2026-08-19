@@ -30,9 +30,9 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
     <div class="w-72 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl">
       <header class="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
         <Icon name="activity" size={12} class="text-faint" />
-        <span class="truncate text-[12px] font-medium text-text">{t("usage.title")}</span>
+        <span class="truncate text-small font-medium text-text">{t("usage.title")}</span>
         {updatedAgo && (
-          <span class="shrink-0 text-[10px] text-faint">
+          <span class="shrink-0 text-tiny text-faint">
             {t("usage.updatedAgo", { away: updatedAgo })}
           </span>
         )}
@@ -61,7 +61,7 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
           <section key={agent} class="flex items-center gap-1.5 px-2.5 py-1">
             <AgentIcon agent={agent} size={12} class="shrink-0 text-faint" />
             <h3 class="text-micro uppercase tracking-wider text-faint">{agent}</h3>
-            <span class="ml-auto shrink-0 text-[11px] text-state-failed">
+            <span class="ml-auto shrink-0 text-micro text-state-failed">
               {t("usage.unavailable")}
             </span>
             <button
@@ -70,7 +70,7 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
                 setRefreshing(true);
                 void refreshQuota().finally(() => setRefreshing(false));
               }}
-              class="shrink-0 text-[11px] text-faint underline transition-colors hover:text-text"
+              class="shrink-0 text-micro text-faint underline transition-colors hover:text-text"
             >
               {t("usage.retry")}
             </button>
@@ -87,7 +87,7 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
                 <div class="mb-0.5 flex items-center gap-1.5">
                   <AgentIcon agent={report.agent} size={12} class="shrink-0 text-faint" />
                   <h3 class="text-micro uppercase tracking-wider text-faint">{report.agent}</h3>
-                  <span class={cn("ml-auto shrink-0 text-[11px] font-medium", level.text)}>
+                  <span class={cn("ml-auto shrink-0 text-micro font-medium", level.text)}>
                     {tight}%
                   </span>
                 </div>

@@ -15,7 +15,7 @@ export function ResourcesPanel({ snapshot, onClose }: Props) {
     <div class="flex max-h-96 flex-col">
       <header class="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
         <Icon name="activity" size={12} class="text-faint" />
-        <span class="truncate text-[12px] font-medium text-text">{t("resources.title")}</span>
+        <span class="truncate text-small font-medium text-text">{t("resources.title")}</span>
         <button
           type="button"
           onClick={onClose}

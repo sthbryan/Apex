@@ -1,5 +1,8 @@
 :root {
   --apex-dock-width: 14rem;
+  --apex-statusbar-h: 1.5rem;
+  --apex-scale: 1;
+  --apex-veil: 100%;
   --apex-ease: cubic-bezier(0.2, 0, 0, 1);
   --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --apex-ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -10,120 +13,61 @@
   --apex-dock: 360ms;
   --apex-view: 200ms;
 
-  --apex-bg: #ffffff;
-  --apex-surface: #f6f7f9;
-  --apex-raised: #eceef0;
-  --apex-overlay: #ffffff;
-  --apex-border: #dfe2e6;
-  --apex-text: #1c1e21;
-  --apex-muted: #656d76;
-  --apex-faint: #8c959f;
-  --apex-accent: #b45309;
-  --apex-focus: #92400e;
-  --apex-selection: #f59e0b33;
+  --apex-bg: light-dark(#ffffff, #0c0d10);
+  --apex-surface: light-dark(#f6f7f9, #131519);
+  --apex-raised: light-dark(#eceef0, #1a1d22);
+  --apex-overlay: light-dark(#ffffff, #1f2228);
+  --apex-border: light-dark(#dfe2e6, #24272e);
+  --apex-text: light-dark(#1c1e21, #e4e6eb);
+  --apex-muted: light-dark(#656d76, #8b919c);
+  --apex-faint: light-dark(#8c959f, #5c626d);
+  --apex-accent: light-dark(#b45309, #f59e0b);
+  --apex-focus: light-dark(#92400e, #fbbf24);
+  --apex-selection: light-dark(#f59e0b33, #f59e0b40);
 
-  --apex-state-idle: #8c959f;
-  --apex-state-working: #0969da;
-  --apex-state-blocked: #bf8700;
-  --apex-state-done: #1a7f37;
-  --apex-state-failed: #cf222e;
+  --apex-shell: var(--apex-bg);
+  --apex-chrome: color-mix(in oklab, var(--apex-surface) var(--apex-veil), transparent);
+  --apex-pane: var(--apex-bg);
 
-  --apex-ansi-black: #24292f;
-  --apex-ansi-red: #cf222e;
-  --apex-ansi-green: #1a7f37;
-  --apex-ansi-yellow: #9a6700;
-  --apex-ansi-blue: #0969da;
-  --apex-ansi-magenta: #8250df;
-  --apex-ansi-cyan: #1b7c83;
-  --apex-ansi-white: #6e7781;
-  --apex-ansi-bright-black: #57606a;
-  --apex-ansi-bright-red: #a40e26;
-  --apex-ansi-bright-green: #2da44e;
-  --apex-ansi-bright-yellow: #bf8700;
-  --apex-ansi-bright-blue: #218bff;
-  --apex-ansi-bright-magenta: #a475f9;
-  --apex-ansi-bright-cyan: #3192aa;
-  --apex-ansi-bright-white: #8c959f;
+  --apex-state-idle: light-dark(#8c959f, #6e7681);
+  --apex-state-working: light-dark(#0969da, #4a9eff);
+  --apex-state-blocked: light-dark(#bf8700, #e8a33d);
+  --apex-state-done: light-dark(#1a7f37, #3fb950);
+  --apex-state-failed: light-dark(#cf222e, #ff6b6b);
 
+  --apex-ansi-black: light-dark(#24292f, #24272e);
+  --apex-ansi-red: light-dark(#cf222e, #ff6b6b);
+  --apex-ansi-green: light-dark(#1a7f37, #3fb950);
+  --apex-ansi-yellow: light-dark(#9a6700, #e8a33d);
+  --apex-ansi-blue: light-dark(#0969da, #4a9eff);
+  --apex-ansi-magenta: light-dark(#8250df, #bc8cff);
+  --apex-ansi-cyan: light-dark(#1b7c83, #39c5cf);
+  --apex-ansi-white: light-dark(#6e7781, #b1bac4);
+  --apex-ansi-bright-black: light-dark(#57606a, #5c626d);
+  --apex-ansi-bright-red: light-dark(#a40e26, #ff8787);
+  --apex-ansi-bright-green: light-dark(#2da44e, #56d364);
+  --apex-ansi-bright-yellow: light-dark(#bf8700, #f0b849);
+  --apex-ansi-bright-blue: light-dark(#218bff, #6cb6ff);
+  --apex-ansi-bright-magenta: light-dark(#a475f9, #d2a8ff);
+  --apex-ansi-bright-cyan: light-dark(#3192aa, #56d4dd);
+  --apex-ansi-bright-white: light-dark(#8c959f, #e4e6eb);
+
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] {
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --apex-bg: #0c0d10;
-    --apex-surface: #131519;
-    --apex-raised: #1a1d22;
-    --apex-overlay: #1f2228;
-    --apex-border: #24272e;
-    --apex-text: #e4e6eb;
-    --apex-muted: #8b919c;
-    --apex-faint: #5c626d;
-    --apex-accent: #f59e0b;
-    --apex-focus: #fbbf24;
-    --apex-selection: #f59e0b40;
-
-    --apex-state-idle: #6e7681;
-    --apex-state-working: #4a9eff;
-    --apex-state-blocked: #e8a33d;
-    --apex-state-done: #3fb950;
-    --apex-state-failed: #ff6b6b;
-
-    --apex-ansi-black: #24272e;
-    --apex-ansi-red: #ff6b6b;
-    --apex-ansi-green: #3fb950;
-    --apex-ansi-yellow: #e8a33d;
-    --apex-ansi-blue: #4a9eff;
-    --apex-ansi-magenta: #bc8cff;
-    --apex-ansi-cyan: #39c5cf;
-    --apex-ansi-white: #b1bac4;
-    --apex-ansi-bright-black: #5c626d;
-    --apex-ansi-bright-red: #ff8787;
-    --apex-ansi-bright-green: #56d364;
-    --apex-ansi-bright-yellow: #f0b849;
-    --apex-ansi-bright-blue: #6cb6ff;
-    --apex-ansi-bright-magenta: #d2a8ff;
-    --apex-ansi-bright-cyan: #56d4dd;
-    --apex-ansi-bright-white: #e4e6eb;
-
-    color-scheme: dark;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
-:root[data-theme="dark"] {
-  --apex-bg: #0c0d10;
-  --apex-surface: #131519;
-  --apex-raised: #1a1d22;
-  --apex-overlay: #1f2228;
-  --apex-border: #24272e;
-  --apex-text: #e4e6eb;
-  --apex-muted: #8b919c;
-  --apex-faint: #5c626d;
-  --apex-accent: #f59e0b;
-  --apex-focus: #fbbf24;
-  --apex-selection: #f59e0b40;
+:root[data-veil="chrome"],
+:root[data-veil="full"] {
+  --apex-shell: transparent;
+}
 
-  --apex-state-idle: #6e7681;
-  --apex-state-working: #4a9eff;
-  --apex-state-blocked: #e8a33d;
-  --apex-state-done: #3fb950;
-  --apex-state-failed: #ff6b6b;
-
-  --apex-ansi-black: #24272e;
-  --apex-ansi-red: #ff6b6b;
-  --apex-ansi-green: #3fb950;
-  --apex-ansi-yellow: #e8a33d;
-  --apex-ansi-blue: #4a9eff;
-  --apex-ansi-magenta: #bc8cff;
-  --apex-ansi-cyan: #39c5cf;
-  --apex-ansi-white: #b1bac4;
-  --apex-ansi-bright-black: #5c626d;
-  --apex-ansi-bright-red: #ff8787;
-  --apex-ansi-bright-green: #56d364;
-  --apex-ansi-bright-yellow: #f0b849;
-  --apex-ansi-bright-blue: #6cb6ff;
-  --apex-ansi-bright-magenta: #d2a8ff;
-  --apex-ansi-bright-cyan: #56d4dd;
-  --apex-ansi-bright-white: #e4e6eb;
-
-  color-scheme: dark;
+:root[data-veil="full"] {
+  --apex-pane: color-mix(in oklab, var(--apex-bg) var(--apex-veil), transparent);
 }

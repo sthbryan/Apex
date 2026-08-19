@@ -3,14 +3,19 @@
 @theme {
   --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-display: ui-serif, "New York", Georgia, "Times New Roman", serif;
 
-  --text-micro: 0.6875rem;
-  --text-code: 0.8125rem;
+  --text-tiny: calc(10px * var(--apex-scale));
+  --text-micro: calc(11px * var(--apex-scale));
+  --text-small: calc(12px * var(--apex-scale));
+  --text-code: calc(13px * var(--apex-scale));
 
   --color-bg: var(--apex-bg);
   --color-surface: var(--apex-surface);
   --color-raised: var(--apex-raised);
   --color-overlay: var(--apex-overlay);
+  --color-chrome: var(--apex-chrome);
+  --color-pane: var(--apex-pane);
   --color-border: var(--apex-border);
   --color-text: var(--apex-text);
   --color-muted: var(--apex-muted);

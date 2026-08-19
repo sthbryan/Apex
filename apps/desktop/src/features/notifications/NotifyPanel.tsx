@@ -24,7 +24,7 @@ export function NotifyPanel({ onClose }: Props) {
     <div class="flex max-h-96 flex-col">
       <header class="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
         <Icon name="bell" size={12} class="text-faint" />
-        <span class="truncate text-[12px] font-medium text-text">{t("notify.title")}</span>
+        <span class="truncate text-small font-medium text-text">{t("notify.title")}</span>
         <button
           type="button"
           title={t("notify.clear")}
@@ -89,7 +89,7 @@ function NoticeRow({ notice }: { notice: Notice }) {
         <Icon name={glyph(notice)} size={12} class="mt-0.5 shrink-0 text-faint" />
       )}
       <span class="min-w-0 flex-1">
-        <span class="block truncate text-[12px]">{notice.title}</span>
+        <span class="block truncate text-small">{notice.title}</span>
         {notice.body && <span class="block truncate text-micro text-faint">{notice.body}</span>}
       </span>
       <span class="shrink-0 text-micro text-faint tabular-nums">{ago}</span>

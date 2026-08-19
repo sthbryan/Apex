@@ -352,8 +352,12 @@ export function Settings() {
   const panel = needle ? null : shown[0]?.panel;
 
   return (
-    <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("settings.title")}>
-      <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-surface px-3">
+    <div
+      class="flex h-full min-h-0 flex-col bg-pane"
+      role="region"
+      aria-label={t("settings.title")}
+    >
+      <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-chrome px-3">
         <Icon name="settings" size={14} class="shrink-0 text-faint" />
         <span class="truncate text-text">{t("settings.title")}</span>
         <button

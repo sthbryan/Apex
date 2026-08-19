@@ -10,7 +10,7 @@ import {
   sendInput,
   suspendTerminal,
 } from "@/features/sessions/state";
-import { fontFamily, readTerminalTheme } from "@/shared/theme/xterm";
+import { fontFamily, readTerminalTheme, terminalFontSize } from "@/shared/theme/xterm";
 
 type Entry = {
   element: HTMLDivElement;
@@ -45,9 +45,10 @@ export async function mountTerminal(id: string, host: HTMLElement): Promise<Entr
 
   const terminal = new Terminal({
     allowProposedApi: true,
+    allowTransparency: true,
     cursorBlink: true,
     fontFamily: fontFamily(),
-    fontSize: 13,
+    fontSize: terminalFontSize(),
     lineHeight: 1.2,
     scrollback: 2000,
     theme: readTerminalTheme(),
@@ -160,8 +161,13 @@ export function focusTerminal(id: string): void {
 
 export function retheme(): void {
   const theme = readTerminalTheme();
-  for (const entry of registry.values()) {
+  const size = terminalFontSize();
+  for (const [id, entry] of registry) {
     entry.terminal.options.theme = theme;
+    if (entry.terminal.options.fontSize !== size) {
+      entry.terminal.options.fontSize = size;
+      refitTerminal(id);
+    }
   }
 }
 

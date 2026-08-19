@@ -13,7 +13,7 @@ export function UsageRow({ window }: Props) {
 
   return (
     <div class="flex items-center gap-1.5 py-0.5" title={resetText(window)}>
-      <span class="w-5 shrink-0 truncate text-[10px] text-faint">{window.label ?? "·"}</span>
+      <span class="w-5 shrink-0 truncate text-tiny text-faint">{window.label ?? "·"}</span>
       <span class="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
         <span
           class={cn(
@@ -29,8 +29,8 @@ export function UsageRow({ window }: Props) {
           />
         )}
       </span>
-      <span class={cn("w-8 shrink-0 text-right text-[11px]", level.text)}>{percent}%</span>
-      <span class={cn("w-10 shrink-0 truncate text-right text-[10px]", pace?.tone ?? "text-faint")}>
+      <span class={cn("w-8 shrink-0 text-right text-micro", level.text)}>{percent}%</span>
+      <span class={cn("w-10 shrink-0 truncate text-right text-tiny", pace?.tone ?? "text-faint")}>
         {pace?.text ?? ""}
       </span>
     </div>

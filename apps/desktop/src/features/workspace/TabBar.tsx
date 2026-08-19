@@ -75,7 +75,7 @@ export function TabBar({ tabs, sessions }: Props) {
   return (
     <div
       ref={holder}
-      class="relative flex h-8 min-h-8.5 shrink-0 items-stretch border-b border-border"
+      class="relative flex min-h-8.5 shrink-0 items-stretch border-b border-border bg-chrome"
     >
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId.value;
@@ -161,7 +161,7 @@ export function TabBar({ tabs, sessions }: Props) {
             onClick={() => setOpen((value) => !value)}
             class={cn(
               "flex items-center gap-0.5 border-r border-border px-2.5 text-muted transition-colors hover:text-text",
-              open && "bg-bg text-text",
+              open && "bg-pane text-text",
             )}
           >
             <Icon name="plus" size={12} />
@@ -191,7 +191,7 @@ export function TabBar({ tabs, sessions }: Props) {
                       <span class="flex shrink-0 items-center text-faint">
                         {identity(tab, sessions)}
                       </span>
-                      <span class="truncate text-[12px] text-text">{titleOf(tab, sessions)}</span>
+                      <span class="truncate text-small text-text">{titleOf(tab, sessions)}</span>
                       {active && (
                         <Icon name="check" size={12} class="ml-auto shrink-0 text-faint" />
                       )}

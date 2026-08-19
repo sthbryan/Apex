@@ -17,7 +17,7 @@ export function SessionSection({ sessions }: Props) {
       <header class="mb-0.5 flex items-baseline gap-1">
         <h3 class="text-micro uppercase tracking-wider text-faint">{t("resources.bySession")}</h3>
         {sessions.length > 0 && (
-          <span class="truncate text-[10px] text-faint">
+          <span class="truncate text-tiny text-faint">
             {t("resources.sessionSummary", {
               count: String(sessions.length),
               memory: compactBytes(sessionMemory),
@@ -27,9 +27,9 @@ export function SessionSection({ sessions }: Props) {
         )}
       </header>
       {sessions.length === 0 ? (
-        <p class="text-[11px] text-faint">{t("resources.noSessions")}</p>
+        <p class="text-micro text-faint">{t("resources.noSessions")}</p>
       ) : (
-        <ul class="flex flex-col text-[11px]">
+        <ul class="flex flex-col text-micro">
           {sessions.map((usage) => (
             <li key={usage.id} class="animate-row-in">
               <button
@@ -46,7 +46,7 @@ export function SessionSection({ sessions }: Props) {
               {usage.processes.slice(0, 3).map((process) => (
                 <div
                   key={process.pid}
-                  class="group flex items-center gap-2 rounded px-1 pl-3 text-[10px] text-faint transition-colors hover:bg-raised"
+                  class="group flex items-center gap-2 rounded px-1 pl-3 text-tiny text-faint transition-colors hover:bg-raised"
                 >
                   <span class="truncate">{process.name}</span>
                   <span class="ml-auto shrink-0">{compactBytes(process.memory)}</span>

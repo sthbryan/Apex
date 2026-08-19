@@ -1,10 +1,10 @@
+import { TitleBar } from "@/app/layout/TitleBar";
 import { connect, failure, stale } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
-import { TitleBar } from "@/app/layout/TitleBar";
 
 export function DaemonFailed() {
   return (
-    <div class="flex h-full flex-col bg-bg text-text">
+    <div class="flex h-full flex-col bg-pane text-text">
       <TitleBar reserveControls />
       <main class="flex-1 overflow-auto p-4">
         <p class="text-state-blocked">
