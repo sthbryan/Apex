@@ -38,7 +38,7 @@ export function AcpView({ id }: { id: string }) {
   }, [entries.length]);
 
   return (
-    <div class="flex h-full flex-col bg-pane">
+    <div class="flex h-full flex-col bg-bg">
       <div class="min-h-0 flex-1 overflow-auto px-3 py-2">
         {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
         {entries.map((entry) => (entry ? <Entry key={entry.index} id={id} entry={entry} /> : null))}
@@ -236,7 +236,7 @@ function Composer({ id, working }: { id: string; working: boolean }) {
   return (
     <div class="relative flex shrink-0 flex-col border-t border-border">
       {matches.length > 0 && (
-        <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-float">
+        <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-surface">
           {matches.map((command, index) => (
             <li key={command.name}>
               <button

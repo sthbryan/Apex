@@ -48,11 +48,7 @@ export function Shortcuts() {
     : SHORTCUTS.filter((shortcut) => shortcut.group === group);
 
   return (
-    <div
-      class="flex h-full min-h-0 flex-col bg-pane"
-      role="region"
-      aria-label={t("shortcuts.title")}
-    >
+    <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("shortcuts.title")}>
       <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-surface px-3">
         <Icon name="keyboard" size={14} class="shrink-0 text-faint" />
         <span class="truncate text-text">{t("shortcuts.title")}</span>

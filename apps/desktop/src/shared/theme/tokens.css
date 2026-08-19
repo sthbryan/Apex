@@ -2,7 +2,6 @@
   --apex-dock-width: 14rem;
   --apex-statusbar-h: 1.5rem;
   --apex-scale: 1;
-  --apex-veil: 100%;
   --apex-ease: cubic-bezier(0.2, 0, 0, 1);
   --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --apex-ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -17,7 +16,6 @@
   --apex-surface: light-dark(#f6f7f9, #131519);
   --apex-raised: light-dark(#eceef0, #1a1d22);
   --apex-overlay: light-dark(#ffffff, #1f2228);
-  --apex-float: light-dark(#ffffff, #1f2228);
   --apex-border: light-dark(#dfe2e6, #24272e);
   --apex-text: light-dark(#1c1e21, #e4e6eb);
   --apex-muted: light-dark(#656d76, #8b919c);
@@ -25,10 +23,6 @@
   --apex-accent: light-dark(#b45309, #f59e0b);
   --apex-focus: light-dark(#92400e, #fbbf24);
   --apex-selection: light-dark(#f59e0b33, #f59e0b40);
-
-  --apex-shell: var(--apex-bg);
-  --apex-chrome: color-mix(in oklab, var(--apex-surface) var(--apex-veil), transparent);
-  --apex-pane: var(--apex-bg);
 
   --apex-state-idle: light-dark(#8c959f, #6e7681);
   --apex-state-working: light-dark(#0969da, #4a9eff);
@@ -62,15 +56,4 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-}
-
-:root[data-veil="chrome"],
-:root[data-veil="full"] {
-  --apex-shell: transparent;
-}
-
-:root[data-veil="full"] {
-  --apex-pane: color-mix(in oklab, var(--apex-bg) var(--apex-veil), transparent);
-  --apex-raised: color-mix(in oklab, light-dark(#eceef0, #1a1d22) var(--apex-veil), transparent);
-  --apex-overlay: color-mix(in oklab, light-dark(#ffffff, #1f2228) var(--apex-veil), transparent);
 }

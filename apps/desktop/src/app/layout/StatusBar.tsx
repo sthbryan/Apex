@@ -5,7 +5,7 @@ import { UsageStrip } from "@/features/usage/UsageStrip";
 
 export function StatusBar() {
   return (
-    <div class="flex h-(--apex-statusbar-h) shrink-0 items-center gap-3 border-t border-border bg-chrome px-2 text-faint">
+    <div class="flex h-(--apex-statusbar-h) shrink-0 items-center gap-3 border-t border-border bg-bg px-2 text-faint">
       <GitChip />
       <UsageStrip />
       <div class="ml-auto flex shrink-0 items-center gap-2">

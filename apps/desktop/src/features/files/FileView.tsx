@@ -49,7 +49,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   const lines = text ? countLines(text) : 0;
 
   return (
-    <div class="flex h-full flex-col bg-pane">
+    <div class="flex h-full flex-col bg-bg">
       {chrome && (
         <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
           <Icon name="file" size={12} />
@@ -92,7 +92,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <div class="flex min-h-full w-max min-w-full animate-veil-in leading-5">
             <div
               aria-hidden="true"
-              class="sticky left-0 shrink-0 select-none border-r border-border bg-pane px-2 py-2 text-right text-faint"
+              class="sticky left-0 shrink-0 select-none border-r border-border bg-bg px-2 py-2 text-right text-faint"
             >
               {Array.from({ length: lines }, (_, index) => (
                 <div key={index}>{index + 1}</div>

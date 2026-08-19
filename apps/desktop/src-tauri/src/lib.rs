@@ -44,9 +44,6 @@ impl AppState {
 
 type Answer<T> = Result<T, String>;
 
-#[cfg(target_os = "macos")]
-const WINDOW_RADIUS: f64 = 10.0;
-
 fn failed(error: anyhow::Error) -> String {
     format!("{error:#}")
 }
@@ -60,36 +57,6 @@ async fn daemon_version(state: tauri::State<'_, AppState>) -> Answer<String> {
 #[tauri::command]
 fn host_platform() -> &'static str {
     std::env::consts::OS
-}
-
-#[cfg(target_os = "macos")]
-fn material_of(name: &str) -> Option<window_vibrancy::NSVisualEffectMaterial> {
-    use window_vibrancy::NSVisualEffectMaterial::{HudWindow, Sidebar, UnderWindowBackground};
-    match name {
-        "subtle" => Some(Sidebar),
-        "medium" => Some(HudWindow),
-        "deep" => Some(UnderWindowBackground),
-        _ => None,
-    }
-}
-
-#[tauri::command]
-#[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
-fn set_window_material(window: tauri::WebviewWindow, material: Option<String>) -> Answer<()> {
-    #[cfg(target_os = "macos")]
-    {
-        window_vibrancy::clear_vibrancy(&window).map_err(|error| error.to_string())?;
-        if let Some(effect) = material.as_deref().and_then(material_of) {
-            window_vibrancy::apply_vibrancy(
-                &window,
-                effect,
-                Some(window_vibrancy::NSVisualEffectState::Active),
-                Some(WINDOW_RADIUS),
-            )
-            .map_err(|error| error.to_string())?;
-        }
-    }
-    Ok(())
 }
 
 #[tauri::command]
@@ -642,7 +609,6 @@ pub fn run() {
             daemon_version,
             host_platform,
             set_badge,
-            set_window_material,
             subscribe_output,
             subscribe_events,
             list_agents,

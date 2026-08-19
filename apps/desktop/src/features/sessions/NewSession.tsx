@@ -24,7 +24,7 @@ export function NewSession() {
     >
       <div
         class={cn(
-          "w-96 max-w-[90vw] overflow-hidden rounded-lg border border-border bg-float shadow-2xl",
+          "w-96 max-w-[90vw] overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl",
           overlay.leaving ? "animate-pop-out" : "animate-pop-in",
         )}
         onMouseDown={(event) => event.stopPropagation()}

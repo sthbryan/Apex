@@ -25,8 +25,8 @@ export function Dock({ header, children, floating = false }: Props) {
       class={cn(
         "relative flex h-full w-full flex-col overflow-hidden border-r border-border transition-[border-radius,box-shadow,background-color] duration-(--apex-dock)",
         floating
-          ? "rounded-r-xl bg-chrome shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
-          : "rounded-none bg-chrome shadow-none",
+          ? "rounded-r-xl bg-bg shadow-[8px_0_28px_rgba(0,0,0,0.28)]"
+          : "rounded-none bg-surface shadow-none",
       )}
     >
       <div

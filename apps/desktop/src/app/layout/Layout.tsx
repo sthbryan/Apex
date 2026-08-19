@@ -34,7 +34,7 @@ export function Layout({ onNewSession }: Props) {
   );
 
   return (
-    <div class="relative flex h-full flex-col text-text">
+    <div class="relative flex h-full flex-col bg-bg text-text">
       <div class="flex min-h-0 flex-1">
         <DockSlot open={dockVisible} overlay={overlay} onHoverChange={setDockHover}>
           <Dock

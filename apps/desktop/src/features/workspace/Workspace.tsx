@@ -77,7 +77,7 @@ function EmptySessions() {
                     isGit: project.is_git,
                   })
                 }
-                class="flex items-center gap-2 rounded-full border border-border bg-chrome px-3 py-1.5 text-muted transition-colors hover:border-muted hover:text-text"
+                class="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-muted transition-colors hover:border-muted hover:text-text"
               >
                 <AgentIcon agent={agent.name} size={13} class="shrink-0" />
                 {agent.name}
@@ -95,7 +95,7 @@ function EmptySessions() {
 
 function Splash({ children }: { children: ComponentChildren }) {
   return (
-    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-pane px-8 text-center">
+    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-bg px-8 text-center">
       <ApexMark />
       <h1 class="relative font-display text-[clamp(3rem,12vw,7rem)] leading-none font-normal tracking-tight text-text">
         APEX

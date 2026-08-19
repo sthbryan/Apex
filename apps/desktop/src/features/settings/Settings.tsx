@@ -20,30 +20,16 @@ import {
   splitCaps,
   viewLanding,
 } from "@/features/settings/agentMode";
-import {
-  type Material,
-  MIN_OPACITY,
-  material,
-  setMaterial,
-  setUiScale,
-  setVeil,
-  setVeilOpacity,
-  type UiScale,
-  uiScale,
-  type Veil,
-  veil,
-  veilOpacity,
-} from "@/features/settings/appearance";
+import { setUiScale, type UiScale, uiScale } from "@/features/settings/appearance";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { SettingsRow } from "@/features/settings/SettingsRow";
-import { agents, complain, daemonVersion, platform } from "@/shared/daemon";
+import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { type Locale, locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, type ThemeMode, themeMode } from "@/shared/theme/mode";
 import { Choice } from "@/shared/ui/Choice";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Select } from "@/shared/ui/Select";
-import { Slider } from "@/shared/ui/Slider";
 
 const THEMES: { value: ThemeMode; icon: IconName }[] = [
   { value: "system", icon: "monitor" },
@@ -58,21 +44,7 @@ const LANGUAGES: { value: Locale; label: string }[] = [
 
 const PANE_CAPS = [2, 3, 4, 5, 6, 8];
 
-const VEILS: Veil[] = ["solid", "chrome", "full"];
-const MATERIALS: Material[] = ["subtle", "medium", "deep"];
 const UI_SCALES: UiScale[] = ["compact", "normal", "roomy"];
-
-const VEIL_LABEL = {
-  solid: "settings.backgroundSolid",
-  chrome: "settings.backgroundChrome",
-  full: "settings.backgroundFull",
-} as const;
-
-const MATERIAL_LABEL = {
-  subtle: "settings.materialSubtle",
-  medium: "settings.materialMedium",
-  deep: "settings.materialDeep",
-} as const;
 
 const UI_SCALE_LABEL = {
   compact: "settings.uiScaleCompact",
@@ -168,65 +140,6 @@ export function Settings() {
             </Segmented>
           ),
         },
-        ...(platform.value === "macos"
-          ? [
-              {
-                id: "background",
-                label: t("settings.background"),
-                hint: t("settings.backgroundHint"),
-                control: (
-                  <Segmented label={t("settings.background")}>
-                    {VEILS.map((option) => (
-                      <Choice
-                        key={option}
-                        selected={veil.value === option}
-                        onSelect={() => setVeil(option)}
-                      >
-                        {t(VEIL_LABEL[option])}
-                      </Choice>
-                    ))}
-                  </Segmented>
-                ),
-              },
-            ]
-          : []),
-        ...(platform.value === "macos" && veil.value !== "solid"
-          ? [
-              {
-                id: "opacity",
-                label: t("settings.opacity"),
-                hint: t("settings.opacityHint"),
-                control: (
-                  <Slider
-                    label={t("settings.opacity")}
-                    value={veilOpacity.value}
-                    min={MIN_OPACITY}
-                    max={100}
-                    format={(value) => `${value}%`}
-                    onChange={setVeilOpacity}
-                  />
-                ),
-              },
-              {
-                id: "material",
-                label: t("settings.material"),
-                hint: t("settings.materialHint"),
-                control: (
-                  <Segmented label={t("settings.material")}>
-                    {MATERIALS.map((option) => (
-                      <Choice
-                        key={option}
-                        selected={material.value === option}
-                        onSelect={() => setMaterial(option)}
-                      >
-                        {t(MATERIAL_LABEL[option])}
-                      </Choice>
-                    ))}
-                  </Segmented>
-                ),
-              },
-            ]
-          : []),
         {
           id: "language",
           label: t("settings.language"),
@@ -466,12 +379,8 @@ export function Settings() {
   const panel = needle ? null : shown[0]?.panel;
 
   return (
-    <div
-      class="flex h-full min-h-0 flex-col bg-pane"
-      role="region"
-      aria-label={t("settings.title")}
-    >
-      <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-chrome px-3">
+    <div class="flex h-full min-h-0 flex-col bg-bg" role="region" aria-label={t("settings.title")}>
+      <header class="flex min-h-8.5 shrink-0 select-none items-center gap-2 border-b border-border bg-surface px-3">
         <Icon name="settings" size={14} class="shrink-0 text-faint" />
         <span class="truncate text-text">{t("settings.title")}</span>
         <button

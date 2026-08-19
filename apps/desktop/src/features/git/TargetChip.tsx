@@ -70,7 +70,7 @@ export function TargetChip({ project }: Props) {
         <div
           ref={menu.holder}
           class={cn(
-            "absolute right-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-lg border border-border bg-float shadow-2xl",
+            "absolute right-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-lg border border-border bg-overlay shadow-2xl",
             {
               "animate-drop-out": menu.leaving,
               "animate-drop-in": !menu.leaving,

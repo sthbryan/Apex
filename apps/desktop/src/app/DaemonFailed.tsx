@@ -4,7 +4,7 @@ import { t } from "@/shared/i18n";
 
 export function DaemonFailed() {
   return (
-    <div class="flex h-full flex-col bg-pane text-text">
+    <div class="flex h-full flex-col bg-bg text-text">
       <TitleBar reserveControls />
       <main class="flex-1 overflow-auto p-4">
         <p class="text-state-blocked">

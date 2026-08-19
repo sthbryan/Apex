@@ -45,7 +45,6 @@ export async function mountTerminal(id: string, host: HTMLElement): Promise<Entr
 
   const terminal = new Terminal({
     allowProposedApi: true,
-    allowTransparency: true,
     cursorBlink: true,
     fontFamily: fontFamily(),
     fontSize: terminalFontSize(),

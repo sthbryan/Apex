@@ -34,7 +34,7 @@ code {
 }
 
 #root {
-  background: var(--apex-shell);
+  background: var(--apex-bg);
   border-radius: var(--apex-window-radius);
   overflow: hidden;
   isolation: isolate;
