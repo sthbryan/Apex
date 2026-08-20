@@ -11,6 +11,7 @@ import {
   gitStatus,
   readDiff,
   readHunks,
+  refreshPending,
   setDiffLayout,
   stageHunk,
 } from "@/features/git/state";
@@ -97,6 +98,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
   const apply = (patch: string, stage: boolean) => {
     void stageHunk(target, patch, stage)
       .then(load)
+      .then(refreshPending)
       .catch((error: unknown) => setFailure(String(error)));
   };
 
@@ -185,18 +187,18 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
         {!commit && (
           <>
             <Group
-              label={t("git.unstagedHunks")}
+              label={t(walking ? "review.pending" : "git.unstagedHunks")}
               hunks={unstaged}
-              action={t("git.stageHunk")}
+              action={t(walking ? "review.approve" : "git.stageHunk")}
               onApply={(patch) => apply(patch, true)}
               path={path}
               split={split}
               target={target}
             />
             <Group
-              label={t("git.stagedHunks")}
+              label={t(walking ? "review.approved" : "git.stagedHunks")}
               hunks={staged}
-              action={t("git.unstageHunk")}
+              action={t(walking ? "review.undoApprove" : "git.unstageHunk")}
               onApply={(patch) => apply(patch, false)}
               tone="text-git-added"
               path={path}

@@ -265,6 +265,10 @@ export const es: Messages = {
     previous: "Archivo anterior",
     next: "Archivo siguiente",
     position: "{at}/{total}",
+    pending: "Esperándote",
+    approved: "Aprobado",
+    approve: "Aprobar",
+    undoApprove: "Deshacer",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

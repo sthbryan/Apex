@@ -263,6 +263,10 @@ export const en = {
     previous: "Previous file",
     next: "Next file",
     position: "{at}/{total}",
+    pending: "Waiting on you",
+    approved: "Approved",
+    approve: "Approve",
+    undoApprove: "Undo",
   },
   git: {
     noRepo: "This project is not a git repository.",
