@@ -13,6 +13,18 @@ import { roughly } from "@/features/usage/format";
 import { t } from "@/shared/i18n";
 
 const INTERVAL = 5000;
+const LAYOUT = "apex.diff-layout";
+
+export type DiffLayout = "unified" | "split";
+
+export const diffLayout = signal<DiffLayout>(
+  (localStorage.getItem(LAYOUT) as DiffLayout | null) ?? "unified",
+);
+
+export function setDiffLayout(layout: DiffLayout): void {
+  diffLayout.value = layout;
+  localStorage.setItem(LAYOUT, layout);
+}
 
 export const commits = signal<GitCommit[]>([]);
 export const gitTarget = signal<GitTarget>({ type: "project" });
