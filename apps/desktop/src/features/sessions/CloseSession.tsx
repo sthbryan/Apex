@@ -2,6 +2,7 @@ import cn from "cnfast";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
+import { useOverlay } from "@/features/browser/state";
 import { cancelClose, finishClose, pendingClose } from "@/features/sessions/pending";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
@@ -15,6 +16,7 @@ const CHOICES: { value: WorktreeDisposal; icon: IconName }[] = [
 export function CloseSession() {
   const request = pendingClose.value;
   const overlay = usePresence<HTMLDivElement>(request !== null);
+  useOverlay(overlay.mounted);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

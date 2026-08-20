@@ -1,6 +1,6 @@
 import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
-
+import { useOverlay } from "@/features/browser/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { usePresence } from "@/shared/ui/presence";
@@ -38,6 +38,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
   const field = useRef<HTMLInputElement>(null);
   const selected = useRef<HTMLButtonElement>(null);
   const overlay = usePresence<HTMLDivElement>(open);
+  useOverlay(overlay.mounted);
 
   useEffect(() => {
     if (!open) {

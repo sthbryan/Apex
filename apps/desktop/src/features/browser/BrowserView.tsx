@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef } from "preact/hooks";
 
+import { overlays } from "@/features/browser/state";
 import { complain } from "@/shared/daemon";
 
 type Props = {
@@ -48,9 +49,11 @@ export function BrowserView({ id, url, visible }: Props) {
     };
   }, [label]);
 
+  const shown = visible && overlays.value === 0;
+
   useEffect(() => {
-    void invoke("browser_show", { label, visible }).catch(complain);
-  }, [label, visible]);
+    void invoke("browser_show", { label, visible: shown }).catch(complain);
+  }, [label, shown]);
 
   return <div ref={host} class="h-full w-full bg-pane" />;
 }

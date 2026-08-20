@@ -1,5 +1,5 @@
 import cn from "cnfast";
-
+import { useOverlay } from "@/features/browser/state";
 import { cancelSession, pendingSession } from "@/features/sessions/pending";
 import { t } from "@/shared/i18n";
 import { usePresence } from "@/shared/ui/presence";
@@ -8,6 +8,7 @@ import { Choices } from "./Choices";
 export function NewSession() {
   const request = pendingSession.value;
   const overlay = usePresence<HTMLDivElement>(request !== null);
+  useOverlay(overlay.mounted);
 
   if (!overlay.mounted) {
     return null;
