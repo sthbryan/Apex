@@ -169,27 +169,6 @@ fn from_manual(root: &Path) -> Vec<Task> {
         .collect()
 }
 
-pub fn detect_port(output: &str) -> Option<u16> {
-    let mut found = None;
-    for line in output.lines().rev().take(200) {
-        for marker in ["http://localhost:", "http://127.0.0.1:", "http://0.0.0.0:"] {
-            if let Some(rest) = line.split(marker).nth(1) {
-                let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
-                if let Ok(port) = digits.parse::<u16>() {
-                    return Some(port);
-                }
-            }
-        }
-        if found.is_none()
-            && let Some(rest) = line.split("port ").nth(1)
-        {
-            let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
-            found = digits.parse::<u16>().ok();
-        }
-    }
-    found
-}
-
 pub fn write_manual(root: &Path, tasks: &BTreeMap<String, String>) -> Result<()> {
     let path = root.join(MANUAL_TASKS);
     if let Some(parent) = path.parent() {

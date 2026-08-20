@@ -318,6 +318,7 @@ pub struct SessionSummary {
     pub mode: AgentMode,
     #[ts(type = "string | null")]
     pub parent: Option<Uuid>,
+    pub url: Option<String>,
 }
 
 impl SessionSummary {
@@ -836,7 +837,7 @@ pub enum Reply {
 #[ts(export)]
 #[serde(rename_all = "snake_case")]
 pub enum CommandOutcome {
-    Ok { reply: Reply },
+    Ok { reply: Box<Reply> },
     Err { error: ProtocolError },
 }
 
@@ -880,6 +881,11 @@ pub enum Event {
         #[ts(type = "string")]
         id: Uuid,
         code: u32,
+    },
+    SessionUrl {
+        #[ts(type = "string")]
+        id: Uuid,
+        url: String,
     },
     SessionClosed {
         #[ts(type = "string")]
@@ -931,7 +937,7 @@ pub enum ServerMessage {
 
 impl ServerMessage {
     pub fn ok(id: RequestId, reply: Reply) -> Self {
-        Self::Response { id, outcome: CommandOutcome::Ok { reply } }
+        Self::Response { id, outcome: CommandOutcome::Ok { reply: Box::new(reply) } }
     }
 
     pub fn err(id: RequestId, error: ProtocolError) -> Self {

@@ -92,7 +92,7 @@ impl DaemonClient {
         }
 
         match receiver.await {
-            Ok(CommandOutcome::Ok { reply }) => Ok(reply),
+            Ok(CommandOutcome::Ok { reply }) => Ok(*reply),
             Ok(CommandOutcome::Err { error }) => bail!("{error}"),
             Err(_) => bail!("apexd closed the connection"),
         }

@@ -6,7 +6,6 @@ import type { TaskSummary } from "@/bindings/TaskSummary";
 import { activeProject } from "@/features/projects/state";
 import { requestClose } from "@/features/sessions/pending";
 import {
-  detectPort,
   failure,
   lastLines,
   loadTasks,
@@ -61,7 +60,7 @@ export function TasksPanel() {
 
 function Row({ task, session }: { task: TaskSummary; session: SessionSummary | null }) {
   const peek = session ? (peeks.value[task.name] ?? "") : "";
-  const port = peek ? detectPort(peek) : null;
+  const url = session?.url ?? null;
   const lines = peek ? lastLines(peek, 3) : [];
 
   return (
@@ -103,7 +102,7 @@ function Row({ task, session }: { task: TaskSummary; session: SessionSummary | n
           <span class={cn("min-w-0 truncate", session ? "text-text" : "text-muted")}>
             {task.name}
           </span>
-          {port !== null && <span class="shrink-0 text-state-done">:{port}</span>}
+          {url && <span class="shrink-0 text-state-done">:{portOf(url)}</span>}
           <span class="ml-auto shrink-0 truncate text-faint opacity-0 transition-opacity group-hover:opacity-100">
             {task.command}
           </span>
@@ -121,4 +120,12 @@ function Row({ task, session }: { task: TaskSummary; session: SessionSummary | n
       )}
     </li>
   );
+}
+
+function portOf(url: string): string {
+  try {
+    return new URL(url).port;
+  } catch {
+    return "";
+  }
 }

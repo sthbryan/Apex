@@ -9,7 +9,9 @@ use apex_proto::{
     AgentSummary, Event, Isolation, NotifyKind, SessionState, SessionSummary, TerminalSize,
     WorktreeDisposal, WorktreeInfo,
 };
-use apex_pty::{OscScanner, PtyProcess, PtySpec, StateDetector, StatePatterns, TerminalNotice};
+use apex_pty::{
+    OscScanner, PtyProcess, PtySpec, StateDetector, StatePatterns, TerminalNotice, UrlScanner,
+};
 use bytes::Bytes;
 use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio::time::{MissedTickBehavior, interval};
@@ -363,6 +365,7 @@ impl SessionRegistry {
             task: task.clone(),
             mode: apex_proto::AgentMode::Pty,
             parent,
+            url: None,
         };
 
         let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
@@ -431,10 +434,16 @@ impl SessionRegistry {
         tokio::spawn(async move {
             let mut detector = StateDetector::new(patterns, size.rows, size.cols, Instant::now());
             let mut scanner = OscScanner::new(bell);
-            if !produced_before_subscribing.is_empty()
-                && let Some(state) = detector.observe(&produced_before_subscribing, Instant::now())
-            {
-                manager.publish_state(id, &session, state).await;
+            let mut urls = UrlScanner::new();
+            if !produced_before_subscribing.is_empty() {
+                if let Some(url) = urls.scan(&produced_before_subscribing) {
+                    manager.publish_url(id, &session, url).await;
+                }
+                if let Some(state) =
+                    detector.observe(&produced_before_subscribing, Instant::now())
+                {
+                    manager.publish_state(id, &session, state).await;
+                }
             }
 
             let mut ticker = interval(POLL_INTERVAL);
@@ -447,6 +456,9 @@ impl SessionRegistry {
                             let now = Instant::now();
                             for notice in scanner.scan(&data, now) {
                                 manager.announce(notice_event(id, notice));
+                            }
+                            if let Some(url) = urls.scan(&data) {
+                                manager.publish_url(id, &session, url).await;
                             }
                             detector.observe(&data, now)
                         }
@@ -501,6 +513,17 @@ impl SessionRegistry {
             summary.state = state;
         }
         let _ = self.events.send(Event::SessionStateChanged { id, state });
+    }
+
+    async fn publish_url(&self, id: Uuid, session: &LiveSession, url: String) {
+        {
+            let mut summary = session.summary.lock().await;
+            if summary.exit_code.is_some() {
+                return;
+            }
+            summary.url = Some(url.clone());
+        }
+        let _ = self.events.send(Event::SessionUrl { id, url });
     }
 }
 

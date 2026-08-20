@@ -93,10 +93,3 @@ fn a_broken_manifest_is_ignored_instead_of_breaking_the_panel() {
     assert_eq!(discover(dir.path()).len(), 3);
 }
 
-#[test]
-fn a_served_url_gives_away_the_port() {
-    assert_eq!(detect_port("  ➜  Local:   http://localhost:5173/\n"), Some(5173));
-    assert_eq!(detect_port("Listening on http://127.0.0.1:8080"), Some(8080));
-    assert_eq!(detect_port("serving on port 3000 now"), Some(3000));
-    assert_eq!(detect_port("compiled successfully"), None);
-}

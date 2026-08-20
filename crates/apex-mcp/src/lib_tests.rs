@@ -28,6 +28,7 @@ fn caller() -> Caller {
         task: None,
         mode: apex_proto::AgentMode::Pty,
         parent: None,
+        url: None,
     };
     Caller {
         session: summary.id,
@@ -58,6 +59,7 @@ fn summary_in(cwd: &str, title: &str) -> SessionSummary {
         task: None,
         mode: apex_proto::AgentMode::Pty,
         parent: None,
+        url: None,
     }
 }
 

@@ -55,7 +55,7 @@ impl Daemon for Link {
             match frame.parse_control::<ServerMessage>()? {
                 ServerMessage::Response { id: answered, outcome } if answered == id => {
                     return match outcome {
-                        CommandOutcome::Ok { reply } => Ok(reply),
+                        CommandOutcome::Ok { reply } => Ok(*reply),
                         CommandOutcome::Err { error } => bail!("{error}"),
                     };
                 }

@@ -211,7 +211,7 @@ impl TestClient {
                     && got == id
                 {
                     return match outcome {
-                        CommandOutcome::Ok { reply } => reply,
+                        CommandOutcome::Ok { reply } => *reply,
                         CommandOutcome::Err { error } => panic!("error: {error}"),
                     };
                 }

@@ -128,6 +128,11 @@ function applyEvent(event: Event): void {
         handler(event.id, event.code);
       }
       break;
+    case "session_url":
+      sessions.value = sessions.value.map((session) =>
+        session.id === event.id ? { ...session, url: event.url } : session,
+      );
+      break;
     case "acp_updated":
       absorb(event.id, event.entry);
       break;

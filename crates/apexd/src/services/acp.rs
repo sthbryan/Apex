@@ -594,6 +594,7 @@ impl AcpRegistry {
             task: None,
             mode: AgentMode::Acp,
             parent,
+            url: None,
         }));
 
         let transcript: Arc<Mutex<Transcript>> = Arc::default();

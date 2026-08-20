@@ -87,17 +87,3 @@ export function lastLines(text: string, count: number): string[] {
     .filter((line) => line.trim().length > 0)
     .slice(-count);
 }
-
-export function detectPort(text: string): number | null {
-  for (const line of text.split("\n").reverse().slice(0, 200)) {
-    const url = line.match(/https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0):(\d{2,5})/);
-    if (url) {
-      return Number(url[1]);
-    }
-    const spoken = line.match(/port[: ]+(\d{2,5})/i);
-    if (spoken) {
-      return Number(spoken[1]);
-    }
-  }
-  return null;
-}
