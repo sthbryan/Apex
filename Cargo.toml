@@ -39,6 +39,7 @@ rusqlite = { version = "0.40", features = ["bundled"] }
 ts-rs = "12"
 uuid = { version = "1", features = ["v4", "serde"] }
 directories = "6"
+tempfile = "3"
 
 [workspace.lints.rust]
 unsafe_code = "deny"

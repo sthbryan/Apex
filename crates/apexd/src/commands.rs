@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use apex_core::files;
 use apex_proto::{Command, ErrorCode, Frame, ProtocolError, Reply, Scope};
 use tokio::sync::{Mutex, mpsc};
 use tokio::task::JoinHandle;
@@ -98,6 +99,12 @@ async fn execute(
         }),
         Command::FileRead { project, path } => Ok(Reply::File {
             contents: manager.read_file(project, &path).await.map_err(not_found_error)?,
+        }),
+        Command::FileWrite { project, path, text, revision } => Ok(Reply::Wrote {
+            revision: manager
+                .write_file(project, &path, text, revision)
+                .await
+                .map_err(write_error)?,
         }),
         Command::FileSearch { project, query, limit } => Ok(Reply::Directory {
             entries: manager
@@ -385,6 +392,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::ListEditors
             | Command::DirList { .. }
             | Command::FileRead { .. }
+            | Command::FileWrite { .. }
             | Command::FileSearch { .. }
             | Command::FileOpenExternal { .. }
             | Command::GitRead { .. }
@@ -435,6 +443,13 @@ pub fn scope_allows(scope: Scope, command: &Command) -> bool {
 
 fn internal_error(error: anyhow::Error) -> ProtocolError {
     ProtocolError::internal(format!("{error:#}"))
+}
+
+fn write_error(error: anyhow::Error) -> ProtocolError {
+    if error.downcast_ref::<files::StaleWrite>().is_some() {
+        return ProtocolError::conflict(format!("{error:#}"));
+    }
+    not_found_error(error)
 }
 
 fn not_found_error(error: anyhow::Error) -> ProtocolError {

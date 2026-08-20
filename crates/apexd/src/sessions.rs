@@ -439,6 +439,16 @@ impl SessionManager {
         self.files.read_file(project, path).await
     }
 
+    pub async fn write_file(
+        &self,
+        project: Uuid,
+        path: &str,
+        text: String,
+        revision: Option<String>,
+    ) -> Result<String> {
+        self.files.write_file(project, path, text, revision).await
+    }
+
     pub async fn list_editors(&self) -> Vec<EditorSummary> {
         self.files.list_editors().await
     }

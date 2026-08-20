@@ -9,6 +9,7 @@ pub enum ErrorCode {
     Unauthorized,
     MalformedRequest,
     NotFound,
+    Conflict,
     Internal,
 }
 
@@ -35,6 +36,10 @@ impl ProtocolError {
 
     pub fn unauthorized(message: impl Into<String>) -> Self {
         Self::new(ErrorCode::Unauthorized, message)
+    }
+
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::Conflict, message)
     }
 }
 

@@ -229,6 +229,25 @@ async fn read_file(
 }
 
 #[tauri::command]
+async fn write_file(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    path: String,
+    text: String,
+    revision: Option<String>,
+) -> Answer<String> {
+    match state
+        .daemon()?
+        .request(Command::FileWrite { project, path, text, revision })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Wrote { revision } => Ok(revision),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn list_editors(state: tauri::State<'_, AppState>) -> Answer<Vec<EditorSummary>> {
     match state.daemon()?.request(Command::ListEditors).await.map_err(failed)? {
         Reply::Editors { editors } => Ok(editors),
@@ -724,6 +743,7 @@ pub fn run() {
             list_history,
             list_directory,
             read_file,
+            write_file,
             search_files,
             list_editors,
             open_externally,

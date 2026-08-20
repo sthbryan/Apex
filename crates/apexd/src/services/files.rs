@@ -29,6 +29,21 @@ impl FilesService {
         tokio::task::spawn_blocking(move || files::read_file(&root, &path)).await?
     }
 
+    pub async fn write_file(
+        &self,
+        project: Uuid,
+        path: &str,
+        text: String,
+        revision: Option<String>,
+    ) -> Result<String> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || {
+            files::write_file(&root, &path, &text, revision.as_deref())
+        })
+        .await?
+    }
+
     pub async fn search_files(
         &self,
         project: Uuid,

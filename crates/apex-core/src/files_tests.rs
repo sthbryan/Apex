@@ -111,3 +111,56 @@ fn rejects_symlinks_leaving_the_project() {
         .expect("symlink");
     assert!(read_file(dir.path(), "link.txt").is_err());
 }
+
+#[test]
+fn writes_a_file_and_reports_a_fresh_revision() {
+    let dir = sample();
+    let opened = read_file(dir.path(), "README.md").expect("contents");
+    let revision = opened.revision.expect("revision");
+
+    let written =
+        write_file(dir.path(), "README.md", "# edited\n", Some(&revision)).expect("write");
+    assert_ne!(written, revision);
+    assert_eq!(fs::read_to_string(dir.path().join("README.md")).expect("read"), "# edited\n");
+}
+
+#[test]
+fn refuses_to_write_over_a_file_that_changed_on_disk() {
+    let dir = sample();
+    let stale = read_file(dir.path(), "README.md").expect("contents").revision.expect("revision");
+    fs::write(dir.path().join("README.md"), "# from an agent\n").expect("agent write");
+
+    let error = write_file(dir.path(), "README.md", "# mine\n", Some(&stale)).expect_err("stale");
+    assert!(error.downcast_ref::<StaleWrite>().is_some());
+    assert_eq!(
+        fs::read_to_string(dir.path().join("README.md")).expect("read"),
+        "# from an agent\n"
+    );
+}
+
+#[test]
+fn creates_a_new_file_only_without_a_revision() {
+    let dir = sample();
+    write_file(dir.path(), "src/added.rs", "fn added() {}\n", None).expect("create");
+    assert_eq!(
+        fs::read_to_string(dir.path().join("src/added.rs")).expect("read"),
+        "fn added() {}\n"
+    );
+
+    let error = write_file(dir.path(), "src/added.rs", "fn again() {}\n", None).expect_err("exists");
+    assert!(error.downcast_ref::<StaleWrite>().is_some());
+}
+
+#[test]
+fn refuses_to_write_a_missing_file_with_a_revision() {
+    let dir = sample();
+    assert!(write_file(dir.path(), "src/gone.rs", "", Some("1-2")).is_err());
+}
+
+#[test]
+fn refuses_to_write_outside_the_project() {
+    let dir = sample();
+    assert!(write_file(dir.path(), "../escaped.txt", "nope", None).is_err());
+    assert!(write_file(dir.path(), "/etc/hosts", "nope", None).is_err());
+    assert!(write_file(dir.path(), "src", "nope", None).is_err());
+}

@@ -1,6 +1,7 @@
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
+use std::time::UNIX_EPOCH;
 
 use anyhow::{Context, Result, bail};
 use apex_proto::{FileContents, FileEntry};
@@ -61,8 +62,9 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
     }
 
     let size = metadata.len();
+    let revision = revision(&metadata);
     if let Some(mime) = image_mime(&target) {
-        return read_image(&target, relative, size, mime);
+        return read_image(&target, relative, size, revision, mime);
     }
 
     let truncated = size > MAX_FILE_BYTES;
@@ -77,6 +79,7 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
             path: relative.to_owned(),
             text: None,
             image: None,
+            revision,
             size,
             truncated: false,
             binary: true,
@@ -88,6 +91,7 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
             path: relative.to_owned(),
             text: Some(text),
             image: None,
+            revision,
             size,
             truncated,
             binary: false,
@@ -96,11 +100,62 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
             path: relative.to_owned(),
             text: None,
             image: None,
+            revision,
             size,
             truncated: false,
             binary: true,
         }),
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("{path} changed on disk since it was opened")]
+pub struct StaleWrite {
+    pub path: String,
+}
+
+pub fn write_file(
+    root: &Path,
+    relative: &str,
+    text: &str,
+    expected: Option<&str>,
+) -> Result<String> {
+    let target = resolve_for_write(root, relative)?;
+    let current = match fs::metadata(&target) {
+        Ok(metadata) if metadata.is_dir() => bail!("{} is a directory", target.display()),
+        Ok(metadata) => Some(revision(&metadata)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => {
+            return Err(error).with_context(|| format!("reading {}", target.display()));
+        }
+    };
+
+    match (expected, current) {
+        (Some(expected), Some(current)) if current.as_deref() == Some(expected) => {}
+        (None, None) => {}
+        _ => bail!(StaleWrite { path: relative.to_owned() }),
+    }
+
+    let parent = target.parent().context("the project root has no parent")?;
+    let mut temporary = tempfile::NamedTempFile::new_in(parent)
+        .with_context(|| format!("writing {}", target.display()))?;
+    temporary
+        .write_all(text.as_bytes())
+        .and_then(|()| temporary.as_file_mut().sync_all())
+        .with_context(|| format!("writing {}", target.display()))?;
+    if let Ok(metadata) = fs::metadata(&target) {
+        let _ = fs::set_permissions(temporary.path(), metadata.permissions());
+    }
+    temporary.persist(&target).with_context(|| format!("writing {}", target.display()))?;
+
+    let metadata =
+        fs::metadata(&target).with_context(|| format!("reading {}", target.display()))?;
+    revision(&metadata).context("the filesystem does not report modification times")
+}
+
+pub fn revision(metadata: &fs::Metadata) -> Option<String> {
+    let stamp = metadata.modified().ok()?.duration_since(UNIX_EPOCH).ok()?;
+    Some(format!("{}-{}", stamp.as_nanos(), metadata.len()))
 }
 
 pub fn image_mime(target: &Path) -> Option<&'static str> {
@@ -112,7 +167,13 @@ pub fn data_url(mime: &str, bytes: &[u8]) -> String {
     format!("data:{mime};base64,{}", STANDARD.encode(bytes))
 }
 
-fn read_image(target: &Path, relative: &str, size: u64, mime: &str) -> Result<FileContents> {
+fn read_image(
+    target: &Path,
+    relative: &str,
+    size: u64,
+    revision: Option<String>,
+    mime: &str,
+) -> Result<FileContents> {
     let image = if size > MAX_IMAGE_BYTES {
         None
     } else {
@@ -124,6 +185,7 @@ fn read_image(target: &Path, relative: &str, size: u64, mime: &str) -> Result<Fi
         path: relative.to_owned(),
         text: None,
         image,
+        revision,
         size,
         truncated: false,
         binary: true,
@@ -216,6 +278,20 @@ pub fn resolve(root: &Path, relative: &str) -> Result<PathBuf> {
         bail!("{relative} escapes the project");
     }
     Ok(resolved)
+}
+
+pub fn resolve_for_write(root: &Path, relative: &str) -> Result<PathBuf> {
+    if let Ok(existing) = resolve(root, relative) {
+        return Ok(existing);
+    }
+
+    let requested = Path::new(relative);
+    let name = requested.file_name().with_context(|| format!("{relative} has no file name"))?;
+    let parent = resolve(root, requested.parent().and_then(Path::to_str).unwrap_or(""))?;
+    if !parent.is_dir() {
+        bail!("{} is not a directory", parent.display());
+    }
+    Ok(parent.join(name))
 }
 
 fn join_relative(parent: &str, name: &str) -> String {

@@ -84,6 +84,19 @@ export async function readFile(project: string, path: string): Promise<FileConte
   return invoke<FileContents>("read_file", { project, path });
 }
 
+export async function writeFile(
+  project: string,
+  path: string,
+  text: string,
+  revision: string | null,
+): Promise<string> {
+  return invoke<string>("write_file", { project, path, text, revision });
+}
+
+export function isStaleWrite(error: unknown): boolean {
+  return String(error).startsWith("Conflict:");
+}
+
 export function fileName(path: string): string {
   return path.split("/").at(-1) ?? path;
 }

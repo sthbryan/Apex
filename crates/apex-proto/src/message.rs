@@ -156,6 +156,7 @@ pub struct FileContents {
     pub path: String,
     pub text: Option<String>,
     pub image: Option<String>,
+    pub revision: Option<String>,
     #[ts(type = "number")]
     pub size: u64,
     pub truncated: bool,
@@ -535,6 +536,13 @@ pub enum Command {
         project: Uuid,
         path: String,
     },
+    FileWrite {
+        #[ts(type = "string")]
+        project: Uuid,
+        path: String,
+        text: String,
+        revision: Option<String>,
+    },
     FileSearch {
         #[ts(type = "string")]
         project: Uuid,
@@ -818,6 +826,7 @@ pub enum Reply {
     Images { pair: ImagePair },
     Merge { report: MergeReport },
     File { contents: FileContents },
+    Wrote { revision: String },
     Metrics { snapshot: MetricsSnapshot },
     Acp { snapshot: AcpSnapshot },
     Done,
