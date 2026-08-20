@@ -12,6 +12,8 @@ import {
   Brain,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Circle,
   CirclePlay,
   CircleStop,
@@ -121,6 +123,8 @@ const ICONS = {
   database: Database,
   folderGit: FolderGit,
   globe: Globe,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

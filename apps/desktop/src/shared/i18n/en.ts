@@ -215,6 +215,11 @@ export const en = {
     unsaved: "Unsaved",
     shared: "Shared with every agent",
   },
+  browser: {
+    back: "Back",
+    forward: "Forward",
+    reload: "Reload the page",
+  },
   tasks: {
     empty: "No tasks found in this project.",
     refresh: "Look for tasks again",

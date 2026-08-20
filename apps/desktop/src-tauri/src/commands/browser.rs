@@ -1,9 +1,17 @@
 use tauri::webview::WebviewBuilder;
-use tauri::{LogicalPosition, LogicalSize, Manager, WebviewUrl};
+use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, WebviewUrl};
 
 use crate::state::Answer;
 
 const HOST: &str = "main";
+const LOADED: &str = "browser-loaded";
+
+#[derive(Clone, serde::Serialize)]
+struct Loaded {
+    label: String,
+    url: String,
+    title: Option<String>,
+}
 
 #[derive(serde::Deserialize)]
 pub struct Bounds {
@@ -44,10 +52,33 @@ pub async fn browser_open(
     }
 
     let window = app.get_window(HOST).ok_or_else(|| "no main window".to_owned())?;
+    let loading = app.clone();
+    let naming = app.clone();
+    let named = label.clone();
     let builder = WebviewBuilder::new(&label, WebviewUrl::External(target))
         .devtools(true)
         .incognito(true)
-        .transparent(false);
+        .transparent(false)
+        .on_page_load(move |webview, payload| {
+            let _ = loading.emit(
+                LOADED,
+                Loaded {
+                    label: webview.label().to_owned(),
+                    url: payload.url().to_string(),
+                    title: None,
+                },
+            );
+        })
+        .on_document_title_changed(move |webview, title| {
+            let _ = naming.emit(
+                LOADED,
+                Loaded {
+                    label: named.clone(),
+                    url: webview.url().map(|url| url.to_string()).unwrap_or_default(),
+                    title: Some(title),
+                },
+            );
+        });
 
     window
         .add_child(builder, bounds.position(), bounds.size())
@@ -79,4 +110,12 @@ pub async fn browser_bounds(app: tauri::AppHandle, label: String, bounds: Bounds
     };
     webview.set_position(bounds.position()).map_err(|error| error.to_string())?;
     webview.set_size(bounds.size()).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn browser_run(app: tauri::AppHandle, label: String, script: String) -> Answer<()> {
+    let Some(webview) = app.get_webview(&label) else {
+        return Ok(());
+    };
+    webview.eval(script).map_err(|error| error.to_string())
 }

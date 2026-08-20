@@ -217,6 +217,11 @@ export const es: Messages = {
     unsaved: "Sin guardar",
     shared: "Lo leen todos los agentes",
   },
+  browser: {
+    back: "Atrás",
+    forward: "Adelante",
+    reload: "Recargar la página",
+  },
   tasks: {
     empty: "No hay tareas en este proyecto.",
     refresh: "Buscar tareas otra vez",

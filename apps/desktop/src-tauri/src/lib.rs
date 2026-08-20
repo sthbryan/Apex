@@ -88,6 +88,7 @@ pub fn run() {
             commands::browser_close,
             commands::browser_bounds,
             commands::browser_show,
+            commands::browser_run,
             commands::acp_choose,
             commands::mcp_adopt,
             commands::context_list,

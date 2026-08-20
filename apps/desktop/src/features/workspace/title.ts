@@ -48,7 +48,7 @@ export function paneSubtitle(view: PaneView): string | null {
     return view.path || view.commit;
   }
   if (view.type === "browser") {
-    return view.url;
+    return null;
   }
   return null;
 }
