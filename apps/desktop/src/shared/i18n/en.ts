@@ -228,7 +228,6 @@ export const en = {
   },
   git: {
     noRepo: "This project is not a git repository.",
-    target: "Choose a worktree",
     dropWorktree: "Delete this worktree and {branch}",
     dropWorktreeAsk: "Delete {branch}?",
     dropWorktreeYes: "Delete",

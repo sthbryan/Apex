@@ -230,7 +230,6 @@ export const es: Messages = {
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
-    target: "Elige un worktree",
     dropWorktree: "Borrar este worktree y {branch}",
     dropWorktreeAsk: "¿Borrar {branch}?",
     dropWorktreeYes: "Borrar",
