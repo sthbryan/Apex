@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { GitTarget } from "@/bindings/GitTarget";
 import { highlight } from "@/features/files/highlight";
+import { splittable } from "@/features/git/patch";
 import { SplitPatch } from "@/features/git/SplitPatch";
 import {
   diffLayout,
@@ -213,7 +214,7 @@ function Group({ label, hunks, action, onApply, tone, path, split }: GroupProps)
 }
 
 function Patch({ painted, path, split }: { painted: Painted; path: string; split: boolean }) {
-  if (split) {
+  if (split && splittable(painted.patch)) {
     return <SplitPatch path={path} patch={painted.patch} />;
   }
   return (

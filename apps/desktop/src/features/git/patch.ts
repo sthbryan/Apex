@@ -22,6 +22,10 @@ export type DiffFile = {
 const HEADER = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 const TOKEN = /<[^>]+>|[^<]+/g;
 
+export function splittable(patch: string): boolean {
+  return /^@@ /m.test(patch);
+}
+
 export function parsePatch(patch: string): DiffFile[] {
   const files: DiffFile[] = [];
   let file: DiffFile | null = null;
