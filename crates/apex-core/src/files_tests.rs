@@ -164,3 +164,14 @@ fn refuses_to_write_outside_the_project() {
     assert!(write_file(dir.path(), "/etc/hosts", "nope", None).is_err());
     assert!(write_file(dir.path(), "src", "nope", None).is_err());
 }
+
+#[test]
+fn refuses_to_write_a_file_that_reads_back_truncated() {
+    let dir = sample();
+    let path = dir.path().join("huge.txt");
+    fs::write(&path, "x".repeat(MAX_FILE_BYTES as usize + 1)).expect("huge");
+    let revision = read_file(dir.path(), "huge.txt").expect("contents").revision.expect("revision");
+
+    assert!(write_file(dir.path(), "huge.txt", "truncated", Some(&revision)).is_err());
+    assert!(fs::metadata(&path).expect("metadata").len() > MAX_FILE_BYTES);
+}

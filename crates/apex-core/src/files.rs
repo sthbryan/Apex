@@ -123,6 +123,9 @@ pub fn write_file(
     let target = resolve_for_write(root, relative)?;
     let current = match fs::metadata(&target) {
         Ok(metadata) if metadata.is_dir() => bail!("{} is a directory", target.display()),
+        Ok(metadata) if metadata.len() > MAX_FILE_BYTES => {
+            bail!("{relative} is too large to edit")
+        }
         Ok(metadata) => Some(revision(&metadata)),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => {
