@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 
-export type DockPanel = "sessions" | "files" | "git" | "history" | "context" | "tasks";
+export type DockPanel = "sessions" | "files" | "git" | "review" | "history" | "context" | "tasks";
 export type DockMode = "expanded" | "rail";
 
 export const DOCK_WIDTH_MIN = 192;
@@ -11,7 +11,15 @@ const WIDTH_KEY = "apex.dockWidth";
 const MODE_KEY = "apex.dockMode";
 const ORDER_KEY = "apex.dockOrder";
 
-const ALL_PANELS: DockPanel[] = ["sessions", "files", "git", "history", "context", "tasks"];
+const ALL_PANELS: DockPanel[] = [
+  "sessions",
+  "files",
+  "git",
+  "review",
+  "history",
+  "context",
+  "tasks",
+];
 
 export const dockMode = signal<DockMode>(readStoredMode());
 export const dockWidth = signal(readStoredWidth());

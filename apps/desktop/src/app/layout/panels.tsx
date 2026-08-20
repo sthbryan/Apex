@@ -26,6 +26,9 @@ const FilesPanel = lazy(async () => ({
 const ChangesPanel = lazy(async () => ({
   default: (await import("@/features/git/ChangesPanel")).ChangesPanel,
 }));
+const ReviewPanel = lazy(async () => ({
+  default: (await import("@/features/review/ReviewPanel")).ReviewPanel,
+}));
 const HistoryPanel = lazy(async () => ({
   default: (await import("@/features/git/HistoryPanel")).HistoryPanel,
 }));
@@ -50,6 +53,11 @@ export const DOCK_PANELS: Record<DockPanel, Entry> = {
     label: () => t("git.changes"),
     badge: () => ((gitStatus.value?.changes.length ?? 0) > 0 ? "dirty" : null),
     View: ChangesPanel,
+  },
+  review: {
+    icon: "inbox",
+    label: () => t("review.title"),
+    View: ReviewPanel,
   },
   history: { icon: "history", label: () => t("git.history"), View: HistoryPanel },
   context: { icon: "context", label: () => t("dock.context"), View: ContextPanel },

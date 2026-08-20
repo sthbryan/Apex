@@ -256,6 +256,13 @@ export const es: Messages = {
     you: "Tú",
     latest: "Ir a lo último",
   },
+  review: {
+    title: "Revisión",
+    empty: "No hay nada esperándote.",
+    waiting: "{count} esperando",
+    files: "{count}a",
+    refresh: "Volver a escanear los worktrees",
+  },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
     dropWorktree: "Borrar este worktree y {branch}",

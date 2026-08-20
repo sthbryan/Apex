@@ -254,6 +254,13 @@ export const en = {
     you: "You",
     latest: "Jump to latest",
   },
+  review: {
+    title: "Review",
+    empty: "Nothing is waiting for you.",
+    waiting: "{count} waiting",
+    files: "{count}f",
+    refresh: "Rescan every worktree",
+  },
   git: {
     noRepo: "This project is not a git repository.",
     dropWorktree: "Delete this worktree and {branch}",
