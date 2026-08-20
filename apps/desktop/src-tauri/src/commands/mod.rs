@@ -1,4 +1,5 @@
 mod acp;
+mod browser;
 mod context;
 mod files;
 mod git;
@@ -11,6 +12,7 @@ mod tasks;
 mod window;
 
 pub use acp::*;
+pub use browser::*;
 pub use context::*;
 pub use files::*;
 pub use git::*;

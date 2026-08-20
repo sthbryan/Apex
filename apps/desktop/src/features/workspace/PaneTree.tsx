@@ -119,7 +119,7 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
               />
             )}
             {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
-            {node.view.type === "browser" && <BrowserView url={node.view.url} />}
+            {node.view.type === "browser" && <BrowserView id={node.id} url={node.view.url} />}
           </Suspense>
         </Boundary>
       </div>
