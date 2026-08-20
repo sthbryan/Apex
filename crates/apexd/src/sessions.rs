@@ -7,7 +7,8 @@ use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
     GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport, MetricsSnapshot,
-    ProjectSummary, SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
+    PendingReview, ProjectSummary, SessionState, SessionSummary, TaskSummary, TerminalSize,
+    WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
@@ -590,6 +591,28 @@ impl SessionManager {
         self.git.log(&dir, limit).await
     }
 
+    pub async fn git_pending(&self, project: Uuid) -> Result<Vec<PendingReview>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let mut reviews = self.git.pending(&root).await?;
+        let sessions = self.list_sessions().await;
+        for review in &mut reviews {
+            let GitTarget::Worktree { path } = &review.target else {
+                continue;
+            };
+            let owner = sessions.iter().find(|session| {
+                session.project_id == project
+                    && session.worktree.as_ref().is_some_and(|tree| &tree.path == path)
+            });
+            if let Some(session) = owner {
+                review.title = Some(session.title.clone());
+                review.state = Some(session.state);
+                review.target = GitTarget::Session { id: session.id };
+            }
+        }
+        reviews.sort_by_key(|review| waiting_rank(review.state));
+        Ok(reviews)
+    }
+
     pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeEntry>> {
         let root = PathBuf::from(self.project_root(project).await?);
         self.git.list_worktrees(&root).await
@@ -720,6 +743,16 @@ impl SessionManager {
 
     async fn project_root(&self, project: Uuid) -> Result<String> {
         self.registry.project_root(project).await
+    }
+}
+
+fn waiting_rank(state: Option<SessionState>) -> u8 {
+    match state {
+        Some(SessionState::Done) => 0,
+        Some(SessionState::Blocked) => 1,
+        Some(SessionState::Idle) => 2,
+        Some(SessionState::Working) => 3,
+        None => 4,
     }
 }
 

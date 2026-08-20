@@ -1,8 +1,9 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Result, bail};
 use apex_proto::{
-    DiffScope, GitChange, GitCommit, GitStatus, GitSyncOp, ImagePair, MergeReport, WorktreeEntry,
+    DiffScope, GitChange, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair, MergeReport,
+    PendingReview, WorktreeEntry,
 };
 
 pub struct GitService;
@@ -166,6 +167,48 @@ impl GitService {
             entries.push(task.await?);
         }
         Ok(entries)
+    }
+
+    pub async fn pending(&self, root: &Path) -> Result<Vec<PendingReview>> {
+        let trees = self.list_worktrees(root).await?;
+        let mut places = vec![(GitTarget::Project, root.to_path_buf(), None)];
+        for tree in trees {
+            places.push((
+                GitTarget::Worktree { path: tree.path.clone() },
+                PathBuf::from(tree.path),
+                Some(tree.branch),
+            ));
+        }
+
+        let counting: Vec<_> = places
+            .into_iter()
+            .map(|(target, dir, branch)| {
+                tokio::task::spawn_blocking(move || {
+                    let counted = apex_git::tally(&dir).unwrap_or_default();
+                    let branch = branch
+                        .or_else(|| apex_git::current_branch(&dir).ok())
+                        .unwrap_or_default();
+                    PendingReview {
+                        target,
+                        branch,
+                        title: None,
+                        state: None,
+                        files: counted.files,
+                        added: counted.added,
+                        removed: counted.removed,
+                    }
+                })
+            })
+            .collect();
+
+        let mut reviews = Vec::with_capacity(counting.len());
+        for task in counting {
+            let review = task.await?;
+            if review.files > 0 {
+                reviews.push(review);
+            }
+        }
+        Ok(reviews)
     }
 
     pub async fn merge(&self, root: &Path, dir: &Path) -> Result<MergeReport> {

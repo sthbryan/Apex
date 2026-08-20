@@ -124,6 +124,9 @@ async fn execute(
                 .await
                 .map_err(not_found_error)?,
         }),
+        Command::GitPending { project } => Ok(Reply::Pending {
+            reviews: manager.git_pending(project).await.map_err(not_found_error)?,
+        }),
         Command::GitHunks { project, target, path, scope } => Ok(Reply::Hunks {
             patches: manager
                 .git_hunks(project, target, &path, scope)
@@ -422,6 +425,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitDiff { .. }
             | Command::GitLog { .. }
             | Command::GitHunks { .. }
+            | Command::GitPending { .. }
             | Command::GitImages { .. }
             | Command::WorktreeList { .. }
             | Command::ListTasks { .. }
