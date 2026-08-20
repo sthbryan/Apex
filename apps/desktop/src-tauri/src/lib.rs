@@ -8,8 +8,8 @@ use std::sync::Arc;
 use apex_core::ApexPaths;
 use apex_proto::{
     AcpSnapshot, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event,
-    FileContents, FileEntry, GitCommit, GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport,
-    MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TaskSummary, TerminalSize,
+    FileContents, FileEntry, GitCommit, GitStatus, GitSyncOp, GitTarget, HistoryEntry, Isolation,
+    MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TaskSummary, TerminalSize,
     WorktreeDisposal, WorktreeEntry,
 };
 use client::DaemonClient;
@@ -474,6 +474,17 @@ async fn git_commit(
 }
 
 #[tauri::command]
+async fn git_sync(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+    op: GitSyncOp,
+) -> Answer<()> {
+    state.daemon()?.request(Command::GitSync { project, target, op }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn list_tasks(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Vec<TaskSummary>> {
     match state.daemon()?.request(Command::ListTasks { project }).await.map_err(failed)? {
         Reply::Tasks { tasks } => Ok(tasks),
@@ -711,6 +722,7 @@ pub fn run() {
             git_stage,
             git_stage_hunk,
             git_commit,
+            git_sync,
             merge_worktree,
             remove_worktree,
             list_tasks,

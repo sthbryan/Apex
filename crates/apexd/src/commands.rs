@@ -137,6 +137,10 @@ async fn execute(
         Command::GitCommitStaged { project, target, message } => Ok(Reply::Committed {
             commit: manager.git_commit(project, target, message).await.map_err(not_found_error)?,
         }),
+        Command::GitSync { project, target, op } => {
+            manager.git_sync(project, target, op).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::GitLog { project, target, limit } => Ok(Reply::Log {
             commits: manager
                 .git_log(project, target, limit as usize)
@@ -391,6 +395,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitStage { .. }
             | Command::GitStageHunk { .. }
             | Command::GitCommitStaged { .. }
+            | Command::GitSync { .. }
             | Command::WorktreeMerge { .. }
             | Command::WorktreeRemove { .. }
             | Command::SessionCreate { .. }

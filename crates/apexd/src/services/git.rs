@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use anyhow::{Result, bail};
-use apex_proto::{DiffScope, GitChange, GitCommit, GitStatus, MergeReport, WorktreeEntry};
+use apex_proto::{
+    DiffScope, GitChange, GitCommit, GitStatus, GitSyncOp, MergeReport, WorktreeEntry,
+};
 
 pub struct GitService;
 
@@ -91,6 +93,11 @@ impl GitService {
         })
     }
 
+    pub async fn sync(&self, dir: &Path, op: GitSyncOp) -> Result<()> {
+        let dir = dir.to_path_buf();
+        tokio::task::spawn_blocking(move || apex_git::sync(&dir, sync_of(op))).await?
+    }
+
     pub async fn log(&self, dir: &Path, limit: usize) -> Result<Vec<GitCommit>> {
         let dir = dir.to_path_buf();
         let commits = tokio::task::spawn_blocking(move || apex_git::log(&dir, limit)).await??;
@@ -168,5 +175,13 @@ fn scope_of(scope: DiffScope) -> apex_git::Scope {
         DiffScope::Unstaged => apex_git::Scope::Unstaged,
         DiffScope::Staged => apex_git::Scope::Staged,
         DiffScope::Both => apex_git::Scope::Both,
+    }
+}
+
+fn sync_of(op: GitSyncOp) -> apex_git::Sync {
+    match op {
+        GitSyncOp::Fetch => apex_git::Sync::Fetch,
+        GitSyncOp::Pull => apex_git::Sync::Pull,
+        GitSyncOp::Push => apex_git::Sync::Push,
     }
 }

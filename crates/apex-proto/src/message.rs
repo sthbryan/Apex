@@ -230,6 +230,15 @@ pub enum DiffScope {
     Both,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum GitSyncOp {
+    Fetch,
+    Pull,
+    Push,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct TaskSummary {
@@ -714,6 +723,12 @@ pub enum Command {
         project: Uuid,
         target: GitTarget,
         limit: u32,
+    },
+    GitSync {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+        op: GitSyncOp,
     },
     WorktreeMerge {
         #[ts(type = "string")]

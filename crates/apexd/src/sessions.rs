@@ -6,7 +6,7 @@ use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
-    GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
+    GitSyncOp, GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
     SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
@@ -520,6 +520,11 @@ impl SessionManager {
     ) -> Result<GitCommit> {
         let dir = self.git_dir(project, &target).await?;
         self.git.commit(&dir, message).await
+    }
+
+    pub async fn git_sync(&self, project: Uuid, target: GitTarget, op: GitSyncOp) -> Result<()> {
+        let dir = self.git_dir(project, &target).await?;
+        self.git.sync(&dir, op).await
     }
 
     pub async fn git_log(
