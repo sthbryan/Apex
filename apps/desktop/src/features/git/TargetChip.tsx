@@ -100,7 +100,7 @@ export function TargetChip({ project, placement = "below" }: Props) {
         }
         onClick={() => setOpen((shown) => !shown)}
         class={cn(
-          "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-px transition-colors hover:border-muted hover:text-text",
+          "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-0.5 transition-colors hover:border-muted hover:text-text",
           onProject ? "text-muted" : "text-accent",
         )}
       >
