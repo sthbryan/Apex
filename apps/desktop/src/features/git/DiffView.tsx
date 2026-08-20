@@ -241,7 +241,7 @@ function Patch({ painted, path, split, target, commit }: PatchProps) {
     </pre>
   );
 
-  if (path && binary(painted.patch)) {
+  if (split && path && binary(painted.patch)) {
     return (
       <ImageDiff target={target} path={path} commit={commit}>
         {plain}
@@ -249,7 +249,7 @@ function Patch({ painted, path, split, target, commit }: PatchProps) {
     );
   }
 
-  const images = path ? [] : binaryPaths(painted.patch);
+  const images = split && !path ? binaryPaths(painted.patch) : [];
   if (images.length > 0) {
     return (
       <>
