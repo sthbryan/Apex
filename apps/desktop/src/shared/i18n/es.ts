@@ -45,7 +45,7 @@ export const es: Messages = {
     saved: "No hay cambios que guardar",
     edit: "Editar el archivo",
     lock: "Volver a solo lectura",
-    discardEdits: "Descartar los cambios y volver a solo lectura",
+    revert: "Descartar los cambios sin guardar",
     conflict: "El archivo cambió en el disco. Recarga para seguir editando.",
     discard: "Recargar y descartar",
   },

@@ -43,7 +43,7 @@ export const en = {
     saved: "No changes to save",
     edit: "Edit this file",
     lock: "Back to read only",
-    discardEdits: "Discard the edits and go back to read only",
+    revert: "Discard the unsaved changes",
     conflict: "This file changed on disk. Reload to keep editing.",
     discard: "Reload and discard",
   },

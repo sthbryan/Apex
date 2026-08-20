@@ -102,13 +102,23 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
       .finally(() => setSaving(false));
   }, [projectId, path, buffer, saved, revision, saving]);
 
-  const lock = () => {
+  const revert = () => {
     if (projectId) {
       dropBuffer(projectId, path);
     }
     setConflict(false);
-    setEditing(false);
   };
+
+  const eraser = writable && dirty && (
+    <button
+      type="button"
+      title={t("files.revert")}
+      onClick={revert}
+      class="shrink-0 text-faint transition-colors hover:text-state-failed"
+    >
+      <Icon name="revert" size={12} />
+    </button>
+  );
 
   const floppy = writable && editing && (
     <button
@@ -129,8 +139,8 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   const pencil = writable && (
     <button
       type="button"
-      title={t(editing ? (dirty ? "files.discardEdits" : "files.lock") : "files.edit")}
-      onClick={() => (editing ? lock() : setEditing(true))}
+      title={t(editing ? "files.lock" : "files.edit")}
+      onClick={() => setEditing(!editing)}
       class={
         editing
           ? "shrink-0 text-accent transition-colors hover:text-text"
@@ -162,6 +172,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <span class="ml-auto shrink-0 text-faint">
             {contents ? formatSize(contents.size) : ""}
           </span>
+          {eraser}
           {floppy}
           {pencil}
           {toggle}
@@ -192,6 +203,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
       {!chrome && (pencil || toggle) && (
         <div class="flex h-6 shrink-0 items-center justify-end gap-2 border-b border-border px-2">
+          {eraser}
           {floppy}
           {pencil}
           {toggle}

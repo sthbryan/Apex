@@ -56,6 +56,7 @@ import {
   SquareSplitVertical,
   SquareTerminal,
   Sun,
+  Undo2,
   X,
 } from "lucide-preact";
 
@@ -67,6 +68,7 @@ const ICONS = {
   monitor: Monitor,
   refresh: RefreshCw,
   save: Save,
+  revert: Undo2,
   close: X,
   chevron: ChevronDown,
   panel: PanelLeft,
