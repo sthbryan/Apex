@@ -17,6 +17,7 @@ export const en = {
     toggle: "Toggle sidebar",
     resize: "Resize sidebar",
     popOut: "Open as tab",
+    panels: "Panels",
     popIn: "Move to sidebar",
     empty: "Drop a panel here.",
     loading: "Loading…",

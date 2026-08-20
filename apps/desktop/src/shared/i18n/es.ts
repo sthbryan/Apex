@@ -19,6 +19,7 @@ export const es: Messages = {
     toggle: "Mostrar u ocultar la barra lateral",
     resize: "Cambiar el ancho de la barra lateral",
     popOut: "Abrir como pestaña",
+    panels: "Paneles",
     popIn: "Mover a la barra lateral",
     empty: "Suelta un panel aquí.",
     loading: "Cargando…",
