@@ -100,7 +100,7 @@ export function TargetChip({ project, placement = "below" }: Props) {
         }
         onClick={() => setOpen((shown) => !shown)}
         class={cn(
-          "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-0.5 transition-colors hover:border-muted hover:text-text",
+          "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-0.5 leading-none transition-colors hover:border-muted hover:text-text",
           onProject ? "text-muted" : "text-accent",
         )}
       >
@@ -184,14 +184,14 @@ function Target({
         <button
           type="button"
           onClick={onDrop}
-          class="shrink-0 text-state-failed transition-colors hover:underline"
+          class="shrink-0 text-micro text-state-failed transition-colors hover:underline"
         >
           {t("git.dropWorktreeYes")}
         </button>
         <button
           type="button"
           onClick={onAsk}
-          class="shrink-0 text-faint transition-colors hover:text-text"
+          class="shrink-0 text-micro text-faint transition-colors hover:text-text"
         >
           {t("git.dropWorktreeNo")}
         </button>
