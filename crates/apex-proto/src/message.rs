@@ -255,6 +255,7 @@ pub struct TaskSummary {
     pub command: String,
     pub source: String,
     pub group: Option<String>,
+    pub risky: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

@@ -33,6 +33,7 @@ pub struct Task {
     pub command: String,
     pub source: Source,
     pub group: Option<String>,
+    pub risky: bool,
 }
 
 pub fn discover(root: &Path) -> Vec<Task> {
@@ -47,6 +48,29 @@ pub fn discover(root: &Path) -> Vec<Task> {
     tasks.dedup_by(|left, right| left.name == right.name);
     regroup(&mut tasks);
     tasks
+}
+
+const RISKY_LINES: [&str; 8] = [
+    "rm -rf",
+    "rm -fr",
+    "pkill",
+    "killall",
+    "cargo clean",
+    "git clean",
+    "reset --hard",
+    "prune",
+];
+
+const RISKY_WORDS: [&str; 6] = ["clean", "kill", "nuke", "wipe", "destroy", "reset"];
+
+pub fn is_risky(name: &str, body: &str) -> bool {
+    let lowered = body.to_lowercase();
+    if RISKY_LINES.iter().any(|marker| lowered.contains(marker)) {
+        return true;
+    }
+    name.to_lowercase()
+        .split(|letter: char| !letter.is_ascii_alphanumeric())
+        .any(|word| RISKY_WORDS.contains(&word))
 }
 
 fn head(name: &str) -> &str {
@@ -100,9 +124,10 @@ fn from_package(root: &Path) -> Vec<Task> {
     let runner = package_runner(root);
     manifest
         .scripts
-        .into_keys()
-        .map(|name| Task {
+        .into_iter()
+        .map(|(name, body)| Task {
             command: format!("{runner} run {name}"),
+            risky: is_risky(&name, &body),
             name,
             source: Source::Package,
             group: None,
@@ -130,6 +155,7 @@ fn from_make(root: &Path) -> Vec<Task> {
                 command: format!("make {target}"),
                 source: Source::Make,
                 group: None,
+                risky: is_risky(target, target),
             })
         })
         .collect()
@@ -158,6 +184,7 @@ fn from_just(root: &Path) -> Vec<Task> {
                 command: format!("just {name}"),
                 source: Source::Just,
                 group: None,
+                risky: is_risky(name, name),
             })
         })
         .collect()
@@ -174,6 +201,7 @@ fn from_cargo(root: &Path) -> Vec<Task> {
             command: format!("cargo {name}"),
             source: Source::Cargo,
             group: None,
+            risky: false,
         })
         .collect()
 }
@@ -195,7 +223,7 @@ fn from_manual(root: &Path) -> Vec<Task> {
     manual
         .tasks
         .into_iter()
-        .map(|(name, command)| Task { name, command, source: Source::Manual, group: None })
+        .map(|(name, command)| Task { risky: is_risky(&name, &command), name, command, source: Source::Manual, group: None })
         .collect()
 }
 

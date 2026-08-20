@@ -220,6 +220,9 @@ export const en = {
     refresh: "Look for tasks again",
     start: "Run it",
     stop: "Stop it",
+    ask: "This one deletes things. Run it?",
+    askYes: "Run",
+    askNo: "Cancel",
   },
   acp: {
     empty: "Say something to get the agent going.",

@@ -146,9 +146,35 @@ function Row({
   open?: boolean;
   onToggle?: () => void;
 }) {
+  const [asking, setAsking] = useState(false);
   const peek = session ? (peeks.value[task.name] ?? "") : "";
   const lines = peek ? lastLines(peek, 3) : [];
   const url = session?.url ?? null;
+
+  if (asking) {
+    return (
+      <li class={cn("flex items-center gap-2 bg-raised px-2 py-1", indent && "pl-6")}>
+        <span class="min-w-0 flex-1 truncate text-muted">{t("tasks.ask")}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setAsking(false);
+            void startTask(task);
+          }}
+          class="shrink-0 text-state-failed transition-colors hover:underline"
+        >
+          {t("tasks.askYes")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setAsking(false)}
+          class="shrink-0 text-faint transition-colors hover:text-text"
+        >
+          {t("tasks.askNo")}
+        </button>
+      </li>
+    );
+  }
 
   return (
     <li class="group">
@@ -172,6 +198,8 @@ function Row({
           onClick={() => {
             if (session) {
               requestClose(session);
+            } else if (task.risky) {
+              setAsking(true);
             } else {
               void startTask(task);
             }

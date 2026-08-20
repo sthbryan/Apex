@@ -122,3 +122,21 @@ fn a_prefix_split_by_a_space_groups_too() {
     let found = discover(dir.path());
     assert!(found.iter().all(|task| task.group.as_deref() == Some("cargo")));
 }
+
+#[test]
+fn destructive_scripts_are_flagged() {
+    let dir = project();
+    std::fs::write(
+        dir.path().join("package.json"),
+        r#"{"scripts":{"clean":"cargo clean && rm -rf dist","kill":"pkill -x apexd","dev":"vite","release":"bun scripts/release.mjs"}}"#,
+    )
+    .expect("write");
+
+    let found = discover(dir.path());
+    let risky = |name: &str| found.iter().find(|task| task.name == name).expect("task").risky;
+
+    assert!(risky("clean"));
+    assert!(risky("kill"));
+    assert!(!risky("dev"));
+    assert!(!risky("release"));
+}

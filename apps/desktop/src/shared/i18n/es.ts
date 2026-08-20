@@ -222,6 +222,9 @@ export const es: Messages = {
     refresh: "Buscar tareas otra vez",
     start: "Arrancarla",
     stop: "Pararla",
+    ask: "Esta borra cosas. ¿La arranco?",
+    askYes: "Arrancar",
+    askNo: "Cancelar",
   },
   acp: {
     empty: "Escríbele algo para que el agente arranque.",
