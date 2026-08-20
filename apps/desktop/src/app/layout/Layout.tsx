@@ -6,9 +6,11 @@ import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
 import { page, togglePage } from "@/app/view";
+import { gitStatus } from "@/features/git/state";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
 
 const NEXT = {
   expanded: { label: "dock.toRail", icon: "panelClose" },
@@ -43,6 +45,22 @@ export function Layout({ onNewSession }: Props) {
         <div class="flex min-w-0 flex-1 flex-col">
           <TitleBar padStart={padStart} lead={sidebarToggle}>
             <Toolbar status={status.value === "ready" ? "" : t("status.connecting")}>
+              {status.value === "ready" && gitStatus.value && (
+                <span
+                  title={
+                    gitStatus.value.upstream
+                      ? t("git.chipTracking", {
+                          branch: gitStatus.value.branch,
+                          upstream: gitStatus.value.upstream,
+                        })
+                      : t("git.chip", { branch: gitStatus.value.branch })
+                  }
+                  class="mr-2 flex max-w-48 items-center gap-1 truncate text-faint"
+                >
+                  <Icon name="branch" size={12} class="shrink-0" />
+                  <span class="truncate">{gitStatus.value.branch}</span>
+                </span>
+              )}
               <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
               <ToolbarButton
                 label={t("settings.title")}
