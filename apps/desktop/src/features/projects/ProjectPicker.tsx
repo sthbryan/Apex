@@ -1,19 +1,16 @@
 import cn from "cnfast";
-import { useEffect, useRef, useState } from "preact/hooks";
-import type { SessionSummary } from "@/bindings/SessionSummary";
+import { useState } from "preact/hooks";
 import {
   activeProject,
   pickProject,
   projects,
   removeProject,
-  revealSession,
   switchTo,
 } from "@/features/projects/state";
-import { SessionStateDot } from "@/features/sessions/SessionStateDot";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
+import { Picker, type PickerItem } from "@/shared/ui/Picker";
 
 type Props = {
   variant?: "bar" | "dock";
@@ -21,177 +18,116 @@ type Props = {
 
 export function ProjectPicker({ variant = "bar" }: Props) {
   const [open, setOpen] = useState(false);
-  const [asking, setAsking] = useState<string | null>(null);
-  const holder = useRef<HTMLDivElement>(null);
-  const menu = usePresence<HTMLDivElement>(open);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const dismiss = (event: MouseEvent) => {
-      if (!holder.current?.contains(event.target as Node)) {
-        setOpen(false);
-        setAsking(null);
-      }
-    };
-    window.addEventListener("mousedown", dismiss);
-    return () => window.removeEventListener("mousedown", dismiss);
-  }, [open]);
-
+  const [query, setQuery] = useState("");
   const current = activeProject.value;
+  const dock = variant === "dock";
+
+  const close = () => {
+    setOpen(false);
+    setQuery("");
+  };
+
+  const needle = query.trim().toLowerCase();
+  const items: PickerItem[] = projects.value
+    .filter(
+      (project) =>
+        !needle ||
+        project.name.toLowerCase().includes(needle) ||
+        project.root.toLowerCase().includes(needle),
+    )
+    .map((project) => {
+      const live = countLive(project.id);
+      const blocked = countBlocked(project.id);
+      return {
+        id: project.id,
+        label: project.name,
+        hint: prettyRoot(project.root),
+        badge:
+          live > 0
+            ? { text: t("projects.live", { count: String(live) }), alert: blocked > 0 }
+            : undefined,
+        remove:
+          live === 0
+            ? {
+                label: t("projects.remove"),
+                ask: t("projects.removeAsk"),
+                yes: t("projects.remove"),
+                no: t("projects.removeCancel"),
+                run: () => {
+                  close();
+                  void removeProject(project.id);
+                },
+              }
+            : undefined,
+        run: () => {
+          close();
+          void switchTo(project.id);
+        },
+      };
+    });
+
+  items.push({
+    id: "open-folder",
+    label: t("projects.open"),
+    run: () => {
+      close();
+      void pickProject();
+    },
+  });
 
   return (
-    <div ref={holder} class={cn("relative", variant === "dock" && "px-2")}>
+    <div class={cn("relative min-w-0", dock && "px-3")}>
       <button
         type="button"
-        onClick={() => {
-          setOpen((shown) => !shown);
-          setAsking(null);
-        }}
+        onClick={() => setOpen(true)}
         title={current?.root ?? t("projects.none")}
-        class={cn("flex items-center gap-1.5 rounded transition-colors", {
-          "max-w-56 px-1.5 py-0.5 hover:bg-raised": variant === "bar",
-          "w-full border border-border bg-raised px-2 py-1 font-medium hover:border-muted":
-            variant === "dock",
+        class={cn("flex min-w-0 items-center gap-1.5 rounded transition-colors", {
+          "max-w-56 px-1.5 py-0.5 hover:bg-raised": !dock,
+          "w-full text-left hover:text-text": dock,
         })}
       >
-        <span class="truncate">{current?.name ?? t("projects.none")}</span>
+        <span class="min-w-0 flex-1">
+          <span class={cn("block truncate", dock && "font-medium text-text")}>
+            {current?.name ?? t("projects.none")}
+          </span>
+          {dock && current && (
+            <span class="block truncate text-tiny text-faint">{prettyRoot(current.root)}</span>
+          )}
+        </span>
         {waitingElsewhere() > 0 && (
-          <span class="size-1.5 animate-breathe rounded-full bg-state-blocked" />
+          <span class="size-1.5 shrink-0 animate-breathe rounded-full bg-state-blocked" />
         )}
-        <Icon
-          name="chevron"
-          size={12}
-          class={cn("text-faint transition-transform", {
-            "ml-auto": variant === "dock",
-            "rotate-180": open,
-          })}
-        />
+        <Icon name="chevron" size={12} class="shrink-0 text-faint" />
       </button>
 
-      {menu.mounted && (
-        <div
-          ref={menu.holder}
-          class={cn(
-            `absolute top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-float shadow-2xl`,
-            {
-              "left-0 w-72": variant === "bar",
-              "inset-x-2": variant === "dock",
-              "animate-drop-out": menu.leaving,
-              "animate-drop-in": !menu.leaving,
-            },
-          )}
-        >
-          <ul class="max-h-72 overflow-y-auto py-1">
-            {projects.value.map((project) => {
-              const live = liveIn(project.id);
-              const blocked = pending(project.id);
-              return (
-                <li key={project.id} class="group relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      void switchTo(project.id);
-                    }}
-                    class={cn(
-                      `flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-raised`,
-                      {
-                        "text-text": project.id === current?.id,
-                        "text-muted": project.id !== current?.id,
-                      },
-                    )}
-                  >
-                    <span class="truncate">{project.name}</span>
-                    <span
-                      class={cn("ml-auto shrink-0 text-micro", {
-                        "text-state-blocked": blocked > 0,
-                        "text-faint": blocked === 0,
-                      })}
-                    >
-                      {live.length > 0 ? t("projects.live", { count: String(live.length) }) : "·"}
-                    </span>
-                  </button>
-                  {live.length === 0 && asking !== project.id && (
-                    <button
-                      type="button"
-                      title={t("projects.remove")}
-                      onClick={() => setAsking(project.id)}
-                      class="absolute inset-y-0 right-1 hidden items-center px-1.5 text-faint transition-colors hover:text-text group-hover:flex"
-                    >
-                      <Icon name="close" size={12} />
-                    </button>
-                  )}
-
-                  {asking === project.id && (
-                    <div class="flex items-center gap-2 border-border border-y bg-raised px-3 py-1.5">
-                      <span class="truncate text-micro text-muted">{t("projects.removeAsk")}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAsking(null);
-                          void removeProject(project.id);
-                        }}
-                        class="ml-auto shrink-0 text-state-blocked transition-opacity hover:opacity-70"
-                      >
-                        {t("projects.remove")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAsking(null)}
-                        class="shrink-0 text-faint transition-colors hover:text-text"
-                      >
-                        {t("projects.removeCancel")}
-                      </button>
-                    </div>
-                  )}
-
-                  {project.id !== current?.id &&
-                    live.map((session) => (
-                      <button
-                        key={session.id}
-                        type="button"
-                        onClick={() => {
-                          setOpen(false);
-                          void revealSession(session);
-                        }}
-                        class="flex w-full items-center gap-2 py-1 pr-3 pl-6 text-left text-muted transition-colors hover:bg-raised hover:text-text"
-                      >
-                        <SessionStateDot session={session} dimmed />
-                        <span class="truncate">{session.title}</span>
-                      </button>
-                    ))}
-                </li>
-              );
-            })}
-          </ul>
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              void pickProject();
-            }}
-            class="w-full border-t border-border px-3 py-2 text-left text-muted transition-colors hover:bg-raised hover:text-text"
-          >
-            {t("projects.open")}
-          </button>
-        </div>
-      )}
+      <Picker
+        open={open}
+        onClose={close}
+        query={query}
+        onQuery={setQuery}
+        placeholder={t("projects.search")}
+        items={items}
+      />
     </div>
   );
 }
 
-function pending(projectId: string): number {
+function prettyRoot(root: string): string {
+  const cut = root.lastIndexOf("/");
+  const parent = cut > 0 ? root.slice(0, cut) : root;
+  return parent.replace(/^\/(Users|home)\/[^/]+/, "~");
+}
+
+function countBlocked(projectId: string): number {
   return sessions.value.filter(
     (session) => session.project_id === projectId && session.state === "blocked",
   ).length;
 }
 
-function liveIn(projectId: string): SessionSummary[] {
+function countLive(projectId: string): number {
   return sessions.value.filter(
     (session) => session.project_id === projectId && session.exit_code === null,
-  );
+  ).length;
 }
 
 function waitingElsewhere(): number {

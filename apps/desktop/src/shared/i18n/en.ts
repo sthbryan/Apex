@@ -42,6 +42,7 @@ export const en = {
   projects: {
     none: "No project",
     open: "Open project…",
+    search: "Find a project…",
     empty: "Open a project to get started.",
     live: "{count} running",
     elsewhere: "Other projects",

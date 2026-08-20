@@ -44,6 +44,7 @@ export const es: Messages = {
   projects: {
     none: "Sin proyecto",
     open: "Abrir proyecto…",
+    search: "Busca un proyecto…",
     empty: "Abre un proyecto para empezar.",
     live: "{count} corriendo",
     elsewhere: "Otros proyectos",
