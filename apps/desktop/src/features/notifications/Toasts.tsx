@@ -64,13 +64,20 @@ function Toast({ notice, depth, expanded }: { notice: Notice; depth: number; exp
 
   return (
     <output
-      onPointerDown={(event) => event.currentTarget.setPointerCapture(event.pointerId)}
       onPointerMove={(event) => {
-        if (event.buttons === 1) {
-          setDrag(Math.max(0, event.movementX + drag));
+        if (event.buttons !== 1) {
+          return;
         }
+        const next = Math.max(0, event.movementX + drag);
+        if (next > 0 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }
+        setDrag(next);
       }}
-      onPointerUp={() => {
+      onPointerUp={(event) => {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
         if (drag > SWIPE) {
           dismissToast(notice.id);
         }
