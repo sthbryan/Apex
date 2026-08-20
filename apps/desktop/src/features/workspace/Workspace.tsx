@@ -1,13 +1,17 @@
 import type { ComponentChildren } from "preact";
+import { useMemo } from "preact/hooks";
 
 import { activeProject } from "@/features/projects/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { requestSession } from "@/features/sessions/pending";
-import { agentsByUse, sessions } from "@/features/sessions/state";
+import { sessions } from "@/features/sessions/state";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
+import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
+
+const OFFERED_AGENTS = 4;
 
 export function Workspace() {
   return (
@@ -55,7 +59,8 @@ function NoProject() {
 
 function EmptySessions() {
   const project = activeProject.value;
-  const offered = agentsByUse.value;
+  const installed = installedAgents.value;
+  const offered = useMemo(() => sample(installed, OFFERED_AGENTS), [installed]);
 
   return (
     <Splash>
@@ -88,6 +93,15 @@ function EmptySessions() {
       </p>
     </Splash>
   );
+}
+
+function sample<T>(pool: readonly T[], count: number): T[] {
+  const drawn = [...pool];
+  for (let index = drawn.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [drawn[index], drawn[swap]] = [drawn[swap], drawn[index]];
+  }
+  return drawn.slice(0, count);
 }
 
 function Splash({ children }: { children: ComponentChildren }) {

@@ -1,4 +1,4 @@
-import { computed, signal } from "@preact/signals";
+import { signal } from "@preact/signals";
 import { Channel, invoke } from "@tauri-apps/api/core";
 
 import type { AgentMode } from "@/bindings/AgentMode";
@@ -9,27 +9,13 @@ import type { TerminalSize } from "@/bindings/TerminalSize";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { absorb, forget, offer } from "@/features/acp/state";
 import { disposeTerminal } from "@/features/sessions/registry";
-import { complain, installedAgents } from "@/shared/daemon";
+import { complain } from "@/shared/daemon";
 
 const UUID_BYTES = 16;
 
 type OutputListener = (data: Uint8Array) => void;
 
 export const sessions = signal<SessionSummary[]>([]);
-
-export const agentsByUse = computed(() => {
-  const lastUsed = new Map<string, number>();
-  for (const session of sessions.value) {
-    const seen = lastUsed.get(session.agent) ?? 0;
-    if (session.started_at > seen) {
-      lastUsed.set(session.agent, session.started_at);
-    }
-  }
-  return [...installedAgents.value].sort((left, right) => {
-    const gap = (lastUsed.get(right.name) ?? 0) - (lastUsed.get(left.name) ?? 0);
-    return gap !== 0 ? gap : left.name.localeCompare(right.name);
-  });
-});
 
 const listeners = new Map<string, Set<OutputListener>>();
 const pendingOutput = new Map<string, Uint8Array[]>();
