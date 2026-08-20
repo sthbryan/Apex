@@ -293,7 +293,6 @@ export const es: Messages = {
     running: "Corriendo",
     finished: "Terminadas",
     empty: "Todavía no hay sesiones.",
-    startTitle: "Empieza una sesión",
     looseTrees: "Worktrees sueltos",
     spawned: "{count} agentes",
     quiet: "Esperando la primera salida…",

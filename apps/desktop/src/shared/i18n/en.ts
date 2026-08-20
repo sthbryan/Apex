@@ -291,7 +291,6 @@ export const en = {
     running: "Running",
     finished: "Finished",
     empty: "No sessions yet.",
-    startTitle: "Start a session",
     looseTrees: "Loose worktrees",
     spawned: "{count} agents",
     quiet: "Waiting for the first output…",

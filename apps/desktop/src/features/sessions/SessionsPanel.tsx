@@ -11,13 +11,10 @@ import {
   projectSessions,
   projects,
 } from "@/features/projects/state";
-import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { ElsewhereList } from "@/features/sessions/ElsewhereList";
-import { requestClose, requestSession } from "@/features/sessions/pending";
+import { requestClose } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
-import { sessions as allSessions } from "@/features/sessions/state";
 import { WaitingList } from "@/features/sessions/WaitingList";
-import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -35,7 +32,9 @@ export function SessionsPanel() {
           <WaitingList sessions={waiting.value} projects={projects.value} />
         )}
 
-        {!hasSessions && <StartHere />}
+        {!hasSessions && !activeProject.value && (
+          <p class="px-1 text-faint">{t("sessions.empty")}</p>
+        )}
 
         {live.length > 0 && (
           <section class="mb-2">
@@ -82,58 +81,6 @@ export function SessionsPanel() {
       </div>
     </div>
   );
-}
-
-function StartHere() {
-  const project = activeProject.value;
-  const offered = byRecentUse(installedAgents.value);
-
-  if (!project) {
-    return <p class="px-1 text-faint">{t("sessions.empty")}</p>;
-  }
-
-  return (
-    <div class="flex flex-col">
-      <h2 class="mb-1 px-1 text-micro uppercase tracking-wider text-faint">
-        {t("sessions.startTitle")}
-      </h2>
-      <ul class="flex flex-col">
-        {offered.map((agent) => (
-          <li key={agent.name}>
-            <button
-              type="button"
-              onClick={() =>
-                requestSession({
-                  project: project.id,
-                  agent: agent.name,
-                  direction: null,
-                  isGit: project.is_git,
-                })
-              }
-              class="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-muted transition-colors hover:bg-raised hover:text-text"
-            >
-              <AgentIcon agent={agent.name} class="shrink-0" />
-              <span class="truncate">{agent.name}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function byRecentUse<T extends { name: string }>(agents: readonly T[]): T[] {
-  const lastUsed = new Map<string, number>();
-  for (const session of allSessions.value) {
-    const seen = lastUsed.get(session.agent) ?? 0;
-    if (session.started_at > seen) {
-      lastUsed.set(session.agent, session.started_at);
-    }
-  }
-  return [...agents].sort((left, right) => {
-    const gap = (lastUsed.get(right.name) ?? 0) - (lastUsed.get(left.name) ?? 0);
-    return gap !== 0 ? gap : left.name.localeCompare(right.name);
-  });
 }
 
 function OrphanTrees() {

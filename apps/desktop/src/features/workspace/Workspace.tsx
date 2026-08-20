@@ -3,14 +3,11 @@ import type { ComponentChildren } from "preact";
 import { activeProject } from "@/features/projects/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { requestSession } from "@/features/sessions/pending";
-import { sessions } from "@/features/sessions/state";
+import { agentsByUse, sessions } from "@/features/sessions/state";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
-import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
-
-const OFFERED_AGENTS = 4;
 
 export function Workspace() {
   return (
@@ -58,7 +55,7 @@ function NoProject() {
 
 function EmptySessions() {
   const project = activeProject.value;
-  const offered = installedAgents.value.slice(0, OFFERED_AGENTS);
+  const offered = agentsByUse.value;
 
   return (
     <Splash>
