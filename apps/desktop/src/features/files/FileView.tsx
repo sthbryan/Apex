@@ -26,6 +26,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   const [saved, setSaved] = useState<string | null>(null);
   const [revision, setRevision] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const ticket = useRef(0);
@@ -40,6 +41,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
     setSaved(null);
     setRevision(null);
     setConflict(false);
+    setEditing(false);
     setFailure(null);
 
     void readFile(projectId, path)
@@ -63,7 +65,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
   const text = buffer ?? contents?.text ?? null;
   const drawn = text !== null && isSvg(path) && svgView.value === "preview";
-  const editable = contents !== null && text !== null && !drawn && !contents.truncated;
+  const writable = contents !== null && text !== null && !drawn && !contents.truncated;
   const dirty = buffer !== null && buffer !== saved;
 
   const save = useCallback(() => {
@@ -87,6 +89,27 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
       })
       .finally(() => setSaving(false));
   }, [projectId, path, buffer, saved, revision, saving]);
+
+  const lock = () => {
+    setBuffer(saved);
+    setConflict(false);
+    setEditing(false);
+  };
+
+  const pencil = writable && (
+    <button
+      type="button"
+      title={t(editing ? (dirty ? "files.discardEdits" : "files.lock") : "files.edit")}
+      onClick={() => (editing ? lock() : setEditing(true))}
+      class={
+        editing
+          ? "shrink-0 text-accent transition-colors hover:text-text"
+          : "shrink-0 text-faint transition-colors hover:text-text"
+      }
+    >
+      <Icon name="pencil" size={12} />
+    </button>
+  );
 
   const toggle = text !== null && isSvg(path) && (
     <button
@@ -120,6 +143,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
               <Icon name="circle" size={10} />
             </button>
           )}
+          {pencil}
           {toggle}
           <button
             type="button"
@@ -146,8 +170,20 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
         </header>
       )}
 
-      {!chrome && toggle && (
-        <div class="flex h-6 shrink-0 items-center justify-end border-b border-border px-2">
+      {!chrome && (pencil || toggle) && (
+        <div class="flex h-6 shrink-0 items-center justify-end gap-2 border-b border-border px-2">
+          {dirty && (
+            <button
+              type="button"
+              title={t("files.save")}
+              disabled={saving}
+              onClick={save}
+              class="shrink-0 text-state-working transition-colors hover:text-text"
+            >
+              <Icon name="circle" size={10} />
+            </button>
+          )}
+          {pencil}
           {toggle}
         </div>
       )}
@@ -194,7 +230,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           key={path}
           path={path}
           text={text}
-          editable={editable}
+          editable={writable && editing}
           onInput={setBuffer}
           onSave={save}
         />
