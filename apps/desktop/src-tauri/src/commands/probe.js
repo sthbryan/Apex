@@ -31,10 +31,15 @@
   window.addEventListener("error", (event) => push("error", event.message));
   window.addEventListener("unhandledrejection", (event) => push("error", show(event.reason)));
   window.__apex = {
-    drain: function () {
+    snapshot: function () {
       const out = seen.slice();
       seen.length = 0;
-      return out;
+      return {
+        url: location.href,
+        title: document.title || null,
+        text: document.body ? document.body.innerText.slice(0, 20000) : null,
+        logs: out,
+      };
     },
   };
 })();

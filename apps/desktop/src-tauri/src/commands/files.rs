@@ -76,6 +76,7 @@ pub async fn list_editors(state: tauri::State<'_, AppState>) -> Answer<Vec<Edito
 pub async fn browser_report(
     state: tauri::State<'_, AppState>,
     project: Uuid,
+    pane: String,
     url: String,
     title: Option<String>,
     text: Option<String>,
@@ -83,15 +84,15 @@ pub async fn browser_report(
 ) -> Answer<()> {
     state
         .daemon()?
-        .request(Command::BrowserReport { project, url, title, text, logs })
+        .request(Command::BrowserReport { project, pane, url, title, text, logs })
         .await
         .map_err(failed)?;
     Ok(())
 }
 
 #[tauri::command]
-pub async fn browser_forget(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<()> {
-    state.daemon()?.request(Command::BrowserForget { project }).await.map_err(failed)?;
+pub async fn browser_forget(state: tauri::State<'_, AppState>, pane: String) -> Answer<()> {
+    state.daemon()?.request(Command::BrowserForget { pane }).await.map_err(failed)?;
     Ok(())
 }
 

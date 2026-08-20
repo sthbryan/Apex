@@ -9,15 +9,18 @@ const KEPT: usize = 200;
 
 #[derive(Default)]
 struct Page {
+    project: Uuid,
     url: String,
     title: Option<String>,
     text: Option<String>,
     logs: Vec<BrowserLog>,
+    seen: u64,
 }
 
 #[derive(Default)]
 pub struct BrowsersService {
-    pages: Arc<Mutex<HashMap<Uuid, Page>>>,
+    panes: Arc<Mutex<HashMap<String, Page>>>,
+    clock: Arc<Mutex<u64>>,
 }
 
 impl BrowsersService {
@@ -28,13 +31,21 @@ impl BrowsersService {
     pub async fn report(
         &self,
         project: Uuid,
+        pane: String,
         url: String,
         title: Option<String>,
         text: Option<String>,
         logs: Vec<BrowserLog>,
     ) {
-        let mut pages = self.pages.lock().await;
-        let page = pages.entry(project).or_default();
+        let seen = {
+            let mut clock = self.clock.lock().await;
+            *clock += 1;
+            *clock
+        };
+        let mut panes = self.panes.lock().await;
+        let page = panes.entry(pane).or_default();
+        page.project = project;
+        page.seen = seen;
         if page.url != url {
             page.url = url;
             page.logs.clear();
@@ -51,36 +62,48 @@ impl BrowsersService {
         }
     }
 
-    pub async fn forget(&self, project: Uuid) {
-        self.pages.lock().await.remove(&project);
+    pub async fn forget(&self, pane: &str) {
+        self.panes.lock().await.remove(pane);
     }
 
     pub async fn read(&self, project: Uuid) -> String {
-        let pages = self.pages.lock().await;
-        let Some(page) = pages.get(&project) else {
-            return String::new();
-        };
-        let mut out = format!("{}\n", page.url);
-        if let Some(title) = &page.title {
-            out.push_str(title);
-            out.push('\n');
-        }
-        if let Some(text) = &page.text {
-            out.push('\n');
-            out.push_str(text);
-        }
-        out
+        self.describe(project, |page| {
+            let mut out = page.url.clone();
+            if let Some(title) = &page.title {
+                out.push_str(" — ");
+                out.push_str(title);
+            }
+            if let Some(text) = &page.text {
+                out.push('\n');
+                out.push_str(text);
+            }
+            out
+        })
+        .await
     }
 
     pub async fn logs(&self, project: Uuid) -> String {
-        let pages = self.pages.lock().await;
-        let Some(page) = pages.get(&project) else {
-            return String::new();
-        };
-        page.logs
-            .iter()
-            .map(|entry| format!("[{}] {}", entry.level, entry.text))
-            .collect::<Vec<_>>()
-            .join("\n")
+        self.describe(project, |page| {
+            let lines = page
+                .logs
+                .iter()
+                .map(|entry| format!("[{}] {}", entry.level, entry.text))
+                .collect::<Vec<_>>()
+                .join("\n");
+            if lines.is_empty() {
+                format!("{} logged nothing.", page.url)
+            } else {
+                format!("{}\n{lines}", page.url)
+            }
+        })
+        .await
+    }
+
+    async fn describe(&self, project: Uuid, shape: impl Fn(&Page) -> String) -> String {
+        let panes = self.panes.lock().await;
+        let mut mine: Vec<&Page> =
+            panes.values().filter(|page| page.project == project).collect();
+        mine.sort_by_key(|page| std::cmp::Reverse(page.seen));
+        mine.iter().map(|page| shape(page)).collect::<Vec<_>>().join("\n\n")
     }
 }

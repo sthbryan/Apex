@@ -460,16 +460,17 @@ impl SessionManager {
     pub async fn browser_report(
         &self,
         project: Uuid,
+        pane: String,
         url: String,
         title: Option<String>,
         text: Option<String>,
         logs: Vec<apex_proto::BrowserLog>,
     ) {
-        self.browsers.report(project, url, title, text, logs).await;
+        self.browsers.report(project, pane, url, title, text, logs).await;
     }
 
-    pub async fn browser_forget(&self, project: Uuid) {
-        self.browsers.forget(project).await;
+    pub async fn browser_forget(&self, pane: &str) {
+        self.browsers.forget(pane).await;
     }
 
     pub async fn browser_read(&self, project: Uuid) -> String {

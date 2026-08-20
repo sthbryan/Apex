@@ -21,29 +21,26 @@ type Entry = {
   at: number;
 };
 
-function report(
-  url: string,
-  title: string | null,
-  logs: Entry[],
-  text: string | null = null,
-): void {
+type Snapshot = {
+  url: string;
+  title: string | null;
+  text: string | null;
+  logs: Entry[];
+};
+
+function report(pane: string, taken: Snapshot): void {
   const project = activeProjectId.value;
   if (!project) {
     return;
   }
   void invoke("browser_report", {
     project,
-    url,
-    title,
-    text,
-    logs: logs.map((entry) => ({ level: entry.level, text: entry.text })),
+    pane,
+    url: taken.url,
+    title: taken.title,
+    text: taken.text,
+    logs: taken.logs.map((entry) => ({ level: entry.level, text: entry.text })),
   }).catch(complain);
-}
-
-function tell(label: string, url: string, title: string | null, logs: Entry[]): void {
-  void invoke<string>("browser_text", { label })
-    .then((raw) => report(url, title, logs, JSON.parse(raw) as string))
-    .catch(() => report(url, title, logs));
 }
 
 type Loaded = {
@@ -69,17 +66,10 @@ export function BrowserView({ id, url, visible }: Props) {
     if (!node) {
       return;
     }
-    void invoke("browser_open", { label, url, bounds: boxOf(node) })
-      .then(() => {
-        window.setTimeout(() => tell(label, url, null, []), 800);
-      })
-      .catch(complain);
+    void invoke("browser_open", { label, url, bounds: boxOf(node) }).catch(complain);
     return () => {
       void invoke("browser_close", { label }).catch(complain);
-      const project = activeProjectId.value;
-      if (project) {
-        void invoke("browser_forget", { project }).catch(complain);
-      }
+      void invoke("browser_forget", { pane: label }).catch(complain);
     };
   }, [label, url]);
 
@@ -117,7 +107,6 @@ export function BrowserView({ id, url, visible }: Props) {
       if (!editing.current) {
         setDraft(event.payload.url);
       }
-      tell(label, event.payload.url, event.payload.title, []);
     });
     return () => {
       void stop.then((off) => off());
@@ -126,20 +115,27 @@ export function BrowserView({ id, url, visible }: Props) {
 
   useEffect(() => {
     const tick = () => {
-      void invoke<string>("browser_logs", { label })
+      void invoke<string>("browser_probe", { label })
         .then((raw) => {
-          const found = JSON.parse(raw) as Entry[];
-          if (found.length === 0) {
+          const taken = raw ? (JSON.parse(raw) as Snapshot | null) : null;
+          if (!taken) {
             return;
           }
-          setLogs((current) => [...current, ...found].slice(-500));
-          tell(label, here, null, found);
+          setHere(taken.url);
+          if (!editing.current) {
+            setDraft(taken.url);
+          }
+          if (taken.logs.length > 0) {
+            setLogs((current) => [...current, ...taken.logs].slice(-500));
+          }
+          report(label, taken);
         })
         .catch(() => {});
     };
+    tick();
     const timer = setInterval(tick, 1500);
     return () => clearInterval(timer);
-  }, [label, here]);
+  }, [label]);
 
   const failures = logs.filter((entry) => entry.level === "error").length;
 

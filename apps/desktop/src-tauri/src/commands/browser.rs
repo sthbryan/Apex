@@ -164,17 +164,9 @@ async fn ask(webview: tauri::Webview, script: &str) -> Answer<String> {
 }
 
 #[tauri::command]
-pub async fn browser_logs(app: tauri::AppHandle, label: String) -> Answer<String> {
-    let Some(webview) = app.get_webview(&label) else {
-        return Ok("[]".to_owned());
-    };
-    ask(webview, "window.__apex ? window.__apex.drain() : []").await
-}
-
-#[tauri::command]
-pub async fn browser_text(app: tauri::AppHandle, label: String) -> Answer<String> {
+pub async fn browser_probe(app: tauri::AppHandle, label: String) -> Answer<String> {
     let Some(webview) = app.get_webview(&label) else {
         return Ok(String::new());
     };
-    ask(webview, "document.body ? document.body.innerText.slice(0, 20000) : ''").await
+    ask(webview, "window.__apex ? window.__apex.snapshot() : null").await
 }

@@ -572,14 +572,14 @@ pub enum Command {
     BrowserReport {
         #[ts(type = "string")]
         project: Uuid,
+        pane: String,
         url: String,
         title: Option<String>,
         text: Option<String>,
         logs: Vec<BrowserLog>,
     },
     BrowserForget {
-        #[ts(type = "string")]
-        project: Uuid,
+        pane: String,
     },
     BrowserRead {
         #[ts(type = "string")]
