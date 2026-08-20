@@ -66,7 +66,7 @@ function History({ target }: { target: GitTarget }) {
               <span class="shrink-0 font-mono tabular-nums">{commit.short}</span>
               <span class="truncate">{commit.author}</span>
               {commit.refs && (
-                <span class="ml-auto shrink-0 truncate text-state-working">
+                <span class="ml-auto shrink-0 truncate text-accent">
                   {commit.refs.split(", ")[0]}
                 </span>
               )}

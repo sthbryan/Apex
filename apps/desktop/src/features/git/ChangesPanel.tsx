@@ -82,9 +82,9 @@ export function ChangesPanel() {
           >
             {t("git.merge", { base: status.base })}
           </button>
-          {report?.type === "merged" && <p class="mt-1 text-state-done">{t("git.merged")}</p>}
+          {report?.type === "merged" && <p class="mt-1 text-git-added">{t("git.merged")}</p>}
           {report?.type === "conflicted" && (
-            <p class="mt-1 text-state-blocked">
+            <p class="mt-1 text-git-conflict">
               {t("git.conflicted", { files: report.files.join(", ") })}
             </p>
           )}
@@ -160,8 +160,8 @@ function Section({
           {label}
         </button>
         <span class="ml-auto shrink-0 tabular-nums">
-          <span class="text-state-done">+{added}</span>{" "}
-          <span class="text-state-failed">−{removed}</span>
+          <span class="text-git-added">+{added}</span>{" "}
+          <span class="text-git-removed">−{removed}</span>
         </span>
       </h3>
       <ul>
@@ -200,9 +200,10 @@ function Row({ change, target }: { change: GitChange; target: GitTarget }) {
       >
         <span
           class={cn("w-3 shrink-0 text-center", {
-            "text-state-done": change.kind === "added",
-            "text-state-failed": change.kind === "deleted" || change.kind === "conflicted",
-            "text-state-working": change.kind === "modified" || change.kind === "renamed",
+            "text-git-added": change.kind === "added",
+            "text-git-removed": change.kind === "deleted",
+            "text-git-conflict": change.kind === "conflicted",
+            "text-git-modified": change.kind === "modified" || change.kind === "renamed",
             "text-faint": change.kind === "untracked",
           })}
         >
@@ -210,8 +211,8 @@ function Row({ change, target }: { change: GitChange; target: GitTarget }) {
         </span>
         <span class="truncate">{change.path}</span>
         <span class="ml-auto shrink-0 tabular-nums text-faint">
-          {change.added > 0 && <span class="text-state-done">+{change.added}</span>}
-          {change.removed > 0 && <span class="text-state-failed"> −{change.removed}</span>}
+          {change.added > 0 && <span class="text-git-added">+{change.added}</span>}
+          {change.removed > 0 && <span class="text-git-removed"> −{change.removed}</span>}
         </span>
       </button>
     </li>

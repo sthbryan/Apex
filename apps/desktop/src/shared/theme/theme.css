@@ -31,6 +31,14 @@
   --color-state-done: var(--apex-state-done);
   --color-state-failed: var(--apex-state-failed);
 
+  --color-git-dirty: var(--apex-git-dirty);
+  --color-git-added: var(--apex-git-added);
+  --color-git-removed: var(--apex-git-removed);
+  --color-git-modified: var(--apex-git-modified);
+  --color-git-ahead: var(--apex-git-ahead);
+  --color-git-behind: var(--apex-git-behind);
+  --color-git-conflict: var(--apex-git-conflict);
+
   --default-transition-duration: var(--apex-quick);
   --default-transition-timing-function: var(--apex-ease);
 

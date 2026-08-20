@@ -37,6 +37,14 @@
   --apex-state-done: light-dark(#1a7f37, #3fb950);
   --apex-state-failed: light-dark(#cf222e, #ff6b6b);
 
+  --apex-git-dirty: light-dark(#656d76, #8b919c);
+  --apex-git-added: light-dark(#1a7f37, #3fb950);
+  --apex-git-removed: light-dark(#cf222e, #ff6b6b);
+  --apex-git-modified: light-dark(#0969da, #4a9eff);
+  --apex-git-ahead: light-dark(#1a7f37, #3fb950);
+  --apex-git-behind: light-dark(#9a6700, #e8a33d);
+  --apex-git-conflict: light-dark(#cf222e, #ff6b6b);
+
   --apex-ansi-black: light-dark(#24292f, #24272e);
   --apex-ansi-red: light-dark(#cf222e, #ff6b6b);
   --apex-ansi-green: light-dark(#1a7f37, #3fb950);
@@ -80,4 +88,12 @@
   --apex-state-blocked: light-dark(#614400, #efbe76);
   --apex-state-done: light-dark(#115525, #8bd796);
   --apex-state-failed: light-dark(#931821, #ffb2b2);
+
+  --apex-git-dirty: light-dark(#3d434a, #c3c9d3);
+  --apex-git-added: light-dark(#115525, #8bd796);
+  --apex-git-removed: light-dark(#931821, #ffb2b2);
+  --apex-git-modified: light-dark(#064895, #9ccaff);
+  --apex-git-ahead: light-dark(#115525, #8bd796);
+  --apex-git-behind: light-dark(#614400, #efbe76);
+  --apex-git-conflict: light-dark(#931821, #ffb2b2);
 }

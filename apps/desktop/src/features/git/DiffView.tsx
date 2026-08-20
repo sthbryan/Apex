@@ -113,7 +113,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
               hunks={staged}
               action={t("git.unstageHunk")}
               onApply={(patch) => apply(patch, false)}
-              tone="text-state-done"
+              tone="text-git-added"
             />
           </>
         )}
