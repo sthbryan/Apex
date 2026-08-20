@@ -47,7 +47,7 @@ export const en = {
     live: "{count} running",
     elsewhere: "Other projects",
     remove: "Remove from Apex",
-    removeAsk: "Remove it from Apex? The folder stays on disk.",
+    removeAsk: "Are you sure?",
     removeCancel: "Cancel",
   },
   usage: {
@@ -229,7 +229,7 @@ export const en = {
   git: {
     noRepo: "This project is not a git repository.",
     dropWorktree: "Delete this worktree and {branch}",
-    dropWorktreeAsk: "Delete {branch}?",
+    dropWorktreeAsk: "Are you sure?",
     dropWorktreeYes: "Delete",
     dropWorktreeNo: "Keep",
     chip: "On {branch} — switch worktree",

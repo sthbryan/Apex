@@ -49,7 +49,7 @@ export const es: Messages = {
     live: "{count} corriendo",
     elsewhere: "Otros proyectos",
     remove: "Quitar de Apex",
-    removeAsk: "¿Quitarlo de Apex? La carpeta sigue en el disco.",
+    removeAsk: "¿Seguro?",
     removeCancel: "Cancelar",
   },
   usage: {
@@ -231,7 +231,7 @@ export const es: Messages = {
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
     dropWorktree: "Borrar este worktree y {branch}",
-    dropWorktreeAsk: "¿Borrar {branch}?",
+    dropWorktreeAsk: "¿Seguro?",
     dropWorktreeYes: "Borrar",
     dropWorktreeNo: "Conservar",
     chip: "En {branch} — cambiar de worktree",
