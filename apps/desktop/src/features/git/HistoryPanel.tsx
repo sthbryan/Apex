@@ -48,7 +48,7 @@ function History({ target }: { target: GitTarget }) {
     return <p class="px-2 py-1 text-faint">{t("git.noHistory")}</p>;
   }
   return (
-    <ul class="min-h-0 flex-1 overflow-auto py-1">
+    <ul class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-1">
       {commits.value.map((commit) => (
         <li key={commit.id}>
           <button
@@ -57,14 +57,18 @@ function History({ target }: { target: GitTarget }) {
             class="flex w-full flex-col gap-0.5 px-2 py-1 text-left transition-colors hover:bg-raised"
           >
             <span class="flex w-full items-baseline gap-2">
-              <span class="truncate text-muted">{commit.summary}</span>
+              <span class="min-w-0 truncate text-muted" title={commit.summary}>
+                {commit.summary}
+              </span>
               <span class="ml-auto shrink-0 tabular-nums text-faint">{since(commit.when)}</span>
             </span>
             <span class="flex w-full items-baseline gap-2 text-faint">
               <span class="shrink-0 font-mono tabular-nums">{commit.short}</span>
-              <span class="truncate">{commit.author}</span>
+              <span class="min-w-0 truncate" title={commit.author}>
+                {commit.author}
+              </span>
               {commit.refs && (
-                <span class="ml-auto shrink-0 truncate text-accent">
+                <span class="ml-auto min-w-0 truncate text-accent" title={commit.refs}>
                   {commit.refs.split(", ")[0]}
                 </span>
               )}
