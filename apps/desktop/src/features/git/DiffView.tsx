@@ -3,10 +3,20 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { GitTarget } from "@/bindings/GitTarget";
 import { highlight } from "@/features/files/highlight";
-import { gitStatus, readDiff, readHunks, stageHunk } from "@/features/git/state";
+import { SplitPatch } from "@/features/git/SplitPatch";
+import {
+  diffLayout,
+  gitStatus,
+  readDiff,
+  readHunks,
+  setDiffLayout,
+  stageHunk,
+} from "@/features/git/state";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+
+const SPLIT_WIDTH = 720;
 
 type Painted = {
   patch: string;
@@ -25,6 +35,8 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
   const [staged, setStaged] = useState<Painted[]>([]);
   const [whole, setWhole] = useState<Painted | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const [wide, setWide] = useState(false);
+  const frame = useRef<HTMLDivElement>(null);
   const ticket = useRef(0);
 
   const session = sessions.value.find(
@@ -65,6 +77,20 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
 
   useEffect(load, [load]);
 
+  useEffect(() => {
+    const node = frame.current;
+    if (!node) {
+      return;
+    }
+    const watcher = new ResizeObserver(([entry]) => {
+      setWide(entry.contentRect.width >= SPLIT_WIDTH);
+    });
+    watcher.observe(node);
+    return () => watcher.disconnect();
+  }, []);
+
+  const split = wide && diffLayout.value === "split";
+
   const apply = (patch: string, stage: boolean) => {
     void stageHunk(target, patch, stage)
       .then(load)
@@ -75,22 +101,42 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     ? whole !== null && whole.patch.trim() === ""
     : unstaged.length === 0 && staged.length === 0;
 
+  const toggle = wide && (
+    <button
+      type="button"
+      title={t(split ? "git.unifiedView" : "git.splitView")}
+      onClick={() => setDiffLayout(split ? "unified" : "split")}
+      class="shrink-0 text-faint transition-colors hover:text-text"
+    >
+      <Icon name={split ? "rows" : "columns"} size={12} />
+    </button>
+  );
+
   return (
-    <div class="flex h-full flex-col bg-pane">
+    <div ref={frame} class="flex h-full flex-col bg-pane">
       {chrome && (
         <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
           <Icon name="branch" size={12} />
           <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
           <span class="truncate text-faint">{label}</span>
-          <button
-            type="button"
-            title={t("git.reload")}
-            onClick={load}
-            class="ml-auto shrink-0 text-faint transition-colors hover:text-text"
-          >
-            <Icon name="refresh" size={12} />
-          </button>
+          <div class="ml-auto flex shrink-0 items-center gap-2">
+            {toggle}
+            <button
+              type="button"
+              title={t("git.reload")}
+              onClick={load}
+              class="text-faint transition-colors hover:text-text"
+            >
+              <Icon name="refresh" size={12} />
+            </button>
+          </div>
         </header>
+      )}
+
+      {!chrome && toggle && (
+        <div class="flex h-6 shrink-0 items-center justify-end border-b border-border px-2">
+          {toggle}
+        </div>
       )}
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
@@ -98,7 +144,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
       {empty && <p class="p-3 text-faint">{t("git.noDiff")}</p>}
 
       <div class="min-h-0 flex-1 overflow-auto">
-        {whole && commit && <Patch painted={whole} />}
+        {whole && commit && <Patch painted={whole} path={path} split={split} />}
 
         {!commit && (
           <>
@@ -107,6 +153,8 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
               hunks={unstaged}
               action={t("git.stageHunk")}
               onApply={(patch) => apply(patch, true)}
+              path={path}
+              split={split}
             />
             <Group
               label={t("git.stagedHunks")}
@@ -114,6 +162,8 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
               action={t("git.unstageHunk")}
               onApply={(patch) => apply(patch, false)}
               tone="text-git-added"
+              path={path}
+              split={split}
             />
           </>
         )}
@@ -128,9 +178,11 @@ type GroupProps = {
   action: string;
   onApply: (patch: string) => void;
   tone?: string;
+  path: string;
+  split: boolean;
 };
 
-function Group({ label, hunks, action, onApply, tone }: GroupProps) {
+function Group({ label, hunks, action, onApply, tone, path, split }: GroupProps) {
   if (hunks.length === 0) {
     return null;
   }
@@ -153,14 +205,17 @@ function Group({ label, hunks, action, onApply, tone }: GroupProps) {
           >
             {action}
           </button>
-          <Patch painted={hunk} />
+          <Patch painted={hunk} path={path} split={split} />
         </div>
       ))}
     </section>
   );
 }
 
-function Patch({ painted }: { painted: Painted }) {
+function Patch({ painted, path, split }: { painted: Painted; path: string; split: boolean }) {
+  if (split) {
+    return <SplitPatch path={path} patch={painted.patch} />;
+  }
   return (
     <pre class="w-max min-w-full animate-veil-in px-3 py-2 leading-5">
       {painted.markup ? (
