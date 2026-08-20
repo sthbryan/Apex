@@ -2,6 +2,7 @@ import cn from "cnfast";
 import { useEffect } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { FileEntry } from "@/bindings/FileEntry";
+import { bufferKey, dirtyKeys } from "@/features/files/buffers";
 import {
   expanded,
   openTree,
@@ -138,6 +139,7 @@ function Row({
 }) {
   const open = entry.is_dir && expanded.value.includes(entry.path);
   const tone = statuses?.get(entry.path);
+  const unsaved = dirtyKeys.value.has(bufferKey(project, entry.path));
 
   return (
     <button
@@ -166,7 +168,8 @@ function Row({
         size={12}
         class="shrink-0 text-faint"
       />
-      <span class="truncate">{entry.name}</span>
+      <span class={cn("truncate", unsaved && "text-accent")}>{entry.name}</span>
+      {unsaved && <Icon name="save" size={10} class="shrink-0 text-accent" />}
       {tone && (
         <span
           aria-hidden="true"

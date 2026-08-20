@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { FileContents } from "@/bindings/FileContents";
+import { dropBuffer, keepBuffer, readBuffer } from "@/features/files/buffers";
 import { openExternally } from "@/features/files/editors";
 import {
   fileName,
@@ -22,9 +23,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   const project = activeProject.value;
   const projectId = project?.id ?? null;
   const [contents, setContents] = useState<FileContents | null>(null);
-  const [buffer, setBuffer] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
-  const [revision, setRevision] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,11 +36,9 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
     }
     const mine = ++ticket.current;
     setContents(null);
-    setBuffer(null);
     setSaved(null);
-    setRevision(null);
     setConflict(false);
-    setEditing(false);
+    setEditing(readBuffer(projectId, path) !== null);
     setFailure(null);
 
     void readFile(projectId, path)
@@ -50,9 +47,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           return;
         }
         setContents(contents);
-        setBuffer(contents.text);
         setSaved(contents.text);
-        setRevision(contents.revision);
       })
       .catch((error: unknown) => {
         if (mine === ticket.current) {
@@ -63,10 +58,24 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
   useEffect(load, [load]);
 
+  const held = projectId ? readBuffer(projectId, path) : null;
+  const buffer = held?.text ?? null;
+  const revision = held?.revision ?? contents?.revision ?? null;
   const text = buffer ?? contents?.text ?? null;
   const drawn = text !== null && isSvg(path) && svgView.value === "preview";
   const writable = contents !== null && text !== null && !drawn && !contents.truncated;
   const dirty = buffer !== null && buffer !== saved;
+
+  const edit = (next: string) => {
+    if (!projectId) {
+      return;
+    }
+    if (next === saved) {
+      dropBuffer(projectId, path);
+    } else {
+      keepBuffer(projectId, path, next, revision);
+    }
+  };
 
   const save = useCallback(() => {
     if (!projectId || buffer === null || buffer === saved || saving) {
@@ -75,8 +84,11 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
     setSaving(true);
     void writeFile(projectId, path, buffer, revision)
       .then((next) => {
-        setRevision(next);
+        setContents((current) =>
+          current ? { ...current, text: buffer, revision: next } : current,
+        );
         setSaved(buffer);
+        dropBuffer(projectId, path);
         setConflict(false);
         setFailure(null);
       })
@@ -91,7 +103,9 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   }, [projectId, path, buffer, saved, revision, saving]);
 
   const lock = () => {
-    setBuffer(saved);
+    if (projectId) {
+      dropBuffer(projectId, path);
+    }
     setConflict(false);
     setEditing(false);
   };
@@ -227,7 +241,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           path={path}
           text={text}
           editable={writable && editing}
-          onInput={setBuffer}
+          onInput={edit}
           onSave={save}
         />
       )}
