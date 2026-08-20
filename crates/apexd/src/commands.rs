@@ -197,6 +197,16 @@ async fn execute(
             text: manager.transcript(id, tail as usize, plain).await.map_err(not_found_error)?,
         }),
         Command::ListEditors => Ok(Reply::Editors { editors: manager.list_editors().await }),
+        Command::BrowserReport { project, url, title, text, logs } => {
+            manager.browser_report(project, url, title, text, logs).await;
+            Ok(Reply::Done)
+        }
+        Command::BrowserRead { project } => {
+            Ok(Reply::Text { text: manager.browser_read(project).await })
+        }
+        Command::BrowserLogs { project } => {
+            Ok(Reply::Text { text: manager.browser_logs(project).await })
+        }
         Command::UrlOpen { url } => {
             manager.open_url(&url).map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -400,6 +410,9 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::FileSearch { .. }
             | Command::FileOpenExternal { .. }
             | Command::UrlOpen { .. }
+            | Command::BrowserReport { .. }
+            | Command::BrowserRead { .. }
+            | Command::BrowserLogs { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
             | Command::GitLog { .. }

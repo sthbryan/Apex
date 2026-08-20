@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 use crate::services::acp::AcpRegistry;
 use crate::services::sessions::SessionRegistry;
+use crate::services::browsers::BrowsersService;
 use crate::services::{
     context::ContextService, files::FilesService, git::GitService, metrics::MetricsService,
     projects::ProjectsService, tasks::TasksService,
@@ -46,6 +47,7 @@ pub struct SessionManager {
     context: ContextService,
     projects: ProjectsService,
     tasks: TasksService,
+    browsers: BrowsersService,
     metrics: MetricsService,
     registry: Arc<SessionRegistry>,
     acp: Arc<AcpRegistry>,
@@ -75,6 +77,7 @@ impl SessionManager {
         let context = ContextService::new(Arc::clone(&store));
         let projects = ProjectsService::new(Arc::clone(&store));
         let tasks = TasksService::new(Arc::clone(&store));
+        let browsers = BrowsersService::new();
         let registry = Arc::new(SessionRegistry::new(
             paths.clone(),
             profiles.clone(),
@@ -100,6 +103,7 @@ impl SessionManager {
             context,
             projects,
             tasks,
+            browsers,
             metrics,
             registry,
             acp,
@@ -451,6 +455,25 @@ impl SessionManager {
 
     pub async fn list_editors(&self) -> Vec<EditorSummary> {
         self.files.list_editors().await
+    }
+
+    pub async fn browser_report(
+        &self,
+        project: Uuid,
+        url: String,
+        title: Option<String>,
+        text: Option<String>,
+        logs: Vec<apex_proto::BrowserLog>,
+    ) {
+        self.browsers.report(project, url, title, text, logs).await;
+    }
+
+    pub async fn browser_read(&self, project: Uuid) -> String {
+        self.browsers.read(project).await
+    }
+
+    pub async fn browser_logs(&self, project: Uuid) -> String {
+        self.browsers.logs(project).await
     }
 
     pub fn open_url(&self, url: &str) -> anyhow::Result<()> {

@@ -148,15 +148,11 @@ pub async fn browser_run(app: tauri::AppHandle, label: String, script: String) -
     webview.eval(script).map_err(|error| error.to_string())
 }
 
-#[tauri::command]
-pub async fn browser_logs(app: tauri::AppHandle, label: String) -> Answer<String> {
-    let Some(webview) = app.get_webview(&label) else {
-        return Ok("[]".to_owned());
-    };
+async fn ask(webview: tauri::Webview, script: &str) -> Answer<String> {
     let (sender, receiver) = tokio::sync::oneshot::channel();
     let slot = std::sync::Mutex::new(Some(sender));
     webview
-        .eval_with_callback("window.__apex ? window.__apex.drain() : []", move |value| {
+        .eval_with_callback(script, move |value| {
             if let Ok(mut held) = slot.lock()
                 && let Some(sender) = held.take()
             {
@@ -165,4 +161,20 @@ pub async fn browser_logs(app: tauri::AppHandle, label: String) -> Answer<String
         })
         .map_err(|error| error.to_string())?;
     receiver.await.map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn browser_logs(app: tauri::AppHandle, label: String) -> Answer<String> {
+    let Some(webview) = app.get_webview(&label) else {
+        return Ok("[]".to_owned());
+    };
+    ask(webview, "window.__apex ? window.__apex.drain() : []").await
+}
+
+#[tauri::command]
+pub async fn browser_text(app: tauri::AppHandle, label: String) -> Answer<String> {
+    let Some(webview) = app.get_webview(&label) else {
+        return Ok(String::new());
+    };
+    ask(webview, "document.body ? document.body.innerText.slice(0, 20000) : ''").await
 }

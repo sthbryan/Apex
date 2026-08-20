@@ -4,6 +4,7 @@ import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import { openWeb, overlays } from "@/features/browser/state";
+import { activeProjectId } from "@/features/projects/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -19,6 +20,25 @@ type Entry = {
   text: string;
   at: number;
 };
+
+function report(
+  url: string,
+  title: string | null,
+  logs: Entry[],
+  text: string | null = null,
+): void {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  void invoke("browser_report", {
+    project,
+    url,
+    title,
+    text,
+    logs: logs.map((entry) => ({ level: entry.level, text: entry.text })),
+  }).catch(() => {});
+}
 
 type Loaded = {
   label: string;
@@ -83,6 +103,9 @@ export function BrowserView({ id, url, visible }: Props) {
       if (!editing.current) {
         setDraft(event.payload.url);
       }
+      void invoke<string>("browser_text", { label })
+        .then((text) => report(event.payload.url, event.payload.title, [], JSON.parse(text)))
+        .catch(() => {});
     });
     return () => {
       void stop.then((off) => off());
@@ -90,22 +113,21 @@ export function BrowserView({ id, url, visible }: Props) {
   }, [label]);
 
   useEffect(() => {
-    if (!shown) {
-      return;
-    }
     const tick = () => {
       void invoke<string>("browser_logs", { label })
         .then((raw) => {
           const found = JSON.parse(raw) as Entry[];
-          if (found.length > 0) {
-            setLogs((current) => [...current, ...found].slice(-500));
+          if (found.length === 0) {
+            return;
           }
+          setLogs((current) => [...current, ...found].slice(-500));
+          report(here, null, found);
         })
         .catch(() => {});
     };
     const timer = setInterval(tick, 1500);
     return () => clearInterval(timer);
-  }, [label, shown]);
+  }, [label, here]);
 
   const failures = logs.filter((entry) => entry.level === "error").length;
 

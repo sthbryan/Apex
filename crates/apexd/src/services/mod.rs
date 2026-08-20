@@ -1,4 +1,5 @@
 pub mod acp;
+pub mod browsers;
 pub mod context;
 pub mod files;
 pub mod git;

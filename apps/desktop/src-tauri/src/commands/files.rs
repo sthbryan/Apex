@@ -73,6 +73,23 @@ pub async fn list_editors(state: tauri::State<'_, AppState>) -> Answer<Vec<Edito
 }
 
 #[tauri::command]
+pub async fn browser_report(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    url: String,
+    title: Option<String>,
+    text: Option<String>,
+    logs: Vec<apex_proto::BrowserLog>,
+) -> Answer<()> {
+    state
+        .daemon()?
+        .request(Command::BrowserReport { project, url, title, text, logs })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn open_url(state: tauri::State<'_, AppState>, url: String) -> Answer<()> {
     state.daemon()?.request(Command::UrlOpen { url }).await.map_err(failed)?;
     Ok(())

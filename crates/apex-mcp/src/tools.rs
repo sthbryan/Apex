@@ -168,6 +168,18 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_browser_read",
+        description: "Read what the browser pane of this project is showing: address, title \
+                      and visible text.",
+        schema: || json!({ "type": "object", "properties": {} }),
+    },
+    Tool {
+        name: "apex_browser_console",
+        description: "Read the console output and errors the page in the browser pane produced \
+                      since the last read.",
+        schema: || json!({ "type": "object", "properties": {} }),
+    },
+    Tool {
         name: "apex_worktree_info",
         description: "Report which branch and folder this session is working in.",
         schema: || json!({ "type": "object", "properties": {} }),
@@ -216,6 +228,8 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
                 }
             },
         }),
+        "apex_browser_read" => Ok(Command::BrowserRead { project: caller.project }),
+        "apex_browser_console" => Ok(Command::BrowserLogs { project: caller.project }),
         "apex_agents_list" => Ok(Command::ListAgents),
         "apex_session_tell" => Ok(Command::SessionTell {
             id: session_id(&text("session"))?,

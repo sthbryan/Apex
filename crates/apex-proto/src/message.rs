@@ -260,6 +260,13 @@ pub struct TaskSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct BrowserLog {
+    pub level: String,
+    pub text: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ContextEntry {
     pub key: String,
     #[ts(type = "number")]
@@ -561,6 +568,22 @@ pub enum Command {
     },
     UrlOpen {
         url: String,
+    },
+    BrowserReport {
+        #[ts(type = "string")]
+        project: Uuid,
+        url: String,
+        title: Option<String>,
+        text: Option<String>,
+        logs: Vec<BrowserLog>,
+    },
+    BrowserRead {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
+    BrowserLogs {
+        #[ts(type = "string")]
+        project: Uuid,
     },
     SessionResume {
         #[ts(type = "string")]
