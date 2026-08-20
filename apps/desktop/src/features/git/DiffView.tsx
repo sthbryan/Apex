@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import type { GitTarget } from "@/bindings/GitTarget";
 import { highlight } from "@/features/files/highlight";
 import { ImageDiff } from "@/features/git/ImageDiff";
-import { binary, splittable } from "@/features/git/patch";
+import { binary, binaryPaths, splittable } from "@/features/git/patch";
 import { SplitPatch } from "@/features/git/SplitPatch";
 import {
   diffLayout,
@@ -246,6 +246,20 @@ function Patch({ painted, path, split, target, commit }: PatchProps) {
       <ImageDiff target={target} path={path} commit={commit}>
         {plain}
       </ImageDiff>
+    );
+  }
+
+  const images = path ? [] : binaryPaths(painted.patch);
+  if (images.length > 0) {
+    return (
+      <>
+        {plain}
+        {images.map((found) => (
+          <ImageDiff key={found} target={target} path={found} commit={commit} heading={found}>
+            {null}
+          </ImageDiff>
+        ))}
+      </>
     );
   }
   return plain;

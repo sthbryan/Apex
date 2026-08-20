@@ -30,6 +30,24 @@ export function binary(patch: string): boolean {
   return /^Binary files /m.test(patch);
 }
 
+export function binaryPaths(patch: string): string[] {
+  const found: string[] = [];
+  let current: string | null = null;
+
+  for (const line of patch.split("\n")) {
+    const named = /^diff --git a\/.+ b\/(.+)$/.exec(line);
+    if (named) {
+      current = named[1];
+      continue;
+    }
+    if (current && line.startsWith("Binary files ")) {
+      found.push(current);
+      current = null;
+    }
+  }
+  return found;
+}
+
 export function parsePatch(patch: string): DiffFile[] {
   const files: DiffFile[] = [];
   let file: DiffFile | null = null;

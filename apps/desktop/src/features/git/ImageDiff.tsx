@@ -10,10 +10,11 @@ type Props = {
   target: GitTarget;
   path: string;
   commit: string | null;
+  heading?: string;
   children: ComponentChildren;
 };
 
-export function ImageDiff({ target, path, commit, children }: Props) {
+export function ImageDiff({ target, path, commit, heading, children }: Props) {
   const [pair, setPair] = useState<ImagePair | null>(null);
 
   useEffect(() => {
@@ -39,10 +40,15 @@ export function ImageDiff({ target, path, commit, children }: Props) {
   }
 
   return (
-    <div class="grid animate-veil-in grid-cols-2 gap-px bg-border">
-      <Frame label={t("git.imageBefore")} source={pair.before} tone="text-git-removed" />
-      <Frame label={t("git.imageAfter")} source={pair.after} tone="text-git-added" />
-    </div>
+    <>
+      {heading && (
+        <h3 class="truncate border-b border-border bg-surface px-3 py-1 text-faint">{heading}</h3>
+      )}
+      <div class="grid animate-veil-in grid-cols-2 gap-px bg-border">
+        <Frame label={t("git.imageBefore")} source={pair.before} tone="text-git-removed" />
+        <Frame label={t("git.imageAfter")} source={pair.after} tone="text-git-added" />
+      </div>
+    </>
   );
 }
 
