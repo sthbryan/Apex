@@ -14,6 +14,8 @@ import {
   setDockMode,
   setDockPanel,
 } from "@/app/layout/state";
+import { gitStatus } from "@/features/git/state";
+import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -36,6 +38,9 @@ export function Dock({ header, children, rail = false }: Props) {
   const View = active ? DOCK_PANELS[active].View : null;
 
   if (rail) {
+    const status = gitStatus.value;
+    const branch = status?.branch ?? null;
+    const dirty = (status?.changes.length ?? 0) > 0;
     return (
       <aside class="flex h-full w-full flex-col bg-chrome">
         <div data-tauri-drag-region class="h-9 shrink-0 select-none" />
@@ -49,6 +54,7 @@ export function Dock({ header, children, rail = false }: Props) {
               id={id}
               current={active === id}
               badge={DOCK_PANELS[id].badge?.() ?? null}
+              large
               onPick={() => {
                 setDockPanel(id);
                 setDockMode("expanded");
@@ -56,6 +62,28 @@ export function Dock({ header, children, rail = false }: Props) {
             />
           ))}
         </nav>
+
+        <div class="flex shrink-0 flex-col items-center gap-1 border-r border-border py-1.5">
+          <ProjectPicker variant="rail" />
+          {branch && (
+            <span
+              title={
+                dirty
+                  ? `${branch} · ${t("git.changed", { count: String(status?.changes.length ?? 0) })}`
+                  : branch
+              }
+              class="relative flex size-6 items-center justify-center text-faint"
+            >
+              <Icon name="branch" size={14} />
+              {dirty && (
+                <span
+                  aria-hidden="true"
+                  class="absolute right-0.5 bottom-0.5 size-1.5 rounded-full bg-git-dirty"
+                />
+              )}
+            </span>
+          )}
+        </div>
       </aside>
     );
   }
@@ -130,10 +158,11 @@ type PanelIconProps = {
   id: DockPanel;
   current: boolean;
   badge: PanelBadge | null;
+  large?: boolean;
   onPick: () => void;
 };
 
-function PanelIcon({ id, current, badge, onPick }: PanelIconProps) {
+function PanelIcon({ id, current, badge, large = false, onPick }: PanelIconProps) {
   const entry = DOCK_PANELS[id];
 
   return (
@@ -144,11 +173,12 @@ function PanelIcon({ id, current, badge, onPick }: PanelIconProps) {
       onClick={onPick}
       onDblClick={() => popPanelToTab(id)}
       class={cn(
-        "relative flex size-6 shrink-0 items-center justify-center rounded transition-colors",
-        current ? "text-accent" : "text-faint hover:text-text",
+        "relative flex shrink-0 items-center justify-center rounded transition-colors",
+        large ? "size-7" : "size-6",
+        current ? "bg-accent-soft text-accent" : "text-faint hover:bg-raised hover:text-text",
       )}
     >
-      <Icon name={entry.icon} />
+      <Icon name={entry.icon} size={large ? 16 : 14} />
       {badge && !current && (
         <span
           aria-hidden="true"

@@ -13,7 +13,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { Picker, type PickerItem } from "@/shared/ui/Picker";
 
 type Props = {
-  variant?: "bar" | "dock";
+  variant?: "bar" | "dock" | "rail";
 };
 
 export function ProjectPicker({ variant = "bar" }: Props) {
@@ -21,6 +21,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
   const [query, setQuery] = useState("");
   const current = activeProject.value;
   const dock = variant === "dock";
+  const rail = variant === "rail";
 
   const close = () => {
     setOpen(false);
@@ -81,23 +82,31 @@ export function ProjectPicker({ variant = "bar" }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         title={current?.root ?? t("projects.none")}
-        class={cn("flex min-w-0 items-center gap-1.5 rounded transition-colors", {
-          "max-w-56 px-1.5 py-0.5 hover:bg-raised": !dock,
-          "w-full text-left hover:text-text": dock,
-        })}
-      >
-        <span class="min-w-0 flex-1">
-          <span class={cn("block truncate", dock && "font-medium text-text")}>
-            {current?.name ?? t("projects.none")}
-          </span>
-          {dock && current && (
-            <span class="block truncate text-tiny text-faint">{prettyRoot(current.root)}</span>
-          )}
-        </span>
-        {waitingElsewhere() > 0 && (
-          <span class="size-1.5 shrink-0 animate-breathe rounded-full bg-state-blocked" />
+        class={cn(
+          "flex min-w-0 items-center gap-1.5 rounded transition-colors",
+          rail && "size-7 justify-center hover:bg-raised hover:text-text",
+          !dock && !rail && "max-w-56 px-1.5 py-0.5 hover:bg-raised",
+          dock && "w-full text-left hover:text-text",
         )}
-        <Icon name="chevron" size={12} class="shrink-0 text-faint" />
+      >
+        {rail ? (
+          <span class="text-micro font-semibold text-text">{current?.name.charAt(0) ?? "·"}</span>
+        ) : (
+          <>
+            <span class="min-w-0 flex-1">
+              <span class={cn("block truncate", dock && "font-medium text-text")}>
+                {current?.name ?? t("projects.none")}
+              </span>
+              {dock && current && (
+                <span class="block truncate text-tiny text-faint">{prettyRoot(current.root)}</span>
+              )}
+            </span>
+            {waitingElsewhere() > 0 && (
+              <span class="size-1.5 shrink-0 animate-breathe rounded-full bg-state-blocked" />
+            )}
+            <Icon name="chevron" size={12} class="shrink-0 text-faint" />
+          </>
+        )}
       </button>
 
       <Picker
