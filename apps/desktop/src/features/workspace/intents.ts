@@ -1,3 +1,4 @@
+import { openWeb } from "@/features/browser/state";
 import { onOpenView, sessions } from "@/features/sessions/state";
 import { viewLanding } from "@/features/settings/agentMode";
 import { openQuietly } from "@/features/workspace/state";
@@ -21,7 +22,7 @@ export function startViewIntents(): () => void {
         openQuietly({ type: "file", path: target.path }, asSplit());
         break;
       case "url":
-        window.open(target.url, "_blank");
+        openWeb(target.url);
         break;
     }
   });

@@ -3,6 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { TaskSummary } from "@/bindings/TaskSummary";
+import { openWeb } from "@/features/browser/state";
 import { activeProject } from "@/features/projects/state";
 import { requestClose } from "@/features/sessions/pending";
 import {
@@ -17,7 +18,7 @@ import {
   type TaskGroup,
   tasks,
 } from "@/features/tasks/state";
-import { focusSession, openBrowser, openInNewTab } from "@/features/workspace/state";
+import { focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -235,11 +236,11 @@ function Row({
               title={t("tasks.preview")}
               onClick={(event) => {
                 event.stopPropagation();
-                openBrowser(url);
+                openWeb(url);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
-                  openBrowser(url);
+                  openWeb(url);
                 }
               }}
               class="shrink-0 text-state-done transition-colors hover:underline"
