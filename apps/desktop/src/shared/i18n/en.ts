@@ -219,6 +219,7 @@ export const en = {
     back: "Back",
     forward: "Forward",
     reload: "Reload the page",
+    external: "Open in the system browser",
   },
   tasks: {
     empty: "No tasks found in this project.",

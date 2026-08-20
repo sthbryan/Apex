@@ -73,6 +73,12 @@ pub async fn list_editors(state: tauri::State<'_, AppState>) -> Answer<Vec<Edito
 }
 
 #[tauri::command]
+pub async fn open_url(state: tauri::State<'_, AppState>, url: String) -> Answer<()> {
+    state.daemon()?.request(Command::UrlOpen { url }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn open_externally(
     state: tauri::State<'_, AppState>,
     project: Uuid,

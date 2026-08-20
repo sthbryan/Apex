@@ -72,6 +72,18 @@ impl FilesService {
             .collect()
     }
 
+    pub fn open_url(&self, url: &str) -> Result<()> {
+        let parsed = url::Url::parse(url)?;
+        if !matches!(parsed.scheme(), "http" | "https") {
+            anyhow::bail!("{url} is not a web address");
+        }
+        std::process::Command::new(editors::system_opener())
+            .arg(parsed.as_str())
+            .spawn()
+            .with_context(|| format!("opening {url}"))?;
+        Ok(())
+    }
+
     pub async fn open_externally(
         &self,
         project: Uuid,

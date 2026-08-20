@@ -197,6 +197,10 @@ async fn execute(
             text: manager.transcript(id, tail as usize, plain).await.map_err(not_found_error)?,
         }),
         Command::ListEditors => Ok(Reply::Editors { editors: manager.list_editors().await }),
+        Command::UrlOpen { url } => {
+            manager.open_url(&url).map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::FileOpenExternal { project, path, editor } => {
             manager
                 .open_externally(project, &path, editor.as_deref())
@@ -395,6 +399,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::FileWrite { .. }
             | Command::FileSearch { .. }
             | Command::FileOpenExternal { .. }
+            | Command::UrlOpen { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
             | Command::GitLog { .. }

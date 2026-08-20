@@ -221,6 +221,7 @@ export const es: Messages = {
     back: "Atrás",
     forward: "Adelante",
     reload: "Recargar la página",
+    external: "Abrir en el navegador del sistema",
   },
   tasks: {
     empty: "No hay tareas en este proyecto.",

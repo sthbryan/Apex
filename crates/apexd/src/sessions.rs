@@ -453,6 +453,10 @@ impl SessionManager {
         self.files.list_editors().await
     }
 
+    pub fn open_url(&self, url: &str) -> anyhow::Result<()> {
+        self.files.open_url(url)
+    }
+
     pub async fn open_externally(
         &self,
         project: Uuid,

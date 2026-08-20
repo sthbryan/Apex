@@ -59,6 +59,7 @@ pub fn run() {
             commands::search_files,
             commands::list_editors,
             commands::open_externally,
+            commands::open_url,
             commands::resume_session,
             commands::create_session,
             commands::attach_session,

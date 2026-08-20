@@ -121,6 +121,13 @@ export function BrowserView({ id, url, visible }: Props) {
           }}
           class="min-w-0 flex-1 rounded bg-raised px-2 py-0.5 text-muted outline-none focus:text-text"
         />
+        <Step
+          icon="external"
+          hint={t("browser.external")}
+          onPick={() => {
+            void invoke("open_url", { url: here }).catch(complain);
+          }}
+        />
       </div>
       <div ref={host} class="min-h-0 flex-1 bg-pane" />
     </div>
@@ -132,7 +139,7 @@ function Step({
   hint,
   onPick,
 }: {
-  icon: "chevronLeft" | "chevronRight" | "refresh";
+  icon: "chevronLeft" | "chevronRight" | "refresh" | "external";
   hint: string;
   onPick: () => void;
 }) {
