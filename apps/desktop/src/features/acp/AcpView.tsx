@@ -19,30 +19,67 @@ import {
   prompt,
   transcripts,
 } from "@/features/acp/state";
+import { SplitPatch } from "@/features/git/SplitPatch";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
-import { Icon } from "@/shared/ui/Icon";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 
 export function AcpView({ id }: { id: string }) {
   const entries = transcripts.value[id] ?? entriesOf(id);
   const session = sessions.value.find((candidate) => candidate.id === id);
   const working = session?.state === "working";
+  const scroll = useRef<HTMLDivElement>(null);
   const foot = useRef<HTMLDivElement>(null);
+  const [stale, setStale] = useState(false);
 
   useEffect(() => {
     void loadTranscript(id);
   }, [id]);
 
   useEffect(() => {
-    foot.current?.scrollIntoView({ block: "end" });
-  }, [entries.length]);
+    const el = scroll.current;
+    if (!el) {
+      return;
+    }
+    const onScroll = () => {
+      const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+      setStale(!bottom);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!stale) {
+      foot.current?.scrollIntoView({ block: "end" });
+    }
+  }, [entries.length, stale]);
 
   return (
     <div class="flex h-full flex-col bg-pane">
-      <div class="min-h-0 flex-1 overflow-auto px-3 py-2">
-        {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
-        {entries.map((entry) => (entry ? <Entry key={entry.index} id={id} entry={entry} /> : null))}
-        <div ref={foot} />
+      <div class="relative min-h-0 flex-1">
+        <div ref={scroll} class="absolute inset-0 overflow-auto px-3 py-2">
+          {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
+          {entries.map((entry) =>
+            entry ? <Entry key={entry.index} id={id} entry={entry} /> : null,
+          )}
+          <div ref={foot} />
+        </div>
+
+        {stale && (
+          <button
+            type="button"
+            onClick={() => {
+              foot.current?.scrollIntoView({ block: "end" });
+              setStale(false);
+            }}
+            class="absolute right-3 bottom-2 z-10 flex animate-drop-in items-center gap-1 rounded-full border border-border bg-float px-2 py-1 text-tiny text-faint shadow-lg transition-colors hover:text-text"
+          >
+            <Icon name="pull" size={12} />
+            {t("acp.latest")}
+          </button>
+        )}
       </div>
 
       {failure.value && <p class="px-3 pb-1 text-state-failed">{failure.value}</p>}
@@ -59,10 +96,10 @@ function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
   switch (body.type) {
     case "user":
       return (
-        <p class="mt-2 flex gap-2 whitespace-pre-wrap">
-          <span class="shrink-0 select-none text-focus">›</span>
-          <span class="min-w-0 text-text">{body.text}</span>
-        </p>
+        <div class="mt-2 rounded-md border border-border bg-raised/60 px-2 py-1">
+          <p class="text-micro font-medium text-accent">{t("acp.you")}</p>
+          <p class="mt-0.5 whitespace-pre-wrap text-text">{body.text}</p>
+        </div>
       );
     case "agent":
       return <p class="mt-2 whitespace-pre-wrap text-text">{body.text}</p>;
@@ -102,7 +139,11 @@ function Tool({ call }: { call: AcpToolCall }) {
         onClick={() => setOpen((shown) => !shown)}
         class="flex w-full items-center gap-2 px-2 py-0.5 text-left enabled:hover:bg-raised"
       >
-        <span class={cn("shrink-0", toneOf(call.status))}>{markOf(call.status)}</span>
+        <Icon
+          name={markOf(call.status)}
+          size={12}
+          class={cn("shrink-0", toneOf(call.status), call.status === "running" && "animate-spin")}
+        />
         <span class="min-w-0 truncate text-text">{call.title}</span>
         <span class="ml-auto shrink-0 text-faint">{call.kind}</span>
       </button>
@@ -126,24 +167,21 @@ function Tool({ call }: { call: AcpToolCall }) {
 function Diff({ diff }: { diff: AcpDiff }) {
   const removed = (diff.old_text ?? "").length > 0 ? (diff.old_text ?? "").split("\n") : [];
   const added = diff.new_text.length > 0 ? diff.new_text.split("\n") : [];
+  if (removed.length === 0 && added.length === 0) {
+    return null;
+  }
+  const patch = [
+    `@@ -1,${removed.length} +1,${added.length} @@`,
+    ...removed.map((line) => `-${line}`),
+    ...added.map((line) => `+${line}`),
+  ].join("\n");
 
   return (
     <div class="border-t border-border first:border-t-0">
       <p class="truncate px-2 py-0.5 text-faint">{diff.path}</p>
-      <pre class="overflow-x-auto px-2 pb-1 leading-5">
-        <code>
-          {removed.map((line, index) => (
-            <div key={`old-${index}-${line}`} class="text-state-failed">
-              -{line}
-            </div>
-          ))}
-          {added.map((line, index) => (
-            <div key={`new-${index}-${line}`} class="text-state-done">
-              +{line}
-            </div>
-          ))}
-        </code>
-      </pre>
+      <div class="px-1 pb-1">
+        <SplitPatch path={diff.path} patch={patch} />
+      </div>
     </div>
   );
 }
@@ -204,7 +242,7 @@ function Working({ since, on }: { since: string | undefined; on: boolean }) {
 
   return (
     <p class="flex shrink-0 animate-pulse items-center gap-2 border-t border-border px-3 py-1 text-state-working">
-      <span>◍</span>
+      <Icon name="activity" size={12} class="shrink-0" />
       <span>{t("acp.working", { seconds: String(seconds) })}</span>
     </p>
   );
@@ -306,7 +344,7 @@ function Composer({ id, working }: { id: string; working: boolean }) {
           <button
             type="button"
             onClick={() => void cancel(id)}
-            class="shrink-0 text-faint transition-colors hover:text-text"
+            class="shrink-0 rounded border border-state-failed/40 px-2 text-state-failed transition-colors hover:bg-state-failed/10 hover:text-state-failed"
           >
             {t("acp.stop")}
           </button>
@@ -337,7 +375,7 @@ function Picker({ id, kind }: { id: string; kind: "model" | "mode" }) {
         const wanted = event.currentTarget.value;
         void choose(id, kind === "model" ? wanted : null, kind === "mode" ? wanted : null);
       }}
-      class="max-w-40 shrink-0 truncate border border-border bg-transparent px-1 text-faint outline-none transition-colors hover:text-text"
+      class="max-w-40 shrink-0 truncate rounded border border-border bg-surface px-1 text-muted outline-none transition-colors hover:border-accent/40 hover:text-text"
     >
       {picker.choices.map((choice) => (
         <option key={choice.id} value={choice.id}>
@@ -352,16 +390,16 @@ function labelOf(ask: AcpPermission, decided: string): string {
   return ask.options.find((option) => option.id === decided)?.name ?? decided;
 }
 
-function markOf(status: AcpToolStatus): string {
+function markOf(status: AcpToolStatus): IconName {
   switch (status) {
     case "pending":
-      return "○";
+      return "circle";
     case "running":
-      return "◍";
+      return "refresh";
     case "completed":
-      return "●";
+      return "check";
     case "failed":
-      return "✕";
+      return "close";
   }
 }
 

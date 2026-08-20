@@ -226,6 +226,8 @@ export const en = {
     model: "Model for this session",
     mode: "How hard it thinks",
     working: "The agent is working… {seconds}s",
+    you: "You",
+    latest: "Jump to latest",
   },
   git: {
     noRepo: "This project is not a git repository.",
