@@ -39,6 +39,8 @@ export const es: Messages = {
     reload: "Recargar el archivo",
     findPlaceholder: "Buscar un archivo…",
     refresh: "Recargar el árbol",
+    showImage: "Ver la imagen",
+    showSource: "Ver el código",
   },
   projects: {
     none: "Sin proyecto",

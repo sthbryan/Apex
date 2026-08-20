@@ -8,6 +8,27 @@ export const tree = signal<Record<string, FileEntry[]>>({});
 export const expanded = signal<string[]>([]);
 export const treeFailure = signal<string | null>(null);
 
+const SVG_VIEW = "apex.svg-view";
+
+export type SvgView = "preview" | "source";
+
+export const svgView = signal<SvgView>(
+  (localStorage.getItem(SVG_VIEW) as SvgView | null) ?? "preview",
+);
+
+export function setSvgView(view: SvgView): void {
+  svgView.value = view;
+  localStorage.setItem(SVG_VIEW, view);
+}
+
+export function isSvg(path: string): boolean {
+  return path.toLowerCase().endsWith(".svg");
+}
+
+export function svgSource(text: string): string {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(text)}`;
+}
+
 let loadedProject: string | null = null;
 
 export async function listDirectory(project: string, path: string): Promise<FileEntry[]> {

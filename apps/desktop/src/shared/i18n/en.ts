@@ -37,6 +37,8 @@ export const en = {
     reload: "Reload the file",
     findPlaceholder: "Find a file…",
     refresh: "Reload the tree",
+    showImage: "Show the image",
+    showSource: "Show the source",
   },
   projects: {
     none: "No project",
