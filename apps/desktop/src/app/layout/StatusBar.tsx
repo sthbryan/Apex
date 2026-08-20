@@ -12,7 +12,7 @@ export function StatusBar() {
 
   return (
     <div class="shrink-0 px-(--apex-statusbar-gap) pb-(--apex-statusbar-gap)">
-      <div class="flex h-(--apex-statusbar-h) items-center gap-2.5 rounded-lg border border-border bg-float px-2 text-faint shadow-[0_4px_16px_var(--apex-dock-shadow)]">
+      <div class="flex h-(--apex-statusbar-h) items-center gap-2.5 rounded-lg border border-border bg-chrome px-1.5 text-faint shadow-[0_4px_16px_var(--apex-dock-shadow)]">
         {onGit && <GitChip />}
         {onGit && onUsage && <Divider />}
         {onUsage && <UsageStrip />}
