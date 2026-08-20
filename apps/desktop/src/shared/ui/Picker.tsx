@@ -127,9 +127,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
             items.map((item, index) =>
               item.remove && asking === item.id ? (
                 <li key={item.id} class="flex items-center gap-2 bg-raised px-3 py-1.5">
-                  <span class="min-w-0 flex-1 truncate text-micro text-muted">
-                    {item.remove.ask}
-                  </span>
+                  <span class="min-w-0 flex-1 truncate text-muted">{item.remove.ask}</span>
                   <button
                     type="button"
                     onClick={item.remove.run}

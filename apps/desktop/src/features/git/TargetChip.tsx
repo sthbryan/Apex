@@ -178,20 +178,20 @@ function Target({
   if (asking && onDrop) {
     return (
       <li class="flex items-center gap-2 bg-raised px-2 py-1">
-        <span class="min-w-0 flex-1 truncate text-micro text-muted">
+        <span class="min-w-0 flex-1 truncate text-muted">
           {t("git.dropWorktreeAsk", { branch })}
         </span>
         <button
           type="button"
           onClick={onDrop}
-          class="shrink-0 text-micro text-state-failed transition-colors hover:underline"
+          class="shrink-0 text-state-failed transition-colors hover:underline"
         >
           {t("git.dropWorktreeYes")}
         </button>
         <button
           type="button"
           onClick={onAsk}
-          class="shrink-0 text-micro text-faint transition-colors hover:text-text"
+          class="shrink-0 text-faint transition-colors hover:text-text"
         >
           {t("git.dropWorktreeNo")}
         </button>
