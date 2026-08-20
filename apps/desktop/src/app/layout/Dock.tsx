@@ -23,6 +23,7 @@ const BADGE_TONE: Record<PanelBadge, string> = {
   blocked: "bg-state-blocked",
   working: "bg-state-working",
   dirty: "bg-git-dirty",
+  done: "bg-state-done",
 };
 
 type Props = {

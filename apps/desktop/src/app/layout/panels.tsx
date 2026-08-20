@@ -2,13 +2,13 @@ import type { ComponentType } from "preact";
 import { lazy } from "preact/compat";
 
 import type { DockPanel } from "@/app/layout/state";
-import { gitStatus } from "@/features/git/state";
+import { gitStatus, pending } from "@/features/git/state";
 import { projectSessions } from "@/features/projects/state";
 import { running } from "@/features/tasks/state";
 import { t } from "@/shared/i18n";
 import type { IconName } from "@/shared/ui/Icon";
 
-export type PanelBadge = "blocked" | "working" | "dirty";
+export type PanelBadge = "blocked" | "working" | "dirty" | "done";
 
 type Entry = {
   icon: IconName;
@@ -39,6 +39,14 @@ const TasksPanel = lazy(async () => ({
   default: (await import("@/features/tasks/TasksPanel")).TasksPanel,
 }));
 
+function reviewBadge(): PanelBadge | null {
+  const waiting = pending.value;
+  if (waiting.length === 0) {
+    return null;
+  }
+  return waiting.some((review) => review.state === "done") ? "done" : "dirty";
+}
+
 export const DOCK_PANELS: Record<DockPanel, Entry> = {
   sessions: {
     icon: "sessions",
@@ -57,6 +65,7 @@ export const DOCK_PANELS: Record<DockPanel, Entry> = {
   review: {
     icon: "inbox",
     label: () => t("review.title"),
+    badge: () => reviewBadge(),
     View: ReviewPanel,
   },
   history: { icon: "history", label: () => t("git.history"), View: HistoryPanel },
