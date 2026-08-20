@@ -5,6 +5,7 @@
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   --font-display: ui-serif, "New York", Georgia, "Times New Roman", serif;
 
+  --text-petite: calc(7px * var(--apex-scale));
   --text-tiny: calc(10px * var(--apex-scale));
   --text-micro: calc(11px * var(--apex-scale));
   --text-small: calc(12px * var(--apex-scale));
