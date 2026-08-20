@@ -196,6 +196,7 @@ export const es: Messages = {
     done: "Un agente terminó",
     terminal: "Un agente te avisa",
     exited: "Un agente salió con error",
+    taskExited: "Una tarea se cortó sola",
     quota: "{agent} se quedó sin margen",
     denied: "El sistema no deja pasar a Apex. Pedirlo otra vez.",
     error: "Apex se topó con un error",

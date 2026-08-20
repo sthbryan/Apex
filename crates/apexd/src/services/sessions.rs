@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 use anyhow::{Context, Result, bail};
@@ -22,6 +23,7 @@ const POLL_INTERVAL: std::time::Duration = std::time::Duration::from_millis(200)
 pub struct LiveSession {
     pub summary: Mutex<SessionSummary>,
     pub process: PtyProcess,
+    pub dismissed: AtomicBool,
 }
 
 impl LiveSession {
@@ -207,6 +209,7 @@ impl SessionRegistry {
         let Some(session) = self.sessions.write().await.remove(&id) else {
             bail!("session {id} does not exist")
         };
+        session.dismissed.store(true, Ordering::Relaxed);
         let _ = session.process.kill();
 
         let summary = session.snapshot_summary().await;
@@ -368,7 +371,11 @@ impl SessionRegistry {
             url: None,
         };
 
-        let session = Arc::new(LiveSession { summary: Mutex::new(summary.clone()), process });
+        let session = Arc::new(LiveSession {
+            summary: Mutex::new(summary.clone()),
+            process,
+            dismissed: AtomicBool::new(false),
+        });
         self.sessions.write().await.insert(record.id, session.clone());
         let _ = self.events.send(Event::SessionOpened { session: summary.clone() });
         self.watch_state(record.id, session.clone(), &profile, size);
@@ -487,7 +494,7 @@ impl SessionRegistry {
                 summary.state = SessionState::Done;
             }
             let _ = manager.events.send(Event::SessionExited { id, code: status.code });
-            if status.code != 0 {
+            if status.code != 0 && !session.dismissed.load(Ordering::Relaxed) {
                 manager.announce(Event::Notify {
                     session: Some(id),
                     notice: NotifyKind::Exited,

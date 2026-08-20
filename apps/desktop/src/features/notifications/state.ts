@@ -120,8 +120,12 @@ function sentRecently(sessionId: string): boolean {
   return false;
 }
 
-function headline(kind: NotifyKind): string {
-  return kind === "exited" ? t("notify.exited") : t("notify.terminal");
+function headline(kind: NotifyKind, sessionId: string | null): string {
+  if (kind !== "exited") {
+    return t("notify.terminal");
+  }
+  const session = sessions.value.find((candidate) => candidate.id === sessionId);
+  return session?.task ? t("notify.taskExited") : t("notify.exited");
 }
 
 export function scopeOf(sessionId: string | null): string {
@@ -168,7 +172,7 @@ export async function startNotifications(): Promise<() => void> {
     push({
       sessionId: event.session,
       kind: event.notice,
-      title: event.title ?? headline(event.notice),
+      title: event.title ?? headline(event.notice, event.session),
       body: event.body.length > 0 ? event.body : scopeOf(event.session),
     });
   });

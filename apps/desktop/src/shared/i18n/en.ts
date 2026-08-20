@@ -194,6 +194,7 @@ export const en = {
     done: "An agent finished",
     terminal: "An agent rang",
     exited: "An agent exited badly",
+    taskExited: "A task stopped on its own",
     quota: "{agent} ran out of room",
     denied: "The system is not letting Apex through. Ask again.",
     error: "Apex hit an error",
