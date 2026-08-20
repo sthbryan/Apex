@@ -1,6 +1,6 @@
 import cn from "cnfast";
 import { useEffect } from "preact/hooks";
-import { PanelHeader } from "@/app/layout/PanelHeader";
+import { PanelActions } from "@/app/layout/PanelActions";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { TaskSummary } from "@/bindings/TaskSummary";
 import { activeProject } from "@/features/projects/state";
@@ -33,7 +33,7 @@ export function TasksPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <PanelHeader title={t("dock.tasks")}>
+      <PanelActions>
         <button
           type="button"
           title={t("tasks.refresh")}
@@ -42,7 +42,7 @@ export function TasksPanel() {
         >
           <Icon name="refresh" size={12} />
         </button>
-      </PanelHeader>
+      </PanelActions>
 
       {failure.value && <p class="px-2 text-state-failed">{failure.value}</p>}
 

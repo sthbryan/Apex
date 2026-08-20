@@ -2,7 +2,6 @@ import cn from "cnfast";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
 import { revealPanel } from "@/app/layout/actions";
-import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { selectTarget, sessionOfWorktree, worktrees } from "@/features/git/state";
 import { waiting } from "@/features/notifications/state";
@@ -31,7 +30,6 @@ export function SessionsPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <PanelHeader title={t("dock.sessions")} />
       <div class="min-h-0 flex-1 overflow-y-auto p-2">
         {waiting.value.length > 0 && (
           <WaitingList sessions={waiting.value} projects={projects.value} />

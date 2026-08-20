@@ -1,7 +1,7 @@
 import cn from "cnfast";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
-import { PanelHeader } from "@/app/layout/PanelHeader";
+import { PanelActions } from "@/app/layout/PanelActions";
 import { entries, failure, loadContext, readEntry, writeEntry } from "@/features/context/state";
 import { activeProject } from "@/features/projects/state";
 import { t } from "@/shared/i18n";
@@ -27,7 +27,7 @@ export function ContextPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <PanelHeader title={t("dock.context")}>
+      <PanelActions>
         <button
           type="button"
           title={t("context.add")}
@@ -44,7 +44,7 @@ export function ContextPanel() {
         >
           <Icon name="refresh" size={12} />
         </button>
-      </PanelHeader>
+      </PanelActions>
 
       {failure.value && <p class="px-2 text-state-failed">{failure.value}</p>}
 

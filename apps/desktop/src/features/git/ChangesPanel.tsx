@@ -1,7 +1,7 @@
 import cn from "cnfast";
 import { useState } from "preact/hooks";
 
-import { PanelHeader } from "@/app/layout/PanelHeader";
+import { PanelActions } from "@/app/layout/PanelActions";
 import type { GitChange } from "@/bindings/GitChange";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitTarget } from "@/bindings/GitTarget";
@@ -44,7 +44,7 @@ export function ChangesPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <PanelHeader title={t("git.changes")}>
+      <PanelActions>
         <button
           type="button"
           title={t("git.refresh")}
@@ -53,7 +53,7 @@ export function ChangesPanel() {
         >
           <Icon name="refresh" size={12} />
         </button>
-      </PanelHeader>
+      </PanelActions>
 
       {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
 

@@ -1,6 +1,6 @@
 import cn from "cnfast";
 import { useEffect } from "preact/hooks";
-import { PanelHeader } from "@/app/layout/PanelHeader";
+import { PanelActions } from "@/app/layout/PanelActions";
 import type { FileEntry } from "@/bindings/FileEntry";
 import {
   expanded,
@@ -31,7 +31,7 @@ export function FilesPanel() {
 
   return (
     <div class="flex h-full flex-col">
-      <PanelHeader title={project.name}>
+      <PanelActions>
         <button
           type="button"
           title={t("files.refresh")}
@@ -40,7 +40,7 @@ export function FilesPanel() {
         >
           <Icon name="refresh" size={12} />
         </button>
-      </PanelHeader>
+      </PanelActions>
       <div class="min-h-0 flex-1 overflow-auto pb-2">
         {treeFailure.value ? (
           <p class="px-2 text-state-failed">{treeFailure.value}</p>
