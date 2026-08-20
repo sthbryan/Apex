@@ -376,9 +376,8 @@ impl SessionRegistry {
 
     async fn resolve_binary(&self, profile: &AgentProfile) -> Result<PathBuf> {
         let mut resolver = self.resolver.lock().await;
-        resolver
-            .resolve(&profile.command)
-            .with_context(|| format!("\"{}\" was not found in PATH", profile.command))
+        let command = profile.launch_command();
+        resolver.resolve(&command).with_context(|| format!("\"{command}\" was not found in PATH"))
     }
 
     pub async fn next_title(&self, agent: &str) -> String {

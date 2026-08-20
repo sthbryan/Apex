@@ -77,6 +77,23 @@ pub struct AgentProfile {
     pub notify: Option<NotifyConfig>,
 }
 
+fn expand_env(raw: &str) -> String {
+    let Some(rest) = raw.strip_prefix("${").and_then(|rest| rest.strip_suffix('}')) else {
+        return match raw.strip_prefix('$') {
+            Some(name) => std::env::var(name).unwrap_or_default(),
+            None => raw.to_owned(),
+        };
+    };
+    let (name, fallback) = match rest.split_once(":-") {
+        Some((name, fallback)) => (name, fallback),
+        None => (rest, ""),
+    };
+    match std::env::var(name) {
+        Ok(value) if !value.is_empty() => value,
+        _ => fallback.to_owned(),
+    }
+}
+
 fn agentic_by_default() -> bool {
     true
 }
@@ -152,6 +169,10 @@ impl AgentProfile {
         toml::from_str(raw).context("invalid agent profile")
     }
 
+    pub fn launch_command(&self) -> String {
+        expand_env(&self.command)
+    }
+
     pub fn supports_resume(&self) -> bool {
         self.history.as_ref().is_some_and(|history| !history.resume_args.is_empty())
     }
@@ -159,8 +180,10 @@ impl AgentProfile {
     pub fn summarize(&self, resolver: &mut BinaryResolver) -> AgentSummary {
         AgentSummary {
             name: self.name.clone(),
-            command: self.command.clone(),
-            resolved_path: resolver.resolve(&self.command).map(|path| path.display().to_string()),
+            command: self.launch_command(),
+            resolved_path: resolver
+                .resolve(&self.launch_command())
+                .map(|path| path.display().to_string()),
             mode: self.mode,
             agentic: self.agentic,
             supports_resume: self.supports_resume(),

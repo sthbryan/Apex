@@ -100,3 +100,23 @@ fn only_an_agent_whose_config_we_can_merge_into_shares_it() {
     assert_eq!(says("opencode"), Some(false), "opencode only takes a project file");
     assert_eq!(says("shell"), Some(false), "shell has no config at all");
 }
+
+#[test]
+fn a_command_falls_back_when_the_variable_it_names_is_unset() {
+    let profile = AgentProfile::parse("name = \"t\"\ncommand = \"${APEX_UNSET_SHELL:-/bin/sh}\"\n")
+        .expect("t");
+    assert_eq!(profile.launch_command(), "/bin/sh");
+}
+
+#[test]
+fn a_command_takes_the_variable_when_it_is_set() {
+    let home = std::env::var("HOME").expect("HOME");
+    let profile = AgentProfile::parse("name = \"t\"\ncommand = \"${HOME:-/bin/sh}\"\n").expect("t");
+    assert_eq!(profile.launch_command(), home);
+}
+
+#[test]
+fn a_plain_command_is_left_alone() {
+    let profile = AgentProfile::parse("name = \"t\"\ncommand = \"claude\"\n").expect("t");
+    assert_eq!(profile.launch_command(), "claude");
+}

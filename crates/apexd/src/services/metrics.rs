@@ -215,7 +215,7 @@ async fn run_quota_refresh(
 
         let prepared = {
             let mut resolver = resolver.lock().await;
-            if resolver.resolve(&profile.command).is_none() {
+            if resolver.resolve(&profile.launch_command()).is_none() {
                 continue;
             }
             config
@@ -253,7 +253,9 @@ fn prepare(
     resolver: &mut BinaryResolver,
 ) -> Option<Prepared> {
     match source {
-        QuotaSource::Native => Prepared::native(&profile.name, resolver.resolve(&profile.command)?),
+        QuotaSource::Native => {
+            Prepared::native(&profile.name, resolver.resolve(&profile.launch_command())?)
+        }
     }
 }
 
