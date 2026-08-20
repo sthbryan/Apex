@@ -14,7 +14,9 @@ export const en = {
     staleHint: "Close its sessions and restart it: pkill -f target/debug/apexd",
   },
   dock: {
-    toggle: "Toggle sidebar",
+    toRail: "Collapse the sidebar to icons",
+    toHidden: "Hide the sidebar",
+    toExpanded: "Show the sidebar",
     resize: "Resize sidebar",
     popOut: "Open as tab",
     panels: "Panels",

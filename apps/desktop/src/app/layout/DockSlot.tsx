@@ -7,11 +7,12 @@ import { usePresence } from "@/shared/ui/presence";
 type Props = {
   open: boolean;
   overlay?: boolean;
+  rail?: boolean;
   onHoverChange?: (hovering: boolean) => void;
   children: ComponentChildren;
 };
 
-export function DockSlot({ open, overlay = false, onHoverChange, children }: Props) {
+export function DockSlot({ open, overlay = false, rail = false, onHoverChange, children }: Props) {
   const panel = usePresence<HTMLDivElement>(open);
   const overlayRef = useRef(overlay);
   const enterKind = useRef<"slide" | "none" | null>(open ? "none" : null);
@@ -45,7 +46,7 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
         class={cn(
           "h-full shrink-0",
           !dockResizing.value && "transition-[width] duration-(--apex-dock) ease-(--apex-ease)",
-          takeSpace ? "w-(--apex-dock-width)" : "w-0",
+          takeSpace ? (rail ? "w-(--apex-rail-width)" : "w-(--apex-dock-width)") : "w-0",
         )}
       />
       <div
@@ -57,7 +58,8 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
           }
         }}
         class={cn(
-          "absolute top-0 left-0 z-30 bottom-(--apex-statusbar-h) w-(--apex-dock-width)",
+          "absolute top-0 left-0 z-30 bottom-(--apex-statusbar-h)",
+          rail ? "w-(--apex-rail-width)" : "w-(--apex-dock-width)",
           panel.leaving ? "animate-dock-out" : enterKind.current === "slide" && "animate-dock-in",
         )}
       >

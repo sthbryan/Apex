@@ -16,7 +16,9 @@ export const es: Messages = {
     staleHint: "Cierra sus sesiones y reinícialo: pkill -f target/debug/apexd",
   },
   dock: {
-    toggle: "Mostrar u ocultar la barra lateral",
+    toRail: "Contraer la barra lateral a iconos",
+    toHidden: "Ocultar la barra lateral",
+    toExpanded: "Mostrar la barra lateral",
     resize: "Cambiar el ancho de la barra lateral",
     popOut: "Abrir como pestaña",
     panels: "Paneles",

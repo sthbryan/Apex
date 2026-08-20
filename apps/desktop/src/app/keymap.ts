@@ -1,5 +1,5 @@
 import { useEffect } from "preact/hooks";
-import { toggleDock } from "@/app/layout/state";
+import { cycleDock } from "@/app/layout/state";
 import { togglePage } from "@/app/view";
 import { cycleLayout, splitWithShell } from "@/features/sessions/pending";
 import { toggleUsagePopover } from "@/features/usage/state";
@@ -72,7 +72,7 @@ const BINDINGS: Record<string, (context: Context) => void> = {
   ",": () => togglePage("settings"),
   h: () => togglePage("shortcuts"),
   u: () => toggleUsagePopover(),
-  b: () => toggleDock(),
+  b: () => cycleDock(),
   d: ({ event }) => {
     const direction = pendingDirection ?? (event.shiftKey ? "column" : "row");
     pendingDirection = null;

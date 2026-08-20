@@ -7,7 +7,13 @@ import { popPanelToTab } from "@/app/layout/actions";
 import { DockChrome } from "@/app/layout/DockChrome";
 import { DockResize } from "@/app/layout/DockResize";
 import { DOCK_PANELS, type PanelBadge } from "@/app/layout/panels";
-import { dockOrder, dockPanel, setDockPanel } from "@/app/layout/state";
+import {
+  type DockPanel,
+  dockOrder,
+  dockPanel,
+  setDockMode,
+  setDockPanel,
+} from "@/app/layout/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -21,13 +27,40 @@ type Props = {
   header?: ComponentChildren;
   children?: ComponentChildren;
   floating?: boolean;
+  rail?: boolean;
 };
 
-export function Dock({ header, children, floating = false }: Props) {
+export function Dock({ header, children, floating = false, rail = false }: Props) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const order = dockOrder.value;
   const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
   const View = active ? DOCK_PANELS[active].View : null;
+
+  if (rail) {
+    return (
+      <aside class="flex h-full w-full flex-col border-r border-border bg-chrome">
+        <div data-tauri-drag-region class="h-9 shrink-0 select-none" />
+        <nav
+          aria-label={t("dock.panels")}
+          class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto py-1 [scrollbar-width:none]"
+        >
+          {order.map((id) => (
+            <PanelIcon
+              key={id}
+              id={id}
+              current={active === id}
+              badge={DOCK_PANELS[id].badge?.() ?? null}
+              dim
+              onPick={() => {
+                setDockPanel(id);
+                setDockMode("expanded");
+              }}
+            />
+          ))}
+        </nav>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -58,39 +91,14 @@ export function Dock({ header, children, floating = false }: Props) {
             const badge = entry.badge?.() ?? null;
             const current = active === id;
             return (
-              <button
+              <PanelIcon
                 key={id}
-                type="button"
-                title={entry.label()}
-                aria-current={current ? "true" : undefined}
-                onClick={() => setDockPanel(id)}
-                onDblClick={() => popPanelToTab(id)}
-                class={cn(
-                  "relative flex size-6 shrink-0 items-center justify-center rounded transition-colors",
-                  current
-                    ? "text-accent"
-                    : floating
-                      ? "text-muted hover:text-text"
-                      : "text-faint hover:text-text",
-                )}
-              >
-                <Icon name={entry.icon} />
-                {badge && !current && (
-                  <span
-                    aria-hidden="true"
-                    class={cn(
-                      "absolute top-0.5 right-0.5 size-1.5 rounded-full ring-2 ring-chrome",
-                      BADGE_TONE[badge],
-                    )}
-                  />
-                )}
-                {current && (
-                  <span
-                    aria-hidden="true"
-                    class="pointer-events-none absolute inset-x-1 -bottom-1 h-0.5 rounded-full bg-accent"
-                  />
-                )}
-              </button>
+                id={id}
+                current={current}
+                badge={badge}
+                dim={!floating}
+                onPick={() => setDockPanel(id)}
+              />
             );
           })}
 
@@ -125,5 +133,48 @@ export function Dock({ header, children, floating = false }: Props) {
         </DockChrome.Provider>
       </div>
     </aside>
+  );
+}
+
+type PanelIconProps = {
+  id: DockPanel;
+  current: boolean;
+  badge: PanelBadge | null;
+  dim: boolean;
+  onPick: () => void;
+};
+
+function PanelIcon({ id, current, badge, dim, onPick }: PanelIconProps) {
+  const entry = DOCK_PANELS[id];
+
+  return (
+    <button
+      type="button"
+      title={entry.label()}
+      aria-current={current ? "true" : undefined}
+      onClick={onPick}
+      onDblClick={() => popPanelToTab(id)}
+      class={cn(
+        "relative flex size-6 shrink-0 items-center justify-center rounded transition-colors",
+        current ? "text-accent" : dim ? "text-faint hover:text-text" : "text-muted hover:text-text",
+      )}
+    >
+      <Icon name={entry.icon} />
+      {badge && !current && (
+        <span
+          aria-hidden="true"
+          class={cn(
+            "absolute top-0.5 right-0.5 size-1.5 rounded-full ring-2 ring-chrome",
+            BADGE_TONE[badge],
+          )}
+        />
+      )}
+      {current && (
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-x-1 -bottom-1 h-0.5 rounded-full bg-accent"
+        />
+      )}
+    </button>
   );
 }

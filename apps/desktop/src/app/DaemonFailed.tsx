@@ -5,7 +5,7 @@ import { t } from "@/shared/i18n";
 export function DaemonFailed() {
   return (
     <div class="flex h-full flex-col bg-pane text-text">
-      <TitleBar reserveControls />
+      <TitleBar padStart="max(var(--apex-controls-start, 0px), 12px)" />
       <main class="flex-1 overflow-auto p-4">
         <p class="text-state-blocked">
           {stale.value ? t("daemon.stale") : t("daemon.unreachable")}

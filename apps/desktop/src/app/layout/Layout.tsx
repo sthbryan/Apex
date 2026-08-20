@@ -2,7 +2,7 @@ import { useEffect, useRef } from "preact/hooks";
 import { Dock } from "@/app/layout/Dock";
 import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
-import { dockHover, dockOpen, setDockHover, toggleDock } from "@/app/layout/state";
+import { cycleDock, dockHover, dockMode, setDockHover } from "@/app/layout/state";
 import { TitleBar } from "@/app/layout/TitleBar";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
@@ -13,18 +13,21 @@ import { t } from "@/shared/i18n";
 
 const PEEK_DELAY = 180;
 
+const NEXT_LABEL = {
+  expanded: "dock.toRail",
+  rail: "dock.toHidden",
+  hidden: "dock.toExpanded",
+} as const;
+
 type Props = {
   onNewSession: () => void;
 };
 
 export function Layout({ onNewSession }: Props) {
-  const peeking = !dockOpen.value && dockHover.value;
-  const dockVisible = dockOpen.value || peeking;
-  const overlayMode = useRef(false);
-  if (dockVisible) {
-    overlayMode.current = peeking;
-  }
-  const overlay = overlayMode.current;
+  const mode = dockMode.value;
+  const rail = mode === "rail";
+  const peeking = mode === "hidden" && dockHover.value;
+  const dockVisible = mode !== "hidden" || peeking;
   const dwell = useRef<number | null>(null);
 
   const cancelPeek = () => {
@@ -45,23 +48,30 @@ export function Layout({ onNewSession }: Props) {
 
   const sidebarToggle = (
     <ToolbarButton
-      label={t("dock.toggle")}
+      label={t(NEXT_LABEL[mode])}
       icon="panel"
-      pressed={dockOpen.value}
-      onClick={toggleDock}
+      pressed={mode !== "hidden"}
+      onClick={cycleDock}
     />
   );
+
+  const padStart = rail
+    ? "max(calc(var(--apex-controls-start, 0px) - var(--apex-rail-width)), 12px)"
+    : mode === "hidden"
+      ? "max(var(--apex-controls-start, 0px), 12px)"
+      : "12px";
 
   return (
     <div class="relative flex h-full flex-col text-text">
       <div class="flex min-h-0 flex-1">
-        <DockSlot open={dockVisible} overlay={overlay} onHoverChange={setDockHover}>
+        <DockSlot open={dockVisible} overlay={peeking} rail={rail} onHoverChange={setDockHover}>
           <Dock
-            floating={overlay}
+            floating={peeking}
+            rail={rail}
             header={
               <>
                 <span data-tauri-drag-region class="h-full flex-1" />
-                {!dockOpen.value && <span class="pr-2">{sidebarToggle}</span>}
+                {peeking && <span class="pr-2">{sidebarToggle}</span>}
               </>
             }
           >
@@ -71,7 +81,7 @@ export function Layout({ onNewSession }: Props) {
 
         <div class="flex min-w-0 flex-1 flex-col">
           <TitleBar
-            reserveControls={!dockVisible}
+            padStart={padStart}
             lead={
               <>
                 {sidebarToggle}
@@ -93,7 +103,7 @@ export function Layout({ onNewSession }: Props) {
           <Views />
         </div>
 
-        {!dockVisible && (
+        {mode === "hidden" && !peeking && (
           <div
             class="absolute inset-y-0 left-0 z-20 w-2"
             onMouseEnter={() => {

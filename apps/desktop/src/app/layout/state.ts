@@ -1,17 +1,19 @@
 import { signal } from "@preact/signals";
 
 export type DockPanel = "sessions" | "files" | "git" | "history" | "context" | "tasks";
+export type DockMode = "expanded" | "rail" | "hidden";
 
 export const DOCK_WIDTH_MIN = 192;
 export const DOCK_WIDTH_MAX = 480;
 export const DOCK_WIDTH_DEFAULT = 224;
 
 const WIDTH_KEY = "apex.dockWidth";
+const MODE_KEY = "apex.dockMode";
 const ORDER_KEY = "apex.dockOrder";
 
 const ALL_PANELS: DockPanel[] = ["sessions", "files", "git", "history", "context", "tasks"];
 
-export const dockOpen = signal(true);
+export const dockMode = signal<DockMode>(readStoredMode());
 export const dockHover = signal(false);
 export const dockWidth = signal(readStoredWidth());
 export const dockResizing = signal(false);
@@ -86,9 +88,32 @@ export function reconcileDock(claimed: Iterable<string>): void {
   persistOrder();
 }
 
-export function toggleDock(): void {
+const NEXT_MODE: Record<DockMode, DockMode> = {
+  expanded: "rail",
+  rail: "hidden",
+  hidden: "expanded",
+};
+
+export function cycleDock(): void {
+  setDockMode(NEXT_MODE[dockMode.value]);
+}
+
+export function setDockMode(mode: DockMode): void {
   dockHover.value = false;
-  dockOpen.value = !dockOpen.value;
+  dockMode.value = mode;
+  try {
+    localStorage.setItem(MODE_KEY, mode);
+  } catch {}
+}
+
+function readStoredMode(): DockMode {
+  try {
+    const stored = localStorage.getItem(MODE_KEY);
+    if (stored === "expanded" || stored === "rail" || stored === "hidden") {
+      return stored;
+    }
+  } catch {}
+  return "expanded";
 }
 
 export function setDockWidth(px: number): void {
