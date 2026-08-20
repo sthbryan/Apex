@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import { openWeb, overlays } from "@/features/browser/state";
@@ -11,6 +12,12 @@ type Props = {
   id: string;
   url: string;
   visible: boolean;
+};
+
+type Entry = {
+  level: string;
+  text: string;
+  at: number;
 };
 
 type Loaded = {
@@ -59,6 +66,8 @@ export function BrowserView({ id, url, visible }: Props) {
     };
   }, [label]);
 
+  const [logs, setLogs] = useState<Entry[]>([]);
+  const [drawer, setDrawer] = useState(false);
   const shown = visible && overlays.value === 0;
 
   useEffect(() => {
@@ -79,6 +88,26 @@ export function BrowserView({ id, url, visible }: Props) {
       void stop.then((off) => off());
     };
   }, [label]);
+
+  useEffect(() => {
+    if (!shown) {
+      return;
+    }
+    const tick = () => {
+      void invoke<string>("browser_logs", { label })
+        .then((raw) => {
+          const found = JSON.parse(raw) as Entry[];
+          if (found.length > 0) {
+            setLogs((current) => [...current, ...found].slice(-500));
+          }
+        })
+        .catch(() => {});
+    };
+    const timer = setInterval(tick, 1500);
+    return () => clearInterval(timer);
+  }, [label, shown]);
+
+  const failures = logs.filter((entry) => entry.level === "error").length;
 
   const run = (script: string) => {
     void invoke("browser_run", { label, script }).catch(complain);
@@ -123,8 +152,52 @@ export function BrowserView({ id, url, visible }: Props) {
             void invoke("open_url", { url: here }).catch(complain);
           }}
         />
+        <button
+          type="button"
+          title={t("browser.console")}
+          onClick={() => setDrawer((open) => !open)}
+          class={cn(
+            "flex h-5 shrink-0 items-center gap-1 rounded px-1 transition-colors hover:bg-raised",
+            drawer ? "text-text" : "text-faint hover:text-text",
+          )}
+        >
+          <Icon name="braces" size={12} />
+          {failures > 0 && <span class="text-state-failed">{failures}</span>}
+        </button>
       </div>
       <div ref={host} class="min-h-0 flex-1 bg-pane" />
+      {drawer && (
+        <div class="flex h-40 shrink-0 flex-col border-t border-border bg-pane">
+          <div class="flex shrink-0 items-center justify-between px-2 py-0.5 text-faint">
+            <span>{t("browser.console")}</span>
+            <button
+              type="button"
+              onClick={() => setLogs([])}
+              class="transition-colors hover:text-text"
+            >
+              {t("browser.clear")}
+            </button>
+          </div>
+          <ul class="min-h-0 flex-1 overflow-auto px-2 pb-1 font-mono">
+            {logs.length === 0 && <li class="text-faint">{t("browser.quiet")}</li>}
+            {logs.map((entry) => (
+              <li
+                key={`${entry.at}-${entry.text}`}
+                class={cn(
+                  "break-words",
+                  entry.level === "error"
+                    ? "text-state-failed"
+                    : entry.level === "warn"
+                      ? "text-state-working"
+                      : "text-muted",
+                )}
+              >
+                {entry.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

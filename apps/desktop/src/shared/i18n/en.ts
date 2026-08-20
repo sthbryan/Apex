@@ -224,6 +224,9 @@ export const en = {
     forward: "Forward",
     reload: "Reload the page",
     external: "Open in the system browser",
+    console: "Console",
+    clear: "Clear",
+    quiet: "Nothing logged yet.",
   },
   tasks: {
     empty: "No tasks found in this project.",
