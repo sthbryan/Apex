@@ -6,6 +6,7 @@ use crate::state::Answer;
 const HOST: &str = "main";
 const LOADED: &str = "browser-loaded";
 const BLOCKED: &str = "browser-blocked";
+const PROBE: &str = include_str!("probe.js");
 const LOCAL: [&str; 4] = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
 
 #[derive(Clone, serde::Serialize)]
@@ -73,6 +74,7 @@ pub async fn browser_open(
         .devtools(true)
         .incognito(true)
         .transparent(false)
+        .initialization_script(PROBE)
         .on_page_load(move |webview, payload| {
             let _ = loading.emit(
                 LOADED,
@@ -144,4 +146,23 @@ pub async fn browser_run(app: tauri::AppHandle, label: String, script: String) -
         return Ok(());
     };
     webview.eval(script).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn browser_logs(app: tauri::AppHandle, label: String) -> Answer<String> {
+    let Some(webview) = app.get_webview(&label) else {
+        return Ok("[]".to_owned());
+    };
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    let slot = std::sync::Mutex::new(Some(sender));
+    webview
+        .eval_with_callback("window.__apex ? window.__apex.drain() : []", move |value| {
+            if let Ok(mut held) = slot.lock()
+                && let Some(sender) = held.take()
+            {
+                let _ = sender.send(value);
+            }
+        })
+        .map_err(|error| error.to_string())?;
+    receiver.await.map_err(|error| error.to_string())
 }
