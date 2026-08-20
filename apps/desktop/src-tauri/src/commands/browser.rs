@@ -1,10 +1,12 @@
-use tauri::webview::WebviewBuilder;
+use tauri::webview::{NewWindowResponse, WebviewBuilder};
 use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, WebviewUrl};
 
 use crate::state::Answer;
 
 const HOST: &str = "main";
 const LOADED: &str = "browser-loaded";
+const BLOCKED: &str = "browser-blocked";
+const LOCAL: [&str; 4] = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
 
 #[derive(Clone, serde::Serialize)]
 struct Loaded {
@@ -31,6 +33,13 @@ impl Bounds {
     }
 }
 
+pub fn is_local(url: &url::Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    LOCAL.contains(&host) || host.ends_with(".localhost")
+}
+
 fn parse(url: &str) -> Answer<url::Url> {
     let parsed = url::Url::parse(url).map_err(|error| error.to_string())?;
     if !matches!(parsed.scheme(), "http" | "https") {
@@ -47,12 +56,17 @@ pub async fn browser_open(
     bounds: Bounds,
 ) -> Answer<()> {
     let target = parse(&url)?;
+    if !is_local(&target) {
+        return Err(format!("{url} is not a local address"));
+    }
     if let Some(webview) = app.get_webview(&label) {
         return webview.navigate(target).map_err(|error| error.to_string());
     }
 
     let window = app.get_window(HOST).ok_or_else(|| "no main window".to_owned())?;
     let loading = app.clone();
+    let leaving = app.clone();
+    let opening = app.clone();
     let naming = app.clone();
     let named = label.clone();
     let builder = WebviewBuilder::new(&label, WebviewUrl::External(target))
@@ -69,6 +83,18 @@ pub async fn browser_open(
                 },
             );
         })
+        .on_navigation(move |url| {
+            if is_local(url) {
+                return true;
+            }
+            let _ = leaving.emit(BLOCKED, url.to_string());
+            false
+        })
+        .on_new_window(move |url, _| {
+            let _ = opening.emit(BLOCKED, url.to_string());
+            NewWindowResponse::Deny
+        })
+        .on_download(|_, _| false)
         .on_document_title_changed(move |webview, title| {
             let _ = naming.emit(
                 LOADED,

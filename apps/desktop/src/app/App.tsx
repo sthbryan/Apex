@@ -6,6 +6,7 @@ import { useKeymap } from "@/app/keymap";
 import { Layout } from "@/app/layout/Layout";
 import { startDockWidth } from "@/app/layout/state";
 import { startMenu } from "@/app/menu";
+import { startBlockedUrls } from "@/features/browser/state";
 import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
 import { startGitWatch } from "@/features/git/state";
@@ -59,6 +60,7 @@ export function App() {
     const stopPeeking = startPeeking();
     const stopCleanup = startPaneCleanup();
     const stopIntents = startViewIntents();
+    const stopBlocked = startBlockedUrls();
     const stopTheme = startThemeWatcher();
     applyAppearance();
     const stopDockWidth = startDockWidth();
@@ -70,6 +72,7 @@ export function App() {
       stopPeeking();
       stopCleanup();
       stopIntents();
+      stopBlocked();
       stopTheme();
       stopDockWidth();
     };

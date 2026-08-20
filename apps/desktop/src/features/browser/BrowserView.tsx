@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import { overlays } from "@/features/browser/state";
+import { openWeb, overlays } from "@/features/browser/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -107,13 +107,8 @@ export function BrowserView({ id, url, visible }: Props) {
           onInput={(event) => setDraft(event.currentTarget.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              const node = host.current;
               event.currentTarget.blur();
-              if (node) {
-                void invoke("browser_open", { label, url: draft, bounds: boxOf(node) }).catch(
-                  complain,
-                );
-              }
+              openWeb(draft);
             }
             if (event.key === "Escape") {
               event.currentTarget.blur();
