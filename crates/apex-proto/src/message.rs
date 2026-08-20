@@ -148,6 +148,7 @@ pub struct EditorSummary {
 pub struct FileContents {
     pub path: String,
     pub text: Option<String>,
+    pub image: Option<String>,
     #[ts(type = "number")]
     pub size: u64,
     pub truncated: bool,

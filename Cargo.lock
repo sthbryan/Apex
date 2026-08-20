@@ -65,6 +65,7 @@ version = "0.6.0"
 dependencies = [
  "anyhow",
  "apex-proto",
+ "base64 0.22.1",
  "directories",
  "ignore",
  "rusqlite",
