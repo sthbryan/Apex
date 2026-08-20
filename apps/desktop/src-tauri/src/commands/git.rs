@@ -1,6 +1,6 @@
 use apex_proto::{
-    Command, DiffScope, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair, MergeReport, Reply,
-    WorktreeEntry,
+    Command, DiffScope, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair, MergeReport,
+    PendingReview, Reply, WorktreeEntry,
 };
 use uuid::Uuid;
 
@@ -82,6 +82,17 @@ pub async fn list_worktrees(
 ) -> Answer<Vec<WorktreeEntry>> {
     match state.daemon()?.request(Command::WorktreeList { project }).await.map_err(failed)? {
         Reply::Worktrees { worktrees } => Ok(worktrees),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+pub async fn git_pending(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Vec<PendingReview>> {
+    match state.daemon()?.request(Command::GitPending { project }).await.map_err(failed)? {
+        Reply::Pending { reviews } => Ok(reviews),
         other => Err(format!("unexpected reply: {other:?}")),
     }
 }

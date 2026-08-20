@@ -8,6 +8,7 @@ import type { GitSyncOp } from "@/bindings/GitSyncOp";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { ImagePair } from "@/bindings/ImagePair";
 import type { MergeReport } from "@/bindings/MergeReport";
+import type { PendingReview } from "@/bindings/PendingReview";
 import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
 import { activeProjectId, projectSessions } from "@/features/projects/state";
 import { roughly } from "@/features/usage/format";
@@ -32,6 +33,7 @@ export const gitTarget = signal<GitTarget>({ type: "project" });
 export const gitStatus = signal<GitStatus | null>(null);
 export const gitFailure = signal<string | null>(null);
 export const worktrees = signal<WorktreeEntry[]>([]);
+export const pending = signal<PendingReview[]>([]);
 
 export const sessionOfWorktree = computed(() => {
   const owners = new Map<string, string>();
@@ -88,10 +90,24 @@ export async function refreshGit(): Promise<void> {
   }
 }
 
+export async function refreshPending(): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    pending.value = [];
+    return;
+  }
+  try {
+    pending.value = await invoke<PendingReview[]>("git_pending", { project });
+  } catch {
+    pending.value = [];
+  }
+}
+
 export function startGitWatch(): () => void {
   const tick = () => {
     if (!document.hidden) {
       void refreshGit();
+      void refreshPending();
     }
   };
   tick();
@@ -102,6 +118,7 @@ export function startGitWatch(): () => void {
     gitStatus.value = null;
     gitFailure.value = null;
     worktrees.value = [];
+    pending.value = [];
     tick();
     void readLog();
   });
