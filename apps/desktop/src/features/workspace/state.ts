@@ -56,6 +56,21 @@ export const activeSessionId = computed(() => {
   return pane ? sessionOf(pane) : null;
 });
 
+export const activeCommit = computed(() => {
+  const tab = activeTab.value;
+  if (!tab) {
+    return null;
+  }
+  const current = findLeaf(tab.root, tab.activeLeafId);
+  if (current?.view.type === "diff" && current.view.commit) {
+    return current.view.commit;
+  }
+  const shown = leaves(tab.root).find(
+    (pane) => pane.view.type === "diff" && pane.view.commit !== null,
+  );
+  return shown?.view.type === "diff" ? shown.view.commit : null;
+});
+
 export const visibleSessions = computed(() => {
   const tab = activeTab.value;
   if (!tab) {
