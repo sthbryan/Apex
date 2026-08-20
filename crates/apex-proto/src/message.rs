@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 13;
+pub const PROTOCOL_VERSION: u32 = 14;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -195,6 +195,18 @@ pub enum WorktreeDisposal {
 pub struct WorktreeInfo {
     pub path: String,
     pub branch: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct PendingReview {
+    pub target: GitTarget,
+    pub branch: String,
+    pub title: Option<String>,
+    pub state: Option<SessionState>,
+    pub files: u32,
+    pub added: u32,
+    pub removed: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -740,6 +752,10 @@ pub enum Command {
         #[serde(default)]
         scope: DiffScope,
     },
+    GitPending {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
     GitHunks {
         #[ts(type = "string")]
         project: Uuid,
@@ -851,6 +867,7 @@ pub enum Reply {
     Log { commits: Vec<GitCommit> },
     Committed { commit: GitCommit },
     Hunks { patches: Vec<String> },
+    Pending { reviews: Vec<PendingReview> },
     Worktrees { worktrees: Vec<WorktreeEntry> },
     Context { entries: Vec<ContextEntry> },
     Tasks { tasks: Vec<TaskSummary> },
