@@ -38,11 +38,11 @@ export function Dock({ header, children, floating = false, rail = false }: Props
 
   if (rail) {
     return (
-      <aside class="flex h-full w-full flex-col border-r border-border bg-chrome">
+      <aside class="flex h-full w-full flex-col bg-chrome">
         <div data-tauri-drag-region class="h-9 shrink-0 select-none" />
         <nav
           aria-label={t("dock.panels")}
-          class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto py-1 [scrollbar-width:none]"
+          class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto border-r border-border py-1 [scrollbar-width:none]"
         >
           {order.map((id) => (
             <PanelIcon
