@@ -401,13 +401,8 @@ impl SessionManager {
         let parent = mine.parent.context("only a session an agent started can call itself done")?;
 
         if let Some(summary) = summary.filter(|text| !text.trim().is_empty()) {
-            self.context_note(
-                mine.project_id,
-                &mine.title,
-                Some(&parent.to_string()),
-                &summary,
-            )
-            .await?;
+            self.context_note(mine.project_id, &mine.title, Some(&parent.to_string()), &summary)
+                .await?;
         }
 
         if self.acp.get(id).await.is_some() {
@@ -556,8 +551,7 @@ impl SessionManager {
     ) -> Result<()> {
         let root = PathBuf::from(self.project_root(project).await?);
         let busy = self.list_sessions().await.into_iter().any(|session| {
-            session.exit_code.is_none()
-                && session.worktree.is_some_and(|tree| tree.path == path)
+            session.exit_code.is_none() && session.worktree.is_some_and(|tree| tree.path == path)
         });
         if busy {
             bail!("a session is still running in {path}")

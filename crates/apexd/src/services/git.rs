@@ -67,11 +67,7 @@ impl GitService {
     pub async fn stage(&self, dir: &Path, paths: Vec<String>, staged: bool) -> Result<()> {
         let dir = dir.to_path_buf();
         tokio::task::spawn_blocking(move || {
-            if staged {
-                apex_git::stage(&dir, &paths)
-            } else {
-                apex_git::unstage(&dir, &paths)
-            }
+            if staged { apex_git::stage(&dir, &paths) } else { apex_git::unstage(&dir, &paths) }
         })
         .await?
     }
@@ -83,7 +79,8 @@ impl GitService {
 
     pub async fn commit(&self, dir: &Path, message: String) -> Result<GitCommit> {
         let dir = dir.to_path_buf();
-        let commit = tokio::task::spawn_blocking(move || apex_git::commit(&dir, &message)).await??;
+        let commit =
+            tokio::task::spawn_blocking(move || apex_git::commit(&dir, &message)).await??;
         Ok(GitCommit {
             id: commit.id,
             short: commit.short,

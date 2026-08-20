@@ -20,10 +20,7 @@ async fn wait_for(process: &PtyProcess, needle: &str) -> String {
     })
     .await;
     found.unwrap_or_else(|_| {
-        panic!(
-            "never saw {needle:?}; got {:?}",
-            String::from_utf8_lossy(&process.snapshot())
-        )
+        panic!("never saw {needle:?}; got {:?}", String::from_utf8_lossy(&process.snapshot()))
     })
 }
 

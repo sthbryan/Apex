@@ -43,16 +43,16 @@ impl ShellEnvironment {
     }
 
     pub fn from_env(env: BTreeMap<String, String>, source: ProbeSource) -> Self {
-        let search_path = env
-            .get("PATH")
-            .map(|raw| split_path(raw))
-            .unwrap_or_default();
+        let search_path = env.get("PATH").map(|raw| split_path(raw)).unwrap_or_default();
         Self { env, search_path: with_fallback_roots(search_path), source }
     }
 
     pub fn from_search_path(search_path: Vec<PathBuf>) -> Self {
-        let joined =
-            search_path.iter().map(|entry| entry.display().to_string()).collect::<Vec<_>>().join(":");
+        let joined = search_path
+            .iter()
+            .map(|entry| entry.display().to_string())
+            .collect::<Vec<_>>()
+            .join(":");
         Self {
             env: BTreeMap::from([("PATH".to_string(), joined)]),
             search_path,

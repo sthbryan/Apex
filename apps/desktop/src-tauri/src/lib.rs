@@ -5,11 +5,10 @@ use std::sync::Arc;
 
 use apex_core::ApexPaths;
 use apex_proto::{
-    AcpSnapshot, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event, FileContents,
-    FileEntry,
-    GitCommit,
-    GitStatus, GitTarget, HistoryEntry, TaskSummary, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
-    Reply, SessionSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
+    AcpSnapshot, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event,
+    FileContents, FileEntry, GitCommit, GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport,
+    MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TaskSummary, TerminalSize,
+    WorktreeDisposal, WorktreeInfo,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -242,7 +241,9 @@ async fn open_externally(
     path: String,
     editor: Option<String>,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::FileOpenExternal { project, path, editor })
+    state
+        .daemon()?
+        .request(Command::FileOpenExternal { project, path, editor })
         .await
         .map_err(failed)?;
     Ok(())
@@ -255,7 +256,11 @@ async fn search_files(
     query: String,
     limit: u32,
 ) -> Answer<Vec<FileEntry>> {
-    match state.daemon()?.request(Command::FileSearch { project, query, limit }).await.map_err(failed)?
+    match state
+        .daemon()?
+        .request(Command::FileSearch { project, query, limit })
+        .await
+        .map_err(failed)?
     {
         Reply::Directory { entries } => Ok(entries),
         other => Err(format!("unexpected reply: {other:?}")),
@@ -270,7 +275,9 @@ async fn resume_session(
     session_id: String,
     size: TerminalSize,
 ) -> Answer<SessionSummary> {
-    match state.daemon()?.request(Command::SessionResume { project, agent, session_id, size })
+    match state
+        .daemon()?
+        .request(Command::SessionResume { project, agent, session_id, size })
         .await
         .map_err(failed)?
     {
@@ -291,7 +298,9 @@ async fn create_session(
     slug: Option<String>,
     mode: Option<apex_proto::AgentMode>,
 ) -> Answer<SessionSummary> {
-    match state.daemon()?.request(Command::SessionCreate { project, agent, cwd, size, isolation, slug, mode })
+    match state
+        .daemon()?
+        .request(Command::SessionCreate { project, agent, cwd, size, isolation, slug, mode })
         .await
         .map_err(failed)?
     {
@@ -353,7 +362,9 @@ async fn git_diff(
     commit: Option<String>,
     scope: DiffScope,
 ) -> Answer<String> {
-    match state.daemon()?.request(Command::GitDiff { project, target, path, commit, scope })
+    match state
+        .daemon()?
+        .request(Command::GitDiff { project, target, path, commit, scope })
         .await
         .map_err(failed)?
     {
@@ -369,7 +380,9 @@ async fn git_log(
     target: GitTarget,
     limit: u32,
 ) -> Answer<Vec<GitCommit>> {
-    match state.daemon()?.request(Command::GitLog { project, target, limit })
+    match state
+        .daemon()?
+        .request(Command::GitLog { project, target, limit })
         .await
         .map_err(failed)?
     {
@@ -397,7 +410,9 @@ async fn git_hunks(
     path: String,
     scope: DiffScope,
 ) -> Answer<Vec<String>> {
-    match state.daemon()?.request(Command::GitHunks { project, target, path, scope })
+    match state
+        .daemon()?
+        .request(Command::GitHunks { project, target, path, scope })
         .await
         .map_err(failed)?
     {
@@ -414,7 +429,9 @@ async fn git_stage(
     paths: Vec<String>,
     staged: bool,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::GitStage { project, target, paths, staged })
+    state
+        .daemon()?
+        .request(Command::GitStage { project, target, paths, staged })
         .await
         .map_err(failed)?;
     Ok(())
@@ -428,7 +445,9 @@ async fn git_stage_hunk(
     patch: String,
     staged: bool,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::GitStageHunk { project, target, patch, staged })
+    state
+        .daemon()?
+        .request(Command::GitStageHunk { project, target, patch, staged })
         .await
         .map_err(failed)?;
     Ok(())
@@ -441,7 +460,9 @@ async fn git_commit(
     target: GitTarget,
     message: String,
 ) -> Answer<GitCommit> {
-    match state.daemon()?.request(Command::GitCommitStaged { project, target, message })
+    match state
+        .daemon()?
+        .request(Command::GitCommitStaged { project, target, message })
         .await
         .map_err(failed)?
     {
@@ -466,7 +487,9 @@ async fn run_task(
     command: String,
     size: TerminalSize,
 ) -> Answer<SessionSummary> {
-    match state.daemon()?.request(Command::TaskRun { project, task, command, size })
+    match state
+        .daemon()?
+        .request(Command::TaskRun { project, task, command, size })
         .await
         .map_err(failed)?
     {
@@ -481,7 +504,12 @@ async fn session_transcript(
     id: Uuid,
     tail: u32,
 ) -> Answer<String> {
-    match state.daemon()?.request(Command::SessionTranscript { id, tail, plain: false }).await.map_err(failed)? {
+    match state
+        .daemon()?
+        .request(Command::SessionTranscript { id, tail, plain: false })
+        .await
+        .map_err(failed)?
+    {
         Reply::Text { text } => Ok(text),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -571,7 +599,9 @@ async fn context_write(
     key: String,
     contents: String,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::ContextWrite { project, key, contents })
+    state
+        .daemon()?
+        .request(Command::ContextWrite { project, key, contents })
         .await
         .map_err(failed)?;
     Ok(())
@@ -583,7 +613,12 @@ async fn merge_worktree(
     project: Uuid,
     target: GitTarget,
 ) -> Answer<MergeReport> {
-    match state.daemon()?.request(Command::WorktreeMerge { project, target }).await.map_err(failed)? {
+    match state
+        .daemon()?
+        .request(Command::WorktreeMerge { project, target })
+        .await
+        .map_err(failed)?
+    {
         Reply::Merge { report } => Ok(report),
         other => Err(format!("unexpected reply: {other:?}")),
     }
@@ -596,22 +631,17 @@ async fn remove_worktree(
     path: String,
     branch: Option<String>,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::WorktreeRemove { project, path, branch })
+    state
+        .daemon()?
+        .request(Command::WorktreeRemove { project, path, branch })
         .await
         .map_err(failed)?;
     Ok(())
 }
 
 #[tauri::command]
-async fn set_idle_grace(
-    state: tauri::State<'_, AppState>,
-    seconds: u32,
-) -> Answer<()> {
-    let daemon = state
-        .daemon
-        .lock()
-        .map_err(|e| e.to_string())?
-        .clone();
+async fn set_idle_grace(state: tauri::State<'_, AppState>, seconds: u32) -> Answer<()> {
+    let daemon = state.daemon.lock().map_err(|e| e.to_string())?.clone();
     if let Some(daemon) = daemon {
         let _ = daemon.request(Command::SetIdleGrace { seconds }).await;
     }

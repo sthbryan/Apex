@@ -1,5 +1,5 @@
 use super::*;
-use crate::message::{ClientMessage, Command, RequestId, Reply, ServerMessage};
+use crate::message::{ClientMessage, Command, Reply, RequestId, ServerMessage};
 
 fn short_socket_dir() -> PathBuf {
     let id = uuid::Uuid::new_v4().simple().to_string();
@@ -17,14 +17,8 @@ async fn unix_transport_carries_a_request_and_a_reply() {
         let mut connection = Connection::new(stream, peer);
         let frame = connection.recv().await.expect("frame").expect("no error");
         let message: ClientMessage = frame.parse_control().expect("parse");
-        assert_eq!(
-            message,
-            ClientMessage::Request { id: RequestId(1), command: Command::Ping }
-        );
-        connection
-            .send_control(&ServerMessage::ok(RequestId(1), Reply::Pong))
-            .await
-            .expect("send");
+        assert_eq!(message, ClientMessage::Request { id: RequestId(1), command: Command::Ping });
+        connection.send_control(&ServerMessage::ok(RequestId(1), Reply::Pong)).await.expect("send");
     });
 
     let mut client = connect_unix(&socket).await.expect("connect");

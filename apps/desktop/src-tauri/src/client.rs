@@ -84,12 +84,8 @@ impl DaemonClient {
         let (sender, receiver) = oneshot::channel();
         self.pending.lock().await.insert(id.0, sender);
 
-        let sent = self
-            .writer
-            .lock()
-            .await
-            .send_control(&ClientMessage::Request { id, command })
-            .await;
+        let sent =
+            self.writer.lock().await.send_control(&ClientMessage::Request { id, command }).await;
         if let Err(error) = sent {
             self.pending.lock().await.remove(&id.0);
             return Err(error).context("sending request");

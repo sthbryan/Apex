@@ -13,8 +13,7 @@ use crate::codec::{Frame, FrameCodec};
 use crate::error::TransportError;
 use crate::message::Scope;
 
-pub type BoxedStream =
-    Join<Box<dyn AsyncRead + Send + Unpin>, Box<dyn AsyncWrite + Send + Unpin>>;
+pub type BoxedStream = Join<Box<dyn AsyncRead + Send + Unpin>, Box<dyn AsyncWrite + Send + Unpin>>;
 
 pub fn box_stream<S>(stream: S) -> BoxedStream
 where

@@ -33,8 +33,7 @@ fn sessions_are_read_newest_first_with_their_label() {
     )
     .expect("write");
     std::thread::sleep(std::time::Duration::from_millis(1100));
-    std::fs::write(dir.join("bbb-222.jsonl"), "{\"content\":\"write tests\"}\n")
-        .expect("write");
+    std::fs::write(dir.join("bbb-222.jsonl"), "{\"content\":\"write tests\"}\n").expect("write");
 
     let profile = profile("~/sessions/{project_slug}", "{session_id}");
     let found = read_history(&profile, Path::new("/Users/x/code"), home.path());
@@ -54,8 +53,11 @@ fn a_session_without_readable_content_still_appears() {
     std::fs::create_dir_all(&dir).expect("mkdir");
     std::fs::write(dir.join("ccc-333.jsonl"), "this is not json\n").expect("write");
 
-    let found =
-        read_history(&profile("~/sessions/{project_slug}", "{session_id}"), Path::new("/p"), home.path());
+    let found = read_history(
+        &profile("~/sessions/{project_slug}", "{session_id}"),
+        Path::new("/p"),
+        home.path(),
+    );
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].label, None);
 }

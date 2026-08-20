@@ -17,8 +17,7 @@ pub fn offer(
     match delivery {
         McpDelivery::Flag { flag, merge_from, prefix } => {
             let dir = paths.mcp_dir();
-            std::fs::create_dir_all(&dir)
-                .with_context(|| format!("creating {}", dir.display()))?;
+            std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
             let args = vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()];
             let path = dir.join(format!("{session}.json"));
             let existing = merge_from
@@ -129,16 +128,15 @@ pub fn adopt(delivery: &McpDelivery, home: &Path, wanted: bool) -> Result<PathBu
 
     if wanted {
         let launcher = locate()?.display().to_string();
-        servers.insert(
-            "apex".to_owned(),
-            serde_json::json!({ "command": launcher, "args": ["mcp"] }),
-        );
+        servers
+            .insert("apex".to_owned(), serde_json::json!({ "command": launcher, "args": ["mcp"] }));
     } else {
         servers.remove("apex");
     }
 
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
     }
     let body = serde_json::to_string_pretty(&serde_json::json!({ "mcpServers": servers }))?;
     std::fs::write(&path, body).with_context(|| format!("writing {}", path.display()))?;

@@ -32,10 +32,7 @@ impl TasksService {
     async fn project_root(&self, project: Uuid) -> Result<PathBuf> {
         let store = self.store.lock().await;
         Ok(PathBuf::from(
-            store
-                .project(project)?
-                .with_context(|| format!("unknown project {project}"))?
-                .root,
+            store.project(project)?.with_context(|| format!("unknown project {project}"))?.root,
         ))
     }
 }

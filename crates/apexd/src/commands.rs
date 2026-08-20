@@ -227,10 +227,7 @@ async fn execute(
             Ok(Reply::Session { session })
         }
         Command::OpenView { asked_by, target } => {
-            manager
-                .open_view(asked_by, target)
-                .await
-                .map_err(not_found_error)?;
+            manager.open_view(asked_by, target).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
         Command::SessionTell { id, text } => {
@@ -247,10 +244,8 @@ async fn execute(
             Ok(Reply::Done)
         }
         Command::SessionBroadcast { parent, agents, task, isolation } => {
-            let sessions = manager
-                .broadcast(parent, agents, task, isolation)
-                .await
-                .map_err(internal_error)?;
+            let sessions =
+                manager.broadcast(parent, agents, task, isolation).await.map_err(internal_error)?;
             Ok(Reply::Spawned { sessions })
         }
         Command::SessionSpawn { parent, agent, task, isolation } => {
@@ -421,10 +416,7 @@ pub fn scope_allows(scope: Scope, command: &Command) -> bool {
     match scope {
         Scope::Local => true,
         Scope::Remote => {
-            !matches!(
-                command,
-                Command::SessionCreate { .. } | Command::SetIdleGrace { .. }
-            )
+            !matches!(command, Command::SessionCreate { .. } | Command::SetIdleGrace { .. })
         }
     }
 }

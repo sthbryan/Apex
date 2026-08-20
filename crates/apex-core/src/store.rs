@@ -127,8 +127,7 @@ impl Store {
     }
 
     pub fn delete_project(&self, id: Uuid) -> Result<()> {
-        self.connection
-            .execute("DELETE FROM projects WHERE id = ?1", params![id.to_string()])?;
+        self.connection.execute("DELETE FROM projects WHERE id = ?1", params![id.to_string()])?;
         Ok(())
     }
 
@@ -221,10 +220,9 @@ impl Store {
     }
 
     pub fn close_orphaned_sessions(&self) -> Result<usize> {
-        Ok(self.connection.execute(
-            "UPDATE sessions SET closed_at = unixepoch() WHERE closed_at IS NULL",
-            [],
-        )?)
+        Ok(self
+            .connection
+            .execute("UPDATE sessions SET closed_at = unixepoch() WHERE closed_at IS NULL", [])?)
     }
 
     pub fn list_open_sessions(&self, project_id: Uuid) -> Result<Vec<Session>> {
@@ -265,7 +263,11 @@ fn map_session(row: &rusqlite::Row<'_>) -> rusqlite::Result<Session> {
 fn parse_uuid(row: &rusqlite::Row<'_>, index: usize) -> rusqlite::Result<Uuid> {
     let raw: String = row.get(index)?;
     Uuid::parse_str(&raw).map_err(|error| {
-        rusqlite::Error::FromSqlConversionFailure(index, rusqlite::types::Type::Text, Box::new(error))
+        rusqlite::Error::FromSqlConversionFailure(
+            index,
+            rusqlite::types::Type::Text,
+            Box::new(error),
+        )
     })
 }
 

@@ -44,9 +44,9 @@ impl Default for Sampler {
 impl Sampler {
     pub fn new() -> Self {
         let mut system = System::new_with_specifics(
-            RefreshKind::nothing().with_cpu(sysinfo::CpuRefreshKind::everything()).with_memory(
-                sysinfo::MemoryRefreshKind::everything(),
-            ),
+            RefreshKind::nothing()
+                .with_cpu(sysinfo::CpuRefreshKind::everything())
+                .with_memory(sysinfo::MemoryRefreshKind::everything()),
         );
         system.refresh_all();
         Self { system }

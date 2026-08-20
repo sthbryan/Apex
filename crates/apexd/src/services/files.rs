@@ -86,19 +86,13 @@ impl FilesService {
             tokio::process::Command::new(&launcher)
         };
 
-        command
-            .arg(&target)
-            .spawn()
-            .with_context(|| format!("spawning {}", launcher.display()))?;
+        command.arg(&target).spawn().with_context(|| format!("spawning {}", launcher.display()))?;
         Ok(())
     }
 
     async fn project_root(&self, project: Uuid) -> Result<String> {
         let store = self.store.lock().await;
-        Ok(store
-            .project(project)?
-            .with_context(|| format!("unknown project {project}"))?
-            .root)
+        Ok(store.project(project)?.with_context(|| format!("unknown project {project}"))?.root)
     }
 }
 

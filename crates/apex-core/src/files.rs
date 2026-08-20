@@ -25,12 +25,7 @@ pub fn list_directory(root: &Path, relative: &str) -> Result<Vec<FileEntry>> {
             continue;
         };
         let path = join_relative(relative, &name);
-        entries.push(FileEntry {
-            name,
-            path,
-            is_dir: metadata.is_dir(),
-            size: metadata.len(),
-        });
+        entries.push(FileEntry { name, path, is_dir: metadata.is_dir(), size: metadata.len() });
     }
 
     entries.sort_by(|left, right| {
@@ -152,9 +147,7 @@ fn subsequence(haystack: &str, needle: &str) -> bool {
 }
 
 pub fn resolve(root: &Path, relative: &str) -> Result<PathBuf> {
-    let root = root
-        .canonicalize()
-        .with_context(|| format!("resolving {}", root.display()))?;
+    let root = root.canonicalize().with_context(|| format!("resolving {}", root.display()))?;
 
     let requested = Path::new(relative);
     if requested.is_absolute() {
@@ -168,9 +161,8 @@ pub fn resolve(root: &Path, relative: &str) -> Result<PathBuf> {
     }
 
     let joined = root.join(requested);
-    let resolved = joined
-        .canonicalize()
-        .with_context(|| format!("resolving {}", joined.display()))?;
+    let resolved =
+        joined.canonicalize().with_context(|| format!("resolving {}", joined.display()))?;
     if !resolved.starts_with(&root) {
         bail!("{relative} escapes the project");
     }

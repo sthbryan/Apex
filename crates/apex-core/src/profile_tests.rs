@@ -65,8 +65,7 @@ fn a_missing_agents_dir_leaves_the_builtins_intact() {
 #[test]
 fn an_invalid_user_profile_is_reported_with_its_path() {
     let dir = tempfile::tempdir().expect("tempdir");
-    std::fs::write(dir.path().join("broken.toml"), "this is not valid toml = = =")
-        .expect("write");
+    std::fs::write(dir.path().join("broken.toml"), "this is not valid toml = = =").expect("write");
 
     let error = ProfileSet::load(dir.path()).expect_err("should fail");
     assert!(format!("{error:#}").contains("broken.toml"));

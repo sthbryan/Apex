@@ -210,10 +210,10 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
                     project: caller.project,
                     path: text("path").context("path is required")?,
                 },
-                Some("url") => ViewTarget::Url {
-                    url: text("url").context("url is required")?,
-                },
-                other => bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing")),
+                Some("url") => ViewTarget::Url { url: text("url").context("url is required")? },
+                other => {
+                    bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing"))
+                }
             },
         }),
         "apex_agents_list" => Ok(Command::ListAgents),
@@ -221,10 +221,7 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
             id: session_id(&text("session"))?,
             text: text("message").context("message is required")?,
         }),
-        "apex_done" => Ok(Command::SessionDone {
-            id: caller.session,
-            summary: text("summary"),
-        }),
+        "apex_done" => Ok(Command::SessionDone { id: caller.session, summary: text("summary") }),
         "apex_close_session" => Ok(Command::SessionDismiss {
             asked_by: caller.session,
             id: session_id(&text("session"))?,

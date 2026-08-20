@@ -128,9 +128,7 @@ fn line_counts(dir: &Path) -> Result<std::collections::HashMap<String, (u32, u32
 }
 
 fn count_lines(path: &Path) -> u32 {
-    std::fs::read_to_string(path)
-        .map(|text| text.lines().count() as u32)
-        .unwrap_or_default()
+    std::fs::read_to_string(path).map(|text| text.lines().count() as u32).unwrap_or_default()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -211,11 +209,7 @@ pub fn commit(dir: &Path, message: &str) -> Result<Commit> {
 }
 
 pub fn staged_paths(dir: &Path) -> Result<Vec<String>> {
-    Ok(status(dir)?
-        .into_iter()
-        .filter(|change| change.staged)
-        .map(|change| change.path)
-        .collect())
+    Ok(status(dir)?.into_iter().filter(|change| change.staged).map(|change| change.path).collect())
 }
 
 pub fn diff(dir: &Path, path: &str) -> Result<String> {
@@ -295,8 +289,7 @@ pub fn remove_worktree(root: &Path, path: &Path, delete_branch: Option<&str>) ->
     run(root, &["worktree", "remove", "--force", &path.display().to_string()])
         .with_context(|| format!("removing {}", path.display()))?;
     if let Some(branch) = delete_branch {
-        run(root, &["branch", "-D", branch])
-            .with_context(|| format!("deleting {branch}"))?;
+        run(root, &["branch", "-D", branch]).with_context(|| format!("deleting {branch}"))?;
     }
     Ok(())
 }
@@ -330,8 +323,12 @@ pub fn merge(root: &Path, branch: &str) -> Result<MergeOutcome> {
         Ok(_) => Ok(MergeOutcome::Merged),
         Err(error) => {
             let unmerged = run(root, &["diff", "--name-only", "--diff-filter=U"])?;
-            let files: Vec<String> =
-                unmerged.lines().map(str::trim).filter(|line| !line.is_empty()).map(str::to_owned).collect();
+            let files: Vec<String> = unmerged
+                .lines()
+                .map(str::trim)
+                .filter(|line| !line.is_empty())
+                .map(str::to_owned)
+                .collect();
             if files.is_empty() {
                 return Err(error);
             }
@@ -431,13 +428,8 @@ fn run_with_input(dir: &Path, args: &[&str], input: &str) -> Result<String> {
 }
 
 fn finish(output: std::process::Output, args: &[&str]) -> Result<String> {
-
     if !output.status.success() {
-        bail!(
-            "git {} failed: {}",
-            args.join(" "),
-            String::from_utf8_lossy(&output.stderr).trim()
-        );
+        bail!("git {} failed: {}", args.join(" "), String::from_utf8_lossy(&output.stderr).trim());
     }
     Ok(String::from_utf8_lossy(&output.stdout).into_owned())
 }

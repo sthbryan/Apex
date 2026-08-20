@@ -13,9 +13,11 @@ impl Client for Recorder {
     }
 
     async fn permission(&mut self, request: PermissionRequest) -> PermissionOutcome {
-        match self.choice.clone().or_else(|| {
-            request.options.first().map(|option| option.option_id.clone())
-        }) {
+        match self
+            .choice
+            .clone()
+            .or_else(|| request.options.first().map(|option| option.option_id.clone()))
+        {
             Some(option_id) => PermissionOutcome::Selected { option_id },
             None => PermissionOutcome::Cancelled,
         }
@@ -26,7 +28,9 @@ impl Client for Recorder {
     }
 }
 
-fn link(choice: Option<&str>) -> (Connection, DuplexStream, mpsc::UnboundedReceiver<SessionUpdate>) {
+fn link(
+    choice: Option<&str>,
+) -> (Connection, DuplexStream, mpsc::UnboundedReceiver<SessionUpdate>) {
     let (ours, theirs) = duplex(8192);
     let (reader, writer) = tokio::io::split(ours);
     let (updates, seen) = mpsc::unbounded_channel();
@@ -206,8 +210,9 @@ async fn a_dead_agent_frees_everyone_waiting_on_it() {
     let (connection, theirs, _) = link(None);
     let mut agent = BufReader::new(theirs);
 
-    let asking =
-        tokio::spawn(async move { connection.request::<_, Prompted>("session/prompt", json!({})).await });
+    let asking = tokio::spawn(async move {
+        connection.request::<_, Prompted>("session/prompt", json!({})).await
+    });
     next_line(&mut agent).await;
     drop(agent);
 

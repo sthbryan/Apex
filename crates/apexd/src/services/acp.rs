@@ -776,8 +776,7 @@ impl AcpRegistry {
             }
             summary.state = SessionState::Done;
         }
-        let _ =
-            self.events.send(Event::SessionStateChanged { id, state: SessionState::Done });
+        let _ = self.events.send(Event::SessionStateChanged { id, state: SessionState::Done });
         Ok(())
     }
 

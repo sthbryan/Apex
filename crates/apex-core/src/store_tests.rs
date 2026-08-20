@@ -93,9 +93,8 @@ fn sessions_belong_to_a_project_and_start_idle() {
     let store = store();
     let dir = tempfile::tempdir().expect("tempdir");
     let project = store.open_project(dir.path()).expect("project");
-    let session = store
-        .insert_session(project.id, "claude", "refactor", "/tmp/apex", None)
-        .expect("session");
+    let session =
+        store.insert_session(project.id, "claude", "refactor", "/tmp/apex", None).expect("session");
 
     assert_eq!(session.state, SessionState::Idle);
     assert_eq!(store.list_open_sessions(project.id).expect("open"), vec![session]);
@@ -106,7 +105,8 @@ fn session_state_survives_a_roundtrip() {
     let store = store();
     let dir = tempfile::tempdir().expect("tempdir");
     let project = store.open_project(dir.path()).expect("project");
-    let session = store.insert_session(project.id, "codex", "tests", "/tmp", None).expect("session");
+    let session =
+        store.insert_session(project.id, "codex", "tests", "/tmp", None).expect("session");
 
     store.set_session_state(session.id, SessionState::Blocked).expect("update");
     let open = store.list_open_sessions(project.id).expect("open");
@@ -161,16 +161,10 @@ fn a_layout_round_trips_and_overwrites() {
 
     assert_eq!(store.load_layout(project.id).expect("empty"), None);
     store.save_layout(project.id, "{\"tabs\":[]}").expect("save");
-    assert_eq!(
-        store.load_layout(project.id).expect("load").as_deref(),
-        Some("{\"tabs\":[]}")
-    );
+    assert_eq!(store.load_layout(project.id).expect("load").as_deref(), Some("{\"tabs\":[]}"));
 
     store.save_layout(project.id, "{\"tabs\":[1]}").expect("overwrite");
-    assert_eq!(
-        store.load_layout(project.id).expect("load").as_deref(),
-        Some("{\"tabs\":[1]}")
-    );
+    assert_eq!(store.load_layout(project.id).expect("load").as_deref(), Some("{\"tabs\":[1]}"));
 }
 
 #[test]
@@ -183,9 +177,7 @@ fn deleting_a_project_takes_its_sessions_and_layout_with_it() {
     let store = store();
     let dir = tempfile::tempdir().expect("tempdir");
     let project = store.open_project(dir.path()).expect("project");
-    store
-        .insert_session(project.id, "claude", "refactor", "/tmp/apex", None)
-        .expect("session");
+    store.insert_session(project.id, "claude", "refactor", "/tmp/apex", None).expect("session");
     store.save_layout(project.id, "{\"tabs\":[]}").expect("save");
 
     store.delete_project(project.id).expect("delete");

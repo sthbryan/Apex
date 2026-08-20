@@ -72,7 +72,11 @@ impl Connection {
         Self { outgoing, pending, next: AtomicU64::new(1) }
     }
 
-    pub async fn request<P: Serialize, T: DeserializeOwned>(&self, method: &str, params: P) -> Result<T> {
+    pub async fn request<P: Serialize, T: DeserializeOwned>(
+        &self,
+        method: &str,
+        params: P,
+    ) -> Result<T> {
         let id = self.next.fetch_add(1, Ordering::Relaxed);
         let (answer, wait) = oneshot::channel();
         self.pending.lock().await.insert(id, answer);
@@ -87,9 +91,11 @@ impl Connection {
             .send(body.to_string())
             .map_err(|_| anyhow!("the agent is no longer listening"))?;
 
-        let reply = wait.await.map_err(|_| anyhow!("the agent closed before answering {method}"))?;
+        let reply =
+            wait.await.map_err(|_| anyhow!("the agent closed before answering {method}"))?;
         let value = reply.map_err(|message| anyhow!("{method} failed: {message}"))?;
-        serde_json::from_value(value).with_context(|| format!("could not read the answer to {method}"))
+        serde_json::from_value(value)
+            .with_context(|| format!("could not read the answer to {method}"))
     }
 
     pub fn notify<P: Serialize>(&self, method: &str, params: P) -> Result<()> {
@@ -105,8 +111,12 @@ impl Connection {
     }
 }
 
-async fn listen<R, C>(reader: R, outgoing: mpsc::UnboundedSender<String>, pending: Pending, mut client: C)
-where
+async fn listen<R, C>(
+    reader: R,
+    outgoing: mpsc::UnboundedSender<String>,
+    pending: Pending,
+    mut client: C,
+) where
     R: AsyncRead + Unpin + Send + 'static,
     C: Client,
 {
@@ -149,7 +159,9 @@ where
                     None => Ok(message.get("result").cloned().unwrap_or(Value::Null)),
                 });
             }
-            (None, None) => tracing::warn!(line, "the agent sent a message with no method and no id"),
+            (None, None) => {
+                tracing::warn!(line, "the agent sent a message with no method and no id")
+            }
         }
     }
 
@@ -158,7 +170,10 @@ where
     }
 }
 
-async fn take_pending(pending: &Pending, id: &Value) -> Option<oneshot::Sender<Result<Value, String>>> {
+async fn take_pending(
+    pending: &Pending,
+    id: &Value,
+) -> Option<oneshot::Sender<Result<Value, String>>> {
     let id = id.as_u64()?;
     pending.lock().await.remove(&id)
 }
@@ -185,7 +200,9 @@ async fn answer_request<C: Client>(client: &mut C, method: &str, params: Value) 
         }
         "fs/write_text_file" => {
             let request: FileRequest = serde_json::from_value(params)?;
-            client.write_file(&request.path, request.content.as_deref().unwrap_or_default()).await?;
+            client
+                .write_file(&request.path, request.content.as_deref().unwrap_or_default())
+                .await?;
             Ok(Value::Null)
         }
         other => bail!("this client does not answer {other}"),
@@ -283,7 +300,8 @@ impl Agent {
     }
 
     pub async fn authenticate(&self, method: &str) -> Result<()> {
-        let _: Value = self.connection.request("authenticate", json!({ "methodId": method })).await?;
+        let _: Value =
+            self.connection.request("authenticate", json!({ "methodId": method })).await?;
         Ok(())
     }
 

@@ -79,11 +79,7 @@ fn from_package(root: &Path) -> Vec<Task> {
     manifest
         .scripts
         .into_keys()
-        .map(|name| Task {
-            command: format!("{runner} run {name}"),
-            name,
-            source: Source::Package,
-        })
+        .map(|name| Task { command: format!("{runner} run {name}"), name, source: Source::Package })
         .collect()
 }
 

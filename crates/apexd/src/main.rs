@@ -3,10 +3,10 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
-use apexd::session;
-use apexd::state;
 use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
+use apexd::session;
+use apexd::state;
 use tokio::sync::watch;
 
 const IDLE_POLL: Duration = Duration::from_secs(1);
@@ -34,11 +34,8 @@ async fn main() -> Result<()> {
     let clients = Arc::new(AtomicUsize::new(0));
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
 
-    let watchdog = tokio::spawn(watch_for_idle(
-        Arc::clone(&clients),
-        manager.idle_grace(),
-        shutdown_tx,
-    ));
+    let watchdog =
+        tokio::spawn(watch_for_idle(Arc::clone(&clients), manager.idle_grace(), shutdown_tx));
 
     let shutdown = || async {
         tracing::info!("apexd shutting down");
@@ -120,7 +117,5 @@ fn mcp_request() -> Result<Option<Option<uuid::Uuid>>> {
     else {
         return Ok(Some(None));
     };
-    Ok(Some(Some(
-        session.parse().with_context(|| format!("{session} is not a session id"))?,
-    )))
+    Ok(Some(Some(session.parse().with_context(|| format!("{session} is not a session id"))?)))
 }

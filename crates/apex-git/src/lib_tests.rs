@@ -180,16 +180,14 @@ fn an_empty_message_is_refused_before_touching_git() {
 fn a_single_hunk_can_be_staged_on_its_own() {
     let dir = repo();
     let lines: Vec<String> = (1..=20).map(|n| format!("line {n}")).collect();
-    std::fs::write(dir.path().join("many.txt"), format!("{}\n", lines.join("\n")))
-        .expect("write");
+    std::fs::write(dir.path().join("many.txt"), format!("{}\n", lines.join("\n"))).expect("write");
     run(dir.path(), &["add", "."]).expect("add");
     run(dir.path(), &["commit", "-m", "many"]).expect("commit");
 
     let mut edited = lines.clone();
     edited[1] = "line 2 touched".into();
     edited[18] = "line 19 touched".into();
-    std::fs::write(dir.path().join("many.txt"), format!("{}\n", edited.join("\n")))
-        .expect("write");
+    std::fs::write(dir.path().join("many.txt"), format!("{}\n", edited.join("\n"))).expect("write");
 
     let patch = diff_scoped(dir.path(), "many.txt", Scope::Unstaged).expect("diff");
     let hunks = split_hunks(&patch);
@@ -217,10 +215,7 @@ fn a_worktree_is_isolated_and_listed() {
     assert_eq!(status(&tree.path).expect("status").len(), 1);
 
     assert!(
-        list_worktrees(dir.path())
-            .expect("list")
-            .iter()
-            .any(|entry| entry.branch == "apex/codex")
+        list_worktrees(dir.path()).expect("list").iter().any(|entry| entry.branch == "apex/codex")
     );
 }
 

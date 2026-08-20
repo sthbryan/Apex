@@ -78,13 +78,7 @@ pub fn resume_args(profile: &AgentProfile, session_id: &str) -> Option<Vec<Strin
     if config.resume_args.is_empty() {
         return None;
     }
-    Some(
-        config
-            .resume_args
-            .iter()
-            .map(|arg| arg.replace("{session_id}", session_id))
-            .collect(),
-    )
+    Some(config.resume_args.iter().map(|arg| arg.replace("{session_id}", session_id)).collect())
 }
 
 pub fn project_slug(root: &Path) -> String {

@@ -230,7 +230,8 @@ impl SessionRegistry {
     }
 
     async fn withdraw_shared_mcp(&self, agent: &str) {
-        let Some(delivery) = self.profiles.get(agent).and_then(|profile| profile.mcp.clone()) else {
+        let Some(delivery) = self.profiles.get(agent).and_then(|profile| profile.mcp.clone())
+        else {
             return;
         };
         let sessions = self.sessions.read().await;

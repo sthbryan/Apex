@@ -67,9 +67,10 @@ async fn the_probe_does_not_inherit_the_parent_environment() {
     const SHELL_PROVIDES: &[&str] =
         &["PATH", "PWD", "SHLVL", "_", "OLDPWD", "TERM", "TMPDIR", "IFS"];
 
-    let Some(candidate) = std::env::vars().map(|(key, _)| key).find(|key| {
-        !PROBE_SEED.contains(&key.as_str()) && !SHELL_PROVIDES.contains(&key.as_str())
-    }) else {
+    let Some(candidate) = std::env::vars()
+        .map(|(key, _)| key)
+        .find(|key| !PROBE_SEED.contains(&key.as_str()) && !SHELL_PROVIDES.contains(&key.as_str()))
+    else {
         return;
     };
 

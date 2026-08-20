@@ -143,9 +143,8 @@ fn a_plan_closes_the_open_answer() {
 #[test]
 fn a_mode_change_is_not_worth_an_entry() {
     let mut transcript = Transcript::default();
-    let entry = transcript.absorb(apex_acp::SessionUpdate::CurrentModeUpdate {
-        current_mode_id: "ask".into(),
-    });
+    let entry = transcript
+        .absorb(apex_acp::SessionUpdate::CurrentModeUpdate { current_mode_id: "ask".into() });
     assert!(entry.is_none());
     assert!(transcript.entries().is_empty());
 }
