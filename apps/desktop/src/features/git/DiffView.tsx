@@ -14,6 +14,7 @@ import {
   setDiffLayout,
   stageHunk,
 } from "@/features/git/state";
+import { inReview, reviewFiles, stepReview } from "@/features/review/state";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -103,6 +104,36 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     ? whole !== null && whole.patch.trim() === ""
     : unstaged.length === 0 && staged.length === 0;
 
+  const walking = !commit && inReview(target);
+  const files = walking ? reviewFiles() : [];
+  const at = files.indexOf(path);
+
+  const walker = walking && files.length > 1 && (
+    <>
+      <button
+        type="button"
+        title={t("review.previous")}
+        disabled={at <= 0}
+        onClick={() => stepReview(target, path, -1)}
+        class="shrink-0 text-faint transition-colors hover:text-text disabled:opacity-30"
+      >
+        <Icon name="chevronLeft" size={12} />
+      </button>
+      <span class="shrink-0 text-faint">
+        {t("review.position", { at: String(at + 1), total: String(files.length) })}
+      </span>
+      <button
+        type="button"
+        title={t("review.next")}
+        disabled={at === -1 || at >= files.length - 1}
+        onClick={() => stepReview(target, path, 1)}
+        class="shrink-0 text-faint transition-colors hover:text-text disabled:opacity-30"
+      >
+        <Icon name="chevronRight" size={12} />
+      </button>
+    </>
+  );
+
   const toggle = wide && (
     <button
       type="button"
@@ -122,6 +153,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
           <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
           <span class="truncate text-faint">{label}</span>
           <div class="ml-auto flex shrink-0 items-center gap-2">
+            {walker}
             {toggle}
             <button
               type="button"

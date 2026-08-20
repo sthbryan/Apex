@@ -260,6 +260,9 @@ export const en = {
     waiting: "{count} waiting",
     files: "{count}f",
     refresh: "Rescan every worktree",
+    previous: "Previous file",
+    next: "Next file",
+    position: "{at}/{total}",
   },
   git: {
     noRepo: "This project is not a git repository.",

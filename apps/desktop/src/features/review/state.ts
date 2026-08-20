@@ -1,7 +1,7 @@
 import { signal } from "@preact/signals";
 
 import type { GitTarget } from "@/bindings/GitTarget";
-import { gitStatus, refreshGit, selectTarget } from "@/features/git/state";
+import { gitStatus, refreshGit, sameTarget, selectTarget } from "@/features/git/state";
 import { openDiff } from "@/features/workspace/state";
 
 export const reviewing = signal<GitTarget | null>(null);
@@ -13,5 +13,23 @@ export async function openReview(target: GitTarget): Promise<void> {
   const first = gitStatus.value?.changes[0];
   if (first) {
     openDiff(target, first.path);
+  }
+}
+
+export function inReview(target: GitTarget): boolean {
+  const at = reviewing.value;
+  return at !== null && sameTarget(at, target);
+}
+
+export function reviewFiles(): string[] {
+  return (gitStatus.value?.changes ?? []).map((change) => change.path);
+}
+
+export function stepReview(target: GitTarget, path: string, delta: number): void {
+  const files = reviewFiles();
+  const at = files.indexOf(path);
+  const next = at === -1 ? files[0] : files[at + delta];
+  if (next) {
+    openDiff(target, next);
   }
 }

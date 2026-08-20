@@ -262,6 +262,9 @@ export const es: Messages = {
     waiting: "{count} esperando",
     files: "{count}a",
     refresh: "Volver a escanear los worktrees",
+    previous: "Archivo anterior",
+    next: "Archivo siguiente",
+    position: "{at}/{total}",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",
