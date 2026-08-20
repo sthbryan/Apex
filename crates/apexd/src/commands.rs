@@ -201,6 +201,10 @@ async fn execute(
             manager.browser_report(project, url, title, text, logs).await;
             Ok(Reply::Done)
         }
+        Command::BrowserForget { project } => {
+            manager.browser_forget(project).await;
+            Ok(Reply::Done)
+        }
         Command::BrowserRead { project } => {
             Ok(Reply::Text { text: manager.browser_read(project).await })
         }
@@ -411,6 +415,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::FileOpenExternal { .. }
             | Command::UrlOpen { .. }
             | Command::BrowserReport { .. }
+            | Command::BrowserForget { .. }
             | Command::BrowserRead { .. }
             | Command::BrowserLogs { .. }
             | Command::GitRead { .. }

@@ -76,6 +76,10 @@ export function BrowserView({ id, url, visible }: Props) {
       .catch(complain);
     return () => {
       void invoke("browser_close", { label }).catch(complain);
+      const project = activeProjectId.value;
+      if (project) {
+        void invoke("browser_forget", { project }).catch(complain);
+      }
     };
   }, [label, url]);
 

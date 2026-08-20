@@ -90,6 +90,12 @@ pub async fn browser_report(
 }
 
 #[tauri::command]
+pub async fn browser_forget(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<()> {
+    state.daemon()?.request(Command::BrowserForget { project }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn open_url(state: tauri::State<'_, AppState>, url: String) -> Answer<()> {
     state.daemon()?.request(Command::UrlOpen { url }).await.map_err(failed)?;
     Ok(())

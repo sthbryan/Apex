@@ -468,6 +468,10 @@ impl SessionManager {
         self.browsers.report(project, url, title, text, logs).await;
     }
 
+    pub async fn browser_forget(&self, project: Uuid) {
+        self.browsers.forget(project).await;
+    }
+
     pub async fn browser_read(&self, project: Uuid) -> String {
         self.browsers.read(project).await
     }

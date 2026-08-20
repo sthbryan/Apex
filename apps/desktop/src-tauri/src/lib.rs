@@ -93,6 +93,7 @@ pub fn run() {
             commands::browser_logs,
             commands::browser_text,
             commands::browser_report,
+            commands::browser_forget,
             commands::acp_choose,
             commands::mcp_adopt,
             commands::context_list,

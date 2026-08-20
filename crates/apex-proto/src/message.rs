@@ -577,6 +577,10 @@ pub enum Command {
         text: Option<String>,
         logs: Vec<BrowserLog>,
     },
+    BrowserForget {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
     BrowserRead {
         #[ts(type = "string")]
         project: Uuid,

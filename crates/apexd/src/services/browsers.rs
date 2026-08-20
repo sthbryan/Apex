@@ -51,6 +51,10 @@ impl BrowsersService {
         }
     }
 
+    pub async fn forget(&self, project: Uuid) {
+        self.pages.lock().await.remove(&project);
+    }
+
     pub async fn read(&self, project: Uuid) -> String {
         let pages = self.pages.lock().await;
         let Some(page) = pages.get(&project) else {
