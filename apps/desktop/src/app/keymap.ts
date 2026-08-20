@@ -1,16 +1,9 @@
 import { useEffect } from "preact/hooks";
-import { toggleDock } from "@/app/layout/state";
-import { togglePage } from "@/app/view";
-import { cycleLayout, splitWithShell } from "@/features/sessions/pending";
-import { toggleUsagePopover } from "@/features/usage/state";
-import { activeTab, activeTabId, closePane, tabs } from "@/features/workspace/state";
-import { type Direction, findLeaf } from "@/features/workspace/tree";
+import { COMMANDS, type Toggles, useToggles } from "@/app/commands";
+import { splitWithShell } from "@/features/sessions/pending";
+import { activeTabId, tabs } from "@/features/workspace/state";
+import type { Direction } from "@/features/workspace/tree";
 import type { MessageKey } from "@/shared/i18n";
-
-type Toggles = {
-  togglePalette: () => void;
-  toggleFinder: () => void;
-};
 
 const ARROW_DIRECTIONS: Record<string, Direction> = {
   ArrowLeft: "row-reverse",
@@ -21,7 +14,8 @@ const ARROW_DIRECTIONS: Record<string, Direction> = {
 
 let pendingDirection: Direction | null = null;
 
-export function useKeymap({ togglePalette, toggleFinder }: Toggles): void {
+export function useKeymap(toggles: Toggles): void {
+  useToggles(toggles);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) {
@@ -35,7 +29,7 @@ export function useKeymap({ togglePalette, toggleFinder }: Toggles): void {
       const binding = BINDINGS[event.key.toLowerCase()];
       if (binding) {
         event.preventDefault();
-        binding({ event, togglePalette, toggleFinder });
+        binding(event);
         return;
       }
 
@@ -61,35 +55,27 @@ export function useKeymap({ togglePalette, toggleFinder }: Toggles): void {
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp, true);
     };
-  }, [togglePalette, toggleFinder]);
+  }, [toggles.togglePalette, toggles.toggleFinder]);
 }
 
-type Context = Toggles & { event: KeyboardEvent };
-
-const BINDINGS: Record<string, (context: Context) => void> = {
-  k: ({ togglePalette }) => togglePalette(),
-  p: ({ toggleFinder }) => toggleFinder(),
-  ",": () => togglePage("settings"),
-  h: () => togglePage("shortcuts"),
-  u: () => toggleUsagePopover(),
-  b: () => toggleDock(),
-  d: ({ event }) => {
+const BINDINGS: Record<string, (event: KeyboardEvent) => void> = {
+  k: () => COMMANDS.palette(),
+  p: () => COMMANDS.finder(),
+  ",": () => COMMANDS.settings(),
+  h: () => COMMANDS.shortcuts(),
+  u: () => COMMANDS.usage(),
+  b: () => COMMANDS.dock(),
+  d: (event) => {
     const direction = pendingDirection ?? (event.shiftKey ? "column" : "row");
     pendingDirection = null;
     void splitWithShell(direction);
   },
-  l: ({ event }) => {
+  l: (event) => {
     if (event.shiftKey) {
-      cycleLayout();
+      COMMANDS["cycle-layout"]();
     }
   },
-  w: () => {
-    const tab = activeTab.value;
-    const pane = currentPane();
-    if (tab && pane) {
-      closePane(tab.id, pane, true);
-    }
-  },
+  w: () => COMMANDS["close-pane"](),
 };
 
 export type Shortcut = {
@@ -118,8 +104,3 @@ export const SHORTCUTS: Shortcut[] = [
   { id: "close-pane", keys: "⌘W", label: "shortcuts.closePane", group: "panes" },
   { id: "tab-1-9", keys: "⌘1–⌘9", label: "shortcuts.tabs", group: "navigation" },
 ];
-
-function currentPane() {
-  const tab = activeTab.value;
-  return tab ? findLeaf(tab.root, tab.activeLeafId) : null;
-}

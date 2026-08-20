@@ -1,4 +1,6 @@
 mod client;
+#[cfg(target_os = "macos")]
+mod menu;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -665,6 +667,8 @@ pub fn run() {
             if let Err(error) = &daemon {
                 tracing::warn!(%error, "could not reach apexd at startup");
             }
+            #[cfg(target_os = "macos")]
+            menu::install(app.handle())?;
             app.manage(AppState {
                 daemon: std::sync::Mutex::new(daemon.ok()),
                 socket: paths.socket,

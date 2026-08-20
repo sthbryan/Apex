@@ -5,6 +5,7 @@ import { DaemonFailed } from "@/app/DaemonFailed";
 import { useKeymap } from "@/app/keymap";
 import { Layout } from "@/app/layout/Layout";
 import { startDockWidth } from "@/app/layout/state";
+import { startMenu } from "@/app/menu";
 import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
 import { startGitWatch } from "@/features/git/state";
@@ -44,6 +45,11 @@ export function App() {
       stopNotifications = stop;
     });
 
+    let stopMenu: (() => void) | undefined;
+    void startMenu().then((stop) => {
+      stopMenu = stop;
+    });
+
     let stopMetrics: (() => void) | undefined;
     void startMetrics().then((stop) => {
       stopMetrics = stop;
@@ -58,6 +64,7 @@ export function App() {
     const stopDockWidth = startDockWidth();
     return () => {
       stopNotifications?.();
+      stopMenu?.();
       stopMetrics?.();
       stopGit();
       stopPeeking();
