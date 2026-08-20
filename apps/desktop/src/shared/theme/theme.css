@@ -24,6 +24,7 @@
   --color-muted: var(--apex-muted);
   --color-faint: var(--apex-faint);
   --color-accent: var(--apex-accent);
+  --color-accent-soft: var(--apex-accent-soft);
   --color-focus: var(--apex-focus);
 
   --color-state-idle: var(--apex-state-idle);

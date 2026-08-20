@@ -1,6 +1,6 @@
 :root {
   --apex-dock-width: 14rem;
-  --apex-rail-width: 2.5rem;
+  --apex-rail-width: 3rem;
   --apex-statusbar-h: 1.75rem;
   --apex-scale: 1;
   --apex-veil: 100%;
@@ -23,8 +23,9 @@
   --apex-border: light-dark(#dfe2e6, #24272e);
   --apex-text: light-dark(#1c1e21, #e4e6eb);
   --apex-muted: light-dark(#656d76, #8b919c);
-  --apex-faint: light-dark(#8c959f, #5c626d);
+  --apex-faint: light-dark(#656d76, #7d8595);
   --apex-accent: light-dark(#b45309, #f59e0b);
+  --apex-accent-soft: color-mix(in oklab, var(--apex-accent) 14%, transparent);
   --apex-focus: light-dark(#92400e, #fbbf24);
   --apex-selection: light-dark(#f59e0b33, #f59e0b40);
 
