@@ -155,6 +155,22 @@ pub fn change_count(dir: &Path) -> Result<usize> {
     Ok(total)
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Tally {
+    pub files: u32,
+    pub added: u32,
+    pub removed: u32,
+}
+
+pub fn tally(dir: &Path) -> Result<Tally> {
+    let changes = status(dir)?;
+    Ok(Tally {
+        files: changes.len() as u32,
+        added: changes.iter().map(|change| change.added).sum(),
+        removed: changes.iter().map(|change| change.removed).sum(),
+    })
+}
+
 pub fn diff_scoped(dir: &Path, path: &str, scope: Scope) -> Result<String> {
     let tracked = run(dir, &["ls-files", "--error-unmatch", "--", path]).is_ok();
     if !tracked {

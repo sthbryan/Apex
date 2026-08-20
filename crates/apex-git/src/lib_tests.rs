@@ -289,3 +289,22 @@ fn blobs_are_read_at_a_revision_and_missing_ones_are_none() {
     assert_eq!(blob(root, "HEAD^", "logo.png"), None);
     assert_eq!(blob(root, "HEAD", "nope.png"), None);
 }
+
+#[test]
+fn a_tally_sums_every_change_in_the_tree() {
+    let dir = repo();
+    let root = dir.path();
+    std::fs::write(root.join("README.md"), "# sample\nmore\n").expect("write");
+    std::fs::write(root.join("new.txt"), "one\ntwo\n").expect("write");
+
+    let counted = tally(root).expect("tally");
+    assert_eq!(counted.files, 2);
+    assert_eq!(counted.added, 3);
+    assert_eq!(counted.removed, 0);
+}
+
+#[test]
+fn a_clean_tree_tallies_to_nothing() {
+    let dir = repo();
+    assert_eq!(tally(dir.path()).expect("tally"), Tally::default());
+}
