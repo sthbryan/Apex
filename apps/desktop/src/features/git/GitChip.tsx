@@ -1,9 +1,8 @@
-import cn from "cnfast";
 import { revealPanel } from "@/app/layout/actions";
-import { gitStatus, worktrees } from "@/features/git/state";
+import { gitStatus } from "@/features/git/state";
+import { TargetChip } from "@/features/git/TargetChip";
 import { activeProject } from "@/features/projects/state";
 import { t } from "@/shared/i18n";
-import { Icon } from "@/shared/ui/Icon";
 
 export function GitChip() {
   const project = activeProject.value;
@@ -12,35 +11,37 @@ export function GitChip() {
     return <div />;
   }
 
-  const trees = worktrees.value.length;
   const dirty = status.changes.length;
 
-  const onOpen = () => revealPanel("git");
-
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      title={
-        status.upstream
-          ? t("git.chipTracking", { branch: status.branch, upstream: status.upstream })
-          : t("git.chip", { branch: status.branch })
-      }
-      class="flex items-center gap-1.5 transition-colors hover:text-text"
-    >
-      <Icon name="branch" size={12} />
-      <span class={cn("truncate", status.isolated ? "text-state-working" : "")}>
-        {status.branch}
-      </span>
-      {dirty > 0 && <span class="text-state-blocked">{dirty}±</span>}
-      {status.ahead > 0 && <span class="text-state-done">↑{status.ahead}</span>}
-      {status.behind > 0 && <span class="text-state-working">↓{status.behind}</span>}
-      {trees > 0 && (
-        <span class="flex items-center gap-0.5">
-          <span class="text-border">·</span>
-          {t("git.trees", { count: String(trees) })}
+    <div class="flex min-w-0 items-center gap-2">
+      <TargetChip project={project} placement="above" />
+      {dirty > 0 && (
+        <button
+          type="button"
+          title={t("git.openChanges")}
+          onClick={() => revealPanel("git")}
+          class="shrink-0 tabular-nums text-git-dirty transition-colors hover:text-text"
+        >
+          {t("git.changed", { count: String(dirty) })}
+        </button>
+      )}
+      {status.ahead > 0 && (
+        <span
+          title={t("git.ahead", { count: String(status.ahead) })}
+          class="shrink-0 tabular-nums text-git-ahead"
+        >
+          ↑{status.ahead}
         </span>
       )}
-    </button>
+      {status.behind > 0 && (
+        <span
+          title={t("git.behind", { count: String(status.behind) })}
+          class="shrink-0 tabular-nums text-git-behind"
+        >
+          ↓{status.behind}
+        </span>
+      )}
+    </div>
   );
 }
