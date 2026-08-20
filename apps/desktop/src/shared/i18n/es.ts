@@ -266,6 +266,7 @@ export const es: Messages = {
     pull: "Bajar de {upstream}",
     push: "Subir a {upstream}",
     noUpstream: "{branch} todavía no tiene upstream",
+    subjectLong: "La primera línea pasa de 50 caracteres",
     reload: "Recargar el diff",
     noDiff: "Sin cambios en este archivo.",
     merge: "Mergear en {base}",

@@ -10,6 +10,7 @@ export function CommitBox({ status }: { status: GitStatus }) {
 
   const staged = status.changes.filter((change) => change.staged);
   const ready = staged.length > 0 && message.trim().length > 0;
+  const [subject] = message.split("\n");
 
   const commit = () => {
     if (!ready) {
@@ -26,7 +27,7 @@ export function CommitBox({ status }: { status: GitStatus }) {
   };
 
   return (
-    <div class="shrink-0 border-t border-border bg-surface mt-auto">
+    <div class="mt-auto shrink-0 border-t border-border bg-surface">
       <textarea
         rows={5}
         value={message}
@@ -50,6 +51,11 @@ export function CommitBox({ status }: { status: GitStatus }) {
             ? t("git.committed", { commit: landed })
             : t("git.onBranch", { count: String(staged.length), branch: status.branch })}
         </span>
+        {subject.length > 50 && (
+          <span title={t("git.subjectLong")} class="shrink-0 tabular-nums text-git-behind">
+            {subject.length}
+          </span>
+        )}
         <button
           type="button"
           disabled={!ready}

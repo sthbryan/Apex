@@ -264,6 +264,7 @@ export const en = {
     pull: "Pull from {upstream}",
     push: "Push to {upstream}",
     noUpstream: "{branch} has no upstream yet",
+    subjectLong: "The first line is longer than 50 characters",
     reload: "Reload the diff",
     noDiff: "No changes in this file.",
     merge: "Merge into {base}",
