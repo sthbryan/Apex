@@ -266,6 +266,8 @@ export const en = {
     noUpstream: "{branch} has no upstream yet",
     subjectLong: "The first line is longer than 50 characters",
     reload: "Reload the diff",
+    splitView: "Side-by-side diff",
+    unifiedView: "Unified diff",
     noDiff: "No changes in this file.",
     merge: "Merge into {base}",
     merged: "Merged.",

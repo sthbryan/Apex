@@ -268,6 +268,8 @@ export const es: Messages = {
     noUpstream: "{branch} todavía no tiene upstream",
     subjectLong: "La primera línea pasa de 50 caracteres",
     reload: "Recargar el diff",
+    splitView: "Diff en paralelo",
+    unifiedView: "Diff unificado",
     noDiff: "Sin cambios en este archivo.",
     merge: "Mergear en {base}",
     merged: "Mergeado.",
