@@ -3,8 +3,9 @@ import cn from "cnfast";
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { PendingReview } from "@/bindings/PendingReview";
 import type { SessionState } from "@/bindings/SessionState";
-import { gitTarget, pending, refreshPending, sameTarget, selectTarget } from "@/features/git/state";
+import { gitTarget, pending, refreshPending, sameTarget } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
+import { openReview } from "@/features/review/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -63,7 +64,7 @@ function Row({ review }: { review: PendingReview }) {
     <li>
       <button
         type="button"
-        onClick={() => selectTarget(review.target)}
+        onClick={() => void openReview(review.target)}
         class={cn(
           "flex w-full items-center gap-1.5 px-2 py-1 text-left transition-colors hover:bg-raised",
           here ? "bg-raised text-text" : "text-muted",
