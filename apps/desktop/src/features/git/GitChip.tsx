@@ -27,20 +27,24 @@ export function GitChip() {
         </button>
       )}
       {status.ahead > 0 && (
-        <span
+        <button
+          type="button"
           title={t("git.ahead", { count: String(status.ahead) })}
-          class="shrink-0 tabular-nums text-git-ahead"
+          onClick={() => revealPanel("git")}
+          class="shrink-0 tabular-nums text-git-ahead transition-colors hover:text-text"
         >
           ↑{status.ahead}
-        </span>
+        </button>
       )}
       {status.behind > 0 && (
-        <span
+        <button
+          type="button"
           title={t("git.behind", { count: String(status.behind) })}
-          class="shrink-0 tabular-nums text-git-behind"
+          onClick={() => revealPanel("git")}
+          class="shrink-0 tabular-nums text-git-behind transition-colors hover:text-text"
         >
           ↓{status.behind}
-        </span>
+        </button>
       )}
     </div>
   );
