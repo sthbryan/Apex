@@ -42,6 +42,26 @@ fn reports_binary_files_without_text() {
 }
 
 #[test]
+fn reads_images_as_data_urls() {
+    let dir = sample();
+    fs::write(dir.path().join("logo.png"), [0x89, 0x50, 0x4e, 0x47]).expect("logo");
+    let contents = read_file(dir.path(), "logo.png").expect("contents");
+    assert!(contents.binary);
+    assert!(contents.text.is_none());
+    assert_eq!(contents.image.as_deref(), Some("data:image/png;base64,iVBORw=="));
+}
+
+#[test]
+fn skips_images_beyond_the_preview_limit() {
+    let dir = sample();
+    let heavy = vec![0u8; MAX_IMAGE_BYTES as usize + 1];
+    fs::write(dir.path().join("huge.png"), &heavy).expect("huge");
+    let contents = read_file(dir.path(), "huge.png").expect("contents");
+    assert!(contents.binary);
+    assert!(contents.image.is_none());
+}
+
+#[test]
 fn truncates_oversized_files() {
     let dir = sample();
     let big = "a".repeat(MAX_FILE_BYTES as usize + 10);

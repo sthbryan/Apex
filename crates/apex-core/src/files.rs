@@ -4,10 +4,25 @@ use std::path::{Component, Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use apex_proto::{FileContents, FileEntry};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD;
 
 pub const MAX_FILE_BYTES: u64 = 1024 * 1024;
+pub const MAX_IMAGE_BYTES: u64 = 16 * 1024 * 1024;
 
 const SNIFF_BYTES: usize = 8 * 1024;
+
+const IMAGE_TYPES: &[(&str, &str)] = &[
+    ("apng", "image/apng"),
+    ("avif", "image/avif"),
+    ("bmp", "image/bmp"),
+    ("gif", "image/gif"),
+    ("ico", "image/x-icon"),
+    ("jpeg", "image/jpeg"),
+    ("jpg", "image/jpeg"),
+    ("png", "image/png"),
+    ("webp", "image/webp"),
+];
 
 pub fn list_directory(root: &Path, relative: &str) -> Result<Vec<FileEntry>> {
     let target = resolve(root, relative)?;
@@ -46,6 +61,10 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
     }
 
     let size = metadata.len();
+    if let Some(mime) = image_type(&target) {
+        return read_image(&target, relative, size, mime);
+    }
+
     let truncated = size > MAX_FILE_BYTES;
     let file = fs::File::open(&target).with_context(|| format!("reading {}", target.display()))?;
     let mut capped = Vec::new();
@@ -57,6 +76,7 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
         return Ok(FileContents {
             path: relative.to_owned(),
             text: None,
+            image: None,
             size,
             truncated: false,
             binary: true,
@@ -67,6 +87,7 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
         Ok(text) => Ok(FileContents {
             path: relative.to_owned(),
             text: Some(text),
+            image: None,
             size,
             truncated,
             binary: false,
@@ -74,11 +95,38 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
         Err(_) => Ok(FileContents {
             path: relative.to_owned(),
             text: None,
+            image: None,
             size,
             truncated: false,
             binary: true,
         }),
     }
+}
+
+fn image_type(target: &Path) -> Option<&'static str> {
+    let extension = target.extension()?.to_str()?.to_lowercase();
+    IMAGE_TYPES
+        .iter()
+        .find(|(name, _)| *name == extension)
+        .map(|(_, mime)| *mime)
+}
+
+fn read_image(target: &Path, relative: &str, size: u64, mime: &str) -> Result<FileContents> {
+    let image = if size > MAX_IMAGE_BYTES {
+        None
+    } else {
+        let bytes = fs::read(target).with_context(|| format!("reading {}", target.display()))?;
+        Some(format!("data:{mime};base64,{}", STANDARD.encode(bytes)))
+    };
+
+    Ok(FileContents {
+        path: relative.to_owned(),
+        text: None,
+        image,
+        size,
+        truncated: false,
+        binary: true,
+    })
 }
 
 pub fn search_files(root: &Path, query: &str, limit: usize) -> Vec<FileEntry> {
