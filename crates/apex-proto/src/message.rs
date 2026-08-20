@@ -143,6 +143,13 @@ pub struct EditorSummary {
     pub resolved_path: Option<String>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ImagePair {
+    pub before: Option<String>,
+    pub after: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct FileContents {
@@ -699,6 +706,14 @@ pub enum Command {
         path: String,
         scope: DiffScope,
     },
+    GitImages {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+        path: String,
+        #[serde(default)]
+        commit: Option<String>,
+    },
     GitStage {
         #[ts(type = "string")]
         project: Uuid,
@@ -800,6 +815,7 @@ pub enum Reply {
     Tasks { tasks: Vec<TaskSummary> },
     Text { text: String },
     Diff { patch: String },
+    Images { pair: ImagePair },
     Merge { report: MergeReport },
     File { contents: FileContents },
     Metrics { snapshot: MetricsSnapshot },

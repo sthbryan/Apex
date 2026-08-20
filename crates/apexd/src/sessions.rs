@@ -6,8 +6,8 @@ use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
-    GitSyncOp, GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
-    SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
+    GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport, MetricsSnapshot,
+    ProjectSummary, SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
@@ -477,6 +477,17 @@ impl SessionManager {
     ) -> Result<String> {
         let dir = self.git_dir(project, &target).await?;
         self.git.diff(&dir, path, commit, scope).await
+    }
+
+    pub async fn git_images(
+        &self,
+        project: Uuid,
+        target: GitTarget,
+        path: &str,
+        commit: Option<String>,
+    ) -> Result<ImagePair> {
+        let dir = self.git_dir(project, &target).await?;
+        self.git.images(&dir, path, commit).await
     }
 
     pub async fn git_hunks(

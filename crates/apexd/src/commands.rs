@@ -123,6 +123,12 @@ async fn execute(
                 .await
                 .map_err(not_found_error)?,
         }),
+        Command::GitImages { project, target, path, commit } => Ok(Reply::Images {
+            pair: manager
+                .git_images(project, target, &path, commit)
+                .await
+                .map_err(not_found_error)?,
+        }),
         Command::GitStage { project, target, paths, staged } => {
             manager.git_stage(project, target, paths, staged).await.map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -385,6 +391,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitDiff { .. }
             | Command::GitLog { .. }
             | Command::GitHunks { .. }
+            | Command::GitImages { .. }
             | Command::WorktreeList { .. }
             | Command::ListTasks { .. }
             | Command::ContextList { .. }

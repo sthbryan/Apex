@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::{Result, bail};
 use apex_proto::{
-    DiffScope, GitChange, GitCommit, GitStatus, GitSyncOp, MergeReport, WorktreeEntry,
+    DiffScope, GitChange, GitCommit, GitStatus, GitSyncOp, ImagePair, MergeReport, WorktreeEntry,
 };
 
 pub struct GitService;
@@ -53,6 +53,33 @@ impl GitService {
                 apex_git::show(&dir, &commit, (!path.is_empty()).then_some(path.as_str()))
             }
             None => apex_git::diff_scoped(&dir, &path, scope_of(scope)),
+        })
+        .await?
+    }
+
+    pub async fn images(
+        &self,
+        dir: &Path,
+        path: &str,
+        commit: Option<String>,
+    ) -> Result<ImagePair> {
+        let dir = dir.to_path_buf();
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || {
+            let Some(mime) = apex_core::files::image_mime(Path::new(&path)) else {
+                return Ok(ImagePair::default());
+            };
+            let (before, after) = match commit {
+                Some(commit) => (
+                    apex_git::blob(&dir, &format!("{commit}^"), &path),
+                    apex_git::blob(&dir, &commit, &path),
+                ),
+                None => (apex_git::blob(&dir, "HEAD", &path), std::fs::read(dir.join(&path)).ok()),
+            };
+            Ok(ImagePair {
+                before: before.map(|bytes| apex_core::files::data_url(mime, &bytes)),
+                after: after.map(|bytes| apex_core::files::data_url(mime, &bytes)),
+            })
         })
         .await?
     }

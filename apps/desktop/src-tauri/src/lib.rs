@@ -8,9 +8,9 @@ use std::sync::Arc;
 use apex_core::ApexPaths;
 use apex_proto::{
     AcpSnapshot, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event,
-    FileContents, FileEntry, GitCommit, GitStatus, GitSyncOp, GitTarget, HistoryEntry, Isolation,
-    MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TaskSummary, TerminalSize,
-    WorktreeDisposal, WorktreeEntry,
+    FileContents, FileEntry, GitCommit, GitStatus, GitSyncOp, GitTarget, HistoryEntry, ImagePair,
+    Isolation, MergeReport, MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TaskSummary,
+    TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -376,6 +376,25 @@ async fn git_diff(
 }
 
 #[tauri::command]
+async fn git_images(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+    path: String,
+    commit: Option<String>,
+) -> Answer<ImagePair> {
+    match state
+        .daemon()?
+        .request(Command::GitImages { project, target, path, commit })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Images { pair } => Ok(pair),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 async fn git_log(
     state: tauri::State<'_, AppState>,
     project: Uuid,
@@ -718,6 +737,7 @@ pub fn run() {
             git_diff,
             git_log,
             git_hunks,
+            git_images,
             list_worktrees,
             git_stage,
             git_stage_hunk,
