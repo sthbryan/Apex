@@ -61,7 +61,7 @@ function Frame({ label, source, tone }: { label: string; source: string | null; 
         {label}
       </figcaption>
       {source ? (
-        <img src={source} alt={label} class="max-h-96 w-full object-contain p-4" />
+        <img src={source} alt={label} class="checkers max-h-96 w-full object-contain p-4" />
       ) : (
         <p class="p-4 text-faint">{t("git.imageMissing")}</p>
       )}

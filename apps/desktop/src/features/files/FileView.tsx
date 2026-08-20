@@ -117,7 +117,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <img
             src={contents.image}
             alt={fileName(path)}
-            class="mx-auto max-h-full animate-veil-in object-contain"
+            class="checkers mx-auto max-h-full animate-veil-in object-contain"
           />
         </div>
       )}
@@ -129,7 +129,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <img
             src={svgSource(text)}
             alt={fileName(path)}
-            class="mx-auto max-h-full animate-veil-in object-contain"
+            class="checkers mx-auto max-h-full animate-veil-in object-contain"
           />
         </div>
       )}

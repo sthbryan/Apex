@@ -40,6 +40,14 @@ code {
   isolation: isolate;
 }
 
+.checkers {
+  background-image: repeating-conic-gradient(
+    var(--apex-border) 0% 25%,
+    transparent 0% 50%
+  );
+  background-size: 16px 16px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --apex-quick: 1ms;
