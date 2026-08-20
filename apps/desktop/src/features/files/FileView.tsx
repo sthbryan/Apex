@@ -3,7 +3,15 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import type { FileContents } from "@/bindings/FileContents";
 import { openExternally } from "@/features/files/editors";
 import { highlight } from "@/features/files/highlight";
-import { fileName, formatSize, readFile } from "@/features/files/state";
+import {
+  fileName,
+  formatSize,
+  isSvg,
+  readFile,
+  setSvgView,
+  svgSource,
+  svgView,
+} from "@/features/files/state";
 import { activeProject } from "@/features/projects/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -47,6 +55,18 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   const contents = loaded?.contents ?? null;
   const text = contents?.text ?? null;
   const lines = text ? countLines(text) : 0;
+  const drawn = text !== null && isSvg(path) && svgView.value === "preview";
+
+  const toggle = text !== null && isSvg(path) && (
+    <button
+      type="button"
+      title={t(drawn ? "files.showSource" : "files.showImage")}
+      onClick={() => setSvgView(drawn ? "source" : "preview")}
+      class="shrink-0 text-faint transition-colors hover:text-text"
+    >
+      <Icon name={drawn ? "fileCode" : "fileImage"} size={12} />
+    </button>
+  );
 
   return (
     <div class="flex h-full flex-col bg-pane">
@@ -58,6 +78,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <span class="ml-auto shrink-0 text-faint">
             {contents ? formatSize(contents.size) : ""}
           </span>
+          {toggle}
           <button
             type="button"
             title={t("files.reload")}
@@ -83,6 +104,12 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
         </header>
       )}
 
+      {!chrome && toggle && (
+        <div class="flex h-6 shrink-0 items-center justify-end border-b border-border px-2">
+          {toggle}
+        </div>
+      )}
+
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
       {contents?.image && (
@@ -97,7 +124,17 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
       {contents?.binary && !contents.image && <p class="p-3 text-faint">{t("files.binary")}</p>}
 
-      {text !== null && (
+      {drawn && text !== null && (
+        <div class="min-h-0 flex-1 overflow-auto p-4">
+          <img
+            src={svgSource(text)}
+            alt={fileName(path)}
+            class="mx-auto max-h-full animate-veil-in object-contain"
+          />
+        </div>
+      )}
+
+      {text !== null && !drawn && (
         <div class="min-h-0 flex-1 overflow-auto">
           <div class="flex min-h-full w-max min-w-full animate-veil-in leading-5">
             <div
