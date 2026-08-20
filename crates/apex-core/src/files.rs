@@ -61,7 +61,7 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
     }
 
     let size = metadata.len();
-    if let Some(mime) = image_type(&target) {
+    if let Some(mime) = image_mime(&target) {
         return read_image(&target, relative, size, mime);
     }
 
@@ -103,12 +103,13 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
     }
 }
 
-fn image_type(target: &Path) -> Option<&'static str> {
+pub fn image_mime(target: &Path) -> Option<&'static str> {
     let extension = target.extension()?.to_str()?.to_lowercase();
-    IMAGE_TYPES
-        .iter()
-        .find(|(name, _)| *name == extension)
-        .map(|(_, mime)| *mime)
+    IMAGE_TYPES.iter().find(|(name, _)| *name == extension).map(|(_, mime)| *mime)
+}
+
+pub fn data_url(mime: &str, bytes: &[u8]) -> String {
+    format!("data:{mime};base64,{}", STANDARD.encode(bytes))
 }
 
 fn read_image(target: &Path, relative: &str, size: u64, mime: &str) -> Result<FileContents> {
@@ -116,7 +117,7 @@ fn read_image(target: &Path, relative: &str, size: u64, mime: &str) -> Result<Fi
         None
     } else {
         let bytes = fs::read(target).with_context(|| format!("reading {}", target.display()))?;
-        Some(format!("data:{mime};base64,{}", STANDARD.encode(bytes)))
+        Some(data_url(mime, &bytes))
     };
 
     Ok(FileContents {
