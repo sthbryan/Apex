@@ -10,6 +10,7 @@ import {
   tree,
   treeFailure,
 } from "@/features/files/state";
+import { gitStatus } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
 import { openFile } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -18,6 +19,7 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 export function FilesPanel() {
   const project = activeProject.value;
   const projectId = project?.id ?? null;
+  const status = gitStatus.value;
 
   useEffect(() => {
     if (projectId) {
@@ -45,20 +47,62 @@ export function FilesPanel() {
         {treeFailure.value ? (
           <p class="px-2 text-state-failed">{treeFailure.value}</p>
         ) : (
-          <Branch project={project.id} path="" depth={0} />
+          <Branch
+            project={project.id}
+            path=""
+            depth={0}
+            statuses={status ? changesMap(status.changes) : null}
+          />
         )}
       </div>
     </div>
   );
 }
 
+function changesMap(changes: { path: string; kind: string }[]): Map<string, string> {
+  const tones = new Map<string, string>();
+  for (const change of changes) {
+    const tone = toneOf(change.kind);
+    if (!tone) {
+      continue;
+    }
+    tones.set(change.path, tone);
+    const parts = change.path.split("/");
+    for (let i = 1; i < parts.length; i += 1) {
+      const dir = parts.slice(0, i).join("/");
+      if (!tones.has(dir)) {
+        tones.set(dir, "bg-faint");
+      }
+    }
+  }
+  return tones;
+}
+
+function toneOf(kind: string): string | null {
+  switch (kind) {
+    case "added":
+    case "untracked":
+      return "bg-git-added";
+    case "modified":
+    case "renamed":
+      return "bg-git-modified";
+    case "deleted":
+      return "bg-git-removed";
+    case "conflicted":
+      return "bg-git-conflict";
+    default:
+      return null;
+  }
+}
+
 type BranchProps = {
   project: string;
   path: string;
   depth: number;
+  statuses: Map<string, string> | null;
 };
 
-function Branch({ project, path, depth }: BranchProps) {
+function Branch({ project, path, depth, statuses }: BranchProps) {
   const entries = tree.value[path];
   if (!entries) {
     return null;
@@ -71,9 +115,9 @@ function Branch({ project, path, depth }: BranchProps) {
     <ul>
       {entries.map((entry) => (
         <li key={entry.path}>
-          <Row project={project} entry={entry} depth={depth} />
+          <Row project={project} entry={entry} depth={depth} statuses={statuses} />
           {entry.is_dir && expanded.value.includes(entry.path) && (
-            <Branch project={project} path={entry.path} depth={depth + 1} />
+            <Branch project={project} path={entry.path} depth={depth + 1} statuses={statuses} />
           )}
         </li>
       ))}
@@ -81,8 +125,19 @@ function Branch({ project, path, depth }: BranchProps) {
   );
 }
 
-function Row({ project, entry, depth }: { project: string; entry: FileEntry; depth: number }) {
+function Row({
+  project,
+  entry,
+  depth,
+  statuses,
+}: {
+  project: string;
+  entry: FileEntry;
+  depth: number;
+  statuses: Map<string, string> | null;
+}) {
   const open = entry.is_dir && expanded.value.includes(entry.path);
+  const tone = statuses?.get(entry.path);
 
   return (
     <button
@@ -112,6 +167,13 @@ function Row({ project, entry, depth }: { project: string; entry: FileEntry; dep
         class="shrink-0 text-faint"
       />
       <span class="truncate">{entry.name}</span>
+      {tone && (
+        <span
+          aria-hidden="true"
+          title={entry.path}
+          class={cn("ml-auto size-1.5 shrink-0 rounded-full", tone)}
+        />
+      )}
     </button>
   );
 }
