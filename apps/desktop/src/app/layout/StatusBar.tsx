@@ -11,15 +11,13 @@ export function StatusBar() {
   const onUsage = hasUsage.value;
 
   return (
-    <div class="shrink-0 px-(--apex-statusbar-gap) pb-(--apex-statusbar-gap)">
-      <div class="flex h-(--apex-statusbar-h) items-center gap-2.5 rounded-lg border border-border bg-chrome px-1.5 text-faint shadow-[0_4px_16px_var(--apex-dock-shadow)]">
-        {onGit && <GitChip />}
-        {onGit && onUsage && <Divider />}
-        {onUsage && <UsageStrip />}
-        <div class="ml-auto flex shrink-0 items-center gap-2">
-          <NotifyChip />
-          <ResourcesSummary />
-        </div>
+    <div class="flex h-(--apex-statusbar-h) shrink-0 items-center gap-2.5 border-t border-border bg-chrome px-2 text-faint">
+      {onGit && <GitChip />}
+      {onGit && onUsage && <Divider />}
+      {onUsage && <UsageStrip />}
+      <div class="ml-auto flex shrink-0 items-center gap-2">
+        <NotifyChip />
+        <ResourcesSummary />
       </div>
     </div>
   );

@@ -58,7 +58,7 @@ export function DockSlot({ open, overlay = false, rail = false, onHoverChange, c
           }
         }}
         class={cn(
-          "absolute top-0 left-0 z-30 bottom-[calc(var(--apex-statusbar-h)+var(--apex-statusbar-gap))]",
+          "absolute top-0 left-0 z-30 bottom-(--apex-statusbar-h)",
           rail ? "w-(--apex-rail-width)" : "w-(--apex-dock-width)",
           panel.leaving ? "animate-dock-out" : enterKind.current === "slide" && "animate-dock-in",
         )}
