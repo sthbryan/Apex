@@ -96,6 +96,22 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
     setEditing(false);
   };
 
+  const floppy = writable && editing && (
+    <button
+      type="button"
+      title={t(dirty ? "files.save" : "files.saved")}
+      disabled={!dirty || saving}
+      onClick={save}
+      class={
+        dirty
+          ? "shrink-0 text-accent transition-colors hover:text-text"
+          : "shrink-0 text-faint opacity-40"
+      }
+    >
+      <Icon name="save" size={12} />
+    </button>
+  );
+
   const pencil = writable && (
     <button
       type="button"
@@ -132,17 +148,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <span class="ml-auto shrink-0 text-faint">
             {contents ? formatSize(contents.size) : ""}
           </span>
-          {dirty && (
-            <button
-              type="button"
-              title={t("files.save")}
-              disabled={saving}
-              onClick={save}
-              class="shrink-0 text-state-working transition-colors hover:text-text"
-            >
-              <Icon name="circle" size={10} />
-            </button>
-          )}
+          {floppy}
           {pencil}
           {toggle}
           <button
@@ -172,17 +178,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
       {!chrome && (pencil || toggle) && (
         <div class="flex h-6 shrink-0 items-center justify-end gap-2 border-b border-border px-2">
-          {dirty && (
-            <button
-              type="button"
-              title={t("files.save")}
-              disabled={saving}
-              onClick={save}
-              class="shrink-0 text-state-working transition-colors hover:text-text"
-            >
-              <Icon name="circle" size={10} />
-            </button>
-          )}
+          {floppy}
           {pencil}
           {toggle}
         </div>
