@@ -50,7 +50,7 @@ export function PaneBar({ tabId, leaf, extra, focused = false }: Props) {
         )}
       >
         {extra}
-        {leaf.view.type === "session" && (
+        {(leaf.view.type === "session" || leaf.view.type === "browser") && (
           <>
             <button
               type="button"
