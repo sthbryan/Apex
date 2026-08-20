@@ -241,25 +241,13 @@ function Patch({ painted, path, split, target, commit }: PatchProps) {
     </pre>
   );
 
-  if (split && path && binary(painted.patch)) {
+  const images = path ? (binary(painted.patch) ? [path] : []) : binaryPaths(painted.patch);
+
+  if (split && images.length > 0) {
     return (
-      <ImageDiff target={target} path={path} commit={commit}>
+      <ImageDiff target={target} paths={images} commit={commit} named={!path}>
         {plain}
       </ImageDiff>
-    );
-  }
-
-  const images = split && !path ? binaryPaths(painted.patch) : [];
-  if (images.length > 0) {
-    return (
-      <>
-        {plain}
-        {images.map((found) => (
-          <ImageDiff key={found} target={target} path={found} commit={commit} heading={found}>
-            {null}
-          </ImageDiff>
-        ))}
-      </>
     );
   }
   return plain;

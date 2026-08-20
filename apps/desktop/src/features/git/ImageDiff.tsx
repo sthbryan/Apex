@@ -6,48 +6,66 @@ import type { ImagePair } from "@/bindings/ImagePair";
 import { readImages } from "@/features/git/state";
 import { t } from "@/shared/i18n";
 
+type Found = {
+  path: string;
+  pair: ImagePair;
+};
+
 type Props = {
   target: GitTarget;
-  path: string;
+  paths: string[];
   commit: string | null;
-  heading?: string;
+  named: boolean;
   children: ComponentChildren;
 };
 
-export function ImageDiff({ target, path, commit, heading, children }: Props) {
-  const [pair, setPair] = useState<ImagePair | null>(null);
+export function ImageDiff({ target, paths, commit, named, children }: Props) {
+  const [found, setFound] = useState<Found[] | null>(null);
+  const key = paths.join("\n");
 
   useEffect(() => {
     let alive = true;
-    void readImages(target, path, commit)
-      .then((found) => {
+    void Promise.all(
+      key.split("\n").map(async (path) => ({ path, pair: await readImages(target, path, commit) })),
+    )
+      .then((pairs) => {
         if (alive) {
-          setPair(found);
+          setFound(pairs.filter((entry) => entry.pair.before || entry.pair.after));
         }
       })
       .catch(() => {
         if (alive) {
-          setPair(null);
+          setFound([]);
         }
       });
     return () => {
       alive = false;
     };
-  }, [target, path, commit]);
+  }, [target, key, commit]);
 
-  if (!pair || (!pair.before && !pair.after)) {
+  if (found === null || found.length === 0) {
     return <>{children}</>;
   }
 
   return (
     <>
-      {heading && (
-        <h3 class="truncate border-b border-border bg-surface px-3 py-1 text-faint">{heading}</h3>
-      )}
-      <div class="grid animate-veil-in grid-cols-2 gap-px bg-border">
-        <Frame label={t("git.imageBefore")} source={pair.before} tone="text-git-removed" />
-        <Frame label={t("git.imageAfter")} source={pair.after} tone="text-git-added" />
-      </div>
+      {found.map((entry) => (
+        <div key={entry.path}>
+          {named && (
+            <h3 class="truncate border-b border-border bg-surface px-3 py-1 text-faint">
+              {entry.path}
+            </h3>
+          )}
+          <div class="grid animate-veil-in grid-cols-2 gap-px bg-border">
+            <Frame
+              label={t("git.imageBefore")}
+              source={entry.pair.before}
+              tone="text-git-removed"
+            />
+            <Frame label={t("git.imageAfter")} source={entry.pair.after} tone="text-git-added" />
+          </div>
+        </div>
+      ))}
     </>
   );
 }
