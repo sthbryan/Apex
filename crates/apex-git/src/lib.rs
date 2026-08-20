@@ -225,6 +225,30 @@ pub fn commit(dir: &Path, message: &str) -> Result<Commit> {
     log(dir, 1)?.into_iter().next().context("the commit did not land")
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Sync {
+    Fetch,
+    Pull,
+    Push,
+}
+
+pub fn sync(dir: &Path, op: Sync) -> Result<()> {
+    let tracking = upstream(dir);
+    match op {
+        Sync::Fetch => run(dir, &["fetch", "--prune"]).map(|_| ()),
+        Sync::Pull => {
+            if tracking.is_none() {
+                bail!("{} has no upstream to pull from", current_branch(dir)?)
+            }
+            run(dir, &["pull", "--rebase", "--autostash"]).map(|_| ())
+        }
+        Sync::Push => match tracking {
+            Some(_) => run(dir, &["push"]).map(|_| ()),
+            None => run(dir, &["push", "--set-upstream", "origin", "HEAD"]).map(|_| ()),
+        },
+    }
+}
+
 pub fn staged_paths(dir: &Path) -> Result<Vec<String>> {
     Ok(status(dir)?.into_iter().filter(|change| change.staged).map(|change| change.path).collect())
 }
