@@ -2,29 +2,31 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { FileContents } from "@/bindings/FileContents";
 import { openExternally } from "@/features/files/editors";
-import { highlight } from "@/features/files/highlight";
 import {
   fileName,
   formatSize,
+  isStaleWrite,
   isSvg,
   readFile,
   setSvgView,
   svgSource,
   svgView,
+  writeFile,
 } from "@/features/files/state";
+import { TextEditor } from "@/features/files/TextEditor";
 import { activeProject } from "@/features/projects/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-type Loaded = {
-  contents: FileContents;
-  markup: string | null;
-};
-
 export function FileView({ path, chrome = true }: { path: string; chrome?: boolean }) {
   const project = activeProject.value;
   const projectId = project?.id ?? null;
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [contents, setContents] = useState<FileContents | null>(null);
+  const [buffer, setBuffer] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [revision, setRevision] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const ticket = useRef(0);
 
@@ -33,15 +35,22 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
       return;
     }
     const mine = ++ticket.current;
-    setLoaded(null);
+    setContents(null);
+    setBuffer(null);
+    setSaved(null);
+    setRevision(null);
+    setConflict(false);
     setFailure(null);
 
     void readFile(projectId, path)
-      .then(async (contents) => {
-        const markup = contents.text ? await highlight(path, contents.text) : null;
-        if (mine === ticket.current) {
-          setLoaded({ contents, markup });
+      .then((contents) => {
+        if (mine !== ticket.current) {
+          return;
         }
+        setContents(contents);
+        setBuffer(contents.text);
+        setSaved(contents.text);
+        setRevision(contents.revision);
       })
       .catch((error: unknown) => {
         if (mine === ticket.current) {
@@ -52,10 +61,32 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
   useEffect(load, [load]);
 
-  const contents = loaded?.contents ?? null;
-  const text = contents?.text ?? null;
-  const lines = text ? countLines(text) : 0;
+  const text = buffer ?? contents?.text ?? null;
   const drawn = text !== null && isSvg(path) && svgView.value === "preview";
+  const editable = contents !== null && text !== null && !drawn && !contents.truncated;
+  const dirty = buffer !== null && buffer !== saved;
+
+  const save = useCallback(() => {
+    if (!projectId || buffer === null || buffer === saved || saving) {
+      return;
+    }
+    setSaving(true);
+    void writeFile(projectId, path, buffer, revision)
+      .then((next) => {
+        setRevision(next);
+        setSaved(buffer);
+        setConflict(false);
+        setFailure(null);
+      })
+      .catch((error: unknown) => {
+        if (isStaleWrite(error)) {
+          setConflict(true);
+        } else {
+          setFailure(String(error));
+        }
+      })
+      .finally(() => setSaving(false));
+  }, [projectId, path, buffer, saved, revision, saving]);
 
   const toggle = text !== null && isSvg(path) && (
     <button
@@ -78,6 +109,17 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
           <span class="ml-auto shrink-0 text-faint">
             {contents ? formatSize(contents.size) : ""}
           </span>
+          {dirty && (
+            <button
+              type="button"
+              title={t("files.save")}
+              disabled={saving}
+              onClick={save}
+              class="shrink-0 text-state-working transition-colors hover:text-text"
+            >
+              <Icon name="circle" size={10} />
+            </button>
+          )}
           {toggle}
           <button
             type="button"
@@ -134,26 +176,28 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
         </div>
       )}
 
-      {text !== null && !drawn && (
-        <div class="min-h-0 flex-1 overflow-auto">
-          <div class="flex min-h-full w-max min-w-full animate-veil-in leading-5">
-            <div
-              aria-hidden="true"
-              class="sticky left-0 shrink-0 select-none border-r border-border bg-pane px-2 py-2 text-right text-faint"
-            >
-              {Array.from({ length: lines }, (_, index) => (
-                <div key={index}>{index + 1}</div>
-              ))}
-            </div>
-            <pre class="grow px-3 py-2">
-              {loaded?.markup ? (
-                <code dangerouslySetInnerHTML={{ __html: loaded.markup }} />
-              ) : (
-                <code>{text}</code>
-              )}
-            </pre>
-          </div>
+      {conflict && (
+        <div class="flex shrink-0 items-center gap-2 border-b border-border bg-raised px-2 py-1">
+          <span class="grow text-state-failed">{t("files.conflict")}</span>
+          <button
+            type="button"
+            onClick={load}
+            class="shrink-0 text-faint transition-colors hover:text-text"
+          >
+            {t("files.discard")}
+          </button>
         </div>
+      )}
+
+      {text !== null && !drawn && (
+        <TextEditor
+          key={path}
+          path={path}
+          text={text}
+          editable={editable}
+          onInput={setBuffer}
+          onSave={save}
+        />
       )}
 
       {contents?.truncated && (
@@ -163,14 +207,4 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
       )}
     </div>
   );
-}
-
-function countLines(text: string): number {
-  let count = 1;
-  for (const character of text) {
-    if (character === "\n") {
-      count += 1;
-    }
-  }
-  return text.endsWith("\n") ? count - 1 : count;
 }

@@ -39,6 +39,9 @@ export const en = {
     refresh: "Reload the tree",
     showImage: "Show the image",
     showSource: "Show the source",
+    save: "Save the file",
+    conflict: "This file changed on disk. Reload to keep editing.",
+    discard: "Reload and discard",
   },
   projects: {
     none: "No project",

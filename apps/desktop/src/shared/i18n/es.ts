@@ -41,6 +41,9 @@ export const es: Messages = {
     refresh: "Recargar el árbol",
     showImage: "Ver la imagen",
     showSource: "Ver el código",
+    save: "Guardar el archivo",
+    conflict: "El archivo cambió en el disco. Recarga para seguir editando.",
+    discard: "Recargar y descartar",
   },
   projects: {
     none: "Sin proyecto",
