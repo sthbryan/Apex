@@ -2,12 +2,18 @@ import type { ComponentType } from "preact";
 import { lazy } from "preact/compat";
 
 import type { DockPanel } from "@/app/layout/state";
+import { gitStatus } from "@/features/git/state";
+import { projectSessions } from "@/features/projects/state";
+import { running } from "@/features/tasks/state";
 import { t } from "@/shared/i18n";
 import type { IconName } from "@/shared/ui/Icon";
+
+export type PanelBadge = "blocked" | "working" | "dirty";
 
 type Entry = {
   icon: IconName;
   label: () => string;
+  badge?: () => PanelBadge | null;
   View: ComponentType;
 };
 
@@ -31,12 +37,28 @@ const TasksPanel = lazy(async () => ({
 }));
 
 export const DOCK_PANELS: Record<DockPanel, Entry> = {
-  sessions: { icon: "sessions", label: () => t("dock.sessions"), View: SessionPanel },
+  sessions: {
+    icon: "sessions",
+    label: () => t("dock.sessions"),
+    badge: () =>
+      projectSessions.value.some((session) => session.state === "blocked") ? "blocked" : null,
+    View: SessionPanel,
+  },
   files: { icon: "files", label: () => t("dock.files"), View: FilesPanel },
-  git: { icon: "branch", label: () => t("git.changes"), View: ChangesPanel },
+  git: {
+    icon: "branch",
+    label: () => t("git.changes"),
+    badge: () => ((gitStatus.value?.changes.length ?? 0) > 0 ? "dirty" : null),
+    View: ChangesPanel,
+  },
   history: { icon: "history", label: () => t("git.history"), View: HistoryPanel },
   context: { icon: "context", label: () => t("dock.context"), View: ContextPanel },
-  tasks: { icon: "play", label: () => t("dock.tasks"), View: TasksPanel },
+  tasks: {
+    icon: "play",
+    label: () => t("dock.tasks"),
+    badge: () => (running.value.size > 0 ? "working" : null),
+    View: TasksPanel,
+  },
 };
 
 export const DOCK_PANEL_ORDER = Object.keys(DOCK_PANELS) as DockPanel[];

@@ -6,10 +6,16 @@ import { useState } from "preact/hooks";
 import { popPanelToTab } from "@/app/layout/actions";
 import { DockChrome } from "@/app/layout/DockChrome";
 import { DockResize } from "@/app/layout/DockResize";
-import { DOCK_PANELS } from "@/app/layout/panels";
+import { DOCK_PANELS, type PanelBadge } from "@/app/layout/panels";
 import { dockOrder, dockPanel, setDockPanel } from "@/app/layout/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+
+const BADGE_TONE: Record<PanelBadge, string> = {
+  blocked: "bg-state-blocked",
+  working: "bg-state-working",
+  dirty: "bg-git-dirty",
+};
 
 type Props = {
   header?: ComponentChildren;
@@ -49,6 +55,7 @@ export function Dock({ header, children, floating = false }: Props) {
         >
           {order.map((id) => {
             const entry = DOCK_PANELS[id];
+            const badge = entry.badge?.() ?? null;
             const current = active === id;
             return (
               <button
@@ -68,6 +75,15 @@ export function Dock({ header, children, floating = false }: Props) {
                 )}
               >
                 <Icon name={entry.icon} />
+                {badge && !current && (
+                  <span
+                    aria-hidden="true"
+                    class={cn(
+                      "absolute top-0.5 right-0.5 size-1.5 rounded-full ring-2 ring-chrome",
+                      BADGE_TONE[badge],
+                    )}
+                  />
+                )}
                 {current && (
                   <span
                     aria-hidden="true"
