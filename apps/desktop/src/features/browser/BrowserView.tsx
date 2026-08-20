@@ -37,7 +37,13 @@ function report(
     title,
     text,
     logs: logs.map((entry) => ({ level: entry.level, text: entry.text })),
-  }).catch(() => {});
+  }).catch(complain);
+}
+
+function tell(label: string, url: string, title: string | null, logs: Entry[]): void {
+  void invoke<string>("browser_text", { label })
+    .then((raw) => report(url, title, logs, JSON.parse(raw) as string))
+    .catch(() => report(url, title, logs));
 }
 
 type Loaded = {
@@ -63,7 +69,11 @@ export function BrowserView({ id, url, visible }: Props) {
     if (!node) {
       return;
     }
-    void invoke("browser_open", { label, url, bounds: boxOf(node) }).catch(complain);
+    void invoke("browser_open", { label, url, bounds: boxOf(node) })
+      .then(() => {
+        window.setTimeout(() => tell(label, url, null, []), 800);
+      })
+      .catch(complain);
     return () => {
       void invoke("browser_close", { label }).catch(complain);
     };
@@ -103,9 +113,7 @@ export function BrowserView({ id, url, visible }: Props) {
       if (!editing.current) {
         setDraft(event.payload.url);
       }
-      void invoke<string>("browser_text", { label })
-        .then((text) => report(event.payload.url, event.payload.title, [], JSON.parse(text)))
-        .catch(() => {});
+      tell(label, event.payload.url, event.payload.title, []);
     });
     return () => {
       void stop.then((off) => off());
@@ -121,7 +129,7 @@ export function BrowserView({ id, url, visible }: Props) {
             return;
           }
           setLogs((current) => [...current, ...found].slice(-500));
-          report(here, null, found);
+          tell(label, here, null, found);
         })
         .catch(() => {});
     };
