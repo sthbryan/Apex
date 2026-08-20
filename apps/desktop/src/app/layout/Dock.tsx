@@ -46,7 +46,7 @@ export function Dock({ header, children, rail = false }: Props) {
         <div data-tauri-drag-region class="h-9 shrink-0 select-none" />
         <nav
           aria-label={t("dock.panels")}
-          class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto border-r border-border py-1 [scrollbar-width:none]"
+          class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto border-r border-border py-1 scrollbar-none"
         >
           {order.map((id) => (
             <PanelIcon
@@ -103,7 +103,7 @@ export function Dock({ header, children, rail = false }: Props) {
       {order.length > 0 && (
         <nav
           aria-label={t("dock.panels")}
-          class="flex min-h-8.5 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-border px-1 py-1 [scrollbar-width:none]"
+          class="flex min-h-8.5 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-border px-1 py-1 scrollbar-none"
         >
           {order.map((id) => {
             const entry = DOCK_PANELS[id];
