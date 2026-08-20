@@ -22,7 +22,7 @@ body {
   color: var(--apex-text);
   font-family: var(--font-sans);
   font-feature-settings: "calt", "kern", "liga", "ss03";
-  font-size: calc(14px * var(--apex-scale));
+  font-size: calc(13px * var(--apex-scale));
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
