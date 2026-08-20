@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "preact/hooks";
 
+import { browsing } from "@/features/settings/browsing";
 import { openBrowser } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 
@@ -20,7 +21,7 @@ export function isLocal(url: string): boolean {
 }
 
 export function openWeb(url: string): void {
-  if (isLocal(url)) {
+  if (isLocal(url) && browsing.value === "internal") {
     openBrowser(url);
     return;
   }

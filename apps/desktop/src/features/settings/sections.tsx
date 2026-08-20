@@ -30,6 +30,7 @@ import {
   uiScale,
   veilOpacity,
 } from "@/features/settings/appearance";
+import { browsing, setBrowsing } from "@/features/settings/browsing";
 import {
   IDLE_GRACES,
   LANGUAGES,
@@ -190,6 +191,24 @@ export function spaceSection(): Section {
               })),
             ]}
           />
+        ),
+      },
+      {
+        id: "browsing",
+        label: t("settings.browsing"),
+        hint: t("settings.browsingHint"),
+        control: (
+          <Segmented label={t("settings.browsing")}>
+            <Choice
+              selected={browsing.value === "internal"}
+              onSelect={() => setBrowsing("internal")}
+            >
+              {t("settings.browsingInternal")}
+            </Choice>
+            <Choice selected={browsing.value === "system"} onSelect={() => setBrowsing("system")}>
+              {t("settings.browsingSystem")}
+            </Choice>
+          </Segmented>
         ),
       },
       {
