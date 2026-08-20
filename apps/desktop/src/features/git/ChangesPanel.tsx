@@ -7,6 +7,7 @@ import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
 import { CommitBox } from "@/features/git/CommitBox";
+import { SyncBar } from "@/features/git/SyncBar";
 import {
   gitFailure,
   gitStatus,
@@ -58,6 +59,8 @@ export function ChangesPanel() {
       {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
 
       <Changes status={status} target={target} />
+
+      {status && <SyncBar status={status} />}
 
       {status && <CommitBox status={status} />}
 

@@ -1,6 +1,8 @@
 import {
   Activity,
+  ArrowDownToLine,
   ArrowRightLeft,
+  ArrowUpFromLine,
   Atom,
   Bell,
   BellOff,
@@ -70,6 +72,8 @@ const ICONS = {
   sessions: SquareTerminal,
   files: Folder,
   branch: GitBranch,
+  pull: ArrowDownToLine,
+  push: ArrowUpFromLine,
   history: History,
   combine: Combine,
   move: MoveHorizontal,

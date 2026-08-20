@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { DiffScope } from "@/bindings/DiffScope";
 import type { GitCommit } from "@/bindings/GitCommit";
 import type { GitStatus } from "@/bindings/GitStatus";
+import type { GitSyncOp } from "@/bindings/GitSyncOp";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
 import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
@@ -154,6 +155,26 @@ export async function commitStaged(message: string): Promise<GitCommit> {
   await refreshGit();
   await readLog();
   return commit;
+}
+
+export const gitSyncing = signal<GitSyncOp | null>(null);
+
+export async function syncRemote(op: GitSyncOp): Promise<void> {
+  gitSyncing.value = op;
+  try {
+    await invoke("git_sync", {
+      project: activeProjectId.value,
+      target: gitTarget.value,
+      op,
+    });
+    gitFailure.value = null;
+    await refreshGit();
+    await readLog();
+  } catch (error) {
+    gitFailure.value = String(error);
+  } finally {
+    gitSyncing.value = null;
+  }
 }
 
 export async function readLog(): Promise<void> {
