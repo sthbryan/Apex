@@ -275,3 +275,17 @@ fn titles_become_safe_branch_slugs() {
     assert_eq!(slugify("Claude 2"), "claude-2");
     assert_eq!(slugify("  opencode//shell "), "opencode-shell");
 }
+
+#[test]
+fn blobs_are_read_at_a_revision_and_missing_ones_are_none() {
+    let dir = repo();
+    let root = dir.path();
+    std::fs::write(root.join("logo.png"), [0x89, 0x50]).expect("logo");
+    run(root, &["add", "."]).expect("add");
+    run(root, &["commit", "-m", "logo"]).expect("commit");
+    std::fs::write(root.join("logo.png"), [0x89, 0x50, 0x4e]).expect("logo");
+
+    assert_eq!(blob(root, "HEAD", "logo.png"), Some(vec![0x89, 0x50]));
+    assert_eq!(blob(root, "HEAD^", "logo.png"), None);
+    assert_eq!(blob(root, "HEAD", "nope.png"), None);
+}

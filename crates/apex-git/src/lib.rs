@@ -274,6 +274,10 @@ pub struct Commit {
     pub refs: String,
 }
 
+pub fn blob(dir: &Path, rev: &str, path: &str) -> Option<Vec<u8>> {
+    run_bytes(dir, &["show", &format!("{rev}:{path}")]).ok()
+}
+
 pub fn log(dir: &Path, limit: usize) -> Result<Vec<Commit>> {
     let format = "--pretty=format:%H%x1f%h%x1f%an%x1f%at%x1f%s%x1f%D%x1e";
     let raw = run(dir, &["log", &format!("-n{limit}"), format])?;
@@ -443,6 +447,18 @@ fn run(dir: &Path, args: &[&str]) -> Result<String> {
             .with_context(|| format!("running git {}", args.join(" ")))?,
         args,
     )
+}
+
+fn run_bytes(dir: &Path, args: &[&str]) -> Result<Vec<u8>> {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(dir)
+        .output()
+        .with_context(|| format!("running git {}", args.join(" ")))?;
+    if !output.status.success() {
+        bail!("git {} failed", args.join(" "));
+    }
+    Ok(output.stdout)
 }
 
 fn run_with_input(dir: &Path, args: &[&str], input: &str) -> Result<String> {
