@@ -255,6 +255,9 @@ export function cycleLayout(): void {
 
 whenClosingSession((sessionId) => {
   const session = sessions.value.find((candidate) => candidate.id === sessionId);
+  if (session?.task && session.exit_code === null) {
+    return;
+  }
   if (session) {
     requestClose(session);
   } else {
