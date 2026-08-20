@@ -17,7 +17,6 @@ export const es: Messages = {
   },
   dock: {
     toRail: "Contraer la barra lateral a iconos",
-    toHidden: "Ocultar la barra lateral",
     toExpanded: "Mostrar la barra lateral",
     resize: "Cambiar el ancho de la barra lateral",
     popOut: "Abrir como pestaña",

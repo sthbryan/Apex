@@ -15,7 +15,6 @@ export const en = {
   },
   dock: {
     toRail: "Collapse the sidebar to icons",
-    toHidden: "Hide the sidebar",
     toExpanded: "Show the sidebar",
     resize: "Resize sidebar",
     popOut: "Open as tab",

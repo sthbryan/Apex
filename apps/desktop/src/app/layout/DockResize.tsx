@@ -6,7 +6,6 @@ import {
   dockResizing,
   dockWidth,
   resetDockWidth,
-  setDockHover,
   setDockWidth,
 } from "@/app/layout/state";
 import { t } from "@/shared/i18n";
@@ -19,7 +18,6 @@ export function DockResize() {
     event.preventDefault();
     const origin = event.clientX;
     const start = dockWidth.value;
-    setDockHover(true);
     dockResizing.value = true;
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";

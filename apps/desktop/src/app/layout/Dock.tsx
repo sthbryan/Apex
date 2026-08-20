@@ -26,11 +26,10 @@ const BADGE_TONE: Record<PanelBadge, string> = {
 type Props = {
   header?: ComponentChildren;
   children?: ComponentChildren;
-  floating?: boolean;
   rail?: boolean;
 };
 
-export function Dock({ header, children, floating = false, rail = false }: Props) {
+export function Dock({ header, children, rail = false }: Props) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const order = dockOrder.value;
   const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
@@ -50,7 +49,6 @@ export function Dock({ header, children, floating = false, rail = false }: Props
               id={id}
               current={active === id}
               badge={DOCK_PANELS[id].badge?.() ?? null}
-              dim
               onPick={() => {
                 setDockPanel(id);
                 setDockMode("expanded");
@@ -63,14 +61,7 @@ export function Dock({ header, children, floating = false, rail = false }: Props
   }
 
   return (
-    <aside
-      class={cn(
-        "relative flex h-full w-full flex-col overflow-hidden border-r border-border transition-[border-radius,box-shadow,background-color] duration-(--apex-dock)",
-        floating
-          ? "rounded-r-xl bg-chrome shadow-[8px_0_28px_var(--apex-dock-shadow)]"
-          : "rounded-none bg-chrome shadow-none",
-      )}
-    >
+    <aside class="relative flex h-full w-full flex-col overflow-hidden border-r border-border bg-chrome">
       <div
         data-tauri-drag-region
         class="flex h-9 shrink-0 select-none items-center"
@@ -96,7 +87,6 @@ export function Dock({ header, children, floating = false, rail = false }: Props
                 id={id}
                 current={current}
                 badge={badge}
-                dim={!floating}
                 onPick={() => setDockPanel(id)}
               />
             );
@@ -140,11 +130,10 @@ type PanelIconProps = {
   id: DockPanel;
   current: boolean;
   badge: PanelBadge | null;
-  dim: boolean;
   onPick: () => void;
 };
 
-function PanelIcon({ id, current, badge, dim, onPick }: PanelIconProps) {
+function PanelIcon({ id, current, badge, onPick }: PanelIconProps) {
   const entry = DOCK_PANELS[id];
 
   return (
@@ -156,7 +145,7 @@ function PanelIcon({ id, current, badge, dim, onPick }: PanelIconProps) {
       onDblClick={() => popPanelToTab(id)}
       class={cn(
         "relative flex size-6 shrink-0 items-center justify-center rounded transition-colors",
-        current ? "text-accent" : dim ? "text-faint hover:text-text" : "text-muted hover:text-text",
+        current ? "text-accent" : "text-faint hover:text-text",
       )}
     >
       <Icon name={entry.icon} />
