@@ -225,6 +225,7 @@ export const es: Messages = {
     ask: "Esta borra cosas. ¿La arranco?",
     askYes: "Arrancar",
     askNo: "Cancelar",
+    preview: "Abrirla en un pane del browser",
   },
   acp: {
     empty: "Escríbele algo para que el agente arranque.",

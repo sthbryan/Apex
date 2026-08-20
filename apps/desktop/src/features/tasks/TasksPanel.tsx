@@ -17,7 +17,7 @@ import {
   type TaskGroup,
   tasks,
 } from "@/features/tasks/state";
-import { focusSession, openInNewTab } from "@/features/workspace/state";
+import { focusSession, openBrowser, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -228,7 +228,25 @@ function Row({
             />
           )}
           <span class={cn("min-w-0 truncate", session ? "text-text" : "text-muted")}>{label}</span>
-          {url && <span class="shrink-0 text-state-done">:{portOf(url)}</span>}
+          {url && (
+            <span
+              role="button"
+              tabIndex={0}
+              title={t("tasks.preview")}
+              onClick={(event) => {
+                event.stopPropagation();
+                openBrowser(url);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  openBrowser(url);
+                }
+              }}
+              class="shrink-0 text-state-done transition-colors hover:underline"
+            >
+              :{portOf(url)}
+            </span>
+          )}
           <span class="ml-auto shrink-0 truncate text-faint opacity-0 transition-opacity group-hover:opacity-100">
             {task.command}
           </span>

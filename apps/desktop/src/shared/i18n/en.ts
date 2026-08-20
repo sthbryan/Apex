@@ -223,6 +223,7 @@ export const en = {
     ask: "This one deletes things. Run it?",
     askYes: "Run",
     askNo: "Cancel",
+    preview: "Open it in a browser pane",
   },
   acp: {
     empty: "Say something to get the agent going.",
