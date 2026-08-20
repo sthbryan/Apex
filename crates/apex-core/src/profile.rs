@@ -57,6 +57,8 @@ pub struct AgentProfile {
     pub args: Vec<String>,
     #[serde(default)]
     pub mode: AgentMode,
+    #[serde(default = "agentic_by_default")]
+    pub agentic: bool,
     #[serde(default)]
     pub acp_command: Option<String>,
     #[serde(default)]
@@ -73,6 +75,10 @@ pub struct AgentProfile {
     pub quota: Option<QuotaConfig>,
     #[serde(default)]
     pub notify: Option<NotifyConfig>,
+}
+
+fn agentic_by_default() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -156,6 +162,7 @@ impl AgentProfile {
             command: self.command.clone(),
             resolved_path: resolver.resolve(&self.command).map(|path| path.display().to_string()),
             mode: self.mode,
+            agentic: self.agentic,
             supports_resume: self.supports_resume(),
             speaks_acp: self.acp_command.is_some(),
             shares_config: matches!(self.mcp, Some(McpDelivery::Flag { merge_from: Some(_), .. })),

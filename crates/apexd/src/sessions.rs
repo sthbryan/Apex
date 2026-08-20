@@ -254,13 +254,19 @@ impl SessionManager {
         isolation: Isolation,
     ) -> Result<SessionSummary> {
         let known = self.list_agents().await;
-        if !known.iter().any(|found| found.name == agent) {
-            let named: Vec<&str> = known
-                .iter()
-                .filter(|found| found.is_available())
-                .map(|found| found.name.as_str())
-                .collect();
-            bail!("there is no agent called {agent} — you can use {}", named.join(", "))
+        match known.iter().find(|found| found.name == agent) {
+            Some(found) if !found.agentic => {
+                bail!("{agent} is a plain terminal, it does not read a task")
+            }
+            Some(_) => {}
+            None => {
+                let named: Vec<&str> = known
+                    .iter()
+                    .filter(|found| found.is_available() && found.agentic)
+                    .map(|found| found.name.as_str())
+                    .collect();
+                bail!("there is no agent called {agent} — you can use {}", named.join(", "))
+            }
         }
 
         let sessions = self.list_sessions().await;

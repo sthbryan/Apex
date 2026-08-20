@@ -1,6 +1,7 @@
 name = "shell"
 command = "zsh"
 mode = "pty"
+agentic = false
 
 [env]
 TERM = "xterm-256color"

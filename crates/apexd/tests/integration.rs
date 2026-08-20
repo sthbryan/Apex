@@ -1660,7 +1660,7 @@ async fn spawning_asks_the_ui_to_open_the_child() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1672,7 +1672,7 @@ async fn spawning_asks_the_ui_to_open_the_child() {
         .expect("parent");
 
     let child =
-        harness.manager.spawn(parent.id, "shell", None, Isolation::Directory).await.expect("child");
+        harness.manager.spawn(parent.id, "sh", None, Isolation::Directory).await.expect("child");
 
     let asked = timeout(std::time::Duration::from_secs(5), async {
         loop {
@@ -1695,7 +1695,7 @@ async fn an_agent_cannot_ask_to_open_a_session_that_is_gone() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1721,7 +1721,7 @@ async fn a_broadcast_starts_one_session_per_agent() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1736,7 +1736,7 @@ async fn a_broadcast_starts_one_session_per_agent() {
         .manager
         .broadcast(
             parent.id,
-            vec!["shell".into(), "shell".into()],
+            vec!["sh".into(), "sh".into()],
             "look at the readme".into(),
             Isolation::Directory,
         )
@@ -1755,7 +1755,7 @@ async fn a_broadcast_that_names_nobody_is_refused() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1781,7 +1781,7 @@ async fn spawning_an_unknown_agent_names_the_ones_that_exist() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1799,7 +1799,33 @@ async fn spawning_an_unknown_agent_names_the_ones_that_exist() {
         .expect_err("an unknown agent got through");
     let said = format!("{refused:#}");
     assert!(said.contains("no agent called general"), "{said}");
-    assert!(said.contains("shell"), "it never said what is available: {said}");
+    assert!(said.contains("sh"), "it never said what is available: {said}");
+}
+
+#[tokio::test]
+async fn a_plain_terminal_does_not_take_a_spawned_task() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+        })
+        .await
+        .expect("parent");
+
+    let refused = harness
+        .manager
+        .spawn(parent.id, "shell", Some("echo hi".into()), Isolation::Directory)
+        .await
+        .expect_err("a terminal took a task");
+    assert!(format!("{refused:#}").contains("plain terminal"), "{refused:#}");
 }
 
 #[tokio::test]
@@ -1809,7 +1835,7 @@ async fn an_agent_only_closes_the_sessions_it_started() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1821,7 +1847,7 @@ async fn an_agent_only_closes_the_sessions_it_started() {
         .expect("parent");
 
     let child =
-        harness.manager.spawn(parent.id, "shell", None, Isolation::Directory).await.expect("child");
+        harness.manager.spawn(parent.id, "sh", None, Isolation::Directory).await.expect("child");
 
     let refused = harness
         .manager
@@ -1841,7 +1867,7 @@ async fn a_plain_transcript_carries_no_terminal_codes() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1880,7 +1906,7 @@ async fn a_task_handed_to_a_terminal_agent_is_actually_submitted() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1893,7 +1919,7 @@ async fn a_task_handed_to_a_terminal_agent_is_actually_submitted() {
 
     let child = harness
         .manager
-        .spawn(parent.id, "shell", Some("echo apex-ran-the-task".into()), Isolation::Directory)
+        .spawn(parent.id, "sh", Some("echo apex-ran-the-task".into()), Isolation::Directory)
         .await
         .expect("child");
 
@@ -1918,7 +1944,7 @@ async fn a_child_calls_itself_done_without_dying() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1930,7 +1956,7 @@ async fn a_child_calls_itself_done_without_dying() {
         .expect("parent");
 
     let child =
-        harness.manager.spawn(parent.id, "shell", None, Isolation::Directory).await.expect("child");
+        harness.manager.spawn(parent.id, "sh", None, Isolation::Directory).await.expect("child");
 
     harness
         .manager
@@ -1959,7 +1985,7 @@ async fn only_a_spawned_session_can_call_itself_done() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1985,7 +2011,7 @@ async fn an_agent_cannot_spawn_a_third_generation() {
         .manager
         .create(NewSession {
             project: harness.project,
-            agent: "shell".into(),
+            agent: "sh".into(),
             cwd: None,
             size: TerminalSize::default(),
             isolation: Isolation::Directory,
@@ -1997,12 +2023,12 @@ async fn an_agent_cannot_spawn_a_third_generation() {
         .expect("parent");
 
     let child =
-        harness.manager.spawn(parent.id, "shell", None, Isolation::Directory).await.expect("child");
+        harness.manager.spawn(parent.id, "sh", None, Isolation::Directory).await.expect("child");
     assert_eq!(child.parent, Some(parent.id));
 
     let refused = harness
         .manager
-        .spawn(child.id, "shell", None, Isolation::Directory)
+        .spawn(child.id, "sh", None, Isolation::Directory)
         .await
         .expect_err("a third generation got through");
     assert!(format!("{refused:#}").contains("third generation"), "unexpected refusal: {refused:#}");

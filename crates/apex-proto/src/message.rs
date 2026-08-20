@@ -89,6 +89,7 @@ pub struct AgentSummary {
     pub command: String,
     pub resolved_path: Option<String>,
     pub mode: AgentMode,
+    pub agentic: bool,
     pub supports_resume: bool,
     pub speaks_acp: bool,
     pub shares_config: bool,

@@ -307,7 +307,7 @@ fn session_id(raw: &Option<String>) -> Result<Uuid> {
 
 pub fn describe_agents(agents: &[apex_proto::AgentSummary]) -> String {
     let usable: Vec<&apex_proto::AgentSummary> =
-        agents.iter().filter(|agent| agent.is_available()).collect();
+        agents.iter().filter(|agent| agent.is_available() && agent.agentic).collect();
     if usable.is_empty() {
         return "No agents are installed here.".to_owned();
     }
