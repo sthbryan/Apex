@@ -87,3 +87,40 @@ export function lastLines(text: string, count: number): string[] {
     .filter((line) => line.trim().length > 0)
     .slice(-count);
 }
+
+export type TaskGroup = {
+  name: string;
+  parent: TaskSummary | null;
+  children: TaskSummary[];
+};
+
+export type TaskEntry = { kind: "task"; task: TaskSummary } | { kind: "group"; group: TaskGroup };
+
+export function arrange(list: TaskSummary[]): TaskEntry[] {
+  const groups = new Map<string, TaskGroup>();
+  const entries: TaskEntry[] = [];
+
+  for (const task of list) {
+    if (!task.group) {
+      entries.push({ kind: "task", task });
+      continue;
+    }
+    let group = groups.get(task.group);
+    if (!group) {
+      group = { name: task.group, parent: null, children: [] };
+      groups.set(task.group, group);
+      entries.push({ kind: "group", group });
+    }
+    if (task.name === group.name) {
+      group.parent = task;
+    } else {
+      group.children.push(task);
+    }
+  }
+
+  return entries;
+}
+
+export function suffix(name: string, group: string): string {
+  return name.slice(group.length).replace(/^[: ]/, "") || name;
+}

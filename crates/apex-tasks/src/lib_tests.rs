@@ -93,3 +93,32 @@ fn a_broken_manifest_is_ignored_instead_of_breaking_the_panel() {
     assert_eq!(discover(dir.path()).len(), 3);
 }
 
+
+#[test]
+fn a_shared_prefix_becomes_a_group() {
+    let dir = project();
+    std::fs::write(
+        dir.path().join("package.json"),
+        r#"{"scripts":{"dev":"vite","dev:daemon":"cargo run","lint":"biome","bundle:desktop":"tauri"}}"#,
+    )
+    .expect("write");
+
+    let found = discover(dir.path());
+    let group = |name: &str| {
+        found.iter().find(|task| task.name == name).expect("task").group.clone()
+    };
+
+    assert_eq!(group("dev"), Some("dev".to_owned()));
+    assert_eq!(group("dev:daemon"), Some("dev".to_owned()));
+    assert_eq!(group("lint"), None);
+    assert_eq!(group("bundle:desktop"), None);
+}
+
+#[test]
+fn a_prefix_split_by_a_space_groups_too() {
+    let dir = project();
+    std::fs::write(dir.path().join("Cargo.toml"), "[package]\nname = \"x\"\n").expect("write");
+
+    let found = discover(dir.path());
+    assert!(found.iter().all(|task| task.group.as_deref() == Some("cargo")));
+}

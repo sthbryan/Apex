@@ -1,17 +1,20 @@
 import cn from "cnfast";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { TaskSummary } from "@/bindings/TaskSummary";
 import { activeProject } from "@/features/projects/state";
 import { requestClose } from "@/features/sessions/pending";
 import {
+  arrange,
   failure,
   lastLines,
   loadTasks,
   peeks,
   running,
   startTask,
+  suffix,
+  type TaskGroup,
   tasks,
 } from "@/features/tasks/state";
 import { focusSession, openInNewTab } from "@/features/workspace/state";
@@ -50,22 +53,119 @@ export function TasksPanel() {
       )}
 
       <ul class="min-h-0 flex-1 overflow-auto pb-2">
-        {tasks.value.map((task) => (
-          <Row key={task.name} task={task} session={running.value.get(task.name) ?? null} />
-        ))}
+        {arrange(tasks.value).map((entry) =>
+          entry.kind === "task" ? (
+            <Row
+              key={entry.task.name}
+              task={entry.task}
+              label={entry.task.name}
+              session={running.value.get(entry.task.name) ?? null}
+            />
+          ) : (
+            <Group key={entry.group.name} group={entry.group} />
+          ),
+        )}
       </ul>
     </div>
   );
 }
 
-function Row({ task, session }: { task: TaskSummary; session: SessionSummary | null }) {
+function Group({ group }: { group: TaskGroup }) {
+  const live = running.value;
+  const members = group.parent ? [group.parent, ...group.children] : group.children;
+  const busy = members.some((task) => live.has(task.name));
+  const [wanted, setWanted] = useState<boolean | null>(null);
+  const open = wanted ?? busy;
+  const toggle = () => setWanted(!open);
+
+  return (
+    <>
+      {group.parent ? (
+        <Row
+          task={group.parent}
+          label={group.name}
+          session={live.get(group.name) ?? null}
+          open={open}
+          onToggle={toggle}
+        />
+      ) : (
+        <li>
+          <button
+            type="button"
+            onClick={toggle}
+            class="flex w-full items-center gap-2 px-2 py-px text-left transition-colors hover:bg-raised"
+          >
+            <Chevron open={open} busy={busy} />
+            <span class="min-w-0 truncate text-muted">{group.name}</span>
+          </button>
+        </li>
+      )}
+
+      {open &&
+        group.children.map((task) => (
+          <Row
+            key={task.name}
+            task={task}
+            label={suffix(task.name, group.name)}
+            session={live.get(task.name) ?? null}
+            indent
+          />
+        ))}
+    </>
+  );
+}
+
+function Chevron({ open, busy }: { open: boolean; busy: boolean }) {
+  return (
+    <span class="flex size-3 shrink-0 items-center justify-center">
+      <Icon
+        name="chevron"
+        size={12}
+        class={cn(
+          "transition-transform",
+          open ? "text-faint" : "-rotate-90",
+          busy && !open ? "text-state-working" : "text-faint",
+        )}
+      />
+    </span>
+  );
+}
+
+function Row({
+  task,
+  label,
+  session,
+  indent,
+  open,
+  onToggle,
+}: {
+  task: TaskSummary;
+  label: string;
+  session: SessionSummary | null;
+  indent?: boolean;
+  open?: boolean;
+  onToggle?: () => void;
+}) {
   const peek = session ? (peeks.value[task.name] ?? "") : "";
-  const url = session?.url ?? null;
   const lines = peek ? lastLines(peek, 3) : [];
+  const url = session?.url ?? null;
 
   return (
     <li class="group">
-      <div class="flex items-center gap-2 px-2 py-px transition-colors hover:bg-raised">
+      <div
+        class={cn(
+          "flex items-center gap-2 px-2 py-px transition-colors hover:bg-raised",
+          indent && "pl-6",
+        )}
+      >
+        {onToggle ? (
+          <button type="button" onClick={onToggle} class="shrink-0">
+            <Chevron open={open === true} busy={false} />
+          </button>
+        ) : (
+          <span class="size-3 shrink-0" />
+        )}
+
         <button
           type="button"
           title={session ? t("tasks.stop") : t("tasks.start")}
@@ -99,9 +199,7 @@ function Row({ task, session }: { task: TaskSummary; session: SessionSummary | n
               class="size-1.5 shrink-0 animate-pulse rounded-full bg-state-working"
             />
           )}
-          <span class={cn("min-w-0 truncate", session ? "text-text" : "text-muted")}>
-            {task.name}
-          </span>
+          <span class={cn("min-w-0 truncate", session ? "text-text" : "text-muted")}>{label}</span>
           {url && <span class="shrink-0 text-state-done">:{portOf(url)}</span>}
           <span class="ml-auto shrink-0 truncate text-faint opacity-0 transition-opacity group-hover:opacity-100">
             {task.command}
@@ -110,7 +208,12 @@ function Row({ task, session }: { task: TaskSummary; session: SessionSummary | n
       </div>
 
       {lines.length > 0 && (
-        <pre class="animate-veil-in overflow-hidden px-2 pb-1 pl-7 text-faint">
+        <pre
+          class={cn(
+            "animate-veil-in overflow-hidden px-2 pb-1 text-faint",
+            indent ? "pl-13" : "pl-10",
+          )}
+        >
           {lines.map((line) => (
             <div key={line} class="truncate">
               {line}

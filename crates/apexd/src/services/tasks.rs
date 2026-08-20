@@ -25,6 +25,7 @@ impl TasksService {
                 name: task.name,
                 command: task.command,
                 source: task.source.as_str().to_owned(),
+                group: task.group,
             })
             .collect())
     }

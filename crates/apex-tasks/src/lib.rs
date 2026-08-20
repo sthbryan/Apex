@@ -32,6 +32,7 @@ pub struct Task {
     pub name: String,
     pub command: String,
     pub source: Source,
+    pub group: Option<String>,
 }
 
 pub fn discover(root: &Path) -> Vec<Task> {
@@ -44,7 +45,28 @@ pub fn discover(root: &Path) -> Vec<Task> {
 
     tasks.sort_by(|left, right| left.name.cmp(&right.name));
     tasks.dedup_by(|left, right| left.name == right.name);
+    regroup(&mut tasks);
     tasks
+}
+
+fn head(name: &str) -> &str {
+    match name.find([':', ' ']) {
+        Some(at) => &name[..at],
+        None => name,
+    }
+}
+
+fn regroup(tasks: &mut [Task]) {
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for task in tasks.iter() {
+        *counts.entry(head(&task.name).to_owned()).or_default() += 1;
+    }
+    for task in tasks.iter_mut() {
+        let key = head(&task.name).to_owned();
+        if counts.get(&key).copied().unwrap_or_default() > 1 {
+            task.group = Some(key);
+        }
+    }
 }
 
 pub fn package_runner(root: &Path) -> &'static str {
@@ -79,7 +101,12 @@ fn from_package(root: &Path) -> Vec<Task> {
     manifest
         .scripts
         .into_keys()
-        .map(|name| Task { command: format!("{runner} run {name}"), name, source: Source::Package })
+        .map(|name| Task {
+            command: format!("{runner} run {name}"),
+            name,
+            source: Source::Package,
+            group: None,
+        })
         .collect()
 }
 
@@ -102,6 +129,7 @@ fn from_make(root: &Path) -> Vec<Task> {
                 name: target.to_owned(),
                 command: format!("make {target}"),
                 source: Source::Make,
+                group: None,
             })
         })
         .collect()
@@ -129,6 +157,7 @@ fn from_just(root: &Path) -> Vec<Task> {
                 name: name.to_owned(),
                 command: format!("just {name}"),
                 source: Source::Just,
+                group: None,
             })
         })
         .collect()
@@ -144,6 +173,7 @@ fn from_cargo(root: &Path) -> Vec<Task> {
             name: format!("cargo {name}"),
             command: format!("cargo {name}"),
             source: Source::Cargo,
+            group: None,
         })
         .collect()
 }
@@ -165,7 +195,7 @@ fn from_manual(root: &Path) -> Vec<Task> {
     manual
         .tasks
         .into_iter()
-        .map(|(name, command)| Task { name, command, source: Source::Manual })
+        .map(|(name, command)| Task { name, command, source: Source::Manual, group: None })
         .collect()
 }
 
