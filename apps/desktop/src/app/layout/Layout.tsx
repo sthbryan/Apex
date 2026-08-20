@@ -1,4 +1,4 @@
-import { useRef } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { Dock } from "@/app/layout/Dock";
 import { DockSlot } from "@/app/layout/DockSlot";
 import { StatusBar } from "@/app/layout/StatusBar";
@@ -10,6 +10,8 @@ import { page, togglePage } from "@/app/view";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
+
+const PEEK_DELAY = 180;
 
 type Props = {
   onNewSession: () => void;
@@ -23,6 +25,23 @@ export function Layout({ onNewSession }: Props) {
     overlayMode.current = peeking;
   }
   const overlay = overlayMode.current;
+  const dwell = useRef<number | null>(null);
+
+  const cancelPeek = () => {
+    if (dwell.current !== null) {
+      clearTimeout(dwell.current);
+      dwell.current = null;
+    }
+  };
+
+  useEffect(
+    () => () => {
+      if (dwell.current !== null) {
+        clearTimeout(dwell.current);
+      }
+    },
+    [],
+  );
 
   const sidebarToggle = (
     <ToolbarButton
@@ -75,7 +94,14 @@ export function Layout({ onNewSession }: Props) {
         </div>
 
         {!dockVisible && (
-          <div class="absolute inset-y-0 left-0 z-20 w-2" onMouseEnter={() => setDockHover(true)} />
+          <div
+            class="absolute inset-y-0 left-0 z-20 w-2"
+            onMouseEnter={() => {
+              cancelPeek();
+              dwell.current = window.setTimeout(() => setDockHover(true), PEEK_DELAY);
+            }}
+            onMouseLeave={cancelPeek}
+          />
         )}
       </div>
 

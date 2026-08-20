@@ -43,16 +43,6 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
     <>
       <div
         class={cn(
-          "pointer-events-none absolute inset-0 z-20 bg-black/25",
-          shownAsOverlay
-            ? panel.leaving
-              ? "animate-dock-veil-out"
-              : "animate-dock-veil-in"
-            : "opacity-0",
-        )}
-      />
-      <div
-        class={cn(
           "h-full shrink-0",
           !dockResizing.value && "transition-[width] duration-(--apex-dock) ease-(--apex-ease)",
           takeSpace ? "w-(--apex-dock-width)" : "w-0",
@@ -67,8 +57,7 @@ export function DockSlot({ open, overlay = false, onHoverChange, children }: Pro
           }
         }}
         class={cn(
-          "absolute top-0 left-0 z-30 w-(--apex-dock-width) transition-[bottom] duration-(--apex-dock) ease-(--apex-ease)",
-          shownAsOverlay ? "bottom-0" : "bottom-(--apex-statusbar-h)",
+          "absolute top-0 left-0 z-30 bottom-(--apex-statusbar-h) w-(--apex-dock-width)",
           panel.leaving ? "animate-dock-out" : enterKind.current === "slide" && "animate-dock-in",
         )}
       >

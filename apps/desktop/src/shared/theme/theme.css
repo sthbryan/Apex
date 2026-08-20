@@ -57,8 +57,6 @@
   --animate-push-out: apex-push-out var(--apex-exit) var(--apex-ease-in) both;
   --animate-dock-in: apex-slide-in var(--apex-dock) var(--apex-ease) both;
   --animate-dock-out: apex-slide-out var(--apex-dock) var(--apex-ease) both;
-  --animate-dock-veil-in: apex-veil-in var(--apex-dock) var(--apex-ease) both;
-  --animate-dock-veil-out: apex-veil-out var(--apex-dock) var(--apex-ease) both;
   --animate-dock-view: apex-dock-view var(--apex-view) var(--apex-ease) both;
   --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
   --animate-shrink: apex-shrink 6s linear forwards;
