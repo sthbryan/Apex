@@ -91,7 +91,7 @@ function Chip({ entry }: { entry: Entry }) {
         <span class={cn("block h-full rounded-full", level.bar)} style={{ width: `${percent}%` }} />
       </span>
       <span class={cn("tabular-nums", level.text)}>{percent}%</span>
-      {entry.window.label && <span class="text-tiny text-faint">{entry.window.label}</span>}
+      {entry.window.label && <span class="text-muted">{entry.window.label}</span>}
     </span>
   );
 }
