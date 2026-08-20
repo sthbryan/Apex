@@ -15,6 +15,14 @@ export function resetText(window: QuotaWindow): string {
     : t("usage.resetsAt", { when: clock(when) });
 }
 
+export function resetIn(window: QuotaWindow): string | null {
+  if (!window.resets_at) {
+    return null;
+  }
+  const when = new Date(window.resets_at);
+  return Number.isNaN(when.getTime()) ? null : countdown((when.getTime() - Date.now()) / 1000);
+}
+
 export function pacing(window: QuotaWindow): { text: string; tone: string } | null {
   if (window.lasts_to_reset === null) {
     return null;

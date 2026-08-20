@@ -1,6 +1,6 @@
 import cn from "cnfast";
 import type { QuotaWindow } from "@/bindings/QuotaWindow";
-import { pacing, resetText, tone } from "@/features/usage/format";
+import { pacing, resetIn, resetText, tone } from "@/features/usage/format";
 
 type Props = {
   window: QuotaWindow;
@@ -10,10 +10,11 @@ export function UsageRow({ window }: Props) {
   const percent = Math.min(100, Math.max(0, window.used_percent));
   const level = tone(percent);
   const pace = pacing(window);
+  const away = pace ? null : resetIn(window);
 
   return (
-    <div class="flex items-center gap-1.5 py-0.5" title={resetText(window)}>
-      <span class="w-5 shrink-0 truncate text-tiny text-faint">{window.label ?? "·"}</span>
+    <div class="flex items-center gap-2 py-0.5" title={resetText(window)}>
+      <span class="w-7 shrink-0 truncate text-muted">{window.label ?? "·"}</span>
       <span class="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
         <span
           class={cn(
@@ -29,9 +30,9 @@ export function UsageRow({ window }: Props) {
           />
         )}
       </span>
-      <span class={cn("w-8 shrink-0 text-right text-micro", level.text)}>{percent}%</span>
-      <span class={cn("w-10 shrink-0 truncate text-right text-tiny", pace?.tone ?? "text-faint")}>
-        {pace?.text ?? ""}
+      <span class={cn("w-9 shrink-0 text-right tabular-nums", level.text)}>{percent}%</span>
+      <span class={cn("w-12 shrink-0 truncate text-right text-tiny", pace?.tone ?? "text-faint")}>
+        {pace?.text ?? away ?? ""}
       </span>
     </div>
   );
