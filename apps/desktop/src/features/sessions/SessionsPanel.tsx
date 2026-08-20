@@ -167,6 +167,9 @@ function OrphanTrees() {
             >
               <Icon name="branch" size={13} class="shrink-0 text-faint" />
               <span class="min-w-0 flex-1 truncate">{tree.branch}</span>
+              {tree.changed > 0 && (
+                <span class="shrink-0 text-micro tabular-nums text-git-dirty">{tree.changed}</span>
+              )}
             </button>
           </li>
         ))}

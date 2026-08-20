@@ -6,7 +6,7 @@ import type { GitCommit } from "@/bindings/GitCommit";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
-import type { WorktreeInfo } from "@/bindings/WorktreeInfo";
+import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
 import { activeProjectId, projectSessions } from "@/features/projects/state";
 import { roughly } from "@/features/usage/format";
 import { t } from "@/shared/i18n";
@@ -17,7 +17,7 @@ export const commits = signal<GitCommit[]>([]);
 export const gitTarget = signal<GitTarget>({ type: "project" });
 export const gitStatus = signal<GitStatus | null>(null);
 export const gitFailure = signal<string | null>(null);
-export const worktrees = signal<WorktreeInfo[]>([]);
+export const worktrees = signal<WorktreeEntry[]>([]);
 
 export const sessionOfWorktree = computed(() => {
   const owners = new Map<string, string>();
@@ -56,7 +56,7 @@ export async function refreshGit(): Promise<void> {
     return;
   }
   try {
-    const trees = await invoke<WorktreeInfo[]>("list_worktrees", { project });
+    const trees = await invoke<WorktreeEntry[]>("list_worktrees", { project });
     worktrees.value = trees;
     const target = gitTarget.value;
     if (target.type === "worktree" && !trees.some((tree) => tree.path === target.path)) {

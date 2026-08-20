@@ -7,7 +7,7 @@ use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
     GitTarget, HistoryEntry, Isolation, MergeReport, MetricsSnapshot, ProjectSummary,
-    SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeInfo,
+    SessionSummary, TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
@@ -532,7 +532,7 @@ impl SessionManager {
         self.git.log(&dir, limit).await
     }
 
-    pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeInfo>> {
+    pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeEntry>> {
         let root = PathBuf::from(self.project_root(project).await?);
         self.git.list_worktrees(&root).await
     }

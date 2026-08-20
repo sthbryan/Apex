@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::{Result, bail};
-use apex_proto::{DiffScope, GitChange, GitCommit, GitStatus, MergeReport, WorktreeInfo};
+use apex_proto::{DiffScope, GitChange, GitCommit, GitStatus, MergeReport, WorktreeEntry};
 
 pub struct GitService;
 
@@ -107,7 +107,7 @@ impl GitService {
             .collect())
     }
 
-    pub async fn list_worktrees(&self, root: &Path) -> Result<Vec<WorktreeInfo>> {
+    pub async fn list_worktrees(&self, root: &Path) -> Result<Vec<WorktreeEntry>> {
         let root = root.to_path_buf();
         let trees = tokio::task::spawn_blocking({
             let root = root.clone();
@@ -115,11 +115,23 @@ impl GitService {
         })
         .await??;
 
-        Ok(trees
+        let counting: Vec<_> = trees
             .into_iter()
             .filter(|tree| tree.path != root)
-            .map(|tree| WorktreeInfo { path: tree.path.display().to_string(), branch: tree.branch })
-            .collect())
+            .map(|tree| {
+                tokio::task::spawn_blocking(move || WorktreeEntry {
+                    path: tree.path.display().to_string(),
+                    branch: tree.branch,
+                    changed: apex_git::change_count(&tree.path).unwrap_or(0) as u32,
+                })
+            })
+            .collect();
+
+        let mut entries = Vec::with_capacity(counting.len());
+        for task in counting {
+            entries.push(task.await?);
+        }
+        Ok(entries)
     }
 
     pub async fn merge(&self, root: &Path, dir: &Path) -> Result<MergeReport> {

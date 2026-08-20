@@ -8,7 +8,7 @@ use apex_proto::{
     AcpSnapshot, AgentSummary, Command, ContextEntry, DiffScope, EditorSummary, Event,
     FileContents, FileEntry, GitCommit, GitStatus, GitTarget, HistoryEntry, Isolation, MergeReport,
     MetricsSnapshot, ProjectSummary, Reply, SessionSummary, TaskSummary, TerminalSize,
-    WorktreeDisposal, WorktreeInfo,
+    WorktreeDisposal, WorktreeEntry,
 };
 use client::DaemonClient;
 use tauri::Manager;
@@ -395,7 +395,7 @@ async fn git_log(
 async fn list_worktrees(
     state: tauri::State<'_, AppState>,
     project: Uuid,
-) -> Answer<Vec<WorktreeInfo>> {
+) -> Answer<Vec<WorktreeEntry>> {
     match state.daemon()?.request(Command::WorktreeList { project }).await.map_err(failed)? {
         Reply::Worktrees { worktrees } => Ok(worktrees),
         other => Err(format!("unexpected reply: {other:?}")),

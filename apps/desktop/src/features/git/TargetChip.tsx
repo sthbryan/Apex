@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
-import type { WorktreeInfo } from "@/bindings/WorktreeInfo";
+import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
 import {
   dropWorktree,
   gitStatus,
@@ -65,12 +65,13 @@ export function TargetChip({ project, placement = "below" }: Props) {
   const orphans = worktrees.value.filter((candidate) => !owners.has(candidate.path));
   const above = placement === "above";
 
-  const row = (candidate: WorktreeInfo) => (
+  const row = (candidate: WorktreeEntry) => (
     <Target
       key={candidate.path}
       target={{ type: "worktree", path: candidate.path }}
       label={owners.get(candidate.path) ?? shortName(candidate.path)}
       branch={candidate.branch}
+      changed={candidate.changed}
       selected={target.type === "worktree" && target.path === candidate.path}
       live={owners.has(candidate.path)}
       onPick={() => setOpen(false)}
@@ -153,6 +154,7 @@ type TargetProps = {
   target: GitTarget;
   label: string;
   branch: string;
+  changed?: number;
   selected: boolean;
   live?: boolean;
   onPick: () => void;
@@ -165,6 +167,7 @@ function Target({
   target,
   label,
   branch,
+  changed = 0,
   selected,
   live,
   onPick,
@@ -222,6 +225,14 @@ function Target({
         />
         <span class="truncate">{label}</span>
         {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
+        {changed > 0 && (
+          <span
+            title={t("git.changed", { count: String(changed) })}
+            class="shrink-0 tabular-nums text-git-dirty"
+          >
+            {changed}
+          </span>
+        )}
       </button>
       {onAsk && (
         <button

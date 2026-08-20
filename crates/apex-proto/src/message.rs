@@ -190,6 +190,14 @@ pub struct WorktreeInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct WorktreeEntry {
+    pub path: String,
+    pub branch: String,
+    pub changed: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct GitChange {
     pub path: String,
     pub kind: String,
@@ -771,7 +779,7 @@ pub enum Reply {
     Log { commits: Vec<GitCommit> },
     Committed { commit: GitCommit },
     Hunks { patches: Vec<String> },
-    Worktrees { worktrees: Vec<WorktreeInfo> },
+    Worktrees { worktrees: Vec<WorktreeEntry> },
     Context { entries: Vec<ContextEntry> },
     Tasks { tasks: Vec<TaskSummary> },
     Text { text: String },

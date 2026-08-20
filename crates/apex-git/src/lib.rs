@@ -138,6 +138,23 @@ pub enum Scope {
     Both,
 }
 
+pub fn change_count(dir: &Path) -> Result<usize> {
+    let raw = run(dir, &["status", "--porcelain=v1", "-z", "--untracked-files=all"])?;
+    let mut fields = raw.split('\0').filter(|field| !field.is_empty());
+    let mut total = 0;
+
+    while let Some(record) = fields.next() {
+        if record.len() < 3 {
+            continue;
+        }
+        if record.starts_with('R') || record.starts_with('C') {
+            fields.next();
+        }
+        total += 1;
+    }
+    Ok(total)
+}
+
 pub fn diff_scoped(dir: &Path, path: &str, scope: Scope) -> Result<String> {
     let tracked = run(dir, &["ls-files", "--error-unmatch", "--", path]).is_ok();
     if !tracked {
