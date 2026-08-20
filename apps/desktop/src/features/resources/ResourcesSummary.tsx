@@ -5,6 +5,8 @@ import { ResourcesPanel } from "@/features/resources/ResourcesPanel";
 import { compactBytes, metrics } from "@/shared/telemetry";
 import { usePresence } from "@/shared/ui/presence";
 
+const BUSY_CPU = 25;
+
 export function ResourcesSummary() {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
@@ -59,7 +61,9 @@ export function ResourcesSummary() {
         onClick={() => setOpen((current) => !current)}
         class="flex items-center gap-3 rounded px-1 transition-colors hover:bg-raised hover:text-muted"
       >
-        <Gauge icon="sparkles" value={`${snapshot.apex.cpu_percent.toFixed(0)}%`} />
+        {snapshot.apex.cpu_percent >= BUSY_CPU && (
+          <Gauge icon="sparkles" value={`${snapshot.apex.cpu_percent.toFixed(0)}%`} />
+        )}
         <Gauge icon="memory" value={compactBytes(snapshot.apex.memory)} />
       </button>
     </div>

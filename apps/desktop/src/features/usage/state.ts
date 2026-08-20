@@ -4,6 +4,12 @@ import { metrics } from "@/shared/telemetry";
 
 export const usageOpen = signal(false);
 
+export const hasUsage = computed(
+  () =>
+    (metrics.value?.quotas ?? []).some((report) => report.windows.length > 0) ||
+    (metrics.value?.quota_failures ?? []).length > 0,
+);
+
 export const tightestUsage = computed(() => {
   const windows = (metrics.value?.quotas ?? []).flatMap((report) => report.windows);
   if (windows.length === 0) {

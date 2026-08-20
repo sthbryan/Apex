@@ -33,7 +33,7 @@ export function tone(percent: number): { text: string; bar: string } {
   if (percent >= 70) {
     return { text: "text-state-blocked", bar: "bg-state-blocked" };
   }
-  return { text: "text-state-done", bar: "bg-state-done" };
+  return { text: "text-muted", bar: "bg-muted" };
 }
 
 function clock(when: Date): string {
