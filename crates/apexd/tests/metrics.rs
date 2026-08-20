@@ -1,7 +1,8 @@
 mod common;
 
 use apex_proto::{
-    ClientMessage, Command, CommandOutcome, ErrorCode, Reply, RequestId, ServerMessage, WorktreeDisposal,
+    ClientMessage, Command, CommandOutcome, ErrorCode, Reply, RequestId, ServerMessage,
+    WorktreeDisposal,
 };
 use common::Harness;
 

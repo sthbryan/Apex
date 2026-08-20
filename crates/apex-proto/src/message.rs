@@ -219,6 +219,14 @@ pub struct WorktreeEntry {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct GitBranch {
+    pub name: String,
+    pub current: bool,
+    pub worktree: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct GitChange {
     pub path: String,
     pub kind: String,
@@ -702,6 +710,17 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    GitBranches {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+    },
+    GitCheckout {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+        branch: String,
+    },
     ListTasks {
         #[ts(type = "string")]
         project: Uuid,
@@ -869,6 +888,7 @@ pub enum Reply {
     Hunks { patches: Vec<String> },
     Pending { reviews: Vec<PendingReview> },
     Worktrees { worktrees: Vec<WorktreeEntry> },
+    Branches { branches: Vec<GitBranch> },
     Context { entries: Vec<ContextEntry> },
     Tasks { tasks: Vec<TaskSummary> },
     Text { text: String },

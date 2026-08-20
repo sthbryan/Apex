@@ -201,3 +201,30 @@ async fn a_session_in_a_plain_folder_cannot_be_isolated() {
             .is_err()
     );
 }
+
+#[tokio::test]
+async fn a_branch_can_be_listed_and_checked_out_on_the_project() {
+    let harness = Harness::start().await;
+    init_repo(harness.root.path());
+    std::process::Command::new("git")
+        .args(["branch", "second"])
+        .current_dir(harness.root.path())
+        .output()
+        .expect("git");
+
+    let branches =
+        harness.manager.git_branches(harness.project, GitTarget::Project).await.expect("branches");
+    let current = branches.iter().find(|branch| branch.name == "main").expect("main");
+    assert!(current.current);
+    assert!(current.worktree.is_some());
+    assert!(branches.iter().any(|branch| branch.name == "second" && branch.worktree.is_none()));
+
+    harness
+        .manager
+        .git_checkout(harness.project, GitTarget::Project, "second".into())
+        .await
+        .expect("checkout");
+    let status =
+        harness.manager.git_status(harness.project, GitTarget::Project).await.expect("status");
+    assert_eq!(status.branch, "second");
+}

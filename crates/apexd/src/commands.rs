@@ -115,6 +115,13 @@ async fn execute(
         Command::GitRead { project, target } => Ok(Reply::Git {
             status: manager.git_status(project, target).await.map_err(not_found_error)?,
         }),
+        Command::GitBranches { project, target } => Ok(Reply::Branches {
+            branches: manager.git_branches(project, target).await.map_err(not_found_error)?,
+        }),
+        Command::GitCheckout { project, target, branch } => {
+            manager.git_checkout(project, target, branch).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::WorktreeList { project } => Ok(Reply::Worktrees {
             worktrees: manager.list_worktrees(project).await.map_err(not_found_error)?,
         }),
@@ -428,6 +435,8 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitPending { .. }
             | Command::GitImages { .. }
             | Command::WorktreeList { .. }
+            | Command::GitBranches { .. }
+            | Command::GitCheckout { .. }
             | Command::ListTasks { .. }
             | Command::ContextList { .. }
             | Command::ContextRead { .. }

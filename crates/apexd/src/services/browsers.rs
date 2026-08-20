@@ -101,8 +101,7 @@ impl BrowsersService {
 
     async fn describe(&self, project: Uuid, shape: impl Fn(&Page) -> String) -> String {
         let panes = self.panes.lock().await;
-        let mut mine: Vec<&Page> =
-            panes.values().filter(|page| page.project == project).collect();
+        let mut mine: Vec<&Page> = panes.values().filter(|page| page.project == project).collect();
         mine.sort_by_key(|page| std::cmp::Reverse(page.seen));
         mine.iter().map(|page| shape(page)).collect::<Vec<_>>().join("\n\n")
     }

@@ -5,18 +5,18 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
-    ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitCommit, GitStatus,
-    GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport, MetricsSnapshot,
-    PendingReview, ProjectSummary, SessionState, SessionSummary, TaskSummary, TerminalSize,
-    WorktreeDisposal, WorktreeEntry,
+    ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitBranch, GitCommit,
+    GitStatus, GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport,
+    MetricsSnapshot, PendingReview, ProjectSummary, SessionState, SessionSummary, TaskSummary,
+    TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
 use crate::services::acp::AcpRegistry;
-use crate::services::sessions::SessionRegistry;
 use crate::services::browsers::BrowsersService;
+use crate::services::sessions::SessionRegistry;
 use crate::services::{
     context::ContextService, files::FilesService, git::GitService, metrics::MetricsService,
     projects::ProjectsService, tasks::TasksService,
@@ -611,6 +611,21 @@ impl SessionManager {
         }
         reviews.sort_by_key(|review| waiting_rank(review.state));
         Ok(reviews)
+    }
+
+    pub async fn git_branches(&self, project: Uuid, target: GitTarget) -> Result<Vec<GitBranch>> {
+        let dir = self.git_dir(project, &target).await?;
+        self.git.branches(&dir).await
+    }
+
+    pub async fn git_checkout(
+        &self,
+        project: Uuid,
+        target: GitTarget,
+        branch: String,
+    ) -> Result<()> {
+        let dir = self.git_dir(project, &target).await?;
+        self.git.checkout(&dir, branch).await
     }
 
     pub async fn list_worktrees(&self, project: Uuid) -> Result<Vec<WorktreeEntry>> {

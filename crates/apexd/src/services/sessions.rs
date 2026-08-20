@@ -446,8 +446,7 @@ impl SessionRegistry {
                 if let Some(url) = urls.scan(&produced_before_subscribing) {
                     manager.publish_url(id, &session, url).await;
                 }
-                if let Some(state) =
-                    detector.observe(&produced_before_subscribing, Instant::now())
+                if let Some(state) = detector.observe(&produced_before_subscribing, Instant::now())
                 {
                     manager.publish_state(id, &session, state).await;
                 }

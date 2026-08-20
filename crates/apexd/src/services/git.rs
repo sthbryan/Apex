@@ -2,8 +2,8 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Result, bail};
 use apex_proto::{
-    DiffScope, GitChange, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair, MergeReport,
-    PendingReview, WorktreeEntry,
+    DiffScope, GitBranch, GitChange, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair,
+    MergeReport, PendingReview, WorktreeEntry,
 };
 
 pub struct GitService;
@@ -142,6 +142,24 @@ impl GitService {
             .collect())
     }
 
+    pub async fn branches(&self, dir: &Path) -> Result<Vec<GitBranch>> {
+        let dir = dir.to_path_buf();
+        let branches = tokio::task::spawn_blocking(move || apex_git::branches(&dir)).await??;
+        Ok(branches
+            .into_iter()
+            .map(|branch| GitBranch {
+                name: branch.name,
+                current: branch.current,
+                worktree: branch.worktree.map(|path| path.display().to_string()),
+            })
+            .collect())
+    }
+
+    pub async fn checkout(&self, dir: &Path, branch: String) -> Result<()> {
+        let dir = dir.to_path_buf();
+        tokio::task::spawn_blocking(move || apex_git::checkout(&dir, &branch)).await?
+    }
+
     pub async fn list_worktrees(&self, root: &Path) -> Result<Vec<WorktreeEntry>> {
         let root = root.to_path_buf();
         let trees = tokio::task::spawn_blocking({
@@ -185,9 +203,8 @@ impl GitService {
             .map(|(target, dir, branch)| {
                 tokio::task::spawn_blocking(move || {
                     let counted = apex_git::tally(&dir).unwrap_or_default();
-                    let branch = branch
-                        .or_else(|| apex_git::current_branch(&dir).ok())
-                        .unwrap_or_default();
+                    let branch =
+                        branch.or_else(|| apex_git::current_branch(&dir).ok()).unwrap_or_default();
                     PendingReview {
                         target,
                         branch,
