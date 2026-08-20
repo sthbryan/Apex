@@ -6,7 +6,8 @@ export type PaneView =
   | { type: "session"; sessionId: string }
   | { type: "file"; path: string }
   | { type: "diff"; target: GitTarget; path: string; commit: string | null }
-  | { type: "panel"; panel: string };
+  | { type: "panel"; panel: string }
+  | { type: "browser"; url: string };
 
 export type Leaf = {
   kind: "leaf";

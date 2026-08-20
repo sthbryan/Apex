@@ -23,6 +23,9 @@ const FileView = lazy(async () => ({
 const DiffView = lazy(async () => ({
   default: (await import("@/features/git/DiffView")).DiffView,
 }));
+const BrowserView = lazy(async () => ({
+  default: (await import("@/features/browser/BrowserView")).BrowserView,
+}));
 
 type Props = {
   tabId: string;
@@ -116,6 +119,7 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
               />
             )}
             {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+            {node.view.type === "browser" && <BrowserView url={node.view.url} />}
           </Suspense>
         </Boundary>
       </div>

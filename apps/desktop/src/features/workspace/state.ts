@@ -94,6 +94,10 @@ export function openFile(path: string): void {
   openBeside({ type: "file", path }, (view) => view.type === "file");
 }
 
+export function openBrowser(url: string): void {
+  openBeside({ type: "browser", url }, (view) => view.type === "browser");
+}
+
 function openBeside(view: PaneView, replaceable: (view: PaneView) => boolean): void {
   if (focusPane((candidate) => same(candidate, view))) {
     return;
@@ -130,6 +134,9 @@ function same(left: PaneView, right: PaneView): boolean {
   }
   if (left.type === "panel" && right.type === "panel") {
     return left.panel === right.panel;
+  }
+  if (left.type === "browser" && right.type === "browser") {
+    return left.url === right.url;
   }
   return false;
 }

@@ -32,6 +32,7 @@ import {
   FolderGit,
   Gem,
   GitBranch,
+  Globe,
   Gpu,
   History,
   Keyboard,
@@ -119,6 +120,7 @@ const ICONS = {
   fileArchive: FileArchive,
   database: Database,
   folderGit: FolderGit,
+  globe: Globe,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

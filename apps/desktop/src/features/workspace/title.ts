@@ -16,6 +16,9 @@ export function paneTitle(view: PaneView, sessions: SessionSummary[]): string {
   if (view.type === "panel") {
     return DOCK_PANELS[view.panel as DockPanel]?.label() ?? view.panel;
   }
+  if (view.type === "browser") {
+    return hostOf(view.url);
+  }
   return (
     sessions.find((session) => session.id === view.sessionId)?.title ?? view.sessionId.slice(0, 8)
   );
@@ -31,6 +34,9 @@ export function paneIcon(view: PaneView): IconName {
   if (view.type === "panel") {
     return DOCK_PANELS[view.panel as DockPanel]?.icon ?? "panel";
   }
+  if (view.type === "browser") {
+    return "globe";
+  }
   return "sessions";
 }
 
@@ -41,5 +47,17 @@ export function paneSubtitle(view: PaneView): string | null {
   if (view.type === "diff") {
     return view.path || view.commit;
   }
+  if (view.type === "browser") {
+    return view.url;
+  }
   return null;
+}
+
+function hostOf(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.port ? `${parsed.hostname}:${parsed.port}` : parsed.hostname;
+  } catch {
+    return url;
+  }
 }
