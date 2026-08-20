@@ -85,7 +85,17 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
-      {contents?.binary && <p class="p-3 text-faint">{t("files.binary")}</p>}
+      {contents?.image && (
+        <div class="min-h-0 flex-1 overflow-auto p-4">
+          <img
+            src={contents.image}
+            alt={fileName(path)}
+            class="mx-auto max-h-full animate-veil-in object-contain"
+          />
+        </div>
+      )}
+
+      {contents?.binary && !contents.image && <p class="p-3 text-faint">{t("files.binary")}</p>}
 
       {text !== null && (
         <div class="min-h-0 flex-1 overflow-auto">
