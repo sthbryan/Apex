@@ -1,8 +1,10 @@
 import cn from "cnfast";
 import { Fragment } from "preact";
-import { useMemo, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
+import { revealPanel } from "@/app/layout/actions";
 import { PanelHeader } from "@/app/layout/PanelHeader";
 import type { SessionSummary } from "@/bindings/SessionSummary";
+import { selectTarget, sessionOfWorktree, worktrees } from "@/features/git/state";
 import { waiting } from "@/features/notifications/state";
 import {
   activeProject,
@@ -14,21 +16,11 @@ import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { ElsewhereList } from "@/features/sessions/ElsewhereList";
 import { requestClose, requestSession } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
+import { sessions as allSessions } from "@/features/sessions/state";
 import { WaitingList } from "@/features/sessions/WaitingList";
 import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-
-const OFFERED_AGENTS = 3;
-
-function shuffled<T>(items: readonly T[]): T[] {
-  const copy = [...items];
-  for (let index = copy.length - 1; index > 0; index--) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [copy[index], copy[swap]] = [copy[swap], copy[index]];
-  }
-  return copy;
-}
 
 export function SessionsPanel() {
   const sessions = projectSessions.value;
@@ -86,6 +78,8 @@ export function SessionsPanel() {
           </section>
         )}
 
+        <OrphanTrees />
+
         {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects.value} />}
       </div>
     </div>
@@ -94,36 +88,90 @@ export function SessionsPanel() {
 
 function StartHere() {
   const project = activeProject.value;
-  const agents = installedAgents.value;
-  const offered = useMemo(() => shuffled(agents).slice(0, OFFERED_AGENTS), [agents]);
+  const offered = byRecentUse(installedAgents.value);
+
+  if (!project) {
+    return <p class="px-1 text-faint">{t("sessions.empty")}</p>;
+  }
 
   return (
-    <div class="flex flex-col gap-2">
-      <p class="px-1 text-faint">{t("sessions.empty")}</p>
-      {project && (
-        <ul class="flex flex-col gap-1">
-          {offered.map((agent) => (
-            <li key={agent.name}>
-              <button
-                type="button"
-                onClick={() =>
-                  requestSession({
-                    project: project.id,
-                    agent: agent.name,
-                    direction: null,
-                    isGit: project.is_git,
-                  })
-                }
-                class="flex w-full items-center gap-2 rounded border border-border bg-raised px-2 py-1.5 text-left transition-colors hover:border-muted"
-              >
-                <AgentIcon agent={agent.name} class="shrink-0 text-faint" />
-                <span class="truncate">{t("sessions.startWith", { agent: agent.name })}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div class="flex flex-col">
+      <h2 class="mb-1 px-1 text-micro uppercase tracking-wider text-faint">
+        {t("sessions.startTitle")}
+      </h2>
+      <ul class="flex flex-col">
+        {offered.map((agent) => (
+          <li key={agent.name}>
+            <button
+              type="button"
+              onClick={() =>
+                requestSession({
+                  project: project.id,
+                  agent: agent.name,
+                  direction: null,
+                  isGit: project.is_git,
+                })
+              }
+              class="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-muted transition-colors hover:bg-raised hover:text-text"
+            >
+              <AgentIcon agent={agent.name} class="shrink-0" />
+              <span class="truncate">{agent.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
+  );
+}
+
+function byRecentUse<T extends { name: string }>(agents: readonly T[]): T[] {
+  const lastUsed = new Map<string, number>();
+  for (const session of allSessions.value) {
+    const seen = lastUsed.get(session.agent) ?? 0;
+    if (session.started_at > seen) {
+      lastUsed.set(session.agent, session.started_at);
+    }
+  }
+  return [...agents].sort((left, right) => {
+    const gap = (lastUsed.get(right.name) ?? 0) - (lastUsed.get(left.name) ?? 0);
+    return gap !== 0 ? gap : left.name.localeCompare(right.name);
+  });
+}
+
+function OrphanTrees() {
+  const owners = sessionOfWorktree.value;
+  const orphans = worktrees.value.filter((tree) => !owners.has(tree.path));
+  if (orphans.length === 0) {
+    return null;
+  }
+
+  return (
+    <section class="mt-2">
+      <div class="mb-1 flex items-center gap-2 px-1">
+        <span class="size-1.5 shrink-0 rounded-full bg-state-idle" aria-hidden="true" />
+        <h2 class="text-micro uppercase tracking-wider text-faint">
+          {t("sessions.looseTrees")} · {orphans.length}
+        </h2>
+      </div>
+      <ul class="flex flex-col">
+        {orphans.map((tree) => (
+          <li key={tree.path}>
+            <button
+              type="button"
+              title={tree.path}
+              onClick={() => {
+                selectTarget({ type: "worktree", path: tree.path });
+                revealPanel("git");
+              }}
+              class="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-muted transition-colors hover:bg-raised hover:text-text"
+            >
+              <Icon name="branch" size={13} class="shrink-0 text-faint" />
+              <span class="min-w-0 flex-1 truncate">{tree.branch}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
