@@ -28,7 +28,7 @@ fn material_of(level: u8) -> Option<window_vibrancy::NSVisualEffectMaterial> {
 
 #[tauri::command]
 #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
-pub fn set_window_material(window: tauri::WebviewWindow, blur: u8) -> Answer<()> {
+pub fn set_window_material(window: tauri::Window, blur: u8) -> Answer<()> {
     #[cfg(target_os = "macos")]
     {
         window_vibrancy::clear_vibrancy(&window).map_err(|error| error.to_string())?;
@@ -46,7 +46,7 @@ pub fn set_window_material(window: tauri::WebviewWindow, blur: u8) -> Answer<()>
 }
 
 #[tauri::command]
-pub fn set_badge(window: tauri::WebviewWindow, count: u32) -> Answer<()> {
+pub fn set_badge(window: tauri::Window, count: u32) -> Answer<()> {
     let value = (count > 0).then_some(i64::from(count));
     window.set_badge_count(value).map_err(|error| error.to_string())
 }
