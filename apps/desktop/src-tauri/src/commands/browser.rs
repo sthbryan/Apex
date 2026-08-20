@@ -64,6 +64,15 @@ pub async fn browser_close(app: tauri::AppHandle, label: String) -> Answer<()> {
 }
 
 #[tauri::command]
+pub async fn browser_show(app: tauri::AppHandle, label: String, visible: bool) -> Answer<()> {
+    let Some(webview) = app.get_webview(&label) else {
+        return Ok(());
+    };
+    let done = if visible { webview.show() } else { webview.hide() };
+    done.map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 pub async fn browser_bounds(app: tauri::AppHandle, label: String, bounds: Bounds) -> Answer<()> {
     let Some(webview) = app.get_webview(&label) else {
         return Ok(());
