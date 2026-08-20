@@ -308,3 +308,45 @@ fn a_clean_tree_tallies_to_nothing() {
     let dir = repo();
     assert_eq!(tally(dir.path()).expect("tally"), Tally::default());
 }
+
+#[test]
+fn branches_mark_the_current_one_and_where_each_lives() {
+    let dir = repo();
+    let root = dir.path();
+    run(root, &["branch", "second"]).expect("branch");
+    let tree = add_worktree(root, "task").expect("worktree");
+
+    let listed = branches(root).expect("branches");
+    let names: Vec<_> = listed.iter().map(|branch| branch.name.as_str()).collect();
+    assert!(names.contains(&"main") && names.contains(&"second"));
+
+    let current = listed.iter().find(|branch| branch.name == "main").expect("main");
+    assert!(current.current);
+    assert_eq!(
+        current.worktree.as_ref().map(|path| path.canonicalize().expect("real")),
+        Some(root.canonicalize().expect("real"))
+    );
+
+    let idle = listed.iter().find(|branch| branch.name == "second").expect("second");
+    assert!(!idle.current);
+    assert!(idle.worktree.is_none());
+
+    let taken = listed.iter().find(|branch| branch.name == tree.branch).expect("taken");
+    assert_eq!(
+        taken.worktree.as_ref().map(|path| path.canonicalize().expect("real")),
+        Some(tree.path.canonicalize().expect("real"))
+    );
+}
+
+#[test]
+fn checkout_moves_head_and_refuses_a_branch_another_worktree_holds() {
+    let dir = repo();
+    let root = dir.path();
+    run(root, &["branch", "second"]).expect("branch");
+    let tree = add_worktree(root, "task").expect("worktree");
+
+    checkout(root, "second").expect("checkout");
+    assert_eq!(current_branch(root).expect("branch"), "second");
+
+    assert!(checkout(root, &tree.branch).is_err());
+}

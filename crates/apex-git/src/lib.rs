@@ -40,6 +40,43 @@ pub fn current_branch(dir: &Path) -> Result<String> {
     Ok(head.trim().to_owned())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Branch {
+    pub name: String,
+    pub current: bool,
+    pub worktree: Option<PathBuf>,
+}
+
+pub fn branches(dir: &Path) -> Result<Vec<Branch>> {
+    let raw = run(
+        dir,
+        &[
+            "for-each-ref",
+            "--sort=-committerdate",
+            "--format=%(refname:short)%09%(HEAD)%09%(worktreepath)",
+            "refs/heads",
+        ],
+    )?;
+    let mut branches = Vec::new();
+    for line in raw.lines() {
+        let mut fields = line.split('\t');
+        let Some(name) = fields.next().filter(|name| !name.is_empty()) else {
+            continue;
+        };
+        let current = fields.next() == Some("*");
+        branches.push(Branch {
+            name: name.to_owned(),
+            current,
+            worktree: fields.next().filter(|path| !path.is_empty()).map(PathBuf::from),
+        });
+    }
+    Ok(branches)
+}
+
+pub fn checkout(dir: &Path, branch: &str) -> Result<()> {
+    run(dir, &["switch", branch]).map(|_| ())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Upstream {
     pub name: String,
