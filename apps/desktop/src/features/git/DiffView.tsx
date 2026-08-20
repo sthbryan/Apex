@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { GitTarget } from "@/bindings/GitTarget";
 import { highlight } from "@/features/files/highlight";
-import { splittable } from "@/features/git/patch";
+import { ImageDiff } from "@/features/git/ImageDiff";
+import { binary, splittable } from "@/features/git/patch";
 import { SplitPatch } from "@/features/git/SplitPatch";
 import {
   diffLayout,
@@ -145,7 +146,9 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
       {empty && <p class="p-3 text-faint">{t("git.noDiff")}</p>}
 
       <div class="min-h-0 flex-1 overflow-auto">
-        {whole && commit && <Patch painted={whole} path={path} split={split} />}
+        {whole && commit && (
+          <Patch painted={whole} path={path} split={split} target={target} commit={commit} />
+        )}
 
         {!commit && (
           <>
@@ -156,6 +159,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
               onApply={(patch) => apply(patch, true)}
               path={path}
               split={split}
+              target={target}
             />
             <Group
               label={t("git.stagedHunks")}
@@ -165,6 +169,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
               tone="text-git-added"
               path={path}
               split={split}
+              target={target}
             />
           </>
         )}
@@ -181,9 +186,10 @@ type GroupProps = {
   tone?: string;
   path: string;
   split: boolean;
+  target: GitTarget;
 };
 
-function Group({ label, hunks, action, onApply, tone, path, split }: GroupProps) {
+function Group({ label, hunks, action, onApply, tone, path, split, target }: GroupProps) {
   if (hunks.length === 0) {
     return null;
   }
@@ -206,18 +212,26 @@ function Group({ label, hunks, action, onApply, tone, path, split }: GroupProps)
           >
             {action}
           </button>
-          <Patch painted={hunk} path={path} split={split} />
+          <Patch painted={hunk} path={path} split={split} target={target} commit={null} />
         </div>
       ))}
     </section>
   );
 }
 
-function Patch({ painted, path, split }: { painted: Painted; path: string; split: boolean }) {
+type PatchProps = {
+  painted: Painted;
+  path: string;
+  split: boolean;
+  target: GitTarget;
+  commit: string | null;
+};
+
+function Patch({ painted, path, split, target, commit }: PatchProps) {
   if (split && splittable(painted.patch)) {
     return <SplitPatch path={path} patch={painted.patch} />;
   }
-  return (
+  const plain = (
     <pre class="w-max min-w-full animate-veil-in px-3 py-2 leading-5">
       {painted.markup ? (
         <code dangerouslySetInnerHTML={{ __html: painted.markup }} />
@@ -226,6 +240,15 @@ function Patch({ painted, path, split }: { painted: Painted; path: string; split
       )}
     </pre>
   );
+
+  if (path && binary(painted.patch)) {
+    return (
+      <ImageDiff target={target} path={path} commit={commit}>
+        {plain}
+      </ImageDiff>
+    );
+  }
+  return plain;
 }
 
 async function paint(patch: string): Promise<string | null> {

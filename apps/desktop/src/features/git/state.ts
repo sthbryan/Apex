@@ -6,6 +6,7 @@ import type { GitCommit } from "@/bindings/GitCommit";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitSyncOp } from "@/bindings/GitSyncOp";
 import type { GitTarget } from "@/bindings/GitTarget";
+import type { ImagePair } from "@/bindings/ImagePair";
 import type { MergeReport } from "@/bindings/MergeReport";
 import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
 import { activeProjectId, projectSessions } from "@/features/projects/state";
@@ -122,6 +123,19 @@ export async function readDiff(
     path,
     commit,
     scope,
+  });
+}
+
+export async function readImages(
+  target: GitTarget,
+  path: string,
+  commit: string | null,
+): Promise<ImagePair> {
+  return invoke<ImagePair>("git_images", {
+    project: activeProjectId.value,
+    target,
+    path,
+    commit,
   });
 }
 

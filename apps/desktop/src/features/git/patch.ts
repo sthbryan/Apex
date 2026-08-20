@@ -26,6 +26,10 @@ export function splittable(patch: string): boolean {
   return /^@@ /m.test(patch);
 }
 
+export function binary(patch: string): boolean {
+  return /^Binary files /m.test(patch);
+}
+
 export function parsePatch(patch: string): DiffFile[] {
   const files: DiffFile[] = [];
   let file: DiffFile | null = null;
