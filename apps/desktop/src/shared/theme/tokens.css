@@ -27,7 +27,6 @@
   --apex-accent: light-dark(#b45309, #f59e0b);
   --apex-focus: light-dark(#92400e, #fbbf24);
   --apex-selection: light-dark(#f59e0b33, #f59e0b40);
-  --apex-dock-shadow: light-dark(rgba(15, 20, 30, 0.14), rgba(0, 0, 0, 0.42));
 
   --apex-shell: var(--apex-bg);
   --apex-chrome: var(--apex-surface);
