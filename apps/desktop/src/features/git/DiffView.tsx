@@ -20,7 +20,7 @@ import {
   setDiffLayout,
   stageHunk,
 } from "@/features/git/state";
-import { inReview, reviewFiles, stepReview } from "@/features/review/state";
+import { inReview, reviewFiles, settleReview, stepReview } from "@/features/review/state";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -118,6 +118,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     void rejectHunk(target, patch)
       .then(load)
       .then(lookShelf)
+      .then(() => settleReview(target, path))
       .catch((error: unknown) => setFailure(String(error)));
   };
 
@@ -125,6 +126,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     void restoreReject(target, id)
       .then(load)
       .then(lookShelf)
+      .then(() => settleReview(target, path))
       .catch((error: unknown) => setFailure(String(error)));
   };
 
@@ -132,6 +134,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     void stageHunk(target, patch, stage)
       .then(load)
       .then(refreshPending)
+      .then(() => walking && settleReview(target, path))
       .catch((error: unknown) => setFailure(String(error)));
   };
 
@@ -159,7 +162,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
       <button
         type="button"
         title={t("review.next")}
-        disabled={at === -1 || at >= files.length - 1}
+        disabled={at >= files.length - 1}
         onClick={() => stepReview(target, path, 1)}
         class="shrink-0 text-faint transition-colors hover:text-text disabled:opacity-30"
       >

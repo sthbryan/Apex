@@ -13,11 +13,13 @@ import {
 import { openDiff } from "@/features/workspace/state";
 
 export const reviewing = signal<GitTarget | null>(null);
+export const cursor = signal(0);
 
 export async function openReview(target: GitTarget): Promise<void> {
   selectTarget(target);
   reviewing.value = target;
   await refreshGit();
+  cursor.value = 0;
   const first = gitStatus.value?.changes[0];
   if (first) {
     openDiff(target, first.path);
@@ -36,10 +38,26 @@ export function reviewFiles(): string[] {
 export function stepReview(target: GitTarget, path: string, delta: number): void {
   const files = reviewFiles();
   const at = files.indexOf(path);
-  const next = at === -1 ? files[0] : files[at + delta];
+  const landing = at === -1 ? 0 : at + delta;
+  const next = files[landing];
   if (next) {
+    cursor.value = landing;
     openDiff(target, next);
   }
+}
+
+export function settleReview(target: GitTarget, path: string): void {
+  const files = reviewFiles();
+  if (files.includes(path)) {
+    cursor.value = files.indexOf(path);
+    return;
+  }
+  if (files.length === 0) {
+    return;
+  }
+  const landing = Math.min(cursor.value, files.length - 1);
+  cursor.value = landing;
+  openDiff(target, files[landing]);
 }
 
 export async function rejectTarget(target: GitTarget): Promise<void> {
