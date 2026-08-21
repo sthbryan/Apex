@@ -278,6 +278,7 @@ async fn execute(
                     slug,
                     mode,
                     parent: None,
+                    run: None,
                 })
                 .await
                 .map_err(internal_error)?;

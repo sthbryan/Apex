@@ -476,6 +476,7 @@ pub struct OpenAcp {
     pub size: TerminalSize,
     pub worktree: Option<apex_proto::WorktreeInfo>,
     pub parent: Option<Uuid>,
+    pub run: Option<Uuid>,
 }
 
 pub struct AcpRegistry {
@@ -552,7 +553,7 @@ impl AcpRegistry {
     }
 
     pub async fn open(self: &Arc<Self>, request: OpenAcp) -> Result<SessionSummary> {
-        let OpenAcp { project, agent, cwd, title, size, worktree, parent } = request;
+        let OpenAcp { project, agent, cwd, title, size, worktree, parent, run } = request;
         let agent = agent.as_str();
         let cwd = cwd.as_path();
         let profile = self
@@ -594,6 +595,7 @@ impl AcpRegistry {
             task: None,
             mode: AgentMode::Acp,
             parent,
+            run,
             url: None,
         }));
 

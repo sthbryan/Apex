@@ -80,6 +80,7 @@ pub struct Spawn {
     pub slug: Option<String>,
     pub task: Option<String>,
     pub parent: Option<Uuid>,
+    pub run: Option<Uuid>,
 }
 
 pub struct SessionRegistry {
@@ -165,6 +166,7 @@ impl SessionRegistry {
             slug: None,
             task: None,
             parent: None,
+            run: None,
         })
         .await
     }
@@ -189,6 +191,7 @@ impl SessionRegistry {
             slug: None,
             task: Some(task.to_owned()),
             parent: None,
+            run: None,
         })
         .await
     }
@@ -292,8 +295,18 @@ impl SessionRegistry {
     }
 
     pub async fn spawn(self: &Arc<Self>, request: Spawn) -> Result<SessionSummary> {
-        let Spawn { project, agent, cwd, size, override_args, isolation, slug, task, parent } =
-            request;
+        let Spawn {
+            project,
+            agent,
+            cwd,
+            size,
+            override_args,
+            isolation,
+            slug,
+            task,
+            parent,
+            run,
+        } = request;
         let profile = self
             .profiles
             .get(&agent)
@@ -368,6 +381,7 @@ impl SessionRegistry {
             task: task.clone(),
             mode: apex_proto::AgentMode::Pty,
             parent,
+            run,
             url: None,
         };
 

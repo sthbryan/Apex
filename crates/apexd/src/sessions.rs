@@ -40,6 +40,7 @@ pub struct NewSession {
     pub slug: Option<String>,
     pub mode: Option<apex_proto::AgentMode>,
     pub parent: Option<Uuid>,
+    pub run: Option<Uuid>,
 }
 
 pub struct SessionManager {
@@ -165,7 +166,7 @@ impl SessionManager {
     }
 
     pub async fn create(&self, request: NewSession) -> Result<SessionSummary> {
-        let NewSession { project, agent, cwd, size, isolation, slug, mode, parent } = request;
+        let NewSession { project, agent, cwd, size, isolation, slug, mode, parent, run } = request;
         let agent = agent.as_str();
         let wanted = match mode {
             Some(chosen) => chosen,
@@ -183,6 +184,7 @@ impl SessionManager {
                     slug,
                     task: None,
                     parent,
+                    run,
                 })
                 .await;
         }
@@ -210,6 +212,7 @@ impl SessionManager {
                 size,
                 worktree,
                 parent,
+                run,
             })
             .await
     }
@@ -300,6 +303,7 @@ impl SessionManager {
                 slug: None,
                 mode: None,
                 parent: Some(parent),
+                run: None,
             })
             .await?;
 

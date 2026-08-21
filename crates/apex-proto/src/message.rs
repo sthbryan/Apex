@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 15;
+pub const PROTOCOL_VERSION: u32 = 16;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -358,6 +358,8 @@ pub struct SessionSummary {
     pub mode: AgentMode,
     #[ts(type = "string | null")]
     pub parent: Option<Uuid>,
+    #[ts(type = "string | null")]
+    pub run: Option<Uuid>,
     pub url: Option<String>,
 }
 
