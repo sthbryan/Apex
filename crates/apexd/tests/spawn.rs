@@ -381,3 +381,33 @@ async fn a_race_needs_agents_and_a_task() {
     assert!(harness.manager.race(harness.project, vec![], "something".into()).await.is_err());
     assert!(harness.manager.race(harness.project, vec!["sh".into()], "   ".into()).await.is_err());
 }
+
+#[tokio::test]
+async fn a_broadcast_groups_its_sessions_like_a_race() {
+    let harness = Harness::start().await;
+    let parent = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+            run: None,
+        })
+        .await
+        .expect("parent");
+
+    let started = harness
+        .manager
+        .broadcast(parent.id, vec!["sh".into(), "sh".into()], "look around".into(), Isolation::Directory)
+        .await
+        .expect("broadcast");
+
+    let run = started[0].run.expect("a broadcast names its run");
+    assert!(started.iter().all(|session| session.run == Some(run)));
+    assert_eq!(parent.run, None);
+}

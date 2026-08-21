@@ -281,10 +281,11 @@ impl SessionManager {
         if agents.is_empty() {
             bail!("name at least one agent to send the task to")
         }
+        let run = Uuid::new_v4();
         let mut started = Vec::with_capacity(agents.len());
         let mut refused = Vec::new();
         for agent in &agents {
-            match self.spawn(parent, agent, Some(task.clone()), isolation).await {
+            match self.spawn_tagged(parent, agent, Some(task.clone()), isolation, Some(run)).await {
                 Ok(session) => started.push(session),
                 Err(error) => refused.push(format!("{agent}: {error:#}")),
             }
@@ -319,6 +320,17 @@ impl SessionManager {
         agent: &str,
         task: Option<String>,
         isolation: Isolation,
+    ) -> Result<SessionSummary> {
+        self.spawn_tagged(parent, agent, task, isolation, None).await
+    }
+
+    async fn spawn_tagged(
+        &self,
+        parent: Uuid,
+        agent: &str,
+        task: Option<String>,
+        isolation: Isolation,
+        run: Option<Uuid>,
     ) -> Result<SessionSummary> {
         let known = self.list_agents().await;
         match known.iter().find(|found| found.name == agent) {
@@ -357,7 +369,7 @@ impl SessionManager {
                 slug: None,
                 mode: None,
                 parent: Some(parent),
-                run: None,
+                run,
             })
             .await?;
 
