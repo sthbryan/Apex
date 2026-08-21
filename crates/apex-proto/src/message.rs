@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 14;
+pub const PROTOCOL_VERSION: u32 = 15;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -195,6 +195,17 @@ pub enum WorktreeDisposal {
 pub struct WorktreeInfo {
     pub path: String,
     pub branch: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct RejectedHunk {
+    pub id: String,
+    pub path: String,
+    #[ts(type = "number")]
+    pub at: i64,
+    pub added: u32,
+    pub removed: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -775,6 +786,28 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    GitRejectHunk {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+        patch: String,
+    },
+    GitRejects {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+    },
+    GitRestoreReject {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+        id: String,
+    },
+    GitClearRejects {
+        #[ts(type = "string")]
+        project: Uuid,
+        target: GitTarget,
+    },
     GitHunks {
         #[ts(type = "string")]
         project: Uuid,
@@ -887,6 +920,7 @@ pub enum Reply {
     Committed { commit: GitCommit },
     Hunks { patches: Vec<String> },
     Pending { reviews: Vec<PendingReview> },
+    Rejects { rejects: Vec<RejectedHunk> },
     Worktrees { worktrees: Vec<WorktreeEntry> },
     Branches { branches: Vec<GitBranch> },
     Context { entries: Vec<ContextEntry> },
