@@ -246,8 +246,14 @@ impl SessionManager {
         if started.is_empty() {
             bail!("none of them started — {}", refused.join("; "))
         }
-        if !refused.is_empty() {
-            tracing::warn!(refused = %refused.join("; "), "some agents stayed out of the race");
+        for reason in &refused {
+            tracing::warn!(%reason, "an agent stayed out of the race");
+            self.registry.announce(Event::Notify {
+                session: None,
+                notice: apex_proto::NotifyKind::Exited,
+                title: Some("Did not join the race".into()),
+                body: reason.clone(),
+            });
         }
         Ok(started)
     }
