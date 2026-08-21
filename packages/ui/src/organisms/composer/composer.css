@@ -1,0 +1,31 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-composer {
+    @apply w-full rounded-xl border border-border;
+    background-color: var(--apex-overlay);
+    box-shadow: var(--apex-shadow-sm), var(--apex-shadow-lg);
+  }
+
+  .ui-composer:focus-within {
+    border-color: var(--apex-focus);
+  }
+
+  .ui-composer textarea {
+    @apply block max-h-44 w-full resize-none px-4 pt-4 pb-1.5;
+    font-size: var(--apex-text-lg);
+    min-height: 58px;
+  }
+
+  .ui-composer textarea::placeholder {
+    color: var(--apex-muted);
+  }
+
+  .ui-composer-bar {
+    @apply flex items-center gap-1.5 px-2.5 pt-2 pb-2.5;
+  }
+
+  .ui-composer-spacer {
+    @apply flex-1;
+  }
+}

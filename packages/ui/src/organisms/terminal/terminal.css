@@ -1,0 +1,24 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-terminal {
+    @apply m-0 min-h-0 flex-1 overflow-auto px-4 py-3.5 font-mono text-sm;
+    background-color: var(--apex-tty);
+    color: var(--apex-tty-fg);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .ui-terminal-cursor {
+    @apply inline-block;
+    width: 7px;
+    height: 13px;
+    vertical-align: -2px;
+    background-color: var(--apex-tty-fg);
+    animation: apex-pulse 1.1s steps(2, start) infinite;
+  }
+
+  .ui-terminal-dim { color: var(--apex-tty-dim); }
+  .ui-terminal-bright { color: var(--apex-tty-bright); }
+}

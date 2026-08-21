@@ -1,0 +1,23 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-code-view {
+    @apply py-3 font-mono text-sm;
+    line-height: 1.7;
+  }
+
+  .ui-code-line {
+    @apply flex;
+    white-space: pre;
+  }
+
+  .ui-code-gutter {
+    @apply flex-none pr-3 text-right text-faint select-none;
+    width: 40px;
+  }
+
+  .ui-code-token[data-token="keyword"] { color: var(--apex-state-working); }
+  .ui-code-token[data-token="function"] { color: var(--apex-accent); }
+  .ui-code-token[data-token="string"] { color: var(--apex-state-done); }
+  .ui-code-token[data-token="comment"] { color: var(--apex-faint); font-style: italic; }
+}

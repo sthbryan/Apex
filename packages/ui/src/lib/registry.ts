@@ -24,6 +24,11 @@ import { sidePanelMeta } from "@/organisms/side-panel/meta";
 import { statusBarMeta } from "@/organisms/status-bar/meta";
 import { tabBarMeta } from "@/organisms/tab-bar/meta";
 import { titleBarMeta } from "@/organisms/title-bar/meta";
+import { codeViewMeta } from "@/organisms/code-view/meta";
+import { composerMeta } from "@/organisms/composer/meta";
+import { diffViewMeta } from "@/organisms/diff-view/meta";
+import { markdownMeta } from "@/organisms/markdown/meta";
+import { terminalMeta } from "@/organisms/terminal/meta";
 import { emptyStateMeta } from "@/organisms/empty-state/meta";
 import { modalMeta } from "@/organisms/modal/meta";
 import { popoverMeta } from "@/organisms/popover/meta";
@@ -50,7 +55,12 @@ export const REGISTRY: ComponentMeta[] = [
   statePillMeta,
   tooltipMeta,
   appWindowMeta,
+  codeViewMeta,
+  composerMeta,
+  diffViewMeta,
   emptyStateMeta,
+  markdownMeta,
+  terminalMeta,
   paneMeta,
   railMeta,
   sidePanelMeta,

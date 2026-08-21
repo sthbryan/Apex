@@ -22,6 +22,11 @@
 @import "./molecules/state-pill/state-pill.css";
 @import "./molecules/tooltip/tooltip.css";
 @import "./organisms/app-window/app-window.css";
+@import "./organisms/code-view/code-view.css";
+@import "./organisms/composer/composer.css";
+@import "./organisms/diff-view/diff-view.css";
+@import "./organisms/markdown/markdown.css";
+@import "./organisms/terminal/terminal.css";
 @import "./organisms/empty-state/empty-state.css";
 @import "./organisms/modal/modal.css";
 @import "./organisms/popover/popover.css";

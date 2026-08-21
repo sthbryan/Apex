@@ -1,0 +1,55 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-diff-view {
+    @apply flex flex-col gap-2.5 px-3 py-2.5;
+  }
+
+  .ui-diff-file {
+    @apply overflow-hidden rounded-sm border border-border;
+    background-color: var(--apex-overlay);
+  }
+
+  .ui-diff-head {
+    @apply flex items-center gap-2 px-2.5 py-1.5 font-mono text-sm;
+    background-color: var(--apex-raised);
+    border-bottom: 1px solid var(--apex-border);
+  }
+
+  .ui-diff-path {
+    @apply min-w-0 flex-1 truncate;
+  }
+
+  .ui-diff-hunk {
+    @apply flex items-center gap-2 rounded-xs px-2 py-1 font-mono text-xs text-muted;
+    background-color: var(--apex-raised);
+  }
+
+  .ui-diff-hunk-actions {
+    @apply ml-auto flex gap-1;
+  }
+
+  .ui-diff-line {
+    @apply overflow-x-auto px-2.5 py-0.5 font-mono text-sm;
+    white-space: pre;
+  }
+
+  .ui-diff-line[data-kind="add"] {
+    color: var(--apex-git-added);
+    background-color: color-mix(in oklab, var(--apex-git-added) 9%, transparent);
+  }
+
+  .ui-diff-line[data-kind="del"] {
+    color: var(--apex-git-removed);
+    background-color: color-mix(in oklab, var(--apex-git-removed) 9%, transparent);
+  }
+
+  .ui-diff-line[data-kind="ctx"] { @apply text-muted; }
+
+  .ui-diff-stat {
+    @apply flex flex-none items-center gap-1.5 font-mono text-xs;
+  }
+
+  .ui-diff-stat-add { color: var(--apex-git-added); font-weight: var(--apex-weight-semibold); }
+  .ui-diff-stat-del { color: var(--apex-git-removed); font-weight: var(--apex-weight-semibold); }
+}
