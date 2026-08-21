@@ -1,0 +1,22 @@
+@reference "../../theme.css";
+
+.ui-tooltip {
+  @apply relative inline-flex;
+}
+
+.ui-tooltip-bubble {
+  @apply pointer-events-none absolute rounded-xs border border-border bg-overlay px-2 py-1 text-xs whitespace-nowrap text-text opacity-0;
+  z-index: var(--apex-z-tooltip);
+  box-shadow: var(--apex-shadow-md);
+  transition: opacity var(--apex-quick) var(--apex-ease) 150ms;
+}
+
+.ui-tooltip-bubble[data-side="top"] { @apply bottom-full left-1/2 mb-1.5 -translate-x-1/2; }
+.ui-tooltip-bubble[data-side="bottom"] { @apply top-full left-1/2 mt-1.5 -translate-x-1/2; }
+.ui-tooltip-bubble[data-side="left"] { @apply top-1/2 right-full mr-1.5 -translate-y-1/2; }
+.ui-tooltip-bubble[data-side="right"] { @apply top-1/2 left-full ml-1.5 -translate-y-1/2; }
+
+.ui-tooltip:hover .ui-tooltip-bubble,
+.ui-tooltip:focus-within .ui-tooltip-bubble {
+  @apply opacity-100;
+}

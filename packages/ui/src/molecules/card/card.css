@@ -1,0 +1,17 @@
+@reference "../../theme.css";
+
+.ui-card {
+  @apply flex flex-col gap-2 p-3;
+}
+
+.ui-card-head {
+  @apply flex items-center gap-2;
+}
+
+.ui-card-title {
+  @apply min-w-0 flex-1 truncate text-md font-semibold text-text;
+}
+
+.ui-card-body {
+  @apply text-md text-muted;
+}

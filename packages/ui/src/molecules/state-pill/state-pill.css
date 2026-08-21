@@ -1,0 +1,5 @@
+@reference "../../theme.css";
+
+.ui-state-pill .ui-dot {
+  background-color: currentcolor;
+}

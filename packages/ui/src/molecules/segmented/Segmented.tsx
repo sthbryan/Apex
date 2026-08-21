@@ -1,0 +1,45 @@
+import { cn } from "@/lib/cn";
+
+export type SegmentedSize = "sm" | "md" | "lg";
+
+export interface SegmentedOption<T extends string = string> {
+  value: T;
+  label: string;
+  disabled?: boolean;
+}
+
+export interface SegmentedProps<T extends string = string> {
+  options: SegmentedOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  label: string;
+  size?: SegmentedSize;
+  class?: string;
+}
+
+export function Segmented<T extends string = string>({
+  options,
+  value,
+  onChange,
+  label,
+  size = "md",
+  class: className,
+}: SegmentedProps<T>) {
+  return (
+    <div class={cn("ui-segmented", className)} data-size={size} role="radiogroup" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          class="ui-segmented-option"
+          role="radio"
+          aria-checked={option.value === value}
+          disabled={option.disabled}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
