@@ -1,5 +1,6 @@
 @import "./keyframes.css";
 @import "@apex/tokens/tokens.css";
+@import "./atoms/agent-icon/agent-icon.css";
 @import "./atoms/badge/badge.css";
 @import "./atoms/bar/bar.css";
 @import "./atoms/button/button.css";

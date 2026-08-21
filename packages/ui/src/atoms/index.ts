@@ -1,3 +1,4 @@
+export * from "@/atoms/agent-icon";
 export * from "@/atoms/badge";
 export * from "@/atoms/bar";
 export * from "@/atoms/button";

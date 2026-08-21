@@ -1,0 +1,22 @@
+@reference "../../theme.css";
+
+.ui-agent-icon {
+  @apply inline-grid shrink-0 place-items-center text-text;
+  width: var(--ui-agent-icon-size, 22px);
+  height: var(--ui-agent-icon-size, 22px);
+}
+
+.ui-agent-icon[data-size="xs"] { --ui-agent-icon-size: 12px; }
+.ui-agent-icon[data-size="sm"] { --ui-agent-icon-size: 16px; }
+.ui-agent-icon[data-size="md"] { --ui-agent-icon-size: 22px; }
+.ui-agent-icon[data-size="lg"] { --ui-agent-icon-size: 28px; }
+
+.ui-agent-icon svg {
+  @apply size-full;
+}
+
+.ui-agent-icon-fallback {
+  @apply rounded-xs bg-raised font-mono font-bold text-muted uppercase;
+  font-size: calc(var(--ui-agent-icon-size, 22px) * 0.5);
+  line-height: var(--ui-agent-icon-size, 22px);
+}
