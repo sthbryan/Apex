@@ -4,6 +4,7 @@ import { lazy } from "preact/compat";
 import type { DockPanel } from "@/app/layout/state";
 import { gitStatus, pending } from "@/features/git/state";
 import { projectSessions } from "@/features/projects/state";
+import { raceSettled, races } from "@/features/race/state";
 import { running } from "@/features/tasks/state";
 import { t } from "@/shared/i18n";
 import type { IconName } from "@/shared/ui/Icon";
@@ -29,6 +30,9 @@ const ChangesPanel = lazy(async () => ({
 const ReviewPanel = lazy(async () => ({
   default: (await import("@/features/review/ReviewPanel")).ReviewPanel,
 }));
+const RacePanel = lazy(async () => ({
+  default: (await import("@/features/race/RacePanel")).RacePanel,
+}));
 const HistoryPanel = lazy(async () => ({
   default: (await import("@/features/git/HistoryPanel")).HistoryPanel,
 }));
@@ -45,6 +49,14 @@ function reviewBadge(): PanelBadge | null {
     return null;
   }
   return waiting.some((review) => review.state === "done") ? "done" : "dirty";
+}
+
+function raceBadge(): PanelBadge | null {
+  const all = races.value;
+  if (all.length === 0) {
+    return null;
+  }
+  return all.some(raceSettled) ? "done" : "working";
 }
 
 export const DOCK_PANELS: Record<DockPanel, Entry> = {
@@ -67,6 +79,12 @@ export const DOCK_PANELS: Record<DockPanel, Entry> = {
     label: () => t("review.title"),
     badge: () => reviewBadge(),
     View: ReviewPanel,
+  },
+  race: {
+    icon: "swap",
+    label: () => t("race.title"),
+    badge: () => raceBadge(),
+    View: RacePanel,
   },
   history: { icon: "history", label: () => t("git.history"), View: HistoryPanel },
   context: { icon: "context", label: () => t("dock.context"), View: ContextPanel },

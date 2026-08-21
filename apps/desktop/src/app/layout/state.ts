@@ -1,6 +1,14 @@
 import { signal } from "@preact/signals";
 
-export type DockPanel = "sessions" | "files" | "git" | "review" | "history" | "context" | "tasks";
+export type DockPanel =
+  | "sessions"
+  | "files"
+  | "git"
+  | "review"
+  | "race"
+  | "history"
+  | "context"
+  | "tasks";
 export type DockMode = "expanded" | "rail";
 
 export const DOCK_WIDTH_MIN = 192;
@@ -16,6 +24,7 @@ const ALL_PANELS: DockPanel[] = [
   "files",
   "git",
   "review",
+  "race",
   "history",
   "context",
   "tasks",
