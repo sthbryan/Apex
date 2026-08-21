@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Check, FileText, GitBranch, Globe, Plus, Search, Settings, X } from "lucide-preact";
+import { ArrowLeftRight, Bell, Bot, Check, Cpu, FileText, GitBranch, Globe, Keyboard, LayoutGrid, Plus, Search, Settings, Sparkles, SquareTerminal, X } from "lucide-preact";
 import { veil } from "@/shared/theme/mode";
 import { Bar, Btn, Dot, Glyph, Seg, StatePill, Switch } from "@/shared/ui/atoms";
 
@@ -143,13 +143,116 @@ export function Toolkit() {
       </section>
 
       <section>
+        <h2>Overlays</h2>
+        <div class="tk-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
+          <div class="tk-cell">
+            <span class="tk-label">settings modal</span>
+            <div class="frame" style="display:flex;padding:0;overflow:hidden">
+              <nav class="modal-nav" style="width:110px;padding:8px 6px">
+                <button class="mnav-btn" aria-selected="true"><Sparkles size={13} />Look</button>
+                <button class="mnav-btn"><Bot size={13} />Agents</button>
+                <button class="mnav-btn"><Keyboard size={13} />Keys</button>
+              </nav>
+              <div style="flex:1;padding:8px 12px">
+                <div class="set-title" style="font-size:13px">Look</div>
+                <div class="set-row" style="padding:7px 0">
+                  <div class="set-label">Theme</div>
+                  <Seg options={[{ id: "l", label: "Light" }, { id: "d", label: "Dark" }]} value="d" onChange={() => {}} />
+                </div>
+                <div class="set-row" style="padding:7px 0;border:0">
+                  <div class="set-label">Veil</div>
+                  <Switch checked onChange={() => {}} />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tk-cell">
+            <span class="tk-label">race launcher</span>
+            <div class="frame">
+              <div class="set-title" style="font-size:13px">Race a task</div>
+              <div class="launch-agents">
+                <button class="launch-chip" aria-pressed="true"><Glyph agent="claude" mini />claude<Check size={11} /></button>
+                <button class="launch-chip"><Glyph agent="codex" mini />codex<Check size={11} /></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                <span style="font-size:10.5px;color:var(--muted);flex:1">2 agents · one worktree each</span>
+                <button class="btn btn-primary" style="height:24px;font-size:11px">Start race</button>
+              </div>
+            </div>
+          </div>
+          <div class="tk-cell">
+            <span class="tk-label">popover · statusbar pops</span>
+            <div class="frame">
+              <div class="pop-head" style="padding:0 0 8px">claude · usage</div>
+              <div class="u-row"><span class="u-win">5h</span><div class="u-track"><div class="u-fill" style="width:62%" /><span class="u-tick" style="left:58%" /></div><span class="u-eta">pace ✓</span></div>
+              <div class="sc-row" style="padding:8px 0 0;border:0"><span class="sc-label">Settings</span><span class="keys"><kbd>⌘</kbd><kbd>,</kbd></span></div>
+            </div>
+          </div>
+          <div class="tk-cell">
+            <span class="tk-label">toast</span>
+            <div class="frame" style="display:flex;align-items:center;gap:10px">
+              <Glyph agent="codex" mini />
+              <div style="flex:1"><div style="font-size:12px;font-weight:600">Codex finished</div><div style="font-size:10.5px;color:var(--muted)">exit 0</div></div>
+              <span class="t-progress" />
+              <button class="icon-btn" style="width:20px;height:20px"><X size={11} /></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Shell chrome</h2>
+        <div class="tk-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
+          <div class="tk-cell">
+            <span class="tk-label">titlebar</span>
+            <div class="frame" style="display:flex;align-items:center;gap:10px;padding:8px 12px">
+              <div class="lights" style="transform:scale(.8)"><i /><i /><i /></div>
+              <strong style="font-size:11px;letter-spacing:.06em">APEX</strong>
+              <span style="flex:1" />
+              <button class="icon-btn" style="width:22px;height:22px"><Settings size={13} /></button>
+            </div>
+          </div>
+          <div class="tk-cell">
+            <span class="tk-label">statusbar pills</span>
+            <div class="frame" style="display:flex;align-items:center;gap:6px;padding:8px 10px;flex-wrap:wrap">
+              <span class="sb-pill"><GitBranch size={11} /><span class="mono">main</span><span style="color:var(--added)">↑2</span></span>
+              <span class="sb-pill live"><i />2 racing</span>
+              <span class="sb-pill"><Cpu size={11} /><span class="sb-bar"><i style="width:23%" /></span><span class="mono">18G</span></span>
+              <span class="sb-pill"><Bell size={11} /><span class="sb-badge">3</span></span>
+            </div>
+          </div>
+          <div class="tk-cell">
+            <span class="tk-label">rail + badges</span>
+            <div class="frame" style="display:flex;align-items:center;gap:8px;padding:10px 12px">
+              <button class="picon" aria-current="true"><LayoutGrid size={14} /><span class="bdot working" /></button>
+              <button class="picon"><SquareTerminal size={14} /><span class="bdot blocked" /></button>
+              <button class="picon"><GitBranch size={14} /><span class="bdot dirty" /></button>
+              <button class="picon"><Bell size={14} /></button>
+            </div>
+          </div>
+          <div class="tk-cell">
+            <span class="tk-label">composer (welcome)</span>
+            <div class="frame">
+              <form class="composer" onSubmit={(e) => e.preventDefault()}>
+                <textarea rows={2} placeholder="Ask, delegate, or start a task…" />
+                <div class="composer-bar">
+                  <button type="button" class="launch-chip" aria-pressed="true"><Glyph agent="claude" mini />claude</button>
+                  <span style="flex:1" />
+                  <button type="submit" class="btn btn-primary" style="height:24px;font-size:11px">Start</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
         <h2>Still to design</h2>
         <ul style="padding-left:18px;font-size:12.5px;color:var(--muted);line-height:2">
           <li>New Session / Close Session modals (radio-cards: project vs worktree)</li>
           <li>⌘P file finder · command palette rich rows</li>
           <li>ACP extras: plan checklists, slash commands, jump-to-latest</li>
           <li>Split diff · image diff · empty states · real split dragging</li>
-          <li>Settings modal with shortcuts/about sections (wire to the shell)</li>
         </ul>
       </section>
     </div>
