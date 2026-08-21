@@ -1,11 +1,4 @@
-/* Apex design tokens — single source of truth.
-   Consumers: apps/desktop (current), apps/design (current + proposal),
-   future web/mobile (generate from these values).
 
-   "Current" mirrors apps/desktop tokens.css verbatim. "Proposal" is the
-   warm graphite/paper direction being evaluated in apps/design. Both use
-   light-dark() and resolve against the color-scheme of the consuming
-   subtree (set data-theme on a wrapper). */
 
 :root {
   --apex-r-s: 9px;
@@ -17,7 +10,6 @@
   --apex-quick: 140ms;
   --apex-swift: 300ms;
 
-  /* ---- current palette (forked from apps/desktop) ---- */
   --apex-bg: light-dark(#ffffff, #0c0d10);
   --apex-surface: light-dark(#f6f7f9, #131519);
   --apex-raised: light-dark(#eceef0, #1a1d22);
@@ -50,7 +42,6 @@
   color-scheme: light dark;
 }
 
-/* ---- proposal palette: warm graphite / warm paper ---- */
 [data-palette="proposal"] {
   --apex-bg: light-dark(#fbfaf8, #141312);
   --apex-surface: light-dark(#f3f1ed, #1b1917);
@@ -84,7 +75,6 @@
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
 
-/* ---- veil: translucent chrome ---- */
 [data-veil="on"] {
   --apex-surface: color-mix(in oklab, var(--apex-surface) 76%, transparent);
   --apex-raised: color-mix(in oklab, var(--apex-raised) 82%, transparent);
@@ -102,7 +92,6 @@
   --apex-faint: #6a645a;
 }
 
-/* semantic aliases used by the design lab components */
 :root {
   --bg: var(--apex-bg);
   --chrome: var(--apex-surface);

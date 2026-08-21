@@ -1,8 +1,5 @@
-/* Design lab component styles. Classes carry the approved v2 look;
-   new components should prefer Tailwind utilities (bridged in
-   @apex/design-tokens/theme.css) over adding classes here. */
 
-/* ---- stage: quiet studio backdrop that follows the theme ---- */
+
 body {
   color: #9a948a;
   background: #101013;
@@ -48,7 +45,6 @@ html[data-theme="light"] body {
 .stage-links a:hover { color: var(--text); }
 .stage-links a[aria-current="page"] { color: var(--accent); }
 
-/* ---- window frame ---- */
 .window {
   position: relative; z-index: 1; width: min(1480px, 100%); flex: 1; min-height: 0;
   display: flex; flex-direction: column;
@@ -82,7 +78,6 @@ html[data-theme="light"] body {
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
 .view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
-/* ---- rail + dock ---- */
 .rail {
   width: 52px; flex: none; display: flex; flex-direction: column; align-items: center;
   padding: 8px 0; gap: 4px; background: var(--chrome); border-right: 1px solid var(--border);
@@ -156,15 +151,13 @@ html[data-theme="light"] body {
 }
 .cta-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ---- atoms ---- */
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .dot.working { background: var(--working); animation: apex-pulse 1.6s ease-in-out infinite; }
 .dot.blocked { background: var(--blocked); animation: apex-pulse 1.6s ease-in-out infinite; }
 .dot.done { background: var(--done); }
 .dot.failed { background: var(--failed); }
 .dot.idle { background: var(--idle); }
-/* real brand marks (see shared/ui/AgentIcon) render as plain
-   currentColor icons — no invented tiles */
+
 .agent-glyph {
   width: 22px; height: 22px; border-radius: 7px; display: inline-grid;
   place-items: center; flex: none; color: var(--text);
@@ -236,7 +229,6 @@ html[data-theme="light"] body {
 .switch input:checked + i { background: var(--accent); border-color: var(--accent); }
 .switch input:checked + i::after { translate: 15px 0; background: var(--accent-fg); }
 
-/* ---- summary rows ---- */
 .sum-row {
   display: flex; align-items: center; gap: 10px; padding: 8px 6px;
   border-radius: var(--r-s); text-align: left; width: 100%;
@@ -248,7 +240,6 @@ html[data-theme="light"] body {
 .sum-val .sub { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sum-nums { font-family: var(--font-mono); font-size: 11px; color: var(--muted); flex: none; text-align: right; }
 
-/* ---- git ---- */
 .dock-view.git-flex { display: none; flex-direction: column; }
 .dock-view.git-flex.active { display: flex; }
 .git-scroll { flex: 1; min-height: 0; overflow-y: auto; }
@@ -270,7 +261,6 @@ html[data-theme="light"] body {
 }
 .row.staged .stage-box { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 
-/* ---- review ---- */
 .rev-row { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 8px; border-radius: var(--r-s); }
 .rev-row:hover { background: var(--raised); }
 .rev-info { flex: 1; min-width: 0; }
@@ -292,7 +282,6 @@ html[data-theme="light"] body {
 .cmsg { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ctime { font-size: 10.5px; color: var(--muted); flex: none; }
 
-/* ---- panes ---- */
 .tabbar {
   flex: none; display: flex; align-items: stretch; min-height: 36px;
   border-bottom: 1px solid var(--border); background: var(--chrome);
@@ -447,7 +436,6 @@ html[data-theme="light"] body {
   border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px;
 }
 
-/* ---- statusbar ---- */
 .statusbar {
   flex: none; height: 32px; display: flex; align-items: center; gap: 4px;
   padding: 0 10px; border-top: 1px solid var(--border); background: var(--chrome);
@@ -471,7 +459,6 @@ button.sb-pill:hover { background: var(--raised); color: var(--text); }
   font-size: 9px; font-weight: 700; display: grid; place-items: center;
 }
 
-/* ---- overlays ---- */
 .backdrop {
   position: absolute; inset: 0; z-index: 50; display: flex; justify-content: center;
   padding: 88px 16px 0; background: rgb(10 12 16 / .32);
@@ -629,7 +616,6 @@ kbd {
   background: var(--accent); transform-origin: left; animation: apex-shrink 6s linear forwards;
 }
 
-/* ---- welcome composer ---- */
 .composer {
   width: 100%; background: var(--overlay); border: 1px solid var(--border);
   border-radius: var(--r-xl);
@@ -640,7 +626,6 @@ kbd {
 .composer textarea::placeholder, .composer input::placeholder { color: var(--muted); }
 .composer-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px 10px; }
 
-/* ---- toolkit page ---- */
 .toolkit { width: min(1180px, 100%); display: flex; flex-direction: column; gap: 30px; padding-bottom: 40px; }
 .toolkit h2 {
   font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
@@ -660,7 +645,6 @@ kbd {
 .imgstage { flex: 1; display: grid; place-items: center; background: color-mix(in oklab, var(--faint) 10%, transparent); }
 .imgstage .ph { width: 70%; height: 60%; border-radius: 8px; background: linear-gradient(135deg, var(--accent-soft), color-mix(in oklab, var(--working) 14%, transparent)); border: 1px solid var(--border); }
 
-/* responsive */
 @media (max-width: 1180px) { .panes { grid-auto-columns: minmax(340px, 1fr); } }
 @media (max-width: 1020px) { .rail, .dock { display: none; } }
 @media (max-width: 780px) {

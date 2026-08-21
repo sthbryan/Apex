@@ -1,6 +1,4 @@
-/* Tailwind v4 bridge (CSS-first). Mirrors apps/desktop theme.css so
-   utilities like bg-chrome / text-muted work identically wherever the
-   tokens package is consumed with Tailwind. */
+
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

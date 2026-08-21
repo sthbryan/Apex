@@ -21,7 +21,6 @@ effect(() => {
   localStorage.setItem(`${KEY}.veil`, veil.value);
 });
 
-/** Applies theme attributes to any element (document root or a wrapper). */
 export function applyTheme(el: HTMLElement) {
   effect(() => {
     el.dataset.theme = themeMode.value;

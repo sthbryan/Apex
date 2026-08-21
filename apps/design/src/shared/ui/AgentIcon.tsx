@@ -6,18 +6,12 @@ import grok from "@/shared/ui/agent-icons/grok.svg?raw";
 import opencode from "@/shared/ui/agent-icons/opencode.svg?raw";
 import pi from "@/shared/ui/agent-icons/pi.svg?raw";
 
-/* Real brand marks, same assets as apps/desktop. gemini falls back to
-   grok's mark until we add the real one to the shared set. */
 const BRANDS: Record<string, string> = {
   claude, codex, copilot: githubcopilot, gemini, grok, opencode, pi,
 };
 
-const FALLBACK: Record<string, string> = {
-  gemini: gemini,
-};
-
 export function AgentIcon({ agent, size = 14 }: { agent: string; size?: number }) {
-  const svg = BRANDS[agent] ?? FALLBACK[agent];
+  const svg = BRANDS[agent];
   return (
     <span
       class="agent-glyph brand"
