@@ -134,6 +134,21 @@ async fn execute(
         Command::GitPending { project } => Ok(Reply::Pending {
             reviews: manager.git_pending(project).await.map_err(not_found_error)?,
         }),
+        Command::GitRejectHunk { project, target, patch } => {
+            manager.git_reject_hunk(project, target, patch).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
+        Command::GitRejects { project, target } => Ok(Reply::Rejects {
+            rejects: manager.git_rejects(project, target).await.map_err(not_found_error)?,
+        }),
+        Command::GitRestoreReject { project, target, id } => {
+            manager.git_restore_reject(project, target, &id).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
+        Command::GitClearRejects { project, target } => {
+            manager.git_clear_rejects(project, target).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::GitHunks { project, target, path, scope } => Ok(Reply::Hunks {
             patches: manager
                 .git_hunks(project, target, &path, scope)
@@ -433,6 +448,10 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitLog { .. }
             | Command::GitHunks { .. }
             | Command::GitPending { .. }
+            | Command::GitRejectHunk { .. }
+            | Command::GitRejects { .. }
+            | Command::GitRestoreReject { .. }
+            | Command::GitClearRejects { .. }
             | Command::GitImages { .. }
             | Command::WorktreeList { .. }
             | Command::GitBranches { .. }

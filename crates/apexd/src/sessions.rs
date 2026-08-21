@@ -7,7 +7,8 @@ use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitBranch, GitCommit,
     GitStatus, GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport,
-    MetricsSnapshot, PendingReview, ProjectSummary, SessionState, SessionSummary, TaskSummary,
+    MetricsSnapshot, PendingReview, ProjectSummary, RejectedHunk, SessionState, SessionSummary,
+    TaskSummary,
     TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
@@ -19,6 +20,7 @@ use crate::services::browsers::BrowsersService;
 use crate::services::sessions::SessionRegistry;
 use crate::services::{
     context::ContextService, files::FilesService, git::GitService, metrics::MetricsService,
+    rejects::RejectsService,
     projects::ProjectsService, tasks::TasksService,
 };
 
@@ -45,6 +47,7 @@ pub struct SessionManager {
     profiles: ProfileSet,
     files: FilesService,
     git: GitService,
+    rejects: RejectsService,
     context: ContextService,
     projects: ProjectsService,
     tasks: TasksService,
@@ -96,11 +99,13 @@ impl SessionManager {
             base_env,
             Arc::clone(&acp),
         );
+        let rejects = RejectsService::new(&paths.data_dir);
         let manager = Arc::new(Self {
             paths,
             profiles,
             files,
             git: GitService,
+            rejects,
             context,
             projects,
             tasks,
@@ -589,6 +594,48 @@ impl SessionManager {
     ) -> Result<Vec<GitCommit>> {
         let dir = self.git_dir(project, &target).await?;
         self.git.log(&dir, limit).await
+    }
+
+    async fn git_branch(&self, project: Uuid, target: &GitTarget) -> Result<String> {
+        let dir = self.git_dir(project, target).await?;
+        let branch = tokio::task::spawn_blocking(move || apex_git::current_branch(&dir)).await??;
+        Ok(crate::services::rejects::require_branch(&branch)?.to_owned())
+    }
+
+    pub async fn git_reject_hunk(
+        &self,
+        project: Uuid,
+        target: GitTarget,
+        patch: String,
+    ) -> Result<()> {
+        let dir = self.git_dir(project, &target).await?;
+        let branch = self.git_branch(project, &target).await?;
+        self.rejects.reject(&dir, project, &branch, patch).await
+    }
+
+    pub async fn git_rejects(
+        &self,
+        project: Uuid,
+        target: GitTarget,
+    ) -> Result<Vec<RejectedHunk>> {
+        let branch = self.git_branch(project, &target).await?;
+        self.rejects.list(project, &branch).await
+    }
+
+    pub async fn git_restore_reject(
+        &self,
+        project: Uuid,
+        target: GitTarget,
+        id: &str,
+    ) -> Result<()> {
+        let dir = self.git_dir(project, &target).await?;
+        let branch = self.git_branch(project, &target).await?;
+        self.rejects.restore(&dir, project, &branch, id).await
+    }
+
+    pub async fn git_clear_rejects(&self, project: Uuid, target: GitTarget) -> Result<()> {
+        let branch = self.git_branch(project, &target).await?;
+        self.rejects.clear(project, &branch).await
     }
 
     pub async fn git_pending(&self, project: Uuid) -> Result<Vec<PendingReview>> {
