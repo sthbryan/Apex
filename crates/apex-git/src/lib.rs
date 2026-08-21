@@ -270,6 +270,41 @@ pub fn apply_to_index(dir: &Path, patch: &str, reverse: bool) -> Result<()> {
     run_with_input(dir, &args, patch).map(|_| ())
 }
 
+pub fn apply_to_worktree(dir: &Path, patch: &str, reverse: bool) -> Result<()> {
+    let mut args = vec!["apply"];
+    if reverse {
+        args.push("--reverse");
+    }
+    args.push("-");
+    run_with_input(dir, &args, patch).map(|_| ())
+}
+
+pub fn patch_path(patch: &str) -> Option<String> {
+    let target = patch
+        .lines()
+        .find_map(|line| line.strip_prefix("+++ b/"))
+        .or_else(|| patch.lines().find_map(|line| line.strip_prefix("--- a/")))?;
+    Some(target.to_owned())
+}
+
+pub fn patch_counts(patch: &str) -> (u32, u32) {
+    let body = patch.lines().skip_while(|line| !line.starts_with("@@"));
+    let mut added = 0;
+    let mut removed = 0;
+    for line in body {
+        if line.starts_with("+++") || line.starts_with("---") {
+            continue;
+        }
+        if line.starts_with('+') {
+            added += 1;
+        }
+        if line.starts_with('-') {
+            removed += 1;
+        }
+    }
+    (added, removed)
+}
+
 pub fn commit(dir: &Path, message: &str) -> Result<Commit> {
     if message.trim().is_empty() {
         bail!("the commit message is empty")

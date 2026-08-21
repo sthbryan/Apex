@@ -361,3 +361,39 @@ fn an_untracked_file_still_yields_a_hunk() {
     assert!(patch.contains("+one"), "{patch}");
     assert_eq!(split_hunks(&patch).len(), 1);
 }
+
+#[test]
+fn a_reversed_hunk_leaves_the_working_tree_without_it() {
+    let dir = repo();
+    let root = dir.path();
+    std::fs::write(root.join("README.md"), "# sample\nkeep\ndrop\n").expect("write");
+
+    let patch = diff_scoped(root, "README.md", Scope::Unstaged).expect("diff");
+    apply_to_worktree(root, &patch, true).expect("reverse");
+
+    assert_eq!(std::fs::read_to_string(root.join("README.md")).expect("read"), "# sample\n");
+}
+
+#[test]
+fn a_reversed_hunk_can_be_applied_again_from_what_was_saved() {
+    let dir = repo();
+    let root = dir.path();
+    std::fs::write(root.join("README.md"), "# sample\nkeep\n").expect("write");
+    let patch = diff_scoped(root, "README.md", Scope::Unstaged).expect("diff");
+
+    apply_to_worktree(root, &patch, true).expect("reverse");
+    apply_to_worktree(root, &patch, false).expect("restore");
+
+    assert_eq!(std::fs::read_to_string(root.join("README.md")).expect("read"), "# sample\nkeep\n");
+}
+
+#[test]
+fn a_patch_carries_its_path_and_its_line_counts() {
+    let dir = repo();
+    let root = dir.path();
+    std::fs::write(root.join("README.md"), "# changed\nextra\n").expect("write");
+
+    let patch = diff_scoped(root, "README.md", Scope::Unstaged).expect("diff");
+    assert_eq!(patch_path(&patch).as_deref(), Some("README.md"));
+    assert_eq!(patch_counts(&patch), (2, 1));
+}
