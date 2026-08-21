@@ -9,7 +9,11 @@ import {
   settingsOpen, showWelcome, toastCount, uaWindow,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
-import { AgentIcon, Bar, Button, Card, Chip, Dot, Pill, Segmented, StatePill, Toast, ToastStack } from "@apex/ui";
+import {
+  AgentIcon, AppMain, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
+  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, Markdown, Pane, PaneGrid, PaneSplit,
+  Pill, Segmented, StatePill, Tab, TabBar, Terminal, Toast, ToastStack, ToggleChip, ToggleChipGroup,
+} from "@apex/ui";
 
 const TABS = [
   { id: "tab-auth", title: "Refactor auth middleware" },
@@ -26,10 +30,10 @@ export function Workspace() {
   }, []);
 
   return (
-    <main class="main">
+    <AppMain>
       {showWelcome.value ? <Welcome /> : <Sessions />}
       <Overlays />
-    </main>
+    </AppMain>
   );
 }
 
@@ -41,18 +45,19 @@ function Welcome() {
           <h1 style="font-size:44px;font-weight:600;letter-spacing:.14em;margin:0">APEX</h1>
           <p style="margin-top:6px;color:var(--apex-muted);font-size:14.5px">Run a team of AI agents, not a wall of terminals.</p>
         </div>
-        <form class="composer" onSubmit={(e) => { e.preventDefault(); showWelcome.value = false; activeTab.value = "tab-auth"; }}>
-          <textarea rows={2} placeholder="Ask, delegate, or start a task…" />
-          <div class="composer-bar">
-            <div class="launch-agents">
-              <button type="button" class="launch-chip" aria-pressed="true"><AgentIcon agent="claude" size="sm" />claude</button>
-              <button type="button" class="launch-chip"><AgentIcon agent="codex" size="sm" />codex</button>
-              <button type="button" class="launch-chip"><AgentIcon agent="gemini" size="sm" />gemini</button>
-            </div>
-            <span style="flex:1" />
-            <Button type="submit" variant="primary"><Send size={13} />Start</Button>
-          </div>
-        </form>
+        <Composer
+          label="Task"
+          placeholder="Ask, delegate, or start a task…"
+          onSubmit={(e) => { e.preventDefault(); showWelcome.value = false; activeTab.value = "tab-auth"; }}
+          lead={
+            <ToggleChipGroup label="Agents">
+              <ToggleChip pressed lead={<AgentIcon agent="claude" size="sm" />}>claude</ToggleChip>
+              <ToggleChip pressed={false} lead={<AgentIcon agent="codex" size="sm" />}>codex</ToggleChip>
+              <ToggleChip pressed={false} lead={<AgentIcon agent="grok" size="sm" />}>grok</ToggleChip>
+            </ToggleChipGroup>
+          }
+          actions={<Button type="submit" variant="primary"><Send size={13} />Start</Button>}
+        />
         <div style="display:flex;gap:8px;margin-top:16px">
           {["Refactor auth middleware", "Race a task across agents"].map((t) => (
             <Button key={t} size="sm" class="rounded-full">{t}</Button>
@@ -66,39 +71,47 @@ function Welcome() {
 function Sessions() {
   return (
     <section class="view">
-      <div class="tabbar">
+      <TabBar label="Sessions" addLabel="New session in a new tab" addIcon={<Plus size={14} />} onAdd={() => showWelcome.value = true}>
         {TABS.map((t) => (
-          <div key={t.id} class="tab" aria-selected={activeTab.value === t.id} onClick={() => activeTab.value = t.id}>
-            {t.icon ? <t.icon size={13} style="color:var(--apex-muted);flex:none" /> : <AgentIcon agent="claude" size="sm" />}
-            <button class="tab-title">{t.title}</button>
-          </div>
+          <Tab
+            key={t.id}
+            title={t.title}
+            selected={activeTab.value === t.id}
+            lead={t.icon ? <t.icon size={13} style="color:var(--apex-muted);flex:none" /> : <AgentIcon agent="claude" size="sm" />}
+            onClick={() => activeTab.value = t.id}
+          />
         ))}
-        <button class="tab-add" title="New session in a new tab" onClick={() => showWelcome.value = true}><Plus size={14} /></button>
-      </div>
+      </TabBar>
 
-      <div class="panes">
+      <PaneGrid>
         {activeTab.value === "tab-auth" && <AuthSplit />}
         {activeTab.value === "tab-browser" && <BrowserPane />}
         {activeTab.value === "tab-race" && <RacePane />}
         {activeTab.value === "tab-file" && <FilePane />}
         {activeTab.value === "tab-diff" && <DiffPane />}
-      </div>
+      </PaneGrid>
     </section>
   );
 }
 
 function AuthSplit() {
   return (
-    <div class="pane pane-group">
-      <article class="pane">
-        <header class="pane-head">
-          <AgentIcon agent="claude" />
-          <div style="min-width:0">
-            <div class="pane-title">Refactor auth middleware</div>
-            <div class="pane-sub"><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span></div>
+    <PaneSplit>
+      <Pane
+        title="Refactor auth middleware"
+        sub={<><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span></>}
+        lead={<AgentIcon agent="claude" />}
+        actions={<StatePill state="blocked">Waiting</StatePill>}
+        scroll={false}
+        foot={
+          <div class="reply-bar">
+            <div class="reply-box">
+              <input placeholder="Reply to claude…" aria-label="Reply to claude" />
+              <button class="reply-send" aria-label="Send"><Send size={13} /></button>
+            </div>
           </div>
-          <StatePill state="blocked" class="ml-auto">Waiting</StatePill>
-        </header>
+        }
+      >
         <div class="transcript">
           <div class="msg-user">Refactor auth middleware to use passkeys instead of session cookies.</div>
           <div class="tool">
@@ -117,32 +130,24 @@ function AuthSplit() {
             </div>
           </div>
         </div>
-        <div class="reply-bar">
-          <div class="reply-box">
-            <input placeholder="Reply to claude…" />
-            <button class="reply-send"><Send size={13} /></button>
-          </div>
-        </div>
-      </article>
+      </Pane>
 
-      <article class="pane">
-        <header class="pane-head">
-          <AgentIcon agent="codex" />
-          <div style="min-width:0">
-            <div class="pane-title">Fix flaky checkout tests</div>
-            <div class="pane-sub"><Chip>⎇ apex/codex</Chip><span class="mono">14m</span></div>
-          </div>
-          <StatePill state="working" class="ml-auto">Running</StatePill>
-        </header>
-        <pre class="tty">{"● Fix the flaky checkout tests\n\n⏺ The retry helper swallows the assertion.\n\n⏺ Patch tests/checkout.test.ts\n  ⎿ +18 −4\n\n⠸ Running the suite twice more…\n\n❯ "}<span class="cursor" /></pre>
-      </article>
-    </div>
+      <Pane
+        title="Fix flaky checkout tests"
+        sub={<><Chip>⎇ apex/codex</Chip><span class="mono">14m</span></>}
+        lead={<AgentIcon agent="codex" />}
+        actions={<StatePill state="working">Running</StatePill>}
+        scroll={false}
+      >
+        <Terminal cursor>{"● Fix the flaky checkout tests\n\n⏺ The retry helper swallows the assertion.\n\n⏺ Patch tests/checkout.test.ts\n  ⎿ +18 −4\n\n⠸ Running the suite twice more…\n\n❯ "}</Terminal>
+      </Pane>
+    </PaneSplit>
   );
 }
 
 function BrowserPane() {
   return (
-    <article class={`pane browser-pane${consoleOpen.value ? " console-open" : ""}`}>
+    <Pane scroll={false} class={`browser-pane${consoleOpen.value ? " console-open" : ""}`}>
       <div class="browser-bar">
         <Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>
         <div class="url-box"><Lock size={11} style="color:var(--apex-state-done)" /><input value="localhost:5173/login" /></div>
@@ -165,14 +170,14 @@ function BrowserPane() {
           <div class="l-info">[vite] hmr update /src/auth/passkey.ts</div>
         </div>
       </div>
-    </article>
+    </Pane>
   );
 }
 
 function RacePane() {
   const kept = raceKept.value;
   return (
-    <article class="pane">
+    <Pane scroll={false}>
       <div class="race-view">
         <p class="race-task">Fix the dock resize jank</p>
         <div class="race-cols">
@@ -182,7 +187,7 @@ function RacePane() {
               {kept && <span class="dropped-tag" style="color:var(--apex-state-done);border-color:color-mix(in oklab, var(--apex-state-done) 40%, transparent)">kept</span>}
               {!kept && <Dot state="done" />}
             </div>
-            <p class="diff-line-plain">14 files <span class="fadd">+382</span><span class="fdel">−96</span></p>
+            <p class="diff-line-plain">14 files <DiffStat added={382} removed={96} /></p>
           </div>
           <div class={`race-col${kept ? " dropped" : ""}`}>
             <div class="race-col-head">
@@ -192,7 +197,7 @@ function RacePane() {
             <p class="c-note">{kept ? "Dropped." : "Still working…"}</p>
           </div>
           <div class="race-col dropped">
-            <div class="race-col-head"><AgentIcon agent="gemini" size="sm" /><span class="c-name">gemini</span><span class="dropped-tag">dropped</span></div>
+            <div class="race-col-head"><AgentIcon agent="antigravity" size="sm" /><span class="c-name">antigravity</span><span class="dropped-tag">dropped</span></div>
             <p class="c-note">Left nothing behind.</p>
           </div>
         </div>
@@ -210,28 +215,29 @@ function RacePane() {
           </div>
         )}
       </div>
-    </article>
+    </Pane>
   );
 }
 
 function FilePane() {
   return (
-    <article class="pane">
-      <div class="pane-toolbar">
-        <FileText size={12} style="color:var(--apex-muted)" />
-        <span class="mono">docs/README.md</span>
+    <Pane
+      lead={<FileText size={12} style="color:var(--apex-muted)" />}
+      title="docs/README.md"
+      actions={
+        <>
         <Chip>markdown</Chip>
-        <span style="flex:1" />
         <Segmented
           label="File view"
           options={[{ value: "preview", label: "Preview" }, { value: "source", label: "Source" }]}
           value={fmode.value}
           onChange={(v) => fmode.value = v as "preview" | "source"}
         />
-      </div>
-      <div class="pane-body">
+        </>
+      }
+    >
         {fmode.value === "preview" ? (
-          <div class="mdview">
+          <Markdown>
             <h1>Apex</h1>
             <p>Run a team of AI agents, not a wall of terminals.</p>
             <h2>Install</h2>
@@ -241,44 +247,37 @@ function FilePane() {
               <li><strong>Sessions</strong> — terminal or native rendering per agent</li>
               <li><strong>Races</strong> — fan one task across agents, keep the winner</li>
             </ul>
-          </div>
+          </Markdown>
         ) : (
-          <div class="codeview">
-            <div class="cl"><span class="ln">1</span><span class="tok-c"># Apex</span></div>
-            <div class="cl"><span class="ln">2</span></div>
-            <div class="cl"><span class="ln">3</span>Run a team of AI agents.</div>
-            <div class="cl"><span class="ln">5</span><span class="tok-c">## Install</span></div>
-            <div class="cl"><span class="ln">7</span>    curl -fsSL https://apex.dev/install.sh | sh</div>
-          </div>
+          <CodeView>
+            <CodeLine number={1}><Code token="comment"># Apex</Code></CodeLine>
+            <CodeLine number={2} />
+            <CodeLine number={3}>Run a team of AI agents.</CodeLine>
+            <CodeLine number={5}><Code token="comment">## Install</Code></CodeLine>
+            <CodeLine number={7}>    curl -fsSL https://apex.dev/install.sh | sh</CodeLine>
+          </CodeView>
         )}
-      </div>
-    </article>
+    </Pane>
   );
 }
 
 function DiffPane() {
   return (
-    <article class="pane">
-      <div class="pane-toolbar">
-        <GitBranch size={12} style="color:var(--apex-muted)" />
-        <span class="mono">apex/claude · DockResize.tsx</span>
-        <Chip>staged</Chip>
-        <span style="flex:1" />
-        <span class="mono" style="font-size:10.5px">2 / 4</span>
-      </div>
-      <div class="pane-body">
-        <div class="diff-wrap">
-          <div class="diff-file">
-            <div class="diff-head">apps/desktop/…/DockResize.tsx<span class="diff-stat"><b>+24</b> <s>−11</s></span></div>
-            <div class="hunk-head">@@ -12,7 +12,9 @@<span class="hh-acts"><button class="hh-btn">Stage hunk</button></span></div>
-            <div class="diff-line ctx">{"  const onPointer = (event) => {"}</div>
-            <div class="diff-line del">{"-    setWidth(event.clientX - origin);"}</div>
-            <div class="diff-line add">{"+    const next = clamp(event.clientX - origin, rail, max);"}</div>
-            <div class="diff-line ctx">{"  };"}</div>
-          </div>
-        </div>
-      </div>
-    </article>
+    <Pane
+      lead={<GitBranch size={12} style="color:var(--apex-muted)" />}
+      title="apex/claude · DockResize.tsx"
+      actions={<><Chip>staged</Chip><span class="mono text-xs">2 / 4</span></>}
+    >
+      <DiffView>
+        <DiffFile path="apps/desktop/…/DockResize.tsx" added={24} removed={11}>
+          <DiffHunk range="@@ -12,7 +12,9 @@" actions={<Button size="xs" variant="ghost">Stage hunk</Button>} />
+          <DiffLine kind="ctx">{"  const onPointer = (event) => {"}</DiffLine>
+          <DiffLine kind="del">{"-    setWidth(event.clientX - origin);"}</DiffLine>
+          <DiffLine kind="add">{"+    const next = clamp(event.clientX - origin, rail, max);"}</DiffLine>
+          <DiffLine kind="ctx">{"  };"}</DiffLine>
+        </DiffFile>
+      </DiffView>
+    </Pane>
   );
 }
 
@@ -355,7 +354,7 @@ function ResourcesPop() {
 
 function NotificationsPop() {
   const notices = [
-    ["blocked", "Waiting for your approval", "gemini wants to run a migration", "2m"],
+    ["blocked", "Waiting for your approval", "antigravity wants to run a migration", "2m"],
     ["done", "Codex finished", "Fix the race settle flow · exit 0", "14m"],
     ["failed", "Weekly quota almost gone", "claude · 71% used, over pace", "1h"],
   ];
@@ -414,22 +413,26 @@ function ProjectsPop() {
 function Launcher() {
   const [picked, setPicked] = (globalThis as any).__picked ??= { v: new Set(["claude", "codex"]) };
   return (
-    <div class="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) launcherOpen.value = false; }}>
-      <div class="modal" style="width:min(520px,94%);height:auto" onClick={(e) => e.stopPropagation()}>
-        <Button class="modal-close" variant="subtle" size="lg" iconOnly title="Close" onClick={() => launcherOpen.value = false}><X size={13} /></Button>
-        <div class="modal-main" style="padding:20px 22px">
-          <div class="set-title">Race a task</div>
+    <Modal
+      open
+      onClose={() => launcherOpen.value = false}
+      title="Race a task"
+      actions={<Button variant="subtle" size="sm" iconOnly title="Close" onClick={() => launcherOpen.value = false}><X size={13} /></Button>}
+    >
+        <div>
           <div class="set-sub">Every contender gets the same task and its own worktree. You keep the winner.</div>
           <textarea class="commit-msg" style="min-height:64px">Fix the dock resize jank</textarea>
           <div class="pl-label" style="padding-left:0">Who runs it</div>
-          <div class="launch-agents">
-            {["claude", "codex", "gemini", "opencode"].map((a) => (
-              <button key={a} class="launch-chip" aria-pressed={picked.v.has(a)}
+          <ToggleChipGroup label="Contenders">
+            {["claude", "codex", "grok", "opencode"].map((a) => (
+              <ToggleChip key={a} pressed={picked.v.has(a)}
+                lead={<AgentIcon agent={a} size="sm" />}
+                trail={picked.v.has(a) ? <Check size={11} /> : undefined}
                 onClick={() => { picked.v.has(a) ? picked.v.delete(a) : picked.v.add(a); setPicked({ v: picked.v }); }}>
-                <AgentIcon agent={a} size="sm" />{a}{picked.v.has(a) && <Check size={11} />}
-              </button>
+                {a}
+              </ToggleChip>
             ))}
-          </div>
+          </ToggleChipGroup>
           <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
             <span style="font-size:11.5px;color:var(--apex-muted);flex:1">
               {picked.v.size < 2 ? "Pick at least two." : `${picked.v.size} agents · one worktree each · no prompts`}
@@ -440,7 +443,6 @@ function Launcher() {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

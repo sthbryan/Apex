@@ -1,7 +1,10 @@
 import { BookOpenText, Bot, CircleHelp, Globe, Keyboard, Server, Sparkles, X } from "lucide-preact";
 import { themeMode, veil } from "@/shared/theme/mode";
 import { settingsOpen, settingsSection, updateState } from "@/app/state";
-import { AgentIcon, Button, Kbd, Pill, Segmented, Switch } from "@apex/ui";
+import {
+  AgentIcon, Button, Field, Kbd, Pill, Segmented, SettingsDialog, SettingsHeading,
+  Slider, Select, Switch,
+} from "@apex/ui";
 
 const SECTIONS = [
   { id: "look", label: "Look", Icon: Sparkles },
@@ -14,49 +17,32 @@ const SECTIONS = [
 
 export function SettingsModal() {
   return (
-    <div class="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) settingsOpen.value = false; }}>
-      <div class="modal" role="dialog" aria-label="Settings" style="width:min(720px,94%);height:min(500px,88%)">
-        <Button class="modal-close" variant="subtle" size="lg" iconOnly title="Close" onClick={() => settingsOpen.value = false}><X size={13} /></Button>
-        <nav class="modal-nav">
-          <h3>Settings</h3>
-          {SECTIONS.map(({ id, label, Icon }) => (
-            <button class="mnav-btn" key={id} aria-selected={settingsSection.value === id}
-              onClick={() => settingsSection.value = id}>
-              <Icon size={14} strokeWidth={1.75} />
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div class="modal-main">
-          {settingsSection.value === "look" && <LookSection />}
-          {settingsSection.value === "workspace" && <WorkspaceSection />}
-          {settingsSection.value === "agents" && <AgentsSection />}
-          {settingsSection.value === "daemon" && <DaemonSection />}
-          {settingsSection.value === "shortcuts" && <ShortcutsSection />}
-          {settingsSection.value === "about" && <AboutSection />}
-        </div>
-      </div>
-    </div>
+    <SettingsDialog
+      open
+      onClose={() => settingsOpen.value = false}
+      sections={SECTIONS.map(({ id, label, Icon }) => ({ id, label, icon: <Icon size={14} strokeWidth={1.75} /> }))}
+      section={settingsSection.value}
+      onSection={(id) => settingsSection.value = id}
+      close={<Button variant="subtle" size="lg" iconOnly title="Close" onClick={() => settingsOpen.value = false}><X size={13} /></Button>}
+    >
+      {settingsSection.value === "look" && <LookSection />}
+      {settingsSection.value === "workspace" && <WorkspaceSection />}
+      {settingsSection.value === "agents" && <AgentsSection />}
+      {settingsSection.value === "daemon" && <DaemonSection />}
+      {settingsSection.value === "shortcuts" && <ShortcutsSection />}
+      {settingsSection.value === "about" && <AboutSection />}
+    </SettingsDialog>
   );
 }
 
 function SetRow({ label, desc, children }: { label: string; desc?: string; children: any }) {
-  return (
-    <div class="set-row">
-      <div>
-        <div class="set-label">{label}</div>
-        {desc && <div class="set-desc">{desc}</div>}
-      </div>
-      {children}
-    </div>
-  );
+  return <Field label={label} hint={desc}>{children}</Field>;
 }
 
 function LookSection() {
   return (
     <div class="set-section">
-      <div class="set-title">Look</div>
-      <div class="set-sub">How Apex feels on this machine.</div>
+      <SettingsHeading title="Look" sub="How Apex feels on this machine." />
       <SetRow label="Theme" desc="Applies instantly, saved for next time.">
         <Segmented
           label="Theme"
@@ -72,10 +58,10 @@ function LookSection() {
         <Switch label="Translucent window" checked={veil.value === "on"} onChange={(v) => (veil.value = v ? "on" : "off")} />
       </SetRow>
       <SetRow label="Transparency">
-        <div class="slider-row"><input type="range" min={0} max={100} defaultValue={76} /><span class="sv">76%</span></div>
+        <Slider label="Transparency" value={76} onChange={() => {}} />
       </SetRow>
       <SetRow label="Blur">
-        <div class="slider-row"><input type="range" min={0} max={40} defaultValue={26} /><span class="sv">26px</span></div>
+        <Slider label="Blur" value={26} max={40} unit="px" onChange={() => {}} />
       </SetRow>
       <SetRow label="Language">
         <Segmented label="Language" options={[{ value: "en", label: "English" }, { value: "es", label: "Español" }]} value="en" onChange={() => {}} />
@@ -87,14 +73,16 @@ function LookSection() {
 function WorkspaceSection() {
   return (
     <div class="set-section">
-      <div class="set-title">Workspace</div>
-      <div class="set-sub">Where files, previews and agent views go.</div>
+      <SettingsHeading title="Workspace" sub="Where files, previews and agent views go." />
       <SetRow label="External editor">
-        <select class="select-box">
-          <option>System default</option>
-          <option>Cursor</option>
-          <option>VS Code</option>
-        </select>
+        <Select
+          label="External editor"
+          options={[
+            { value: "system", label: "System default" },
+            { value: "cursor", label: "Cursor" },
+            { value: "vscode", label: "VS Code" },
+          ]}
+        />
       </SetRow>
       <SetRow label="Web previews" desc="localhost links open…">
         <Segmented label="Web previews" options={[{ value: "pane", label: "In a pane" }, { value: "browser", label: "System browser" }]} value="pane" onChange={() => {}} />
@@ -115,17 +103,14 @@ function WorkspaceSection() {
 const AGENTS = [
   { id: "claude", name: "claude", ver: "2.0.14", shares: true, mode: "acp" },
   { id: "codex", name: "codex", ver: "0.9.2", shares: false, mode: "tty" },
-  { id: "gemini", name: "gemini", ver: "0.8.0", shares: true, mode: "tty" },
+  { id: "antigravity", name: "antigravity", ver: "0.8.0", shares: true, mode: "tty" },
   { id: "opencode", name: "opencode", ver: "0.7.1", shares: true, mode: "acp" },
 ] as const;
 
 function AgentsSection() {
   return (
     <div class="set-section">
-      <div class="set-title">Agents</div>
-      <div class="set-sub">
-        Rendering belongs to each agent — native when it speaks ACP, terminal otherwise.
-      </div>
+      <SettingsHeading title="Agents" sub="Rendering belongs to each agent — native when it speaks ACP, terminal otherwise." />
       {AGENTS.map((a) => (
         <div class="agent-set-row" key={a.id}>
           <AgentIcon agent={a.id} size="md" />
@@ -147,8 +132,7 @@ function AgentsSection() {
 function DaemonSection() {
   return (
     <div class="set-section">
-      <div class="set-title">Daemon</div>
-      <div class="set-sub">The background service keeping sessions alive.</div>
+      <SettingsHeading title="Daemon" sub="The background service keeping sessions alive." />
       <SetRow label="Daemon background time" desc="After you close Apex, agents keep running for this long.">
         <Segmented
           label="Daemon background time"
@@ -187,8 +171,7 @@ const SHORTCUTS: { group: string; rows: [string, string[]][] }[] = [
 function ShortcutsSection() {
   return (
     <div class="set-section">
-      <div class="set-title">Keyboard shortcuts</div>
-      <div class="set-sub">Everything reachable without the mouse.</div>
+      <SettingsHeading title="Keyboard shortcuts" sub="Everything reachable without the mouse." />
       {SHORTCUTS.map(({ group, rows }) => (
         <div key={group}>
           <div class="pl-label" style="padding-left:0">{group}</div>
@@ -208,8 +191,7 @@ function AboutSection() {
   const checking = updateState.value === "Checking…";
   return (
     <div class="set-section">
-      <div class="set-title">About</div>
-      <div class="set-sub">What is running on this machine.</div>
+      <SettingsHeading title="About" sub="What is running on this machine." />
       <div class="set-row" style="border:0;padding-top:0">
         <div>
           <div class="set-label" style="font-size:15px;font-weight:700;letter-spacing:.08em;display:flex;align-items:center;gap:8px">

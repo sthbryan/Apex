@@ -5,9 +5,13 @@ import {
 } from "lucide-preact";
 import { openPop, activePanel, railOnly, settingsOpen, settingsSection, showWelcome } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
-import { Button, Tooltip } from "@apex/ui";
+import {
+  AppBody, Badge, Button, Rail, RailButton, RailSpacer,
+  SidePanel, StatusBar, StatusPill, TitleBar,
+} from "@apex/ui";
+import type { RailBadge } from "@apex/ui";
 
-const PANELS = [
+const PANELS: { id: string; icon: typeof LayoutGrid; label: string; badge?: RailBadge }[] = [
   { id: "summary", icon: LayoutGrid, label: "Summary" },
   { id: "sessions", icon: SquareTerminal, label: "Sessions", badge: "blocked" },
   { id: "files", icon: Folder, label: "Files" },
@@ -22,89 +26,87 @@ const PANELS = [
 export function Layout({ children }: { children: ComponentChildren }) {
   return (
     <>
-      <header class="titlebar chrome-blur">
-        <div class="lights" aria-hidden="true"><i /><i /><i /></div>
-        <div class="titlebar-title"><strong>APEX</strong> — apex-sandbox</div>
-        <div class="tb-actions">
-          <Button variant="subtle" size="lg" iconOnly title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></Button>
-          <Button variant="subtle" size="lg" iconOnly title="Command palette ⌘K"><LayoutGrid size={15} /></Button>
-          <Button variant="subtle" size="lg" iconOnly title="Settings ⌘," onClick={() => { settingsOpen.value = true; settingsSection.value = "look"; }}><Settings size={15} /></Button>
-        </div>
-      </header>
+      <TitleBar
+        title={<><strong>APEX</strong> — apex-sandbox</>}
+        actions={
+          <>
+            <Button variant="subtle" size="lg" iconOnly title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></Button>
+            <Button variant="subtle" size="lg" iconOnly title="Command palette ⌘K"><LayoutGrid size={15} /></Button>
+            <Button variant="subtle" size="lg" iconOnly title="Settings ⌘," onClick={() => { settingsOpen.value = true; settingsSection.value = "look"; }}><Settings size={15} /></Button>
+          </>
+        }
+      />
 
-      <div class="app">
-        <nav class="rail chrome-blur" aria-label="Panels">
+      <AppBody>
+        <Rail aria-label="Panels">
           {PANELS.map((p) => (
-            <Tooltip key={p.id} content={p.label} side="right">
-              <button class="picon" aria-current={activePanel.value === p.id}
-                onClick={() => { activePanel.value = p.id; railOnly.value = false; }}>
-                <p.icon size={16} />
-                {p.badge && <span class={`bdot ${p.badge}`} />}
-              </button>
-            </Tooltip>
+            <RailButton
+              key={p.id}
+              label={p.label}
+              badge={p.badge}
+              current={activePanel.value === p.id}
+              onClick={() => { activePanel.value = p.id; railOnly.value = false; }}
+            >
+              <p.icon size={16} />
+            </RailButton>
           ))}
-          <div style="flex:1" />
-          <button class="picon" title="main · 16 changed">
-            <GitBranch size={15} />
-          </button>
-        </nav>
+          <RailSpacer />
+          <RailButton label="main · 16 changed"><GitBranch size={15} /></RailButton>
+        </Rail>
 
-        <aside class="dock chrome-blur" hidden={railOnly.value}>
-          <div class="ws-head">
-            <div class="ws-head-row">
-              <button class="proj-btn" title="Switch project"
-                onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "projects" ? null : "projects"; }}>
-                <span class="proj-glyph"><LayoutGrid size={13} /></span>
-                <span class="proj-main">
-                  <span class="proj-name">apex-sandbox</span>
-                  <span class="proj-path">~/Documents/Codes/apex-sandbox</span>
-                </span>
-                <span class="proj-alert" title="1 session waiting in another project" />
-                <ChevronDown size={12} style="color:var(--apex-muted);flex:none" />
-              </button>
-            </div>
-          </div>
-
-          <div class="dock-views">
-            <Panels />
-          </div>
-
-          <div class="dock-foot">
-            <button class="cta-btn" onClick={() => showWelcome.value = true}>+ New Session</button>
-          </div>
-        </aside>
+        <SidePanel
+          hidden={railOnly.value}
+          head={
+            <button class="proj-btn" title="Switch project"
+              onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "projects" ? null : "projects"; }}>
+              <span class="proj-glyph"><LayoutGrid size={13} /></span>
+              <span class="proj-main">
+                <span class="proj-name">apex-sandbox</span>
+                <span class="proj-path">~/Documents/Codes/apex-sandbox</span>
+              </span>
+              <span class="proj-alert" title="1 session waiting in another project" />
+              <ChevronDown size={12} style="color:var(--apex-muted);flex:none" />
+            </button>
+          }
+          foot={<Button variant="dashed" size="xl" onClick={() => showWelcome.value = true}>+ New Session</Button>}
+        >
+          <Panels />
+        </SidePanel>
 
         {children}
-      </div>
+      </AppBody>
 
-      <footer class="statusbar chrome-blur">
-        <button class="sb-pill" title="Switch target"
+      <StatusBar
+        right={
+          <>
+            <StatusPill onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "notifications" ? null : "notifications"; }}>
+              <Bell size={11} /><Badge tone="neutral">3</Badge>
+            </StatusPill>
+            <StatusPill onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "resources" ? null : "resources"; }}>
+              <Cpu size={11} />
+              <span class="sb-bar"><i class="warn" style="width:23%" /></span>
+              <span class="mono">18G</span>
+            </StatusPill>
+          </>
+        }
+      >
+        <StatusPill title="Switch target"
           onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "target" ? null : "target"; }}>
           <GitBranch size={11} />
           <span class="mono">main</span>
           <span style="color:var(--apex-git-added)">↑2</span>
           <span style="color:var(--apex-state-blocked)">↓0</span>
-        </button>
-        <button class="sb-pill" onClick={() => activePanel.value = "git"}>
+        </StatusPill>
+        <StatusPill onClick={() => activePanel.value = "git"}>
           <span class="mono">16</span> changed
-        </button>
-        <span class="sb-pill live"><i /> 2 racing</span>
-        <button class="sb-pill" onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "usage" ? null : "usage"; }}>
+        </StatusPill>
+        <StatusPill live interactive={false}>2 racing</StatusPill>
+        <StatusPill onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "usage" ? null : "usage"; }}>
           <span class="sb-bar"><i style="width:62%" /></span>
           <span class="sb-bar"><i class="warn" style="width:71%" /></span>
           <span class="mono">71%</span>
-        </button>
-        <div class="sb-right">
-          <button class="sb-pill" onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "notifications" ? null : "notifications"; }}>
-            <Bell size={11} /><span class="sb-badge">3</span>
-          </button>
-          <button class="sb-pill" onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "resources" ? null : "resources"; }}>
-            <Cpu size={11} />
-            <span class="sb-bar"><i class="warn" style="width:23%" /></span>
-            <span class="mono">18G</span>
-          </button>
-        </div>
-      </footer>
+        </StatusPill>
+      </StatusBar>
     </>
   );
 }

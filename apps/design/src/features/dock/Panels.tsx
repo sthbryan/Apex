@@ -46,7 +46,7 @@ function SummaryPanel() {
     <div class="dock-view active">
       <div style="display:flex;flex-direction:column;padding-top:4px">
         <SumRow icon={<ArrowLeftRight size={14} />} k="Agents" val="4 running"
-          sub="gemini waiting for your approval" nums="1 waiting" panel="sessions" />
+          sub="antigravity waiting for your approval" nums="1 waiting" panel="sessions" />
         <SumRow icon={<ArrowLeftRight size={14} />} k="Race" val="dock resize jank"
           sub="claude done · codex still working" nums="2 left" tab="tab-race" />
         <SumRow icon={<Eye size={14} />} k="Review" val="2 waiting for you"
@@ -77,7 +77,7 @@ function SessionsPanel() {
       <ListRow label="Fix flaky checkout tests" selected lead={<Dot state="working" />} trail={<span class="mono">14m</span>}
         onClick={() => { showWelcome.value = false; activeTab.value = "tab-auth"; }} />
       <div class="sec-label">Worktrees <span>· 3</span></div>
-      {["apex/claude", "apex/codex", "apex/gemini"].map((b, i) => (
+      {["apex/claude", "apex/codex", "apex/antigravity"].map((b, i) => (
         <ListRow key={b} label={b} class="font-mono"
           lead={<GitBranch size={13} style="color:var(--apex-muted)" />}
           trail={<span>{[3, 5, 0][i]}</span>} />

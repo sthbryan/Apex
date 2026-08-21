@@ -1,5 +1,5 @@
 import { LayoutGrid, SwatchBook } from "lucide-preact";
-import { veil } from "@/shared/theme/mode";
+import { AppWindow } from "@apex/ui";
 import { navigate, route } from "@/app/router";
 import type { Route } from "@/app/router";
 import { Layout } from "@/app/layout/Layout";
@@ -15,11 +15,11 @@ export function App() {
   return (
     <div class="apx">
       {route.value === "/toolkit" ? <Toolkit /> : (
-        <div class="window chrome-blur" data-veil={veil.value}>
+        <AppWindow class="window">
           <Layout>
             <Workspace />
           </Layout>
-        </div>
+        </AppWindow>
       )}
 
       <nav class="stage-links" aria-label="Lab pages">
