@@ -165,13 +165,14 @@ html[data-theme="light"] .stage-links {
 .reply-box input { flex: 1; height: 30px; font-size: 13px; min-width: 0; }
 .reply-send { width: 30px; height: 30px; border-radius: var(--apex-r-sm); background: var(--apex-accent); color: var(--apex-accent-fg); display: grid; place-items: center; flex: none; }
 .pane-toolbar .mono { font-size: 11px; color: var(--apex-muted); } .tok-f { color: var(--apex-accent); } .tok-c { color: var(--apex-faint); font-style: italic; }
-.race-view { display: flex; flex-direction: column; height: 100%; }
+.race-view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .race-task {
   padding: 7px 12px; border-bottom: 1px solid var(--apex-border); color: var(--apex-muted);
   font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;
 }
-.race-cols { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); overflow-x: auto; }
-.race-col { display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--apex-border); }
+.race-cols { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); overflow: auto; }
+.race-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--apex-border); }
+.race-col:last-child { border-right: 0; }
 .race-col-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--apex-border); flex-shrink: 0; }
 .race-col-head .c-name { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .race-col .c-note { padding: 8px 10px; color: var(--apex-muted); }

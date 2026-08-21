@@ -20,6 +20,7 @@ const TABS = [
   { id: "tab-browser", title: "localhost:5173", icon: Globe },
   { id: "tab-race", title: "Race · dock resize jank", icon: ArrowLeftRight },
   { id: "tab-file", title: "README.md", icon: FileText },
+  { id: "tab-code", title: "DockResize.ts", icon: FileText },
   { id: "tab-diff", title: "± DockResize.tsx", icon: GitBranch },
 ];
 
@@ -94,7 +95,8 @@ export const PANE_TYPES = [
   { id: "tab-auth", label: "Session · split", Component: () => <AuthSplit /> },
   { id: "tab-browser", label: "Web preview", Component: () => <BrowserPane /> },
   { id: "tab-race", label: "Race", Component: () => <RacePane /> },
-  { id: "tab-file", label: "File · markdown / source", Component: () => <FilePane /> },
+  { id: "tab-file", label: "Markdown", Component: () => <MarkdownPane /> },
+  { id: "tab-code", label: "Code", Component: () => <CodePane /> },
   { id: "tab-diff", label: "Diff", Component: () => <DiffPane /> },
 ];
 
@@ -222,7 +224,8 @@ function RacePane() {
   );
 }
 
-function FilePane() {
+function MarkdownPane() {
+  const view = fmode.value;
   return (
     <Pane
       lead={<FileText size={12} style="color:var(--apex-muted)" />}
@@ -233,13 +236,13 @@ function FilePane() {
         <Segmented
           label="File view"
           options={[{ value: "preview", label: "Preview" }, { value: "source", label: "Source" }]}
-          value={fmode.value}
+          value={view}
           onChange={(v) => fmode.value = v as "preview" | "source"}
         />
         </>
       }
     >
-        {fmode.value === "preview" ? (
+        {view === "preview" ? (
           <MarkdownView>
             <h1>Apex</h1>
             <p>Run a team of AI agents, not a wall of terminals.</p>
@@ -260,6 +263,25 @@ function FilePane() {
             <CodeLine number={7}>    curl -fsSL https://apex.dev/install.sh | sh</CodeLine>
           </CodeView>
         )}
+    </Pane>
+  );
+}
+
+function CodePane() {
+  return (
+    <Pane
+      lead={<FileText size={12} style="color:var(--apex-muted)" />}
+      title="src/dock/DockResize.ts"
+      actions={<Chip>typescript</Chip>}
+    >
+      <CodeView>
+        <CodeLine number={1}><Code token="comment">// clamp the dock between the rail and half the window</Code></CodeLine>
+        <CodeLine number={2}><Code token="keyword">export function</Code>{" "}<Code token="function">clamp</Code>(x: number, rail: number, max: number) {"{"}</CodeLine>
+        <CodeLine number={3}>  <Code token="keyword">return</Code> Math.<Code token="function">min</Code>(Math.<Code token="function">max</Code>(x, rail), max);</CodeLine>
+        <CodeLine number={4}>{"}"}</CodeLine>
+        <CodeLine number={5} />
+        <CodeLine number={6}><Code token="keyword">export const</Code> STORAGE_KEY = <Code token="string">"apex.dock.width"</Code>;</CodeLine>
+      </CodeView>
     </Pane>
   );
 }

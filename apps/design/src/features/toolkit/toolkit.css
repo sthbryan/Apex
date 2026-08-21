@@ -269,6 +269,11 @@
   background: var(--apex-bg);
 }
 
+.vw-stage > * {
+  flex: 1;
+  min-height: 0;
+}
+
 .vw-dock {
   height: 380px;
   border-radius: var(--apex-r-md);
