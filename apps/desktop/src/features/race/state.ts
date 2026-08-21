@@ -1,6 +1,9 @@
 import { computed, signal } from "@preact/signals";
 
+import type { GitTarget } from "@/bindings/GitTarget";
+import type { PendingReview } from "@/bindings/PendingReview";
 import type { SessionSummary } from "@/bindings/SessionSummary";
+import { pending } from "@/features/git/state";
 import { projectSessions } from "@/features/projects/state";
 
 export type Race = {
@@ -41,4 +44,26 @@ export const currentRace = computed(
 
 export function raceSettled(race: Race): boolean {
   return race.contenders.every((session) => session.state === "done" || session.exit_code !== null);
+}
+
+export type Contender = {
+  session: SessionSummary;
+  changed: PendingReview | null;
+};
+
+export function contendersOf(race: Race): Contender[] {
+  const counted = new Map<string, PendingReview>();
+  for (const review of pending.value) {
+    if (review.target.type === "session") {
+      counted.set(review.target.id, review);
+    }
+  }
+  return race.contenders.map((session) => ({
+    session,
+    changed: counted.get(session.id) ?? null,
+  }));
+}
+
+export function contenderTarget(session: SessionSummary): GitTarget {
+  return { type: "session", id: session.id };
 }
