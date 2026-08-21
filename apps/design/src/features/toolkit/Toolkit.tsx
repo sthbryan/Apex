@@ -1,8 +1,41 @@
-import { ArrowLeftRight, Bell, Bot, Check, Cpu, FileText, GitBranch, Globe, Keyboard, LayoutGrid, Plus, Search, Settings, Sparkles, SquareTerminal, X } from "lucide-preact";
+import { ArrowLeftRight, Bell, Bot, Check, Cpu, FileText, GitBranch, Globe, Keyboard, LayoutGrid, Plus, Settings, Sparkles, SquareTerminal, X } from "lucide-preact";
 import { veil } from "@/shared/theme/mode";
 import { Bar, Btn, Dot, Glyph, Seg, StatePill, Switch } from "@/shared/ui/atoms";
 
-const SWATCHES = ["bg", "chrome", "raised", "overlay", "border", "accent"] as const;
+const SURFACES: [string, string, string][] = [
+  ["bg", "#ffffff", "#0c0d10"],
+  ["surface · chrome", "#f6f7f9", "#131519"],
+  ["raised", "#eceef0", "#1a1d22"],
+  ["overlay · float", "#ffffff", "#1f2228"],
+  ["border", "#dfe2e6", "#24272e"],
+  ["text", "#1c1e21", "#e4e6eb"],
+  ["muted", "#656d76", "#8b919c"],
+  ["accent", "#b45309", "#f59e0b"],
+];
+
+const STATES: [string, string, string][] = [
+  ["idle", "#8c959f", "#6e7681"],
+  ["working", "#0969da", "#4a9eff"],
+  ["blocked", "#bf8700", "#e8a33d"],
+  ["done", "#1a7f37", "#3fb950"],
+  ["failed", "#cf222e", "#ff6b6b"],
+];
+
+const TYPE_SCALE: [string, number, number, string][] = [
+  ["display", 32, 600, "Run a team of AI agents"],
+  ["heading", 20, 600, "Race · dock resize jank"],
+  ["body", 14, 400, "Every contender gets its own worktree."],
+  ["caption", 12, 500, "claude · 2.0.14 · shares context"],
+  ["mono label", 11, 500, "apex/claude · +382 −96"],
+];
+
+const RADII: [string, string][] = [
+  ["s · 9", "9px"],
+  ["m · 12", "12px"],
+  ["l · 14", "14px"],
+  ["xl · 16", "16px"],
+  ["pill", "999px"],
+];
 
 export function Toolkit() {
   return (
@@ -16,23 +49,68 @@ export function Toolkit() {
 
       <section>
         <h2>Tokens · surfaces</h2>
-        <div class="tk-grid">
-          {SWATCHES.map((s) => (
-            <div class="tk-cell" key={s}>
-              <div class="swatch" style={`background:var(--${s === "chrome" ? "chrome" : s})`}><span>{s}</span></div>
+        <div style="max-width:760px">
+          <div class="spec-row spec-head">
+            <span>token</span><span /><span>light</span><span>dark</span>
+          </div>
+          {SURFACES.map(([name, light, dark]) => (
+            <div class="spec-row" key={name}>
+              <span class="dual-swatch" style={`background:linear-gradient(90deg, ${light} 50%, ${dark} 50%)`} />
+              <span>{name}</span>
+              <span class="spec-hex">{light}</span>
+              <span class="spec-hex">{dark}</span>
             </div>
           ))}
         </div>
       </section>
 
       <section>
-        <h2>State</h2>
-        <div class="tk-row" style="gap:18px">
-          <StatePill state="working">working</StatePill>
-          <StatePill state="blocked">blocked</StatePill>
-          <StatePill state="done">done</StatePill>
-          <Dot state="failed" /><Dot state="idle" />
-          <span class="fbadge M">M</span><span class="fbadge A">A</span><span class="fbadge D">D</span>
+        <h2>Tokens · state</h2>
+        <div style="max-width:760px">
+          <div class="spec-row spec-head">
+            <span>token</span><span /><span>light</span><span>dark</span>
+          </div>
+          {STATES.map(([name, light, dark]) => (
+            <div class="spec-row" key={name}>
+              <Dot state={name} />
+              <span>{name}</span>
+              <span class="spec-hex">{light}</span>
+              <span class="spec-hex">{dark}</span>
+            </div>
+          ))}
+          <div class="tk-row" style="gap:18px;margin-top:14px">
+            <StatePill state="working">working</StatePill>
+            <StatePill state="blocked">blocked</StatePill>
+            <StatePill state="done">done</StatePill>
+            <Dot state="failed" /><Dot state="idle" />
+            <span class="fbadge M">M</span><span class="fbadge A">A</span><span class="fbadge D">D</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Typography</h2>
+        <div style="max-width:760px">
+          {TYPE_SCALE.map(([name, size, weight, sample]) => (
+            <div class="type-row" key={name}>
+              <span style={`font-size:${size}px;font-weight:${weight};${name === "mono label" ? "font-family:var(--font-mono)" : ""};overflow:hidden;text-overflow:ellipsis;white-space:nowrap`}>
+                {sample}
+              </span>
+              <span class="type-meta">{name} / {size} / {weight}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Radii</h2>
+        <div class="radius-row">
+          {RADII.map(([name, r]) => (
+            <span class="radius-chip" key={name}>
+              <i style={`border-radius:${r}`} />
+              {name}
+            </span>
+          ))}
         </div>
       </section>
 
