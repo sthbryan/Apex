@@ -1,6 +1,6 @@
 use apex_proto::{
-    Command, DiffScope, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair, MergeReport,
-    PendingReview, Reply, WorktreeEntry,
+    Command, DiffScope, GitBranch, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair,
+    MergeReport, PendingReview, Reply, WorktreeEntry,
 };
 use uuid::Uuid;
 
@@ -71,6 +71,36 @@ pub async fn git_log(
         .map_err(failed)?
     {
         Reply::Log { commits } => Ok(commits),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+pub async fn git_branches(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+) -> Answer<Vec<GitBranch>> {
+    match state.daemon()?.request(Command::GitBranches { project, target }).await.map_err(failed)? {
+        Reply::Branches { branches } => Ok(branches),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+pub async fn git_checkout(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+    branch: String,
+) -> Answer<()> {
+    match state
+        .daemon()?
+        .request(Command::GitCheckout { project, target, branch })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Done => Ok(()),
         other => Err(format!("unexpected reply: {other:?}")),
     }
 }

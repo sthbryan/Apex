@@ -73,6 +73,8 @@ pub fn run() {
             commands::git_hunks,
             commands::git_images,
             commands::list_worktrees,
+            commands::git_branches,
+            commands::git_checkout,
             commands::git_pending,
             commands::git_stage,
             commands::git_stage_hunk,
