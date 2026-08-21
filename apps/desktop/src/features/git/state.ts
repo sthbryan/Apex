@@ -274,11 +274,17 @@ export async function readBranches(): Promise<void> {
 }
 
 export async function checkoutBranch(branch: string): Promise<void> {
-  await invoke("git_checkout", {
-    project: activeProjectId.value,
-    target: gitTarget.value,
-    branch,
-  });
+  try {
+    await invoke("git_checkout", {
+      project: activeProjectId.value,
+      target: gitTarget.value,
+      branch,
+    });
+    gitFailure.value = null;
+  } catch (error) {
+    gitFailure.value = String(error);
+    throw error;
+  }
   await refreshGit();
   await readLog();
   await readBranches();
