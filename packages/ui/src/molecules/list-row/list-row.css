@@ -1,39 +1,41 @@
 @reference "../../theme.css";
 
-.ui-list-row {
-  @apply flex w-full items-center gap-2 rounded-sm px-2 text-left text-md text-text transition-colors;
-  min-height: var(--apex-h-md);
-  @apply py-1.5;
-}
+@layer components {
+  .ui-list-row {
+    @apply flex w-full items-center gap-2 rounded-sm px-2 text-left text-md text-text transition-colors;
+    min-height: var(--apex-h-md);
+    @apply py-1.5;
+  }
 
-.ui-list-row:hover:not([aria-disabled="true"]) {
-  @apply bg-raised;
-}
+  .ui-list-row:hover:not([aria-disabled="true"]) {
+    @apply bg-raised;
+  }
 
-.ui-list-row[aria-selected="true"] {
-  @apply bg-raised font-medium;
-}
+  .ui-list-row[aria-selected="true"] {
+    @apply bg-raised font-medium;
+  }
 
-.ui-list-row[aria-disabled="true"] {
-  @apply cursor-not-allowed opacity-45;
-}
+  .ui-list-row[aria-disabled="true"] {
+    @apply cursor-not-allowed opacity-45;
+  }
 
-.ui-list-row-lead {
-  @apply flex shrink-0 items-center gap-2;
-}
+  .ui-list-row-lead {
+    @apply flex shrink-0 items-center gap-2;
+  }
 
-.ui-list-row-text {
-  @apply min-w-0 flex-1;
-}
+  .ui-list-row-text {
+    @apply min-w-0 flex-1;
+  }
 
-.ui-list-row-label {
-  @apply block truncate;
-}
+  .ui-list-row-label {
+    @apply block truncate;
+  }
 
-.ui-list-row-sub {
-  @apply block truncate font-mono text-2xs text-muted;
-}
+  .ui-list-row-sub {
+    @apply block truncate font-mono text-2xs text-muted;
+  }
 
-.ui-list-row-trail {
-  @apply flex shrink-0 items-center gap-2 text-xs text-muted;
+  .ui-list-row-trail {
+    @apply flex shrink-0 items-center gap-2 text-xs text-muted;
+  }
 }

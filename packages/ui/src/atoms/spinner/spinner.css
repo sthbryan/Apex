@@ -1,12 +1,14 @@
 @reference "../../theme.css";
 
-.ui-spinner {
-  @apply inline-block shrink-0 rounded-full border-2 border-current border-t-transparent;
-  width: var(--ui-spinner-size, 14px);
-  height: var(--ui-spinner-size, 14px);
-  animation: apex-spin var(--apex-slow) linear infinite;
-}
+@layer components {
+  .ui-spinner {
+    @apply inline-block shrink-0 rounded-full border-2 border-current border-t-transparent;
+    width: var(--ui-spinner-size, 14px);
+    height: var(--ui-spinner-size, 14px);
+    animation: apex-spin var(--apex-slow) linear infinite;
+  }
 
-.ui-spinner[data-size="sm"] { --ui-spinner-size: 12px; }
-.ui-spinner[data-size="md"] { --ui-spinner-size: 14px; }
-.ui-spinner[data-size="lg"] { --ui-spinner-size: 18px; }
+  .ui-spinner[data-size="sm"] { --ui-spinner-size: 12px; }
+  .ui-spinner[data-size="md"] { --ui-spinner-size: 14px; }
+  .ui-spinner[data-size="lg"] { --ui-spinner-size: 18px; }
+}

@@ -1,21 +1,23 @@
 @reference "../../theme.css";
 
-.ui-empty-state {
-  @apply flex flex-col items-center justify-center gap-2 px-6 py-10 text-center;
-}
+@layer components {
+  .ui-empty-state {
+    @apply flex flex-col items-center justify-center gap-2 px-6 py-10 text-center;
+  }
 
-.ui-empty-state-icon {
-  @apply mb-1 grid size-10 place-items-center rounded-md bg-accent-soft text-accent;
-}
+  .ui-empty-state-icon {
+    @apply mb-1 grid size-10 place-items-center rounded-md bg-accent-soft text-accent;
+  }
 
-.ui-empty-state-title {
-  @apply text-lg font-semibold text-text;
-}
+  .ui-empty-state-title {
+    @apply text-lg font-semibold text-text;
+  }
 
-.ui-empty-state-detail {
-  @apply max-w-72 text-md text-muted;
-}
+  .ui-empty-state-detail {
+    @apply max-w-72 text-md text-muted;
+  }
 
-.ui-empty-state-actions {
-  @apply mt-2 flex items-center gap-2;
+  .ui-empty-state-actions {
+    @apply mt-2 flex items-center gap-2;
+  }
 }

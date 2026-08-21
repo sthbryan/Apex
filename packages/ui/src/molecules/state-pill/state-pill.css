@@ -1,5 +1,7 @@
 @reference "../../theme.css";
 
-.ui-state-pill .ui-dot {
-  background-color: currentcolor;
+@layer components {
+  .ui-state-pill .ui-dot {
+    background-color: currentcolor;
+  }
 }

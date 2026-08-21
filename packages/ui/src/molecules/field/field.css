@@ -1,33 +1,35 @@
 @reference "../../theme.css";
 
-.ui-field {
-  @apply flex items-center gap-4 border-b border-border py-2;
-}
+@layer components {
+  .ui-field {
+    @apply flex items-center gap-4 border-b border-border py-2;
+  }
 
-.ui-field:last-child {
-  @apply border-b-0;
-}
+  .ui-field:last-child {
+    @apply border-b-0;
+  }
 
-.ui-field[data-layout="stacked"] {
-  @apply flex-col items-stretch gap-1.5;
-}
+  .ui-field[data-layout="stacked"] {
+    @apply flex-col items-stretch gap-1.5;
+  }
 
-.ui-field-text {
-  @apply min-w-0 flex-1;
-}
+  .ui-field-text {
+    @apply min-w-0 flex-1;
+  }
 
-.ui-field-label {
-  @apply block text-md font-medium text-text;
-}
+  .ui-field-label {
+    @apply block text-md font-medium text-text;
+  }
 
-.ui-field-hint {
-  @apply mt-0.5 block text-xs text-muted;
-}
+  .ui-field-hint {
+    @apply mt-0.5 block text-xs text-muted;
+  }
 
-.ui-field-control {
-  @apply flex shrink-0 items-center gap-2;
-}
+  .ui-field-control {
+    @apply flex shrink-0 items-center gap-2;
+  }
 
-.ui-field[data-layout="stacked"] .ui-field-control {
-  @apply w-full;
+  .ui-field[data-layout="stacked"] .ui-field-control {
+    @apply w-full;
+  }
 }

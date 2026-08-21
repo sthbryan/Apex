@@ -1,29 +1,31 @@
 @reference "../../theme.css";
 
-.ui-segmented {
-  @apply inline-flex shrink-0 items-center gap-0.5 rounded-sm border border-border p-0.5;
-  background-color: color-mix(in oklab, var(--apex-raised) 60%, transparent);
-}
+@layer components {
+  .ui-segmented {
+    @apply inline-flex shrink-0 items-center gap-0.5 rounded-sm border border-border p-0.5;
+    background-color: color-mix(in oklab, var(--apex-raised) 60%, transparent);
+  }
 
-.ui-segmented-option {
-  @apply inline-flex items-center justify-center rounded-xs px-2 text-xs font-medium text-muted whitespace-nowrap;
-  @apply transition-[background-color,color,box-shadow];
-  height: var(--ui-segmented-height, 20px);
-}
+  .ui-segmented-option {
+    @apply inline-flex items-center justify-center rounded-xs px-2 text-xs font-medium text-muted whitespace-nowrap;
+    @apply transition-[background-color,color,box-shadow];
+    height: var(--ui-segmented-height, 20px);
+  }
 
-.ui-segmented[data-size="sm"] { --ui-segmented-height: 18px; }
-.ui-segmented[data-size="md"] { --ui-segmented-height: 20px; }
-.ui-segmented[data-size="lg"] { --ui-segmented-height: 24px; }
+  .ui-segmented[data-size="sm"] { --ui-segmented-height: 18px; }
+  .ui-segmented[data-size="md"] { --ui-segmented-height: 20px; }
+  .ui-segmented[data-size="lg"] { --ui-segmented-height: 24px; }
 
-.ui-segmented-option:hover:not(:disabled) {
-  @apply text-text;
-}
+  .ui-segmented-option:hover:not(:disabled) {
+    @apply text-text;
+  }
 
-.ui-segmented-option[aria-checked="true"] {
-  @apply bg-bg text-text font-semibold;
-  box-shadow: 0 0 0 1px var(--apex-border), var(--apex-shadow-sm);
-}
+  .ui-segmented-option[aria-checked="true"] {
+    @apply bg-bg text-text font-semibold;
+    box-shadow: 0 0 0 1px var(--apex-border), var(--apex-shadow-sm);
+  }
 
-.ui-segmented-option:disabled {
-  @apply cursor-not-allowed opacity-45;
+  .ui-segmented-option:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
 }

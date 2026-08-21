@@ -1,22 +1,24 @@
 @reference "../../theme.css";
 
-.ui-dot {
-  @apply inline-block shrink-0 rounded-full;
-  width: var(--ui-dot-size, 8px);
-  height: var(--ui-dot-size, 8px);
-  background-color: var(--ui-dot-color);
-}
+@layer components {
+  .ui-dot {
+    @apply inline-block shrink-0 rounded-full;
+    width: var(--ui-dot-size, 8px);
+    height: var(--ui-dot-size, 8px);
+    background-color: var(--ui-dot-color);
+  }
 
-.ui-dot[data-size="sm"] { --ui-dot-size: 6px; }
-.ui-dot[data-size="md"] { --ui-dot-size: 8px; }
-.ui-dot[data-size="lg"] { --ui-dot-size: 10px; }
+  .ui-dot[data-size="sm"] { --ui-dot-size: 6px; }
+  .ui-dot[data-size="md"] { --ui-dot-size: 8px; }
+  .ui-dot[data-size="lg"] { --ui-dot-size: 10px; }
 
-.ui-dot[data-state="idle"] { --ui-dot-color: var(--apex-state-idle); }
-.ui-dot[data-state="working"] { --ui-dot-color: var(--apex-state-working); }
-.ui-dot[data-state="blocked"] { --ui-dot-color: var(--apex-state-blocked); }
-.ui-dot[data-state="done"] { --ui-dot-color: var(--apex-state-done); }
-.ui-dot[data-state="failed"] { --ui-dot-color: var(--apex-state-failed); }
+  .ui-dot[data-state="idle"] { --ui-dot-color: var(--apex-state-idle); }
+  .ui-dot[data-state="working"] { --ui-dot-color: var(--apex-state-working); }
+  .ui-dot[data-state="blocked"] { --ui-dot-color: var(--apex-state-blocked); }
+  .ui-dot[data-state="done"] { --ui-dot-color: var(--apex-state-done); }
+  .ui-dot[data-state="failed"] { --ui-dot-color: var(--apex-state-failed); }
 
-.ui-dot[data-pulse="true"] {
-  animation: apex-pulse 1.6s ease-in-out infinite;
+  .ui-dot[data-pulse="true"] {
+    animation: apex-pulse 1.6s ease-in-out infinite;
+  }
 }

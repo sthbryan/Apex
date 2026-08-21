@@ -1,15 +1,17 @@
 @reference "../../theme.css";
 
-.ui-meter {
-  @apply flex w-full items-center gap-2;
-}
+@layer components {
+  .ui-meter {
+    @apply flex w-full items-center gap-2;
+  }
 
-.ui-meter-label {
-  @apply shrink-0 text-xs text-muted;
-  width: var(--ui-meter-label-width, 52px);
-}
+  .ui-meter-label {
+    @apply shrink-0 text-xs text-muted;
+    width: var(--ui-meter-label-width, 52px);
+  }
 
-.ui-meter-value {
-  @apply shrink-0 text-right font-mono text-2xs text-muted tabular-nums;
-  width: var(--ui-meter-value-width, 44px);
+  .ui-meter-value {
+    @apply shrink-0 text-right font-mono text-2xs text-muted tabular-nums;
+    width: var(--ui-meter-value-width, 44px);
+  }
 }

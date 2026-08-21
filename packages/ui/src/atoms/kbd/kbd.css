@@ -1,10 +1,12 @@
 @reference "../../theme.css";
 
-.ui-kbd {
-  @apply inline-flex min-w-4 items-center justify-center rounded-xs border border-border bg-raised px-1 font-mono text-2xs text-text;
-  height: 18px;
-}
+@layer components {
+  .ui-kbd {
+    @apply inline-flex min-w-4 items-center justify-center rounded-xs border border-border bg-raised px-1 font-mono text-2xs text-text;
+    height: 18px;
+  }
 
-.ui-kbd-group {
-  @apply inline-flex items-center gap-0.5;
+  .ui-kbd-group {
+    @apply inline-flex items-center gap-0.5;
+  }
 }

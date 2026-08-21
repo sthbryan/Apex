@@ -1,3 +1,5 @@
+@layer theme, base, components, utilities;
+
 @import "./keyframes.css";
 @import "@apex/tokens/tokens.css";
 @import "./atoms/agent-icon/agent-icon.css";

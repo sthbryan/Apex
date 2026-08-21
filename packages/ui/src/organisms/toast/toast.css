@@ -1,40 +1,42 @@
 @reference "../../theme.css";
 
-.ui-toast {
-  @apply relative flex w-72 items-center gap-2.5 overflow-hidden rounded-md border border-border p-3;
-  background-color: var(--apex-overlay);
-  box-shadow: var(--apex-shadow-lg);
-  backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
-  animation: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
-}
+@layer components {
+  .ui-toast {
+    @apply relative flex w-72 items-center gap-2.5 overflow-hidden rounded-md border border-border p-3;
+    background-color: var(--apex-overlay);
+    box-shadow: var(--apex-shadow-lg);
+    backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
+    animation: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
+  }
 
-.ui-toast-text {
-  @apply min-w-0 flex-1;
-}
+  .ui-toast-text {
+    @apply min-w-0 flex-1;
+  }
 
-.ui-toast-title {
-  @apply truncate text-md font-semibold text-text;
-}
+  .ui-toast-title {
+    @apply truncate text-md font-semibold text-text;
+  }
 
-.ui-toast-detail {
-  @apply truncate text-xs text-muted;
-}
+  .ui-toast-detail {
+    @apply truncate text-xs text-muted;
+  }
 
-.ui-toast-progress {
-  @apply absolute inset-x-0 bottom-0 h-0.5 origin-left;
-  background-color: var(--ui-toast-accent, var(--apex-accent));
-  animation: apex-shrink var(--ui-toast-duration, 6s) linear forwards;
-}
+  .ui-toast-progress {
+    @apply absolute inset-x-0 bottom-0 h-0.5 origin-left;
+    background-color: var(--ui-toast-accent, var(--apex-accent));
+    animation: apex-shrink var(--ui-toast-duration, 6s) linear forwards;
+  }
 
-.ui-toast[data-tone="done"] { --ui-toast-accent: var(--apex-state-done); }
-.ui-toast[data-tone="failed"] { --ui-toast-accent: var(--apex-state-failed); }
-.ui-toast[data-tone="blocked"] { --ui-toast-accent: var(--apex-state-blocked); }
+  .ui-toast[data-tone="done"] { --ui-toast-accent: var(--apex-state-done); }
+  .ui-toast[data-tone="failed"] { --ui-toast-accent: var(--apex-state-failed); }
+  .ui-toast[data-tone="blocked"] { --ui-toast-accent: var(--apex-state-blocked); }
 
-.ui-toast-stack {
-  @apply pointer-events-none fixed right-4 bottom-4 flex flex-col items-end gap-2;
-  z-index: var(--apex-z-toast);
-}
+  .ui-toast-stack {
+    @apply pointer-events-none fixed right-4 bottom-4 flex flex-col items-end gap-2;
+    z-index: var(--apex-z-toast);
+  }
 
-.ui-toast-stack > * {
-  @apply pointer-events-auto;
+  .ui-toast-stack > * {
+    @apply pointer-events-auto;
+  }
 }
