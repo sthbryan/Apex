@@ -169,8 +169,9 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
         </header>
       )}
 
-      {!chrome && toggle && (
-        <div class="flex h-6 shrink-0 items-center justify-end border-b border-border px-2">
+      {!chrome && (walker || toggle) && (
+        <div class="flex h-6 shrink-0 items-center justify-end gap-2 border-b border-border px-2">
+          {walker}
           {toggle}
         </div>
       )}
