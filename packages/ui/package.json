@@ -1,0 +1,35 @@
+{
+  "name": "@apex/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./ui.css": "./dist/ui.css"
+  },
+  "files": ["dist"],
+  "sideEffects": ["*.css"],
+  "scripts": {
+    "build": "bun run build:js && bun run build:css",
+    "build:js": "bun build ./src/index.ts --outdir dist --target browser --format esm --external preact --external 'preact/*' && tsc -p tsconfig.json",
+    "build:css": "tailwindcss -i ./src/index.css -o ./dist/ui.css --minify",
+    "dev": "bun run build:js --watch"
+  },
+  "peerDependencies": {
+    "preact": ">=10"
+  },
+  "dependencies": {
+    "@apex/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "preact": "^10.29.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}

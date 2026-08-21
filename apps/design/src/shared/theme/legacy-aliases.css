@@ -22,9 +22,9 @@
   --tty-fg: var(--apex-tty-fg);
   --tty-dim: var(--apex-tty-dim);
   --tty-bright: var(--apex-tty-bright);
-  --r-s: var(--apex-r-s);
-  --r-m: var(--apex-r-m);
-  --r-l: var(--apex-r-l);
+  --r-s: var(--apex-r-sm);
+  --r-m: var(--apex-r-md);
+  --r-l: var(--apex-r-lg);
   --r-xl: var(--apex-r-xl);
   --ease: var(--apex-ease);
   --quick: var(--apex-quick);

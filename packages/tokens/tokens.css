@@ -1,36 +1,22 @@
 :root {
-  --apex-space-0: 0px;
-  --apex-space-1: 2px;
-  --apex-space-2: 4px;
-  --apex-space-3: 6px;
-  --apex-space-4: 8px;
-  --apex-space-5: 10px;
-  --apex-space-6: 12px;
-  --apex-space-7: 16px;
-  --apex-space-8: 20px;
-  --apex-space-9: 24px;
-  --apex-space-10: 32px;
-  --apex-space-11: 40px;
-  --apex-space-12: 56px;
-
   --apex-r-xs: 6px;
-  --apex-r-s: 9px;
-  --apex-r-m: 12px;
-  --apex-r-l: 14px;
+  --apex-r-sm: 9px;
+  --apex-r-md: 12px;
+  --apex-r-lg: 14px;
   --apex-r-xl: 16px;
   --apex-r-full: 999px;
 
   --apex-h-xs: 20px;
-  --apex-h-s: 24px;
-  --apex-h-m: 28px;
-  --apex-h-l: 32px;
+  --apex-h-sm: 24px;
+  --apex-h-md: 28px;
+  --apex-h-lg: 32px;
   --apex-h-xl: 36px;
 
   --apex-text-2xs: 9.5px;
   --apex-text-xs: 10.5px;
-  --apex-text-s: 11.5px;
-  --apex-text-m: 12.5px;
-  --apex-text-l: 14px;
+  --apex-text-sm: 11.5px;
+  --apex-text-md: 12.5px;
+  --apex-text-lg: 14px;
   --apex-text-xl: 17px;
   --apex-text-2xl: 20px;
   --apex-text-3xl: 26px;
@@ -69,9 +55,9 @@
   --apex-z-toast: 70;
   --apex-z-palette: 80;
 
-  --apex-shadow-s: 0 1px 2px rgb(0 0 0 / 0.08);
-  --apex-shadow-m: 0 4px 14px rgb(0 0 0 / 0.16);
-  --apex-shadow-l: 0 10px 30px rgb(0 0 0 / 0.24);
+  --apex-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.08);
+  --apex-shadow-md: 0 4px 14px rgb(0 0 0 / 0.16);
+  --apex-shadow-lg: 0 10px 30px rgb(0 0 0 / 0.24);
   --apex-shadow-xl: 0 24px 80px rgb(0 0 0 / 0.4);
 }
 

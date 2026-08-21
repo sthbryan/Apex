@@ -6,7 +6,7 @@ body {
   background: var(--apex-bg);
   font-family: var(--font-sans, Inter, system-ui, sans-serif);
   font-feature-settings: "calt", "kern", "liga", "ss03";
-  font-size: var(--apex-text-m);
+  font-size: var(--apex-text-md);
   line-height: var(--apex-leading-snug);
   -webkit-font-smoothing: antialiased;
 }
