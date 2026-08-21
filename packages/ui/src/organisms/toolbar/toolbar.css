@@ -1,0 +1,22 @@
+@reference "../../theme.css";
+
+.ui-toolbar {
+  @apply flex shrink-0 items-center gap-2 px-3;
+  min-height: var(--apex-h-xl);
+}
+
+.ui-toolbar[data-bordered="true"] {
+  @apply border-b border-border;
+}
+
+.ui-toolbar[data-elevation="surface"] { background-color: var(--apex-surface); }
+.ui-toolbar[data-elevation="bg"] { background-color: var(--apex-bg); }
+.ui-toolbar[data-elevation="raised"] { background-color: var(--apex-raised); }
+
+.ui-toolbar-title {
+  @apply min-w-0 truncate text-md font-semibold text-text;
+}
+
+.ui-toolbar-spacer {
+  @apply flex-1;
+}

@@ -1,0 +1,24 @@
+@reference "../../theme.css";
+
+.ui-popover {
+  @apply absolute min-w-52 rounded-md border border-border p-3;
+  z-index: var(--apex-z-overlay);
+  background-color: var(--apex-overlay);
+  box-shadow: var(--apex-shadow-lg);
+  backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
+  animation: apex-pop-in var(--apex-quick) var(--apex-ease-out) both;
+}
+
+.ui-popover[data-side="top"] { @apply bottom-full mb-2; }
+.ui-popover[data-side="bottom"] { @apply top-full mt-2; }
+.ui-popover[data-align="start"] { @apply left-0; }
+.ui-popover[data-align="end"] { @apply right-0; }
+.ui-popover[data-align="center"] { @apply left-1/2 -translate-x-1/2; }
+
+.ui-popover-anchor {
+  @apply relative inline-flex;
+}
+
+.ui-popover-head {
+  @apply mb-2 flex items-center gap-2 text-xs font-semibold tracking-caps text-muted uppercase;
+}
