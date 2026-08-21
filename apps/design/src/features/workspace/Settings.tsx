@@ -1,8 +1,7 @@
 import { BookOpenText, Bot, CircleHelp, Globe, Keyboard, Server, Sparkles, X } from "lucide-preact";
 import { themeMode, veil } from "@/shared/theme/mode";
 import { settingsOpen, settingsSection, updateState } from "@/app/state";
-import { AgentIcon } from "@/shared/ui/AgentIcon";
-import { Seg, Switch } from "@/shared/ui/atoms";
+import { AgentIcon, Button, Kbd, Pill, Segmented, Switch } from "@apex/ui";
 
 const SECTIONS = [
   { id: "look", label: "Look", Icon: Sparkles },
@@ -17,7 +16,7 @@ export function SettingsModal() {
   return (
     <div class="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) settingsOpen.value = false; }}>
       <div class="modal" role="dialog" aria-label="Settings" style="width:min(720px,94%);height:min(500px,88%)">
-        <button class="icon-btn modal-close" title="Close" onClick={() => settingsOpen.value = false}><X size={13} /></button>
+        <Button class="modal-close" variant="subtle" size="lg" iconOnly title="Close" onClick={() => settingsOpen.value = false}><X size={13} /></Button>
         <nav class="modal-nav">
           <h3>Settings</h3>
           {SECTIONS.map(({ id, label, Icon }) => (
@@ -59,17 +58,18 @@ function LookSection() {
       <div class="set-title">Look</div>
       <div class="set-sub">How Apex feels on this machine.</div>
       <SetRow label="Theme" desc="Applies instantly, saved for next time.">
-        <Seg
-          options={[{ id: "light", label: "Light" }, { id: "dark", label: "Dark" }]}
+        <Segmented
+          label="Theme"
+          options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]}
           value={themeMode.value}
           onChange={(v) => (themeMode.value = v as "light" | "dark")}
         />
       </SetRow>
       <SetRow label="Text size">
-        <Seg options={[{ id: "compact", label: "Compact" }, { id: "normal", label: "Normal" }, { id: "roomy", label: "Roomy" }]} value="compact" onChange={() => {}} />
+        <Segmented label="Text size" options={[{ value: "compact", label: "Compact" }, { value: "normal", label: "Normal" }, { value: "roomy", label: "Roomy" }]} value="compact" onChange={() => {}} />
       </SetRow>
       <SetRow label="Translucent window" desc="Let the desktop show through the chrome.">
-        <Switch checked={veil.value === "on"} onChange={(v) => (veil.value = v ? "on" : "off")} />
+        <Switch label="Translucent window" checked={veil.value === "on"} onChange={(v) => (veil.value = v ? "on" : "off")} />
       </SetRow>
       <SetRow label="Transparency">
         <div class="slider-row"><input type="range" min={0} max={100} defaultValue={76} /><span class="sv">76%</span></div>
@@ -78,7 +78,7 @@ function LookSection() {
         <div class="slider-row"><input type="range" min={0} max={40} defaultValue={26} /><span class="sv">26px</span></div>
       </SetRow>
       <SetRow label="Language">
-        <Seg options={[{ id: "en", label: "English" }, { id: "es", label: "Español" }]} value="en" onChange={() => {}} />
+        <Segmented label="Language" options={[{ value: "en", label: "English" }, { value: "es", label: "Español" }]} value="en" onChange={() => {}} />
       </SetRow>
     </div>
   );
@@ -97,16 +97,16 @@ function WorkspaceSection() {
         </select>
       </SetRow>
       <SetRow label="Web previews" desc="localhost links open…">
-        <Seg options={[{ id: "pane", label: "In a pane" }, { id: "browser", label: "System browser" }]} value="pane" onChange={() => {}} />
+        <Segmented label="Web previews" options={[{ value: "pane", label: "In a pane" }, { value: "browser", label: "System browser" }]} value="pane" onChange={() => {}} />
       </SetRow>
       <SetRow label="Views an agent asks for">
-        <Seg options={[{ id: "tab", label: "New tab" }, { id: "split", label: "Split the tab" }]} value="split" onChange={() => {}} />
+        <Segmented label="Views an agent asks for" options={[{ value: "tab", label: "New tab" }, { value: "split", label: "Split the tab" }]} value="split" onChange={() => {}} />
       </SetRow>
       <SetRow label="Races skip permission prompts" desc="Contenders run unsupervised in their worktrees.">
-        <Switch checked onChange={() => {}} />
+        <Switch label="Races skip permission prompts" checked onChange={() => {}} />
       </SetRow>
       <SetRow label="Notifications">
-        <Switch checked onChange={() => {}} />
+        <Switch label="Notifications" checked onChange={() => {}} />
       </SetRow>
     </div>
   );
@@ -128,15 +128,15 @@ function AgentsSection() {
       </div>
       {AGENTS.map((a) => (
         <div class="agent-set-row" key={a.id}>
-          <AgentIcon agent={a.id} size={20} />
+          <AgentIcon agent={a.id} size="md" />
           <div style="flex:1;min-width:0">
             <div class="as-name">{a.name} <span class="as-ver">{a.ver}</span></div>
           </div>
-          <span class={"pill" + (a.shares ? " on" : "")} title="Shares context">shares context</span>
+          <Pill tone={a.shares ? "accent" : "neutral"} title="Shares context">shares context</Pill>
           {a.mode === "acp" ? (
-            <Seg options={[{ id: "tty", label: "Terminal" }, { id: "acp", label: "Native" }]} value="acp" onChange={() => {}} />
+            <Segmented label={`${a.name} rendering`} options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]} value="acp" onChange={() => {}} />
           ) : (
-            <Seg options={[{ id: "tty", label: "Terminal" }, { id: "acp", label: "Native" }]} value="tty" onChange={() => {}} />
+            <Segmented label={`${a.name} rendering`} options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]} value="tty" onChange={() => {}} />
           )}
         </div>
       ))}
@@ -150,8 +150,9 @@ function DaemonSection() {
       <div class="set-title">Daemon</div>
       <div class="set-sub">The background service keeping sessions alive.</div>
       <SetRow label="Daemon background time" desc="After you close Apex, agents keep running for this long.">
-        <Seg
-          options={[{ id: "stop", label: "Stop on close" }, { id: "60", label: "60 s" }, { id: "2h", label: "2 h" }]}
+        <Segmented
+          label="Daemon background time"
+          options={[{ value: "stop", label: "Stop on close" }, { value: "60", label: "60 s" }, { value: "2h", label: "2 h" }]}
           value="60"
           onChange={() => {}}
         />
@@ -194,7 +195,7 @@ function ShortcutsSection() {
           {rows.map(([label, keys]) => (
             <div class="sc-row" key={label}>
               <span class="sc-label">{label}</span>
-              <span class="keys">{keys.map((k) => <kbd key={k}>{k}</kbd>)}</span>
+              <span class="keys">{keys.map((k) => <Kbd key={k}>{k}</Kbd>)}</span>
             </div>
           ))}
         </div>
@@ -216,8 +217,8 @@ function AboutSection() {
           </div>
           <div class="set-desc">Run a team of AI agents, not a wall of terminals.</div>
         </div>
-        <button
-          class="btn btn-primary"
+        <Button
+          variant="primary"
           disabled={checking}
           onClick={() => {
             updateState.value = "Checking…";
@@ -225,7 +226,7 @@ function AboutSection() {
           }}
         >
           {checking ? "Checking…" : "Check for updates"}
-        </button>
+        </Button>
       </div>
       <dl>
         <div class="fact-row"><dt>App</dt><dd>0.5.0 (design lab)</dd></div>

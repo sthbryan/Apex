@@ -5,6 +5,7 @@ import {
 } from "lucide-preact";
 import { openPop, activePanel, railOnly, settingsOpen, settingsSection, showWelcome } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
+import { Button, Tooltip } from "@apex/ui";
 
 const PANELS = [
   { id: "summary", icon: LayoutGrid, label: "Summary" },
@@ -25,21 +26,22 @@ export function Layout({ children }: { children: ComponentChildren }) {
         <div class="lights" aria-hidden="true"><i /><i /><i /></div>
         <div class="titlebar-title"><strong>APEX</strong> — apex-sandbox</div>
         <div class="tb-actions">
-          <button class="icon-btn" title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></button>
-          <button class="icon-btn" title="Command palette ⌘K"><LayoutGrid size={15} /></button>
-          <button class="icon-btn" title="Settings ⌘," onClick={() => { settingsOpen.value = true; settingsSection.value = "look"; }}><Settings size={15} /></button>
+          <Button variant="subtle" size="lg" iconOnly title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></Button>
+          <Button variant="subtle" size="lg" iconOnly title="Command palette ⌘K"><LayoutGrid size={15} /></Button>
+          <Button variant="subtle" size="lg" iconOnly title="Settings ⌘," onClick={() => { settingsOpen.value = true; settingsSection.value = "look"; }}><Settings size={15} /></Button>
         </div>
       </header>
 
       <div class="app">
         <nav class="rail chrome-blur" aria-label="Panels">
           {PANELS.map((p) => (
-            <button key={p.id} class="picon" aria-current={activePanel.value === p.id}
-              onClick={() => { activePanel.value = p.id; railOnly.value = false; }}>
-              <p.icon size={16} />
-              {p.badge && <span class={`bdot ${p.badge}`} />}
-              <span class="tip">{p.label}</span>
-            </button>
+            <Tooltip key={p.id} content={p.label} side="right">
+              <button class="picon" aria-current={activePanel.value === p.id}
+                onClick={() => { activePanel.value = p.id; railOnly.value = false; }}>
+                <p.icon size={16} />
+                {p.badge && <span class={`bdot ${p.badge}`} />}
+              </button>
+            </Tooltip>
           ))}
           <div style="flex:1" />
           <button class="picon" title="main · 16 changed">

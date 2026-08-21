@@ -5,7 +5,7 @@ import {
   pickWinner, raceKept, removedProject,
 } from "@/app/state";
 import { activeTab, showWelcome } from "@/app/state";
-import { Bar, Dot, Glyph } from "@/shared/ui/atoms";
+import { AgentIcon, Bar, Button, Card, Dot, ListRow } from "@apex/ui";
 
 function SumRow({ icon, k, val, sub, nums, ...go }: {
   icon: any; k: string; val: any; sub?: string; nums?: string;
@@ -56,13 +56,13 @@ function SummaryPanel() {
       </div>
       <div class="sec-label">Quotas</div>
       <div style="display:flex;flex-direction:column;gap:2px">
-        <div class="sum-row" style="padding:4px 6px"><Glyph agent="claude" mini /><span style="margin-right:8px">claude</span><Bar width="62%" /><span class="sum-nums">62%</span></div>
-        <div class="sum-row" style="padding:4px 6px"><Glyph agent="codex" mini /><span style="margin-right:8px">codex</span><Bar tone="warn" width="71%" /><span class="sum-nums">71%</span></div>
+        <div class="sum-row" style="padding:4px 6px"><AgentIcon agent="claude" size="sm" /><span style="margin-right:8px">claude</span><Bar value={62} label="claude usage" /><span class="sum-nums">62%</span></div>
+        <div class="sum-row" style="padding:4px 6px"><AgentIcon agent="codex" size="sm" /><span style="margin-right:8px">codex</span><Bar value={71} tone="blocked" label="codex usage" /><span class="sum-nums">71%</span></div>
       </div>
       <div class="sec-label">Machine</div>
       <div style="display:flex;flex-direction:column;gap:2px">
-        <div class="sum-row" style="padding:4px 6px"><span style="margin-right:8px">CPU</span><Bar tone="ok" width="23%" /><span class="sum-nums">23%</span></div>
-        <div class="sum-row" style="padding:4px 6px"><span style="margin-right:8px">RAM</span><Bar width="56%" /><span class="sum-nums">18/32G</span></div>
+        <div class="sum-row" style="padding:4px 6px"><span style="margin-right:8px">CPU</span><Bar value={23} tone="done" label="CPU" /><span class="sum-nums">23%</span></div>
+        <div class="sum-row" style="padding:4px 6px"><span style="margin-right:8px">RAM</span><Bar value={56} label="RAM" /><span class="sum-nums">18/32G</span></div>
       </div>
     </div>
   );
@@ -72,19 +72,15 @@ function SessionsPanel() {
   return (
     <div class="dock-view active">
       <div class="sec-label" style="padding-top:4px">Running <span>· 2</span></div>
-      <button class="row" onClick={() => { showWelcome.value = false; activeTab.value = "tab-auth"; }}>
-        <Dot state="blocked" /><span class="row-label">Refactor auth middleware</span><span class="row-meta mono">2m</span>
-      </button>
-      <button class="row" aria-selected="true" onClick={() => { showWelcome.value = false; activeTab.value = "tab-auth"; }}>
-        <Dot state="working" /><span class="row-label">Fix flaky checkout tests</span><span class="row-meta mono">14m</span>
-      </button>
+      <ListRow label="Refactor auth middleware" lead={<Dot state="blocked" />} trail={<span class="mono">2m</span>}
+        onClick={() => { showWelcome.value = false; activeTab.value = "tab-auth"; }} />
+      <ListRow label="Fix flaky checkout tests" selected lead={<Dot state="working" />} trail={<span class="mono">14m</span>}
+        onClick={() => { showWelcome.value = false; activeTab.value = "tab-auth"; }} />
       <div class="sec-label">Worktrees <span>· 3</span></div>
       {["apex/claude", "apex/codex", "apex/gemini"].map((b, i) => (
-        <button class="row" key={b}>
-          <GitBranch size={13} style="color:var(--muted);flex:none" />
-          <span class="row-label mono">{b}</span>
-          <span class="row-meta">{[3, 5, 0][i]}</span>
-        </button>
+        <ListRow key={b} label={b} class="font-mono"
+          lead={<GitBranch size={13} style="color:var(--apex-muted)" />}
+          trail={<span>{[3, 5, 0][i]}</span>} />
       ))}
     </div>
   );
@@ -119,17 +115,13 @@ function GitPanel() {
         </div>
         <div class="sec-label" style="padding-top:4px">Staged <span>· {staged ? 3 : 4}</span></div>
         {(staged ? STAGED : [...STAGED.slice(0, 1), CHANGES[0], ...STAGED.slice(1)]).map((f) => (
-          <div class="row staged" key={f}>
-            <span class="stage-box"><Check size={9} strokeWidth={3} /></span>
-            <span class="row-label mono">{f.split(" ").slice(0, 1)}</span>
-          </div>
+          <ListRow as="div" key={f} class="font-mono staged" label={String(f.split(" ").slice(0, 1))}
+            lead={<span class="stage-box"><Check size={9} strokeWidth={3} /></span>} />
         ))}
         <div class="sec-label">Changes <span>· {staged ? 4 : 3}</span></div>
         {(staged ? CHANGES : CHANGES.slice(1)).map((f) => (
-          <div class="row" key={f}>
-            <span class="stage-box"><Check size={9} strokeWidth={3} /></span>
-            <span class="row-label mono">{f.split(" ").slice(0, 1)}</span>
-          </div>
+          <ListRow as="div" key={f} class="font-mono" label={String(f.split(" ").slice(0, 1))}
+            lead={<span class="stage-box"><Check size={9} strokeWidth={3} /></span>} />
         ))}
       </div>
       <div class="commit-dock">
@@ -138,7 +130,7 @@ function GitPanel() {
           <span class="commit-count">
             {committed.value ?? `${staged ? 3 : 4} staged on main`}
           </span>
-          <button class="btn btn-primary" onClick={() => committed.value = `Committed as ${Math.random().toString(16).slice(2, 9)}`}>Commit</button>
+          <Button variant="primary" onClick={() => committed.value = `Committed as ${Math.random().toString(16).slice(2, 9)}`}>Commit</Button>
         </div>
       </div>
     </div>
@@ -151,7 +143,7 @@ function ReviewPanel() {
       <div class="sec-label" style="padding-top:4px">Waiting on you <span>· 2</span></div>
       {[0, 1].map((i) => (
         <div class="rev-row" key={i} style={approvedFirst.value && i === 0 ? { opacity: .6 } : undefined}>
-          <Glyph agent={i === 0 ? "opencode" : "claude"} mini />
+          <AgentIcon agent={i === 0 ? "opencode" : "claude"} size="sm" />
           <div class="rev-info">
             <div class="rev-title">{i === 0 ? "Refactor auth middleware" : "Fix flaky checkout tests"}</div>
             <div class="rev-meta">{approvedFirst.value && i === 0 ? "approved" : `apex/${i === 0 ? "claude" : "codex"} · ${i === 0 ? 4 : 2} files`}</div>
@@ -175,22 +167,22 @@ function RacePanel() {
   return (
     <div class="dock-view active">
       <div class="sec-label" style="padding-top:4px">Running <span>· 1</span></div>
-      <div class="card" style="padding:9px 10px">
+      <Card elevation="raised">
         <div class="rev-title" style="font-weight:600">“Fix the dock resize jank”</div>
         <div class="rev-meta">2 contenders · no prompts · 4m 12s</div>
-      </div>
+      </Card>
       <div class="rev-row">
-        <Glyph agent="claude" mini />
+        <AgentIcon agent="claude" size="sm" />
         <div class="rev-info">
           <div class="rev-title">claude</div>
           <div class="rev-meta mono">{pickWinner.value ? "kept · tests 48 ✓" : "14 files · tests 48 ✓"}</div>
         </div>
         {!pickWinner.value && (
-          <button class="btn btn-ghost" style="height:22px;font-size:10.5px" onClick={() => pickWinner.value = true}>Keep claude</button>
+          <Button size="xs" onClick={() => pickWinner.value = true}>Keep claude</Button>
         )}
       </div>
       <div class="rev-row">
-        <Glyph agent="codex" mini />
+        <AgentIcon agent="codex" size="sm" />
         <div class="rev-info"><div class="rev-title">codex</div><div class="rev-meta mono">still working · tests 31 ✓</div></div>
         <Dot state="working" />
       </div>
@@ -223,12 +215,10 @@ function ContextPanel() {
   return (
     <div class="dock-view active">
       <div class="sec-label" style="padding-top:4px">AGENTS.md</div>
-      <div class="card"><div class="rev-meta mono" style="margin:0">bun install<br />bun run dev<br />bun test</div></div>
+      <Card elevation="raised"><div class="rev-meta mono" style="margin:0">bun install<br />bun run dev<br />bun test</div></Card>
       <div class="sec-label">Pinned <span>· 2</span></div>
       {["tokens.css 3.1k", "race.proto 1.8k"].map((f) => (
-        <div class="row" key={f}>
-          <span class="row-label mono">{f.split(" ")[0]}</span><span class="row-meta">{f.split(" ")[1]}</span>
-        </div>
+        <ListRow as="div" key={f} class="font-mono" label={f.split(" ")[0]} trail={<span>{f.split(" ")[1]}</span>} />
       ))}
     </div>
   );
@@ -238,22 +228,11 @@ function TasksPanel() {
   return (
     <div class="dock-view active">
       <div class="sec-label" style="padding-top:4px">Active <span>· 2</span></div>
-      <div class="row">
-        <Dot state="working" />
-        <div style="flex:1;min-width:0">
-          <div class="row-label mono" style="color:var(--text)">bun run dev</div>
-          <div class="row-meta">watching · rebuilt 2s ago</div>
-        </div>
-        <button class="url-chip" title="Open localhost:5173 in a pane"
-          onClick={() => { showWelcome.value = false; activeTab.value = "tab-browser"; }}>:5173</button>
-      </div>
-      <div class="row">
-        <Dot state="idle" />
-        <div style="flex:1;min-width:0">
-          <div class="row-label mono" style="color:var(--text)">bun test --watch</div>
-          <div class="row-meta">paused</div>
-        </div>
-      </div>
+      <ListRow as="div" class="font-mono" label="bun run dev" sub="watching · rebuilt 2s ago"
+        lead={<Dot state="working" />}
+        trail={<button class="url-chip" title="Open localhost:5173 in a pane"
+          onClick={() => { showWelcome.value = false; activeTab.value = "tab-browser"; }}>:5173</button>} />
+      <ListRow as="div" class="font-mono" label="bun test --watch" sub="paused" lead={<Dot state="idle" />} />
     </div>
   );
 }
