@@ -94,7 +94,7 @@ function Row({ review }: { review: PendingReview }) {
         type="button"
         onClick={() => void openReview(review.target)}
         class={cn(
-          "flex w-full items-center gap-1.5 px-2 py-1 text-left transition-colors hover:bg-raised",
+          "flex w-full items-center gap-1.5 px-2 py-1 text-left transition-colors hover:bg-raised group-hover/row:pr-7",
           here ? "bg-raised text-text" : "text-muted",
         )}
       >
@@ -116,7 +116,7 @@ function Row({ review }: { review: PendingReview }) {
         type="button"
         title={t("review.rejectAll")}
         onClick={() => setAsking(true)}
-        class="absolute top-1 right-1 hidden bg-raised px-1 text-faint transition-colors group-hover/row:block hover:text-state-failed"
+        class="-translate-y-1/2 absolute top-1/2 right-1 hidden size-5 items-center justify-center rounded text-faint transition-colors group-hover/row:flex hover:bg-surface hover:text-state-failed"
       >
         <Icon name="close" size={12} />
       </button>
