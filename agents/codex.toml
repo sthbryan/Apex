@@ -1,6 +1,7 @@
 name = "codex"
 command = "codex"
 mode = "pty"
+auto_args = ["--dangerously-bypass-approvals-and-sandbox"]
 acp_command = "npx"
 acp_args = ["@zed-industries/codex-acp"]
 

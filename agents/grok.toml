@@ -1,6 +1,7 @@
 name = "grok"
 command = "grok"
 mode = "pty"
+auto_args = ["--always-approve"]
 
 [mcp]
 kind = "project"

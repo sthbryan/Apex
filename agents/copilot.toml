@@ -1,6 +1,7 @@
 name = "copilot"
 command = "copilot"
 mode = "pty"
+auto_args = ["--allow-all-tools"]
 
 [mcp]
 kind = "flag"

@@ -1,6 +1,7 @@
 name = "opencode"
 command = "opencode"
 mode = "pty"
+auto_args = ["--auto"]
 acp_command = "opencode"
 acp_args = ["acp"]
 

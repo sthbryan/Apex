@@ -56,6 +56,8 @@ pub struct AgentProfile {
     #[serde(default)]
     pub args: Vec<String>,
     #[serde(default)]
+    pub auto_args: Vec<String>,
+    #[serde(default)]
     pub mode: AgentMode,
     #[serde(default = "agentic_by_default")]
     pub agentic: bool,

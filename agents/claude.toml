@@ -1,6 +1,7 @@
 name = "claude"
 command = "claude"
 mode = "pty"
+auto_args = ["--dangerously-skip-permissions"]
 acp_command = "npx"
 acp_args = ["-y", "@agentclientprotocol/claude-agent-acp"]
 
