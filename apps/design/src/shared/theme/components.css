@@ -39,39 +39,14 @@ html[data-theme="light"] body {
   border-radius: 5px; border: 2px solid transparent; background-clip: content-box;
 }
 
-.stage-controls {
-  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-  font-size: 11px; color: inherit; width: 100%; max-width: 1480px;
+.stage-links {
+  position: fixed; left: 0; right: 0; bottom: 12px; z-index: 5;
+  display: flex; justify-content: center; gap: 14px;
+  font-family: var(--font-mono); font-size: 11px;
 }
-.stage-controls .group {
-  display: flex; padding: 0; border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / .10);
-  background: rgb(20 19 18 / .55); backdrop-filter: blur(14px); overflow: hidden;
-}
-.stage-controls button { font: inherit; color: inherit; padding: 5px 12px; position: relative; }
-.stage-controls button + button::before {
-  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px;
-  width: 1px; background: rgb(255 255 255 / .08);
-}
-.stage-controls button:hover { color: #fff; }
-.stage-controls button[aria-pressed="true"] { color: #0f0e0d; background: #f2a929; font-weight: 600; }
-
-html[data-theme="light"] .stage-controls .group {
-  border-color: rgb(0 0 0 / .08);
-  background: rgb(255 255 255 / .6);
-}
-html[data-theme="light"] .stage-controls button + button::before { background: rgb(0 0 0 / .08); }
-html[data-theme="light"] .stage-controls button:hover { color: #24211d; }
-html[data-theme="light"] .stage-controls button[aria-pressed="true"] {
-  color: #fff; background: #b45309;
-}
-
-.version-tabs { display: flex; gap: 4px; align-items: center; margin-right: auto; }
-.version-tabs button {
-  color: inherit; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px;
-}
-.version-tabs button.on { background: rgb(255 255 255 / .12); color: #fff; }
-html[data-theme="light"] .version-tabs button.on { background: rgb(0 0 0 / .08); color: #24211d; }
+.stage-links a { color: var(--muted); text-decoration: none; }
+.stage-links a:hover { color: var(--text); }
+.stage-links a[aria-current="page"] { color: var(--accent); }
 
 /* ---- window frame ---- */
 .window {

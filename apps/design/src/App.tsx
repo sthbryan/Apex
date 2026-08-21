@@ -1,53 +1,38 @@
-import { useEffect, useState } from "preact/hooks";
-import { themeMode, veil } from "@/shared/theme/mode";
-import { page } from "@/app/state";
+import { veil } from "@/shared/theme/mode";
+import { navigate, route } from "@/app/router";
+import type { Route } from "@/app/router";
 import { Layout } from "@/app/layout/Layout";
 import { Workspace } from "@/features/workspace/Workspace";
 import { Toolkit } from "@/features/toolkit/Toolkit";
 
-function Group({ ids, labels, value, set }: {
-  ids: string[]; labels: string[]; value: string; set: (v: string) => void;
-}) {
-  return (
-    <div class="group">
-      {ids.map((id, i) => (
-        <button aria-pressed={id === value} onClick={() => set(id)}>{labels[i]}</button>
-      ))}
-    </div>
-  );
-}
+const PAGES: { to: Route; label: string }[] = [
+  { to: "/", label: "workspace" },
+  { to: "/toolkit", label: "toolkit" },
+];
 
 export function App() {
-  // mirror the signal in local state so page switches never depend on
-  // the signals render adapter being wired in this bundle
-  const [pg, setPg] = useState(page.value);
-  useEffect(() => page.subscribe((v) => setPg(v)), []);
-
   return (
     <div class="apx">
-      <div class="stage-controls">
-        <div class="version-tabs">
-          <button class={pg === "workspace" ? "on" : ""} onClick={() => (page.value = "workspace")}>Workspace</button>
-          <button class={pg === "toolkit" ? "on" : ""} onClick={() => (page.value = "toolkit")}>Toolkit</button>
-        </div>
-        <span>Theme</span>
-        <Group
-          ids={["light", "dark"]} labels={["Light", "Dark"]}
-          value={themeMode.value} set={(v) => (themeMode.value = v)}
-        />
-        <Group
-          ids={["off", "on"]} labels={["Solid", "Veil"]}
-          value={veil.value} set={(v) => (veil.value = v)}
-        />
-      </div>
-
-      {pg === "toolkit" ? <Toolkit /> : (
+      {route.value === "/toolkit" ? <Toolkit /> : (
         <div class="window chrome-blur" data-veil={veil.value}>
           <Layout>
             <Workspace />
           </Layout>
         </div>
       )}
+
+      <nav class="stage-links" aria-label="Lab pages">
+        {PAGES.map((p) => (
+          <a
+            key={p.to}
+            href={p.to}
+            aria-current={route.value === p.to ? "page" : undefined}
+            onClick={(e) => { e.preventDefault(); navigate(p.to); }}
+          >
+            {p.label}
+          </a>
+        ))}
+      </nav>
     </div>
   );
 }

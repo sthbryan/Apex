@@ -1,6 +1,5 @@
 import { signal } from "@preact/signals";
 
-export const page = signal<"workspace" | "toolkit">("workspace");
 export const activePanel = signal<string>("summary");
 export const railOnly = signal(false);
 export const showWelcome = signal(true);

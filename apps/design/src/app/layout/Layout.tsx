@@ -3,7 +3,7 @@ import {
   ArrowLeftRight, Bell, BookOpen, ChevronDown, Cpu, Folder, GitBranch,
   History, Inbox, LayoutGrid, PanelLeft, Play, Settings, SquareTerminal,
 } from "lucide-preact";
-import { openPop, page, activePanel, railOnly, settingsOpen, settingsSection, showWelcome } from "@/app/state";
+import { openPop, activePanel, railOnly, settingsOpen, settingsSection, showWelcome } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
 
 const PANELS = [
