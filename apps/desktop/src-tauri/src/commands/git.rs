@@ -1,6 +1,6 @@
 use apex_proto::{
     Command, DiffScope, GitBranch, GitCommit, GitStatus, GitSyncOp, GitTarget, ImagePair,
-    MergeReport, PendingReview, Reply, WorktreeEntry,
+    MergeReport, PendingReview, RejectedHunk, Reply, WorktreeEntry,
 };
 use uuid::Uuid;
 
@@ -125,6 +125,62 @@ pub async fn git_pending(
         Reply::Pending { reviews } => Ok(reviews),
         other => Err(format!("unexpected reply: {other:?}")),
     }
+}
+
+#[tauri::command]
+pub async fn git_reject_hunk(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+    patch: String,
+) -> Answer<()> {
+    state
+        .daemon()?
+        .request(Command::GitRejectHunk { project, target, patch })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn git_rejects(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+) -> Answer<Vec<RejectedHunk>> {
+    match state.daemon()?.request(Command::GitRejects { project, target }).await.map_err(failed)? {
+        Reply::Rejects { rejects } => Ok(rejects),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+pub async fn git_restore_reject(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+    id: String,
+) -> Answer<()> {
+    state
+        .daemon()?
+        .request(Command::GitRestoreReject { project, target, id })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn git_clear_rejects(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    target: GitTarget,
+) -> Answer<()> {
+    state
+        .daemon()?
+        .request(Command::GitClearRejects { project, target })
+        .await
+        .map_err(failed)?;
+    Ok(())
 }
 
 #[tauri::command]

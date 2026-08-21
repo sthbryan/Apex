@@ -10,6 +10,7 @@ import type { GitTarget } from "@/bindings/GitTarget";
 import type { ImagePair } from "@/bindings/ImagePair";
 import type { MergeReport } from "@/bindings/MergeReport";
 import type { PendingReview } from "@/bindings/PendingReview";
+import type { RejectedHunk } from "@/bindings/RejectedHunk";
 import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
 import { activeProjectId, projectSessions } from "@/features/projects/state";
 import { roughly } from "@/features/usage/format";
@@ -191,6 +192,26 @@ export async function stageHunk(target: GitTarget, patch: string, staged: boolea
     staged,
   });
   await refreshGit();
+}
+
+export async function rejectHunk(target: GitTarget, patch: string): Promise<void> {
+  await invoke("git_reject_hunk", { project: activeProjectId.value, target, patch });
+  await refreshGit();
+  await refreshPending();
+}
+
+export async function readRejects(target: GitTarget): Promise<RejectedHunk[]> {
+  return invoke<RejectedHunk[]>("git_rejects", { project: activeProjectId.value, target });
+}
+
+export async function restoreReject(target: GitTarget, id: string): Promise<void> {
+  await invoke("git_restore_reject", { project: activeProjectId.value, target, id });
+  await refreshGit();
+  await refreshPending();
+}
+
+export async function clearRejects(target: GitTarget): Promise<void> {
+  await invoke("git_clear_rejects", { project: activeProjectId.value, target });
 }
 
 export async function commitStaged(message: string): Promise<GitCommit> {
