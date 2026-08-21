@@ -1,11 +1,12 @@
 import cn from "cnfast";
+import { useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { PendingReview } from "@/bindings/PendingReview";
 import type { SessionState } from "@/bindings/SessionState";
 import { gitTarget, pending, refreshPending, sameTarget } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
-import { openReview } from "@/features/review/state";
+import { openReview, rejectTarget } from "@/features/review/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -60,8 +61,35 @@ export function ReviewPanel() {
 
 function Row({ review }: { review: PendingReview }) {
   const here = sameTarget(gitTarget.value, review.target);
+  const [asking, setAsking] = useState(false);
+
+  if (asking) {
+    return (
+      <li class="flex items-center gap-2 px-2 py-1">
+        <span class="min-w-0 flex-1 truncate text-state-failed">{t("review.rejectAllAsk")}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setAsking(false);
+            void rejectTarget(review.target);
+          }}
+          class="shrink-0 text-state-failed transition-colors hover:text-text"
+        >
+          {t("review.rejectAllYes")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setAsking(false)}
+          class="shrink-0 text-faint transition-colors hover:text-text"
+        >
+          {t("review.rejectAllNo")}
+        </button>
+      </li>
+    );
+  }
+
   return (
-    <li>
+    <li class="group/row relative">
       <button
         type="button"
         onClick={() => void openReview(review.target)}
@@ -83,6 +111,14 @@ function Row({ review }: { review: PendingReview }) {
         </span>
         <span class="shrink-0 text-git-added">+{review.added}</span>
         <span class="shrink-0 text-git-removed">−{review.removed}</span>
+      </button>
+      <button
+        type="button"
+        title={t("review.rejectAll")}
+        onClick={() => setAsking(true)}
+        class="absolute top-1 right-1 hidden bg-raised px-1 text-faint transition-colors group-hover/row:block hover:text-state-failed"
+      >
+        <Icon name="close" size={12} />
       </button>
     </li>
   );

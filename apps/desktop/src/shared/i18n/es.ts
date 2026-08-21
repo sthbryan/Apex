@@ -276,6 +276,10 @@ export const es: Messages = {
     clearAsk: "¿Sin vuelta atrás?",
     clearYes: "Vaciar",
     clearNo: "Conservar",
+    rejectAll: "Rechazar todo lo que no aprobaste",
+    rejectAllAsk: "¿Rechazar todo?",
+    rejectAllYes: "Rechazar",
+    rejectAllNo: "Conservar",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

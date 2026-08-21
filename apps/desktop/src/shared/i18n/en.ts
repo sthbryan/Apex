@@ -274,6 +274,10 @@ export const en = {
     clearAsk: "Gone for good?",
     clearYes: "Clear",
     clearNo: "Keep",
+    rejectAll: "Reject everything not approved",
+    rejectAllAsk: "Reject all of it?",
+    rejectAllYes: "Reject",
+    rejectAllNo: "Keep",
   },
   git: {
     noRepo: "This project is not a git repository.",
