@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Bar } from "@/atoms/bar/Bar";
 
 export const barMeta: ComponentMeta = {
   name: "Bar",
+  component: Bar,
   layer: "atom",
   description: "Determinate progress track with an optional pace tick.",
   variants: [

@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Surface } from "@/atoms/surface/Surface";
 
 export const surfaceMeta: ComponentMeta = {
   name: "Surface",
+  component: Surface,
   layer: "atom",
   description: "Elevation primitive. Set blur only on a stacking layer root so veil never compounds.",
   variants: [

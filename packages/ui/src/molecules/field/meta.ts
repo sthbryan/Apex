@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Field } from "@/molecules/field/Field";
 
 export const fieldMeta: ComponentMeta = {
   name: "Field",
+  component: Field,
   layer: "molecule",
   description: "Settings row pairing a label and optional hint with a control.",
   variants: [

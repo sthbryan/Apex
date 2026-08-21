@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Toolbar } from "@/organisms/toolbar/Toolbar";
 
 export const toolbarMeta: ComponentMeta = {
   name: "Toolbar",
+  component: Toolbar,
   layer: "organism",
   description: "Header strip for panes and windows with lead, title and trailing slots.",
   variants: [

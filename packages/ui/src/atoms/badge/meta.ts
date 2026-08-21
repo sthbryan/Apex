@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Badge } from "@/atoms/badge/Badge";
 
 export const badgeMeta: ComponentMeta = {
   name: "Badge",
+  component: Badge,
   layer: "atom",
   description: "Compact counter and git file marker.",
   variants: [

@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Meter } from "@/molecules/meter/Meter";
 
 export const meterMeta: ComponentMeta = {
   name: "Meter",
+  component: Meter,
   layer: "molecule",
   description: "Labelled Bar with a trailing readout for usage and resources.",
   variants: [

@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Card } from "@/molecules/card/Card";
 
 export const cardMeta: ComponentMeta = {
   name: "Card",
+  component: Card,
   layer: "molecule",
   description: "Bordered Surface with an optional head row.",
   variants: [

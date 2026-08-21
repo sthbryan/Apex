@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Pill } from "@/atoms/pill/Pill";
 
 export const pillMeta: ComponentMeta = {
   name: "Pill",
+  component: Pill,
   layer: "atom",
   description: "Rounded label for capabilities and toggled states.",
   variants: [

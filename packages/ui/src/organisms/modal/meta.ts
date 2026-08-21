@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Modal } from "@/organisms/modal/Modal";
 
 export const modalMeta: ComponentMeta = {
   name: "Modal",
+  component: Modal,
   layer: "organism",
   description: "Native dialog with backdrop, escape handling and click-outside close.",
   variants: [

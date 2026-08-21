@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Tooltip } from "@/molecules/tooltip/Tooltip";
 
 export const tooltipMeta: ComponentMeta = {
   name: "Tooltip",
+  component: Tooltip,
   layer: "molecule",
   description: "Hover and focus hint anchored to any of the four sides.",
   variants: [

@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Toast } from "@/organisms/toast/Toast";
 
 export const toastMeta: ComponentMeta = {
   name: "Toast",
+  component: Toast,
   layer: "organism",
   description: "Transient notification with optional auto-dismiss progress.",
   variants: [

@@ -1,4 +1,5 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Segmented } from "@/molecules/segmented/Segmented";
 
 const THEME = [
   { value: "system", label: "System" },
@@ -8,6 +9,7 @@ const THEME = [
 
 export const segmentedMeta: ComponentMeta = {
   name: "Segmented",
+  component: Segmented,
   layer: "molecule",
   description: "Exclusive choice as a radiogroup, not a row of toggle buttons.",
   variants: [

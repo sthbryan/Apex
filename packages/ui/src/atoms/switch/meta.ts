@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Switch } from "@/atoms/switch/Switch";
 
 export const switchMeta: ComponentMeta = {
   name: "Switch",
+  component: Switch,
   layer: "atom",
   description: "Binary toggle with a required accessible label.",
   variants: [

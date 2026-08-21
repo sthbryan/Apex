@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { ListRow } from "@/molecules/list-row/ListRow";
 
 export const listRowMeta: ComponentMeta = {
   name: "ListRow",
+  component: ListRow,
   layer: "molecule",
   description: "Selectable row for sessions, files and tasks.",
   variants: [

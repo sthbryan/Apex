@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Button } from "@/atoms/button/Button";
 
 export const buttonMeta: ComponentMeta = {
   name: "Button",
+  component: Button,
   layer: "atom",
   description: "Primary interactive control in four intents and four sizes.",
   variants: [

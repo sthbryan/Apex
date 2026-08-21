@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { EmptyState } from "@/organisms/empty-state/EmptyState";
 
 export const emptyStateMeta: ComponentMeta = {
   name: "EmptyState",
+  component: EmptyState,
   layer: "organism",
   description: "Placeholder for empty panes, lists and search results.",
   variants: [

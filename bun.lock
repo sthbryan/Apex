@@ -9,6 +9,7 @@
       "name": "apex-design",
       "dependencies": {
         "@apex/tokens": "workspace:*",
+        "@apex/ui": "workspace:*",
         "@fontsource/inter": "^5.3.0",
         "@preact/signals": "^2.11.1",
         "lucide-preact": "^1.31.0",

@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { Dot } from "@/atoms/dot/Dot";
 
 export const dotMeta: ComponentMeta = {
   name: "Dot",
+  component: Dot,
   layer: "atom",
   description: "Status indicator for the five agent states.",
   variants: [

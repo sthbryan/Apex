@@ -1,347 +1,146 @@
-import { ArrowLeftRight, Bell, Bot, Check, Cpu, FileText, GitBranch, Globe, Keyboard, LayoutGrid, Plus, Settings, Sparkles, SquareTerminal, X } from "lucide-preact";
-import { veil } from "@/shared/theme/mode";
-import { Bar, Btn, Dot, Glyph, Seg, StatePill, Switch } from "@/shared/ui/atoms";
+import { REGISTRY } from "@apex/ui";
+import type { ComponentLayer, ComponentMeta } from "@apex/ui";
+import { Chip, Pill, Segmented, Switch } from "@apex/ui";
+import { themeMode, veil } from "@/shared/theme/mode";
+import type { ThemeMode } from "@/shared/theme/mode";
+import { SAMPLES, TOKEN_GROUPS, TYPE_TOKENS } from "@/features/toolkit/tokens";
+import { useTokenValues } from "@/features/toolkit/useTokenValues";
+import type { TokenKind } from "@/features/toolkit/useTokenValues";
+import { renderVariant } from "@/features/toolkit/harness";
 
-const SURFACES: [string, string, string][] = [
-  ["bg", "#ffffff", "#0c0d10"],
-  ["surface · chrome", "#f6f7f9", "#131519"],
-  ["raised", "#eceef0", "#1a1d22"],
-  ["overlay · float", "#ffffff", "#1f2228"],
-  ["border", "#dfe2e6", "#24272e"],
-  ["text", "#1c1e21", "#e4e6eb"],
-  ["muted", "#656d76", "#8b919c"],
-  ["accent", "#b45309", "#f59e0b"],
+const LAYERS: { id: ComponentLayer; title: string; blurb: string }[] = [
+  { id: "atom", title: "Atoms", blurb: "Indivisible primitives. They own no layout." },
+  { id: "molecule", title: "Molecules", blurb: "Two or more atoms bound to one job." },
+  { id: "organism", title: "Organisms", blurb: "Self-contained regions with their own behaviour." },
 ];
 
-const STATES: [string, string, string][] = [
-  ["idle", "#8c959f", "#6e7681"],
-  ["working", "#0969da", "#4a9eff"],
-  ["blocked", "#bf8700", "#e8a33d"],
-  ["done", "#1a7f37", "#3fb950"],
-  ["failed", "#cf222e", "#ff6b6b"],
-];
-
-const TYPE_SCALE: [string, number, number, string][] = [
-  ["display", 32, 600, "Run a team of AI agents"],
-  ["heading", 20, 600, "Race · dock resize jank"],
-  ["body", 14, 400, "Every contender gets its own worktree."],
-  ["caption", 12, 500, "claude · 2.0.14 · shares context"],
-  ["mono label", 11, 500, "apex/claude · +382 −96"],
-];
-
-const RADII: [string, string][] = [
-  ["s · 9", "9px"],
-  ["m · 12", "12px"],
-  ["l · 14", "14px"],
-  ["xl · 16", "16px"],
-  ["pill", "999px"],
-];
+const ALL_TOKENS: Record<string, TokenKind> = {
+  ...Object.fromEntries(
+    TOKEN_GROUPS.flatMap((g) => g.tokens.map((t) => [t, g.kind === "color" ? "color" : "size"] as const)),
+  ),
+  ...Object.fromEntries(TYPE_TOKENS.map((t) => [t, "size"] as const)),
+};
 
 export function Toolkit() {
+  const values = useTokenValues(ALL_TOKENS);
+
   return (
-    <div class="toolkit" style="margin-top:4px">
-      <header style="font-size:20px;font-weight:700">
-        Apex UI toolkit
-        <span style="font-size:12.5px;font-weight:400;color:var(--muted);margin-left:10px">
-          every primitive and pane type · same tokens as apps/desktop
-        </span>
+    <div class="tk">
+      <header class="tk-head">
+        <div>
+          <h1 class="tk-title">Apex UI</h1>
+          <p class="tk-sub">
+            {REGISTRY.length} components from <code>@apex/ui</code>, rendered live from the registry.
+          </p>
+        </div>
+        <div class="tk-controls">
+          <Segmented
+            label="Theme"
+            value={themeMode.value}
+            onChange={(v) => themeMode.value = v as ThemeMode}
+            options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]}
+          />
+          <label class="tk-veil">
+            <span>Veil</span>
+            <Switch label="Veil" checked={veil.value === "on"} onChange={(v) => veil.value = v ? "on" : "off"} />
+          </label>
+        </div>
       </header>
 
-      <section>
-        <h2>Tokens · surfaces</h2>
-        <div style="max-width:760px">
-          <div class="spec-row spec-head">
-            <span>token</span><span /><span>light</span><span>dark</span>
-          </div>
-          {SURFACES.map(([name, light, dark]) => (
-            <div class="spec-row" key={name}>
-              <span class="dual-swatch" style={`background:linear-gradient(90deg, ${light} 50%, ${dark} 50%)`} />
-              <span>{name}</span>
-              <span class="spec-hex">{light}</span>
-              <span class="spec-hex">{dark}</span>
+      <section class="tk-section">
+        <h2 class="tk-h2">Tokens</h2>
+        <div class="tk-token-groups">
+          {TOKEN_GROUPS.map((group) => (
+            <div class="tk-token-group" key={group.title}>
+              <h3 class="tk-h3">{group.title}</h3>
+              <table class="tk-table">
+                <thead>
+                  <tr>
+                    <th />
+                    <th>token</th>
+                    <th>light</th>
+                    <th>dark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.tokens.map((token) => {
+                    const value = values[token];
+                    return (
+                      <tr key={token}>
+                        <td>
+                          {group.kind === "color" ? (
+                            <span
+                              class="tk-swatch"
+                              style={`background:linear-gradient(90deg, ${value?.light} 50%, ${value?.dark} 50%)`}
+                            />
+                          ) : (
+                            <span class="tk-radius" style={`border-radius:${value?.light}`} />
+                          )}
+                        </td>
+                        <td><code>{token.replace("--apex-", "")}</code></td>
+                        <td class="tk-value">{value?.light}</td>
+                        <td class="tk-value">{value?.dark}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           ))}
         </div>
       </section>
 
-      <section>
-        <h2>Tokens · state</h2>
-        <div style="max-width:760px">
-          <div class="spec-row spec-head">
-            <span>token</span><span /><span>light</span><span>dark</span>
-          </div>
-          {STATES.map(([name, light, dark]) => (
-            <div class="spec-row" key={name}>
-              <Dot state={name} />
-              <span>{name}</span>
-              <span class="spec-hex">{light}</span>
-              <span class="spec-hex">{dark}</span>
-            </div>
-          ))}
-          <div class="tk-row" style="gap:18px;margin-top:14px">
-            <StatePill state="working">working</StatePill>
-            <StatePill state="blocked">blocked</StatePill>
-            <StatePill state="done">done</StatePill>
-            <Dot state="failed" /><Dot state="idle" />
-            <span class="fbadge M">M</span><span class="fbadge A">A</span><span class="fbadge D">D</span>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2>Typography</h2>
-        <div style="max-width:760px">
-          {TYPE_SCALE.map(([name, size, weight, sample]) => (
-            <div class="type-row" key={name}>
-              <span style={`font-size:${size}px;font-weight:${weight};${name === "mono label" ? "font-family:var(--font-mono)" : ""};overflow:hidden;text-overflow:ellipsis;white-space:nowrap`}>
-                {sample}
+      <section class="tk-section">
+        <h2 class="tk-h2">Type scale</h2>
+        <div class="tk-type">
+          {[...TYPE_TOKENS].reverse().map((token) => (
+            <div class="tk-type-row" key={token}>
+              <span class="tk-type-sample" style={`font-size:${values[token]?.light}`}>
+                {SAMPLES[token]}
               </span>
-              <span class="type-meta">{name} / {size} / {weight}</span>
+              <span class="tk-value">
+                {token.replace("--apex-text-", "")} · {values[token]?.light}
+              </span>
             </div>
           ))}
         </div>
       </section>
 
-      <section>
-        <h2>Radii</h2>
-        <div class="radius-row">
-          {RADII.map(([name, r]) => (
-            <span class="radius-chip" key={name}>
-              <i style={`border-radius:${r}`} />
-              {name}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2>Controls</h2>
-        <div class="tk-row">
-          <Btn kind="primary">Primary action</Btn>
-          <Btn>Ghost</Btn>
-          <button class="kb-btn" aria-pressed="true">Tool button</button>
-          <Seg options={[{ id: "sys", label: "System" }, { id: "light", label: "Light" }, { id: "dark", label: "Dark" }]} value="sys" onChange={() => {}} />
-          <Switch checked={veil.value === "on"} onChange={(v) => veil.value = v ? "on" : "off"} />
-          <span class="chip">⎇ apex/claude</span>
-          <span class="pill">shares context</span>
-          <span class="pill on">on</span>
-          <Glyph agent="claude" /><Glyph agent="codex" /><Glyph agent="gemini" /><Glyph agent="opencode" />
-        </div>
-      </section>
-
-      <section>
-        <h2>Rows</h2>
-        <div class="tk-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
-          <div class="tk-cell">
-            <span class="tk-label">summary / review / task</span>
-            <button class="row" aria-selected="true">
-              <Dot state="working" /><Glyph agent="claude" mini />
-              <span class="row-label">Refactor auth middleware</span>
-              <span class="row-meta mono">2m</span>
-            </button>
-            <div class="rev-row">
-              <Glyph agent="opencode" mini />
-              <div class="rev-info"><div class="rev-title">Fix flaky checkout tests</div><div class="rev-meta">apex/codex · 2 files</div></div>
-              <span class="fadd">+14</span><span class="fdel">−9</span>
-              <button class="rev-act approve"><Check size={12} /></button>
+      {LAYERS.map((layer) => {
+        const components = REGISTRY.filter((c) => c.layer === layer.id);
+        return (
+          <section class="tk-section" key={layer.id}>
+            <h2 class="tk-h2">
+              {layer.title}
+              <Pill>{components.length}</Pill>
+            </h2>
+            <p class="tk-blurb">{layer.blurb}</p>
+            <div class="tk-components">
+              {components.map((meta) => <ComponentCard meta={meta} key={meta.name} />)}
             </div>
-            <div class="row">
-              <Dot state="working" /><span class="row-label mono">bun run dev</span>
-              <button class="url-chip">:5173</button>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">data</span>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", width: 260 }}>
-              <span class="m-label">5h</span>
-              <div class="u-track"><div class="u-fill" style="width:62%" /><span class="u-tick" style="left:58%" /></div>
-              <span class="m-pct mono">62%</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", width: 260 }}>
-              <span class="m-label">RAM</span><Bar width="56%" /><span class="m-pct mono">56%</span>
-            </div>
-            <div class="toast" style={{ width: 260 }}>
-              <Glyph agent="codex" mini />
-              <div style="flex:1"><div style="font-size:12.5px;font-weight:600">Codex finished</div></div>
-              <span class="t-progress" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2>Pane types</h2>
-        <div class="tk-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
-          <Frame label="session · acp">
-            <div class="pane-head"><Glyph agent="claude" /><div><div class="pane-title">Auth middleware</div></div><StatePill state="blocked">Waiting</StatePill></div>
-            <div class="pane-body" style="padding:10px;display:flex;flex-direction:column;gap:8px">
-              <div class="msg-user" style="font-size:11.5px">Use passkeys instead of cookies.</div>
-              <div class="perm-card"><div class="perm-head"><Plus size={12} />Run a migration?</div></div>
-            </div>
-          </Frame>
-          <Frame label="session · tty">
-            <div class="pane-head"><Glyph agent="codex" /><div class="pane-title">Checkout tests</div><StatePill state="working">Running</StatePill></div>
-            <pre class="tty">{"● tests\n\n⏺ +18 −4\n\n⠸ running…"}</pre>
-          </Frame>
-          <Frame label="file · markdown / source">
-            <div class="pane-head"><FileText size={11} /><span class="mono" style="font-size:10px;color:var(--muted)">README.md</span><span class="chip">preview</span></div>
-            <div class="pane-body"><div class="mdview" style="padding:14px 16px"><h1 style="font-size:16px">Apex</h1><pre style="margin:6px 0">curl -fsSL … | sh</pre></div></div>
-          </Frame>
-          <Frame label="diff">
-            <div class="pane-head"><GitBranch size={11} /><span class="mono" style="font-size:10px;color:var(--muted)">DockResize.tsx</span></div>
-            <div class="pane-body">
-              <div class="diff-head">DockResize.tsx<span class="diff-stat"><b>+24</b> <s>−11</s></span></div>
-              <div class="hunk-head">@@ -12,7 +12,9 @@</div>
-              <div class="diff-line del">- setWidth(x);</div>
-              <div class="diff-line add">+ const next = clamp(x);</div>
-            </div>
-          </Frame>
-          <Frame label="browser">
-            <div class="pane-head"><Globe size={11} /><div class="url-box"><span class="mono" style="font-size:10px">localhost:5173</span></div></div>
-            <div class="pane-body" style="display:grid;place-items:center">
-              <div class="card" style="width:75%;text-align:center;padding:18px"><b style="font-size:12px">Sign in</b></div>
-            </div>
-          </Frame>
-          <Frame label="race">
-            <div class="race-col-head"><Glyph agent="claude" mini />claude<Dot state="done" /></div>
-            <div class="diff-line-plain mono" style="font-size:10px">14 files +382 −96</div>
-            <div class="race-decide"><b>claude</b>&nbsp;finished first<span style="flex:1" /><button class="btn btn-primary" style="height:22px;font-size:10.5px">Keep</button></div>
-          </Frame>
-          <Frame label="image">
-            <div class="pane-head"><span class="mono" style="font-size:10px;color:var(--muted)">welcome.png</span><span class="chip">PNG</span></div>
-            <div class="imgstage"><div class="ph" /></div>
-          </Frame>
-          <Frame label="panel (in a tab)">
-            <div class="pane-head"><ArrowLeftRight size={11} /><div class="pane-title">Sessions</div><span style="flex:1" /><button class="kb-btn">Move to sidebar</button></div>
-            <div class="pane-body" style="padding:8px">
-              <button class="row"><Dot state="blocked" /><span class="row-label">Refactor auth</span></button>
-            </div>
-          </Frame>
-        </div>
-      </section>
-
-      <section>
-        <h2>Overlays</h2>
-        <div class="tk-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
-          <div class="tk-cell">
-            <span class="tk-label">settings modal</span>
-            <div class="frame" style="display:flex;padding:0;overflow:hidden">
-              <nav class="modal-nav" style="width:110px;padding:8px 6px">
-                <button class="mnav-btn" aria-selected="true"><Sparkles size={13} />Look</button>
-                <button class="mnav-btn"><Bot size={13} />Agents</button>
-                <button class="mnav-btn"><Keyboard size={13} />Keys</button>
-              </nav>
-              <div style="flex:1;padding:8px 12px">
-                <div class="set-title" style="font-size:13px">Look</div>
-                <div class="set-row" style="padding:7px 0">
-                  <div class="set-label">Theme</div>
-                  <Seg options={[{ id: "l", label: "Light" }, { id: "d", label: "Dark" }]} value="d" onChange={() => {}} />
-                </div>
-                <div class="set-row" style="padding:7px 0;border:0">
-                  <div class="set-label">Veil</div>
-                  <Switch checked onChange={() => {}} />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">race launcher</span>
-            <div class="frame">
-              <div class="set-title" style="font-size:13px">Race a task</div>
-              <div class="launch-agents">
-                <button class="launch-chip" aria-pressed="true"><Glyph agent="claude" mini />claude<Check size={11} /></button>
-                <button class="launch-chip"><Glyph agent="codex" mini />codex<Check size={11} /></button>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
-                <span style="font-size:10.5px;color:var(--muted);flex:1">2 agents · one worktree each</span>
-                <button class="btn btn-primary" style="height:24px;font-size:11px">Start race</button>
-              </div>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">popover · statusbar pops</span>
-            <div class="frame">
-              <div class="pop-head" style="padding:0 0 8px">claude · usage</div>
-              <div class="u-row"><span class="u-win">5h</span><div class="u-track"><div class="u-fill" style="width:62%" /><span class="u-tick" style="left:58%" /></div><span class="u-eta">pace ✓</span></div>
-              <div class="sc-row" style="padding:8px 0 0;border:0"><span class="sc-label">Settings</span><span class="keys"><kbd>⌘</kbd><kbd>,</kbd></span></div>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">toast</span>
-            <div class="frame" style="display:flex;align-items:center;gap:10px">
-              <Glyph agent="codex" mini />
-              <div style="flex:1"><div style="font-size:12px;font-weight:600">Codex finished</div><div style="font-size:10.5px;color:var(--muted)">exit 0</div></div>
-              <span class="t-progress" />
-              <button class="icon-btn" style="width:20px;height:20px"><X size={11} /></button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2>Shell chrome</h2>
-        <div class="tk-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
-          <div class="tk-cell">
-            <span class="tk-label">titlebar</span>
-            <div class="frame" style="display:flex;align-items:center;gap:10px;padding:8px 12px">
-              <div class="lights" style="transform:scale(.8)"><i /><i /><i /></div>
-              <strong style="font-size:11px;letter-spacing:.06em">APEX</strong>
-              <span style="flex:1" />
-              <button class="icon-btn" style="width:22px;height:22px"><Settings size={13} /></button>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">statusbar pills</span>
-            <div class="frame" style="display:flex;align-items:center;gap:6px;padding:8px 10px;flex-wrap:wrap">
-              <span class="sb-pill"><GitBranch size={11} /><span class="mono">main</span><span style="color:var(--added)">↑2</span></span>
-              <span class="sb-pill live"><i />2 racing</span>
-              <span class="sb-pill"><Cpu size={11} /><span class="sb-bar"><i style="width:23%" /></span><span class="mono">18G</span></span>
-              <span class="sb-pill"><Bell size={11} /><span class="sb-badge">3</span></span>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">rail + badges</span>
-            <div class="frame" style="display:flex;align-items:center;gap:8px;padding:10px 12px">
-              <button class="picon" aria-current="true"><LayoutGrid size={14} /><span class="bdot working" /></button>
-              <button class="picon"><SquareTerminal size={14} /><span class="bdot blocked" /></button>
-              <button class="picon"><GitBranch size={14} /><span class="bdot dirty" /></button>
-              <button class="picon"><Bell size={14} /></button>
-            </div>
-          </div>
-          <div class="tk-cell">
-            <span class="tk-label">composer (welcome)</span>
-            <div class="frame">
-              <form class="composer" onSubmit={(e) => e.preventDefault()}>
-                <textarea rows={2} placeholder="Ask, delegate, or start a task…" />
-                <div class="composer-bar">
-                  <button type="button" class="launch-chip" aria-pressed="true"><Glyph agent="claude" mini />claude</button>
-                  <span style="flex:1" />
-                  <button type="submit" class="btn btn-primary" style="height:24px;font-size:11px">Start</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2>Still to design</h2>
-        <ul style="padding-left:18px;font-size:12.5px;color:var(--muted);line-height:2">
-          <li>New Session / Close Session modals (radio-cards: project vs worktree)</li>
-          <li>⌘P file finder · command palette rich rows</li>
-          <li>ACP extras: plan checklists, slash commands, jump-to-latest</li>
-          <li>Split diff · image diff · empty states · real split dragging</li>
-        </ul>
-      </section>
+          </section>
+        );
+      })}
     </div>
   );
 }
 
-function Frame({ label, children }: { label: string; children: any }) {
+function ComponentCard({ meta }: { meta: ComponentMeta }) {
   return (
-    <div class="tk-cell">
-      <span class="tk-label">{label}</span>
-      <div class="frame">{children}</div>
-    </div>
+    <article class="tk-component">
+      <header class="tk-component-head">
+        <h3 class="tk-h3">{meta.name}</h3>
+        <Chip>{meta.variants.length} variants</Chip>
+      </header>
+      <p class="tk-blurb">{meta.description}</p>
+      <div class="tk-variants">
+        {meta.variants.map((variant) => (
+          <div class="tk-variant" key={variant.name}>
+            <div class="tk-stage">{renderVariant(meta.component, meta.name, variant)}</div>
+            <span class="tk-variant-name">{variant.name}</span>
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }

@@ -1,0 +1,217 @@
+.tk {
+  width: min(1180px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--apex-r-xl);
+  padding-bottom: 96px;
+  color: var(--apex-text);
+}
+
+.tk-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+}
+
+.tk-title {
+  margin: 0;
+  font-size: var(--apex-text-3xl);
+  font-weight: var(--apex-weight-bold);
+  letter-spacing: var(--apex-tracking-tight);
+}
+
+.tk-sub {
+  margin: 4px 0 0;
+  font-size: var(--apex-text-md);
+  color: var(--apex-muted);
+}
+
+.tk-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tk-veil {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--apex-text-sm);
+  color: var(--apex-muted);
+}
+
+.tk-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tk-h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--apex-border);
+  font-size: var(--apex-text-xl);
+  font-weight: var(--apex-weight-semibold);
+}
+
+.tk-h3 {
+  margin: 0;
+  font-size: var(--apex-text-lg);
+  font-weight: var(--apex-weight-semibold);
+}
+
+.tk-blurb {
+  margin: 0;
+  font-size: var(--apex-text-md);
+  color: var(--apex-muted);
+}
+
+.tk-token-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.tk-token-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--apex-text-sm);
+}
+
+.tk-table th {
+  text-align: left;
+  font-weight: var(--apex-weight-medium);
+  font-size: var(--apex-text-2xs);
+  letter-spacing: var(--apex-tracking-caps);
+  text-transform: uppercase;
+  color: var(--apex-faint);
+  padding-bottom: 6px;
+}
+
+.tk-table td {
+  padding: 5px 8px 5px 0;
+  border-top: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
+}
+
+.tk-table code {
+  font-size: var(--apex-text-sm);
+  color: var(--apex-text);
+}
+
+.tk-value {
+  font-family: var(--font-mono);
+  font-size: var(--apex-text-2xs);
+  color: var(--apex-muted);
+  white-space: nowrap;
+}
+
+.tk-swatch,
+.tk-radius {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--apex-r-xs);
+  border: 1px solid var(--apex-border);
+}
+
+.tk-radius {
+  background: var(--apex-accent-soft);
+  border-color: var(--apex-accent);
+}
+
+.tk-type {
+  display: flex;
+  flex-direction: column;
+}
+
+.tk-type-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
+}
+
+.tk-type-row:last-child {
+  border-bottom: 0;
+}
+
+.tk-type-sample {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: var(--apex-leading-tight);
+}
+
+.tk-components {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.tk-component {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-r-md);
+  background: var(--apex-surface);
+}
+
+.tk-component-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tk-component-head .tk-h3 {
+  flex: 1;
+}
+
+.tk-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.tk-variant {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.tk-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 56px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklab, var(--apex-border) 55%, transparent);
+  border-radius: var(--apex-r-sm);
+  background: var(--apex-bg);
+}
+
+.tk-variant-name {
+  font-family: var(--font-mono);
+  font-size: var(--apex-text-2xs);
+  color: var(--apex-faint);
+  text-align: center;
+}

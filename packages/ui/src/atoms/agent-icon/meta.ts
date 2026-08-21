@@ -1,8 +1,10 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { AgentIcon } from "@/atoms/agent-icon/AgentIcon";
 import { AGENT_GLYPHS } from "@/atoms/agent-icon/glyphs";
 
 export const agentIconMeta: ComponentMeta = {
   name: "AgentIcon",
+  component: AgentIcon,
   layer: "atom",
   description: "Brand mark for each agent, with an initials fallback for unknown ids.",
   variants: [

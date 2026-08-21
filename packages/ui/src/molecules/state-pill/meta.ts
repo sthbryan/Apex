@@ -1,7 +1,9 @@
 import type { ComponentMeta } from "@/lib/meta";
+import { StatePill } from "@/molecules/state-pill/StatePill";
 
 export const statePillMeta: ComponentMeta = {
   name: "StatePill",
+  component: StatePill,
   layer: "molecule",
   description: "Agent state as a labelled pill: Dot plus text.",
   variants: [
