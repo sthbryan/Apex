@@ -22,6 +22,8 @@
   --apex-text-3xl: 26px;
   --apex-text-4xl: 32px;
 
+  --apex-font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, Georgia, serif;
+
   --apex-leading-tight: 1.2;
   --apex-leading-snug: 1.4;
   --apex-leading-normal: 1.6;

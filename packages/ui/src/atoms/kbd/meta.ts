@@ -6,6 +6,7 @@ export const kbdMeta: ComponentMeta = {
   component: Kbd,
   layer: "atom",
   description: "Keyboard key cap, single or grouped into a shortcut.",
+  rule: "Show the shortcut where the action lives, never in a separate legend.",
   variants: [
     { name: "single", props: {}, children: "K" },
   ],

@@ -6,6 +6,7 @@ export const switchMeta: ComponentMeta = {
   component: Switch,
   layer: "atom",
   description: "Binary toggle with a required accessible label.",
+  rule: "Applies immediately. If it needs a save button, it is a form field.",
   variants: [
     { name: "off", props: { checked: false, label: "Veil" } },
     { name: "on", props: { checked: true, label: "Veil" } },

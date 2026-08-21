@@ -12,7 +12,7 @@ import { SettingsModal } from "@/features/workspace/Settings";
 import {
   AgentIcon, AppMain, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
   DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, Markdown, Pane, PaneGrid, PaneSplit,
-  Pill, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup,
+  Pill, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
 } from "@apex/ui";
 
 const TABS = [
@@ -42,7 +42,7 @@ function Welcome() {
     <section class="view" style="position:relative;align-items:center;justify-content:center;padding:32px;overflow:hidden">
       <div style="position:relative;width:min(660px,100%);display:flex;flex-direction:column;align-items:center">
         <div style="text-align:center;margin-bottom:22px">
-          <h1 style="font-size:44px;font-weight:600;letter-spacing:.14em;margin:0">APEX</h1>
+          <Wordmark size="xl">APEX</Wordmark>
           <p style="margin-top:6px;color:var(--apex-muted);font-size:14.5px">Run a team of AI agents, not a wall of terminals.</p>
         </div>
         <Composer

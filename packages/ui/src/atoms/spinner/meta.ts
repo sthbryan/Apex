@@ -6,6 +6,7 @@ export const spinnerMeta: ComponentMeta = {
   component: Spinner,
   layer: "atom",
   description: "Indeterminate activity indicator that inherits its colour.",
+  rule: "Only for waits with no known end. If you know the percentage, use Bar.",
   variants: [
     { name: "sm", props: { size: "sm" } },
     { name: "md", props: { size: "md" } },

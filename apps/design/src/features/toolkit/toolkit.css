@@ -215,3 +215,21 @@
   color: var(--apex-faint);
   text-align: center;
 }
+
+.tk-rule {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--apex-accent);
+  font-size: var(--apex-text-md);
+  color: var(--apex-text);
+}
+
+.tk-compositions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 12px;
+}
+
+.tk-composition {
+  margin-top: 4px;
+}

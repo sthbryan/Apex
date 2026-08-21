@@ -5,6 +5,7 @@ export const composerMeta: ComponentMeta = {
   name: "Composer",
   layer: "organism",
   description: "Prompt input with a slotted action bar underneath.",
+  rule: "The single primary action of the view lives here.",
   component: Composer,
   variants: [
     { name: "empty", props: { label: "Prompt", placeholder: "Ask, delegate, or start a task…", class: "w-64" } },

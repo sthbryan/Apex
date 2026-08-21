@@ -6,6 +6,7 @@ export const surfaceMeta: ComponentMeta = {
   component: Surface,
   layer: "atom",
   description: "Elevation primitive. Set blur only on a stacking layer root so veil never compounds.",
+  rule: "Set blur on a stacking-layer root only. Nested veil compounds and turns to mud.",
   variants: [
     { name: "bg", props: { elevation: "bg", bordered: true, radius: "md" } },
     { name: "surface", props: { elevation: "surface", bordered: true, radius: "md" } },

@@ -1,0 +1,16 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-wordmark {
+    font-family: var(--apex-font-serif);
+    font-weight: var(--apex-weight-semibold);
+    letter-spacing: var(--apex-tracking-wide);
+    color: var(--apex-text);
+    line-height: var(--apex-leading-tight);
+  }
+
+  .ui-wordmark[data-size="sm"] { font-size: var(--apex-text-lg); }
+  .ui-wordmark[data-size="md"] { font-size: var(--apex-text-2xl); }
+  .ui-wordmark[data-size="lg"] { font-size: var(--apex-text-4xl); }
+  .ui-wordmark[data-size="xl"] { font-size: 56px; letter-spacing: 0.14em; }
+}

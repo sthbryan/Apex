@@ -6,6 +6,7 @@ export const cardMeta: ComponentMeta = {
   component: Card,
   layer: "molecule",
   description: "Bordered Surface with an optional head row.",
+  rule: "Group what is read together. Never nest a Card inside a Card.",
   variants: [
     { name: "titled", props: { title: "Run a migration?" }, children: "Adds two columns to sessions." },
     { name: "body only", props: {}, children: "Every contender gets its own worktree." },

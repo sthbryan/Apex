@@ -6,6 +6,7 @@ export const toastMeta: ComponentMeta = {
   component: Toast,
   layer: "organism",
   description: "Transient notification with optional auto-dismiss progress.",
+  rule: "Report what already happened. Never ask a question in a toast.",
   variants: [
     { name: "accent", props: { title: "Codex finished", detail: "exit 0" } },
     { name: "done", props: { title: "Race won by claude", detail: "14 files · +382 −96", tone: "done" } },

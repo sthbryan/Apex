@@ -12,6 +12,7 @@ export interface ComponentMeta {
   name: string;
   layer: ComponentLayer;
   description: string;
+  rule: string;
   component: ComponentType<any>;
   variants: ComponentVariant[];
 }

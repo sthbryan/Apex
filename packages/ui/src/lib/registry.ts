@@ -12,6 +12,7 @@ import { selectMeta } from "@/atoms/select/meta";
 import { spinnerMeta } from "@/atoms/spinner/meta";
 import { surfaceMeta } from "@/atoms/surface/meta";
 import { switchMeta } from "@/atoms/switch/meta";
+import { wordmarkMeta } from "@/atoms/wordmark/meta";
 import { cardMeta } from "@/molecules/card/meta";
 import { fieldMeta } from "@/molecules/field/meta";
 import { listRowMeta } from "@/molecules/list-row/meta";
@@ -55,6 +56,7 @@ export const REGISTRY: ComponentMeta[] = [
   spinnerMeta,
   surfaceMeta,
   switchMeta,
+  wordmarkMeta,
   cardMeta,
   fieldMeta,
   listRowMeta,

@@ -6,6 +6,7 @@ export const tooltipMeta: ComponentMeta = {
   component: Tooltip,
   layer: "molecule",
   description: "Hover and focus hint anchored to any of the four sides.",
+  rule: "Name the control, never explain it. Explanations belong in a Field hint.",
   variants: [
     { name: "top", props: { content: "Sessions", side: "top" } },
     { name: "bottom", props: { content: "Sessions", side: "bottom" } },

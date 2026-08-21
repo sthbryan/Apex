@@ -1,12 +1,13 @@
 import { REGISTRY } from "@apex/ui";
 import type { ComponentLayer, ComponentMeta } from "@apex/ui";
-import { Chip, Pill, Segmented, Switch } from "@apex/ui";
+import { Chip, Pill, Segmented, Switch, Wordmark } from "@apex/ui";
 import { themeMode, veil } from "@/shared/theme/mode";
 import type { ThemeMode } from "@/shared/theme/mode";
 import { SAMPLES, TOKEN_GROUPS, TYPE_TOKENS } from "@/features/toolkit/tokens";
 import { useTokenValues } from "@/features/toolkit/useTokenValues";
 import type { TokenKind } from "@/features/toolkit/useTokenValues";
 import { renderVariant } from "@/features/toolkit/harness";
+import { COMPOSITIONS } from "@/features/toolkit/Compositions";
 
 const LAYERS: { id: ComponentLayer; title: string; blurb: string }[] = [
   { id: "atom", title: "Atoms", blurb: "Indivisible primitives. They own no layout." },
@@ -28,7 +29,7 @@ export function Toolkit() {
     <div class="tk">
       <header class="tk-head">
         <div>
-          <h1 class="tk-title">Apex UI</h1>
+          <h1 class="tk-title"><Wordmark size="lg">Apex</Wordmark> UI</h1>
           <p class="tk-sub">
             {REGISTRY.length} components from <code>@apex/ui</code>, rendered live from the registry.
           </p>
@@ -106,6 +107,25 @@ export function Toolkit() {
         </div>
       </section>
 
+      <section class="tk-section">
+        <h2 class="tk-h2">
+          In situ
+          <Pill>{COMPOSITIONS.length}</Pill>
+        </h2>
+        <p class="tk-blurb">The same components assembled the way the product uses them.</p>
+        <div class="tk-compositions">
+          {COMPOSITIONS.map((c) => (
+            <article class="tk-component" key={c.name}>
+              <header class="tk-component-head">
+                <h3 class="tk-h3">{c.name}</h3>
+              </header>
+              <p class="tk-rule">{c.rule}</p>
+              <div class="tk-composition">{c.render()}</div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {LAYERS.map((layer) => {
         const components = REGISTRY.filter((c) => c.layer === layer.id);
         return (
@@ -133,6 +153,7 @@ function ComponentCard({ meta }: { meta: ComponentMeta }) {
         <Chip>{meta.variants.length} variants</Chip>
       </header>
       <p class="tk-blurb">{meta.description}</p>
+      <p class="tk-rule">{meta.rule}</p>
       <div class="tk-variants">
         {meta.variants.map((variant) => (
           <div class="tk-variant" key={variant.name}>

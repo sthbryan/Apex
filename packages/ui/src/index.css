@@ -16,6 +16,7 @@
 @import "./atoms/spinner/spinner.css";
 @import "./atoms/surface/surface.css";
 @import "./atoms/switch/switch.css";
+@import "./atoms/wordmark/wordmark.css";
 @import "./molecules/card/card.css";
 @import "./molecules/field/field.css";
 @import "./molecules/list-row/list-row.css";

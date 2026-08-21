@@ -5,6 +5,7 @@ export const statusBarMeta: ComponentMeta = {
   name: "StatusBar",
   layer: "organism",
   description: "Bottom strip of compact status pills, with a right-aligned group.",
+  rule: "Ambient state you may ignore. Nothing here is the only path to an action.",
   component: StatusPill,
   variants: [
     { name: "button", props: {}, children: "16 changed" },

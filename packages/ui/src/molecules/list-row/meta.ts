@@ -6,6 +6,7 @@ export const listRowMeta: ComponentMeta = {
   component: ListRow,
   layer: "molecule",
   description: "Selectable row for sessions, files and tasks.",
+  rule: "One line of identity, one of context. Anything else goes in the trail slot.",
   variants: [
     { name: "default", props: { label: "Refactor auth middleware" } },
     { name: "selected", props: { label: "Refactor auth middleware", selected: true } },

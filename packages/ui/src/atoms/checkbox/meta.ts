@@ -5,6 +5,7 @@ export const checkboxMeta: ComponentMeta = {
   name: "Checkbox",
   layer: "atom",
   description: "Square toggle for staging and multi-select lists.",
+  rule: "For staging and multi-select. A single on/off setting is a Switch.",
   component: Checkbox,
   variants: [
     { name: "off", props: { checked: false, label: "Stage file" } },

@@ -11,3 +11,4 @@ export * from "@/atoms/select";
 export * from "@/atoms/spinner";
 export * from "@/atoms/surface";
 export * from "@/atoms/switch";
+export * from "@/atoms/wordmark";

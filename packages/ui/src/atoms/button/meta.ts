@@ -6,6 +6,7 @@ export const buttonMeta: ComponentMeta = {
   component: Button,
   layer: "atom",
   description: "Primary interactive control in four intents and four sizes.",
+  rule: "One primary per action context. Ghost is the default voice.",
   variants: [
     { name: "primary", props: { variant: "primary" }, children: "Start race" },
     { name: "ghost", props: { variant: "ghost" }, children: "Cancel" },

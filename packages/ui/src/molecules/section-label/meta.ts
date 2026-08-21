@@ -5,6 +5,7 @@ export const sectionLabelMeta: ComponentMeta = {
   name: "SectionLabel",
   layer: "molecule",
   description: "Uppercase group heading with an optional count.",
+  rule: "Only when there are two or more groups. A single group needs no heading.",
   component: SectionLabel,
   variants: [
     { name: "plain", props: {}, children: "Worktrees" },

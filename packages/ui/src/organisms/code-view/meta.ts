@@ -5,6 +5,7 @@ export const codeViewMeta: ComponentMeta = {
   name: "CodeView",
   layer: "organism",
   description: "Gutter-numbered source listing with four syntax token roles.",
+  rule: "Read-only source. Editing belongs to the editor, not to a pane.",
   component: Code,
   variants: [
     { name: "keyword", props: { token: "keyword" }, children: "const" },

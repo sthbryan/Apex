@@ -5,6 +5,7 @@ export const commandPaletteMeta: ComponentMeta = {
   name: "CommandPalette",
   layer: "organism",
   description: "Search-driven command list with keyboard selection.",
+  rule: "Every command here must also be reachable with the mouse.",
   component: CommandItem,
   variants: [
     { name: "default", props: { name: "New session" } },

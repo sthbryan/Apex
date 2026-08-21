@@ -5,6 +5,7 @@ export const railMeta: ComponentMeta = {
   name: "Rail",
   layer: "organism",
   description: "Vertical icon navigation with per-item state badges.",
+  rule: "Destinations, not actions. Badges mirror state, never counts.",
   component: RailButton,
   variants: [
     { name: "default", props: { label: "Summary" }, children: "◧" },

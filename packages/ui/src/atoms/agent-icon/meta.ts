@@ -7,6 +7,7 @@ export const agentIconMeta: ComponentMeta = {
   component: AgentIcon,
   layer: "atom",
   description: "Brand mark for each agent, with an initials fallback for unknown ids.",
+  rule: "Identity only. State belongs to the Dot beside it, never to the glyph.",
   variants: [
     ...Object.keys(AGENT_GLYPHS).map((agent) => ({ name: agent, props: { agent } })),
     { name: "unknown", props: { agent: "zed" } },

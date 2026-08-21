@@ -6,6 +6,7 @@ export const barMeta: ComponentMeta = {
   component: Bar,
   layer: "atom",
   description: "Determinate progress track with an optional pace tick.",
+  rule: "Always pair it with a number. A bar on its own is decoration.",
   variants: [
     { name: "accent", props: { value: 62, label: "Usage" } },
     { name: "with tick", props: { value: 62, tick: 58, label: "Usage" } },

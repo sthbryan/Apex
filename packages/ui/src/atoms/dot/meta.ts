@@ -6,6 +6,7 @@ export const dotMeta: ComponentMeta = {
   component: Dot,
   layer: "atom",
   description: "Status indicator for the five agent states.",
+  rule: "One per row. Pulsing means it needs you or is actively moving.",
   variants: [
     { name: "idle", props: { state: "idle" } },
     { name: "working", props: { state: "working" } },

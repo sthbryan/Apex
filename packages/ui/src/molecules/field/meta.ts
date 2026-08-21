@@ -6,6 +6,7 @@ export const fieldMeta: ComponentMeta = {
   component: Field,
   layer: "molecule",
   description: "Settings row pairing a label and optional hint with a control.",
+  rule: "Label left, control right. Stack only when the control needs the full width.",
   variants: [
     { name: "inline", props: { label: "Theme" } },
     { name: "with hint", props: { label: "Veil", hint: "Translucent chrome over the desktop." } },

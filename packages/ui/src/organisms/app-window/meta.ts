@@ -5,6 +5,7 @@ export const appWindowMeta: ComponentMeta = {
   name: "AppWindow",
   layer: "organism",
   description: "Rounded desktop window frame holding the whole shell.",
+  rule: "One per window. Everything else lives inside it.",
   component: AppWindow,
   variants: [
     { name: "framed", props: { class: "h-24 w-56" } },

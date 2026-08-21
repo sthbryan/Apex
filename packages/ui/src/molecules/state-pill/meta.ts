@@ -6,6 +6,7 @@ export const statePillMeta: ComponentMeta = {
   component: StatePill,
   layer: "molecule",
   description: "Agent state as a labelled pill: Dot plus text.",
+  rule: "The agent lifecycle, named. Use a bare Dot only when the word will not fit.",
   variants: [
     { name: "idle", props: { state: "idle" }, children: "Idle" },
     { name: "working", props: { state: "working" }, children: "Running" },

@@ -5,6 +5,7 @@ export const toggleChipMeta: ComponentMeta = {
   name: "ToggleChip",
   layer: "molecule",
   description: "Multi-select chip for picking agents and filters.",
+  rule: "Multi-select. An exclusive choice is a Segmented.",
   component: ToggleChip,
   variants: [
     { name: "off", props: { pressed: false }, children: "codex" },

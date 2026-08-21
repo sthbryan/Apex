@@ -6,6 +6,7 @@ export const pillMeta: ComponentMeta = {
   component: Pill,
   layer: "atom",
   description: "Rounded label for capabilities and toggled states.",
+  rule: "Status and capability. Never navigation.",
   variants: [
     { name: "neutral", props: {}, children: "shares context" },
     { name: "accent", props: { tone: "accent" }, children: "on" },

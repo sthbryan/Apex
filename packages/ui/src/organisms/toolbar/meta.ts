@@ -6,6 +6,7 @@ export const toolbarMeta: ComponentMeta = {
   component: Toolbar,
   layer: "organism",
   description: "Header strip for panes and windows with lead, title and trailing slots.",
+  rule: "Actions scoped to the pane directly below it.",
   variants: [
     { name: "surface", props: { title: "Auth middleware", label: "Pane" } },
     { name: "bg", props: { title: "Auth middleware", elevation: "bg", label: "Pane" } },

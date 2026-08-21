@@ -12,6 +12,7 @@ export const segmentedMeta: ComponentMeta = {
   component: Segmented,
   layer: "molecule",
   description: "Exclusive choice as a radiogroup, not a row of toggle buttons.",
+  rule: "Two to four exclusive options that apply on click.",
   variants: [
     { name: "sm", props: { options: THEME, value: "dark", label: "Theme", size: "sm" } },
     { name: "md", props: { options: THEME, value: "dark", label: "Theme" } },
