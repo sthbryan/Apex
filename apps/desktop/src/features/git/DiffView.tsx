@@ -2,16 +2,21 @@ import cn from "cnfast";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { GitTarget } from "@/bindings/GitTarget";
+import type { RejectedHunk } from "@/bindings/RejectedHunk";
 import { highlight } from "@/features/files/highlight";
 import { ImageDiff } from "@/features/git/ImageDiff";
 import { binary, binaryPaths, splittable } from "@/features/git/patch";
 import { SplitPatch } from "@/features/git/SplitPatch";
 import {
+  clearRejects,
   diffLayout,
   gitStatus,
   readDiff,
   readHunks,
+  readRejects,
   refreshPending,
+  rejectHunk,
+  restoreReject,
   setDiffLayout,
   stageHunk,
 } from "@/features/git/state";
@@ -39,6 +44,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
   const [staged, setStaged] = useState<Painted[]>([]);
   const [whole, setWhole] = useState<Painted | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const [shelf, setShelf] = useState<RejectedHunk[]>([]);
   const [wide, setWide] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
   const ticket = useRef(0);
@@ -95,6 +101,33 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
 
   const split = wide && diffLayout.value === "split";
 
+  const walking = !commit && inReview(target);
+
+  const lookShelf = useCallback(() => {
+    if (!walking) {
+      return;
+    }
+    void readRejects(target)
+      .then(setShelf)
+      .catch(() => setShelf([]));
+  }, [target, walking]);
+
+  useEffect(lookShelf, [lookShelf]);
+
+  const reject = (patch: string) => {
+    void rejectHunk(target, patch)
+      .then(load)
+      .then(lookShelf)
+      .catch((error: unknown) => setFailure(String(error)));
+  };
+
+  const undo = (id: string) => {
+    void restoreReject(target, id)
+      .then(load)
+      .then(lookShelf)
+      .catch((error: unknown) => setFailure(String(error)));
+  };
+
   const apply = (patch: string, stage: boolean) => {
     void stageHunk(target, patch, stage)
       .then(load)
@@ -106,7 +139,6 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
     ? whole !== null && whole.patch.trim() === ""
     : unstaged.length === 0 && staged.length === 0;
 
-  const walking = !commit && inReview(target);
   const files = walking ? reviewFiles() : [];
   const at = files.indexOf(path);
 
@@ -178,6 +210,14 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
+      {walking && shelf.length > 0 && (
+        <Shelf
+          rejects={shelf}
+          onUndo={undo}
+          onClear={() => void clearRejects(target).then(lookShelf)}
+        />
+      )}
+
       {empty && <p class="p-3 text-faint">{t("git.noDiff")}</p>}
 
       <div class="min-h-0 flex-1 overflow-auto">
@@ -192,6 +232,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
               hunks={unstaged}
               action={t(walking ? "review.approve" : "git.stageHunk")}
               onApply={(patch) => apply(patch, true)}
+              onReject={walking ? reject : undefined}
               path={path}
               split={split}
               target={target}
@@ -218,13 +259,14 @@ type GroupProps = {
   hunks: Painted[];
   action: string;
   onApply: (patch: string) => void;
+  onReject?: (patch: string) => void;
   tone?: string;
   path: string;
   split: boolean;
   target: GitTarget;
 };
 
-function Group({ label, hunks, action, onApply, tone, path, split, target }: GroupProps) {
+function Group({ label, hunks, action, onApply, onReject, tone, path, split, target }: GroupProps) {
   if (hunks.length === 0) {
     return null;
   }
@@ -240,17 +282,87 @@ function Group({ label, hunks, action, onApply, tone, path, split, target }: Gro
       </h2>
       {hunks.map((hunk) => (
         <div key={hunk.patch} class="group/hunk relative border-b border-border">
-          <button
-            type="button"
-            onClick={() => onApply(hunk.patch)}
-            class="absolute top-1 right-2 z-10 rounded border border-border bg-surface px-1.5 text-faint opacity-0 transition-[opacity,color] group-hover/hunk:opacity-100 hover:text-text"
-          >
-            {action}
-          </button>
+          <div class="absolute top-1 right-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover/hunk:opacity-100">
+            <button
+              type="button"
+              onClick={() => onApply(hunk.patch)}
+              class="rounded border border-border bg-surface px-1.5 text-faint transition-colors hover:text-text"
+            >
+              {action}
+            </button>
+            {onReject && (
+              <button
+                type="button"
+                onClick={() => onReject(hunk.patch)}
+                class="rounded border border-border bg-surface px-1.5 text-faint transition-colors hover:text-state-failed"
+              >
+                {t("review.reject")}
+              </button>
+            )}
+          </div>
           <Patch painted={hunk} path={path} split={split} target={target} commit={null} />
         </div>
       ))}
     </section>
+  );
+}
+
+function Shelf({
+  rejects,
+  onUndo,
+  onClear,
+}: {
+  rejects: RejectedHunk[];
+  onUndo: (id: string) => void;
+  onClear: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+  const last = rejects[0];
+  return (
+    <div class="flex shrink-0 items-center gap-2 border-b border-border bg-surface px-3 py-1">
+      <span class="min-w-0 flex-1 truncate text-faint">
+        {t("review.rejected", { count: String(rejects.length), path: last?.path ?? "" })}
+      </span>
+      {last && (
+        <button
+          type="button"
+          onClick={() => onUndo(last.id)}
+          class="shrink-0 text-muted transition-colors hover:text-text"
+        >
+          {t("review.undoReject")}
+        </button>
+      )}
+      {asking ? (
+        <>
+          <span class="shrink-0 text-state-failed">{t("review.clearAsk")}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setAsking(false);
+              onClear();
+            }}
+            class="shrink-0 text-state-failed transition-colors hover:text-text"
+          >
+            {t("review.clearYes")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setAsking(false)}
+            class="shrink-0 text-faint transition-colors hover:text-text"
+          >
+            {t("review.clearNo")}
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAsking(true)}
+          class="shrink-0 text-faint transition-colors hover:text-text"
+        >
+          {t("review.clear")}
+        </button>
+      )}
+    </div>
   );
 }
 

@@ -269,6 +269,13 @@ export const es: Messages = {
     approved: "Aprobado",
     approve: "Aprobar",
     undoApprove: "Deshacer",
+    reject: "Rechazar",
+    rejected: "{count} rechazados · el último en {path}",
+    undoReject: "Deshacer el último",
+    clear: "Vaciar",
+    clearAsk: "¿Sin vuelta atrás?",
+    clearYes: "Vaciar",
+    clearNo: "Conservar",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

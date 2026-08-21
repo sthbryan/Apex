@@ -267,6 +267,13 @@ export const en = {
     approved: "Approved",
     approve: "Approve",
     undoApprove: "Undo",
+    reject: "Reject",
+    rejected: "{count} rejected · last was {path}",
+    undoReject: "Undo the last",
+    clear: "Clear",
+    clearAsk: "Gone for good?",
+    clearYes: "Clear",
+    clearNo: "Keep",
   },
   git: {
     noRepo: "This project is not a git repository.",
