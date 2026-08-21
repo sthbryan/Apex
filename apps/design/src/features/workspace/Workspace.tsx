@@ -6,8 +6,9 @@ import {
 import {
   activeTab, consoleOpen, fmode, launcherOpen,
   openPop, raceAsking, raceKept, removedProject,
-  showWelcome, toastCount, uaWindow,
+  settingsOpen, showWelcome, toastCount, uaWindow,
 } from "@/app/state";
+import { SettingsModal } from "@/features/workspace/Settings";
 import { Dot, Glyph, StatePill } from "@/shared/ui/atoms";
 
 const TABS = [
@@ -297,6 +298,7 @@ function Overlays() {
       {openPop.value === "target" && <TargetPop />}
       {openPop.value === "projects" && <ProjectsPop />}
       {launcherOpen.value && <Launcher />}
+      {settingsOpen.value && <SettingsModal />}
     </>
   );
 }

@@ -3,7 +3,7 @@ import {
   ArrowLeftRight, Bell, BookOpen, ChevronDown, Cpu, Folder, GitBranch,
   History, Inbox, LayoutGrid, PanelLeft, Play, Settings, SquareTerminal,
 } from "lucide-preact";
-import { openPop, page, activePanel, railOnly, showWelcome } from "@/app/state";
+import { openPop, page, activePanel, railOnly, settingsOpen, settingsSection, showWelcome } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
 
 const PANELS = [
@@ -27,7 +27,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
         <div class="tb-actions">
           <button class="icon-btn" title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></button>
           <button class="icon-btn" title="Command palette ⌘K"><LayoutGrid size={15} /></button>
-          <button class="icon-btn" title="Settings ⌘,"><Settings size={15} /></button>
+          <button class="icon-btn" title="Settings ⌘," onClick={() => { settingsOpen.value = true; settingsSection.value = "look"; }}><Settings size={15} /></button>
         </div>
       </header>
 
