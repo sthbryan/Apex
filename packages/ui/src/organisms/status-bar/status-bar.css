@@ -1,0 +1,36 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-status-bar {
+    @apply flex flex-none items-center gap-1 overflow-x-auto px-2.5 text-sm whitespace-nowrap text-muted;
+    height: var(--apex-h-lg);
+    border-top: 1px solid var(--apex-border);
+    scrollbar-width: none;
+  }
+
+  .ui-status-bar::-webkit-scrollbar { display: none; }
+
+  .ui-status-bar-right {
+    @apply ml-auto flex items-center gap-1;
+  }
+
+  .ui-status-pill {
+    @apply inline-flex flex-none items-center gap-1.5 rounded-full border border-transparent px-2.5;
+    height: var(--apex-h-xs);
+  }
+
+  button.ui-status-pill:hover {
+    @apply bg-raised text-text;
+  }
+
+  .ui-status-pill[data-live="true"] {
+    color: var(--apex-state-working);
+    border-color: color-mix(in oklab, var(--apex-state-working) 35%, transparent);
+  }
+
+  .ui-status-pill[data-live="true"] .ui-status-pill-beacon {
+    @apply block size-1.5 rounded-full;
+    background-color: currentcolor;
+    animation: apex-pulse 1.6s ease-in-out infinite;
+  }
+}

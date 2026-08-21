@@ -1,0 +1,39 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-rail {
+    @apply flex flex-none flex-col items-center gap-1 py-2;
+    width: 52px;
+    border-right: 1px solid var(--apex-border);
+  }
+
+  .ui-rail-spacer {
+    @apply flex-1;
+  }
+
+  .ui-rail-button {
+    @apply relative grid flex-none place-items-center rounded-sm text-muted transition-colors;
+    width: var(--apex-h-lg);
+    height: var(--apex-h-lg);
+  }
+
+  .ui-rail-button:hover {
+    @apply bg-raised text-text;
+  }
+
+  .ui-rail-button[aria-current="true"] {
+    @apply bg-accent-soft text-accent;
+  }
+
+  .ui-rail-badge {
+    @apply absolute top-1 right-1 size-1.5 rounded-full;
+    box-shadow: 0 0 0 2px var(--apex-surface);
+  }
+
+  .ui-rail-badge[data-state="idle"] { background-color: var(--apex-state-idle); }
+  .ui-rail-badge[data-state="working"] { background-color: var(--apex-state-working); animation: apex-pulse 1.6s ease-in-out infinite; }
+  .ui-rail-badge[data-state="blocked"] { background-color: var(--apex-state-blocked); }
+  .ui-rail-badge[data-state="done"] { background-color: var(--apex-state-done); }
+  .ui-rail-badge[data-state="failed"] { background-color: var(--apex-state-failed); }
+  .ui-rail-badge[data-state="dirty"] { background-color: var(--apex-muted); }
+}

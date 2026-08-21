@@ -1,0 +1,33 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-title-bar {
+    @apply flex flex-none items-center gap-3 px-3.5;
+    height: 44px;
+    border-bottom: 1px solid var(--apex-border);
+  }
+
+  .ui-title-bar-lights {
+    @apply flex flex-none gap-2;
+  }
+
+  .ui-title-bar-lights i {
+    @apply block size-3 rounded-full;
+  }
+
+  .ui-title-bar-lights i:nth-child(1) { background-color: #ff5f57; }
+  .ui-title-bar-lights i:nth-child(2) { background-color: #febc2e; }
+  .ui-title-bar-lights i:nth-child(3) { background-color: #28c840; }
+
+  .ui-title-bar-title {
+    @apply min-w-0 flex-1 truncate text-center font-medium text-muted;
+  }
+
+  .ui-title-bar-title strong {
+    @apply font-semibold tracking-wide text-text;
+  }
+
+  .ui-title-bar-actions {
+    @apply flex flex-none items-center gap-1;
+  }
+}

@@ -1,0 +1,24 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-app-window {
+    @apply relative isolate flex min-h-0 flex-1 flex-col overflow-hidden text-text;
+    background-color: var(--apex-bg);
+    border-radius: var(--apex-r-lg);
+    border: 1px solid color-mix(in oklab, var(--apex-border) 80%, transparent);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), var(--apex-shadow-xl), 0 4px 18px rgb(0 0 0 / 0.35);
+  }
+
+  .ui-app-window[data-flush="true"] {
+    @apply rounded-none border-0 shadow-none;
+  }
+
+  .ui-app-body {
+    @apply flex min-h-0 flex-1;
+  }
+
+  .ui-app-main {
+    @apply flex min-w-0 flex-1 flex-col;
+    background-color: var(--apex-bg);
+  }
+}

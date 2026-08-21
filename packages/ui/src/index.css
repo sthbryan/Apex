@@ -2,6 +2,7 @@
 
 @import "./keyframes.css";
 @import "@apex/tokens/tokens.css";
+@import "./lib/chrome.css";
 @import "./atoms/agent-icon/agent-icon.css";
 @import "./atoms/badge/badge.css";
 @import "./atoms/bar/bar.css";
@@ -20,8 +21,15 @@
 @import "./molecules/segmented/segmented.css";
 @import "./molecules/state-pill/state-pill.css";
 @import "./molecules/tooltip/tooltip.css";
+@import "./organisms/app-window/app-window.css";
 @import "./organisms/empty-state/empty-state.css";
 @import "./organisms/modal/modal.css";
 @import "./organisms/popover/popover.css";
 @import "./organisms/toast/toast.css";
 @import "./organisms/toolbar/toolbar.css";
+@import "./organisms/pane/pane.css";
+@import "./organisms/rail/rail.css";
+@import "./organisms/side-panel/side-panel.css";
+@import "./organisms/status-bar/status-bar.css";
+@import "./organisms/tab-bar/tab-bar.css";
+@import "./organisms/title-bar/title-bar.css";

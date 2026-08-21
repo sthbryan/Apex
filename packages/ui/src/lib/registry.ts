@@ -17,6 +17,13 @@ import { meterMeta } from "@/molecules/meter/meta";
 import { segmentedMeta } from "@/molecules/segmented/meta";
 import { statePillMeta } from "@/molecules/state-pill/meta";
 import { tooltipMeta } from "@/molecules/tooltip/meta";
+import { appWindowMeta } from "@/organisms/app-window/meta";
+import { paneMeta } from "@/organisms/pane/meta";
+import { railMeta } from "@/organisms/rail/meta";
+import { sidePanelMeta } from "@/organisms/side-panel/meta";
+import { statusBarMeta } from "@/organisms/status-bar/meta";
+import { tabBarMeta } from "@/organisms/tab-bar/meta";
+import { titleBarMeta } from "@/organisms/title-bar/meta";
 import { emptyStateMeta } from "@/organisms/empty-state/meta";
 import { modalMeta } from "@/organisms/modal/meta";
 import { popoverMeta } from "@/organisms/popover/meta";
@@ -42,7 +49,14 @@ export const REGISTRY: ComponentMeta[] = [
   segmentedMeta,
   statePillMeta,
   tooltipMeta,
+  appWindowMeta,
   emptyStateMeta,
+  paneMeta,
+  railMeta,
+  sidePanelMeta,
+  statusBarMeta,
+  tabBarMeta,
+  titleBarMeta,
   modalMeta,
   popoverMeta,
   toastMeta,

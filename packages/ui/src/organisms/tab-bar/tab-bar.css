@@ -1,0 +1,49 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-tab-bar {
+    @apply flex flex-none items-stretch overflow-x-auto;
+    min-height: var(--apex-h-xl);
+    border-bottom: 1px solid var(--apex-border);
+    scrollbar-width: none;
+  }
+
+  .ui-tab-bar::-webkit-scrollbar { display: none; }
+
+  .ui-tab {
+    @apply relative flex min-w-0 max-w-64 flex-none cursor-pointer items-center gap-2 pr-1.5 pl-3 text-muted;
+    height: var(--apex-h-xl);
+    border-right: 1px solid var(--apex-border);
+  }
+
+  .ui-tab:hover {
+    @apply text-text;
+    background-color: color-mix(in oklab, var(--apex-raised) 55%, transparent);
+  }
+
+  .ui-tab[aria-selected="true"] {
+    @apply bg-bg font-medium text-text;
+  }
+
+  .ui-tab[aria-selected="true"]::before {
+    @apply absolute inset-x-0 top-0 block h-0.5 bg-accent;
+    content: "";
+    border-radius: 0 0 2px 2px;
+  }
+
+  .ui-tab-title {
+    @apply min-w-0 max-w-40 truncate text-left text-md;
+  }
+
+  .ui-tab-add {
+    @apply grid flex-none place-items-center text-muted;
+    width: var(--apex-h-xl);
+    height: var(--apex-h-xl);
+    border-right: 1px solid var(--apex-border);
+  }
+
+  .ui-tab-add:hover {
+    @apply text-text;
+    background-color: color-mix(in oklab, var(--apex-raised) 55%, transparent);
+  }
+}
