@@ -1,7 +1,15 @@
 import cn from "cnfast";
+import { useState } from "preact/hooks";
 
 import type { SessionState } from "@/bindings/SessionState";
-import { type Contender, contendersOf, contenderTarget, races } from "@/features/race/state";
+import {
+  type Contender,
+  contendersOf,
+  contenderTarget,
+  type Race,
+  races,
+  settleRace,
+} from "@/features/race/state";
 import { openReview } from "@/features/review/state";
 import { t } from "@/shared/i18n";
 
@@ -26,14 +34,15 @@ export function RaceView({ run }: { run: string }) {
       <p class="shrink-0 truncate border-b border-border px-2 py-1.5 text-muted">{race.task}</p>
       <div class="grid min-h-0 flex-1 auto-cols-fr grid-flow-col divide-x divide-border overflow-auto">
         {contenders.map((contender) => (
-          <Column key={contender.session.id} contender={contender} />
+          <Column key={contender.session.id} contender={contender} race={race} />
         ))}
       </div>
     </div>
   );
 }
 
-function Column({ contender }: { contender: Contender }) {
+function Column({ contender, race }: { contender: Contender; race: Race }) {
+  const [asking, setAsking] = useState(false);
   const { session, changed } = contender;
   const target = contenderTarget(session);
   const dead = session.exit_code !== null;
@@ -65,6 +74,38 @@ function Column({ contender }: { contender: Contender }) {
           </button>
         </>
       )}
+
+      <div class="mt-auto shrink-0 border-t border-border px-2 py-1.5">
+        {asking ? (
+          <div class="flex items-center gap-1.5">
+            <span class="min-w-0 flex-1 truncate text-faint">
+              {t("race.keepAsk", { count: String(race.contenders.length - 1) })}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAsking(false)}
+              class="shrink-0 text-muted transition-colors hover:text-text"
+            >
+              {t("race.keepNo")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void settleRace(race, session.id)}
+              class="shrink-0 text-git-removed transition-colors hover:brightness-125"
+            >
+              {t("race.keepYes")}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAsking(true)}
+            class="w-full rounded border border-border px-2 py-0.5 text-muted transition-colors hover:bg-raised hover:text-text"
+          >
+            {t("race.keep")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

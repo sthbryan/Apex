@@ -5,6 +5,9 @@ import type { PendingReview } from "@/bindings/PendingReview";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { pending } from "@/features/git/state";
 import { projectSessions } from "@/features/projects/state";
+import { openReview } from "@/features/review/state";
+import { finishClose } from "@/features/sessions/pending";
+import { complain } from "@/shared/daemon";
 
 export type Race = {
   id: string;
@@ -66,4 +69,16 @@ export function contendersOf(race: Race): Contender[] {
 
 export function contenderTarget(session: SessionSummary): GitTarget {
   return { type: "session", id: session.id };
+}
+
+export async function settleRace(race: Race, keeping: string): Promise<void> {
+  const losers = race.contenders.filter((session) => session.id !== keeping);
+  for (const session of losers) {
+    await finishClose(session.id, "discard").catch((cause: unknown) => complain(cause));
+  }
+  const winner = race.contenders.find((session) => session.id === keeping);
+  if (winner) {
+    await openReview(contenderTarget(winner));
+  }
+  openRace.value = null;
 }

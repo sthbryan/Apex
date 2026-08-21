@@ -271,6 +271,10 @@ export const es: Messages = {
     stillWorking: "Todavía trabajando…",
     leftNothing: "No dejó nada.",
     inspect: "Mirarlo",
+    keep: "Quedarme con este",
+    keepAsk: "¿Descartar los otros {count}?",
+    keepYes: "Descartar",
+    keepNo: "Cancelar",
   },
   review: {
     title: "Revisión",

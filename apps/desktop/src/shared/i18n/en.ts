@@ -269,6 +269,10 @@ export const en = {
     stillWorking: "Still working…",
     leftNothing: "Left nothing behind.",
     inspect: "Look at it",
+    keep: "Keep this one",
+    keepAsk: "Drop the other {count}?",
+    keepYes: "Drop",
+    keepNo: "Cancel",
   },
   review: {
     title: "Review",
