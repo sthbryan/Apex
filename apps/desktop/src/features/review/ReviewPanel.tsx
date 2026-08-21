@@ -1,5 +1,5 @@
 import cn from "cnfast";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { MergeReport } from "@/bindings/MergeReport";
@@ -7,11 +7,13 @@ import type { PendingReview } from "@/bindings/PendingReview";
 import type { SessionState } from "@/bindings/SessionState";
 import { CommitBox } from "@/features/git/CommitBox";
 import {
+  clearRejects,
   gitFailure,
   gitStatus,
   gitTarget,
   mergeWorktree,
   pending,
+  readRejects,
   refreshGit,
   refreshPending,
   sameTarget,
@@ -74,12 +76,43 @@ export function ReviewPanel() {
 
 function Closing() {
   const [report, setReport] = useState<MergeReport | null>(null);
+  const [shelved, setShelved] = useState(0);
+  const [asking, setAsking] = useState(false);
   const at = reviewing.value;
   const status = gitStatus.value;
+  const mine = at && sameTarget(gitTarget.value, at);
 
-  if (!at || !status || !sameTarget(gitTarget.value, at)) {
+  useEffect(() => {
+    if (!at || !mine) {
+      setShelved(0);
+      return;
+    }
+    void readRejects(at)
+      .then((found) => setShelved(found.length))
+      .catch(() => setShelved(0));
+  }, [at, mine, status]);
+
+  if (!at || !status || !mine) {
     return null;
   }
+
+  const merge = () => {
+    setAsking(false);
+    setReport(null);
+    void mergeWorktree(at)
+      .then(async (outcome) => {
+        setReport(outcome);
+        if (outcome.type === "merged") {
+          await clearRejects(at).catch(() => {});
+          reviewing.value = null;
+        }
+        await refreshGit();
+        await refreshPending();
+      })
+      .catch((error: unknown) => {
+        gitFailure.value = String(error);
+      });
+  };
 
   const staged = status.changes.filter((change) => change.staged).length;
   if (staged === 0 && !status.isolated) {
@@ -91,24 +124,37 @@ function Closing() {
       <CommitBox status={status} />
       {status.isolated && (
         <div class="shrink-0 border-t border-border p-2">
-          <button
-            type="button"
-            onClick={() => {
-              setReport(null);
-              void mergeWorktree(at)
-                .then((outcome) => {
-                  setReport(outcome);
-                  void refreshGit();
-                  void refreshPending();
-                })
-                .catch((error: unknown) => {
-                  gitFailure.value = String(error);
-                });
-            }}
-            class="w-full rounded border border-border py-1 text-muted transition-colors hover:bg-raised hover:text-text"
-          >
-            {t("git.merge", { base: status.base })}
-          </button>
+          {asking ? (
+            <>
+              <p class="mb-1 text-state-failed">
+                {t("review.mergeDropsRejects", { count: String(shelved) })}
+              </p>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  onClick={merge}
+                  class="flex-1 rounded border border-border py-1 text-state-failed transition-colors hover:bg-raised hover:text-text"
+                >
+                  {t("review.mergeAnyway")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAsking(false)}
+                  class="flex-1 rounded border border-border py-1 text-faint transition-colors hover:bg-raised hover:text-text"
+                >
+                  {t("review.clearNo")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => (shelved > 0 ? setAsking(true) : merge())}
+              class="w-full rounded border border-border py-1 text-muted transition-colors hover:bg-raised hover:text-text"
+            >
+              {t("git.merge", { base: status.base })}
+            </button>
+          )}
           {report?.type === "merged" && <p class="mt-1 text-git-added">{t("git.merged")}</p>}
           {report?.type === "conflicted" && (
             <p class="mt-1 text-git-conflict">

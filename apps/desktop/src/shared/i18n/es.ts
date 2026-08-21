@@ -280,6 +280,8 @@ export const es: Messages = {
     rejectAllAsk: "¿Rechazar todo?",
     rejectAllYes: "Rechazar",
     rejectAllNo: "Conservar",
+    mergeDropsRejects: "Mergear descarta {count} rechazos guardados.",
+    mergeAnyway: "Mergear",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

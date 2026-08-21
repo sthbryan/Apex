@@ -4,6 +4,7 @@ import type { AgentMode } from "@/bindings/AgentMode";
 import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
+import { clearRejects } from "@/features/git/state";
 import { activeProjectId } from "@/features/projects/state";
 import { closeSession, createSession, sessions } from "@/features/sessions/state";
 import { modeOf } from "@/features/settings/agentMode";
@@ -120,6 +121,7 @@ export function cancelClose(): void {
 
 export async function finishClose(sessionId: string, disposal: WorktreeDisposal): Promise<void> {
   pendingClose.value = null;
+  await clearRejects({ type: "session", id: sessionId }).catch(() => {});
   dropSession(sessionId);
   await closeSession(sessionId, disposal);
 }

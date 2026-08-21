@@ -278,6 +278,8 @@ export const en = {
     rejectAllAsk: "Reject all of it?",
     rejectAllYes: "Reject",
     rejectAllNo: "Keep",
+    mergeDropsRejects: "Merging throws away {count} saved rejects.",
+    mergeAnyway: "Merge",
   },
   git: {
     noRepo: "This project is not a git repository.",
