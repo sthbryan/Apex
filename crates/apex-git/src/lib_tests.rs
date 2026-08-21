@@ -350,3 +350,14 @@ fn checkout_moves_head_and_refuses_a_branch_another_worktree_holds() {
 
     assert!(checkout(root, &tree.branch).is_err());
 }
+
+#[test]
+fn an_untracked_file_still_yields_a_hunk() {
+    let dir = repo();
+    std::fs::write(dir.path().join("fresh.txt"), "one\ntwo\n").expect("write");
+
+    let patch = diff_scoped(dir.path(), "fresh.txt", Scope::Unstaged).expect("diff");
+    assert!(patch.contains("@@"), "{patch}");
+    assert!(patch.contains("+one"), "{patch}");
+    assert_eq!(split_hunks(&patch).len(), 1);
+}

@@ -311,9 +311,10 @@ pub fn diff(dir: &Path, path: &str) -> Result<String> {
     if tracked {
         return run(dir, &["diff", "HEAD", "--", path]);
     }
-    run(dir, &["diff", "--no-index", "--", "/dev/null", path]).or_else(|_| {
+    run_diff(dir, &["diff", "--no-index", "--", "/dev/null", path]).or_else(|_| {
         let contents = std::fs::read_to_string(dir.join(path)).unwrap_or_default();
-        Ok(contents.lines().map(|line| format!("+{line}\n")).collect())
+        let body: String = contents.lines().map(|line| format!("+{line}\n")).collect();
+        Ok(format!("@@ -0,0 +1,{} @@\n{body}", contents.lines().count()))
     })
 }
 
@@ -535,6 +536,18 @@ fn run_with_input(dir: &Path, args: &[&str], input: &str) -> Result<String> {
         .context("writing the patch to git")?;
 
     finish(child.wait_with_output()?, args)
+}
+
+fn run_diff(dir: &Path, args: &[&str]) -> Result<String> {
+    let output = std::process::Command::new("git")
+        .current_dir(dir)
+        .args(args)
+        .output()
+        .with_context(|| format!("running git {}", args.join(" ")))?;
+    match output.status.code() {
+        Some(0 | 1) => Ok(String::from_utf8_lossy(&output.stdout).into_owned()),
+        _ => finish(output, args),
+    }
 }
 
 fn finish(output: std::process::Output, args: &[&str]) -> Result<String> {
