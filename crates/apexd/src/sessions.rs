@@ -29,6 +29,8 @@ const SPAWN_DEPTH_CAP: usize = 1;
 const STARTUP_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
 const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis(600);
 const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
+const BLOCKED_GRACE: std::time::Duration = std::time::Duration::from_secs(300);
+const POLL_WHILE_BLOCKED: std::time::Duration = std::time::Duration::from_millis(200);
 pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
 
 pub struct NewSession {
@@ -449,6 +451,7 @@ impl SessionManager {
             return self.acp_prompt(session.id, task).await;
         }
         self.await_first_paint(session.id).await;
+        self.await_unblocked(session.id).await;
         self.type_into(session.id, &task).await
     }
 
@@ -463,6 +466,25 @@ impl SessionManager {
             tokio::time::sleep(std::time::Duration::from_millis(50)).await;
         }
         tokio::time::sleep(SETTLE_AFTER_PAINT).await;
+    }
+
+    async fn await_unblocked(&self, id: Uuid) {
+        let deadline = std::time::Instant::now() + BLOCKED_GRACE;
+        let mut waited = false;
+        while std::time::Instant::now() < deadline {
+            let sessions = self.list_sessions().await;
+            let Some(mine) = sessions.iter().find(|session| session.id == id) else {
+                return;
+            };
+            if mine.state != SessionState::Blocked {
+                break;
+            }
+            waited = true;
+            tokio::time::sleep(POLL_WHILE_BLOCKED).await;
+        }
+        if waited {
+            tokio::time::sleep(SETTLE_AFTER_PAINT).await;
+        }
     }
 
     async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {

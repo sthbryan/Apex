@@ -200,6 +200,7 @@ async fn a_session_in_a_plain_folder_cannot_be_isolated() {
                 slug: None,
                 mode: None,
                 parent: None,
+                run: None,
             })
             .await
             .is_err()

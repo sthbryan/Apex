@@ -157,6 +157,7 @@ async fn an_agent_with_one_shared_config_gets_it_merged_and_taken_back_out() {
                 slug: None,
                 mode: None,
                 parent: None,
+                run: None,
             })
             .await
             .expect("session")
