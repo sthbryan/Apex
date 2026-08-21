@@ -2,11 +2,22 @@ import cn from "cnfast";
 import { useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
+import type { MergeReport } from "@/bindings/MergeReport";
 import type { PendingReview } from "@/bindings/PendingReview";
 import type { SessionState } from "@/bindings/SessionState";
-import { gitTarget, pending, refreshPending, sameTarget } from "@/features/git/state";
+import { CommitBox } from "@/features/git/CommitBox";
+import {
+  gitFailure,
+  gitStatus,
+  gitTarget,
+  mergeWorktree,
+  pending,
+  refreshGit,
+  refreshPending,
+  sameTarget,
+} from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
-import { openReview, rejectTarget } from "@/features/review/state";
+import { openReview, rejectTarget, reviewing } from "@/features/review/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -55,7 +66,58 @@ export function ReviewPanel() {
           </ul>
         </>
       )}
+
+      <Closing />
     </div>
+  );
+}
+
+function Closing() {
+  const [report, setReport] = useState<MergeReport | null>(null);
+  const at = reviewing.value;
+  const status = gitStatus.value;
+
+  if (!at || !status || !sameTarget(gitTarget.value, at)) {
+    return null;
+  }
+
+  const staged = status.changes.filter((change) => change.staged).length;
+  if (staged === 0 && !status.isolated) {
+    return null;
+  }
+
+  return (
+    <>
+      <CommitBox status={status} />
+      {status.isolated && (
+        <div class="shrink-0 border-t border-border p-2">
+          <button
+            type="button"
+            onClick={() => {
+              setReport(null);
+              void mergeWorktree(at)
+                .then((outcome) => {
+                  setReport(outcome);
+                  void refreshGit();
+                  void refreshPending();
+                })
+                .catch((error: unknown) => {
+                  gitFailure.value = String(error);
+                });
+            }}
+            class="w-full rounded border border-border py-1 text-muted transition-colors hover:bg-raised hover:text-text"
+          >
+            {t("git.merge", { base: status.base })}
+          </button>
+          {report?.type === "merged" && <p class="mt-1 text-git-added">{t("git.merged")}</p>}
+          {report?.type === "conflicted" && (
+            <p class="mt-1 text-git-conflict">
+              {t("git.conflicted", { files: report.files.join(", ") })}
+            </p>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 
