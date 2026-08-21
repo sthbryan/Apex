@@ -112,10 +112,15 @@ function openBeside(view: PaneView, replaceable: (view: PaneView) => boolean): v
     return;
   }
   const current = findLeaf(tab.root, tab.activeLeafId);
-  if (current && replaceable(current.view)) {
+  const reusing =
+    current && replaceable(current.view)
+      ? current
+      : leaves(tab.root).find((pane) => replaceable(pane.view));
+  if (reusing) {
     updateTab(tab.id, (state) => ({
       ...state,
-      root: setView(state.root, state.activeLeafId, view),
+      root: setView(state.root, reusing.id, view),
+      activeLeafId: reusing.id,
     }));
     return;
   }

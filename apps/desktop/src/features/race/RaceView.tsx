@@ -32,7 +32,7 @@ export function RaceView({ run }: { run: string }) {
   return (
     <div class="flex h-full flex-col">
       <p class="shrink-0 truncate border-b border-border px-2 py-1.5 text-muted">{race.task}</p>
-      <div class="grid min-h-0 flex-1 auto-cols-fr grid-flow-col divide-x divide-border overflow-auto">
+      <div class="grid min-h-0 flex-1 auto-cols-[minmax(9rem,1fr)] grid-flow-col divide-x divide-border overflow-x-auto">
         {contenders.map((contender) => (
           <Column key={contender.session.id} contender={contender} race={race} />
         ))}
