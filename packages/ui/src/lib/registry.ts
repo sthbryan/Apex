@@ -37,7 +37,6 @@ import { settingsDialogMeta } from "@/organisms/settings-dialog/meta";
 import { sidePanelMeta } from "@/organisms/side-panel/meta";
 import { statusBarMeta } from "@/organisms/status-bar/meta";
 import { tabBarMeta } from "@/organisms/tab-bar/meta";
-import { terminalMeta } from "@/organisms/terminal/meta";
 import { titleBarMeta } from "@/organisms/title-bar/meta";
 import { toastMeta } from "@/organisms/toast/meta";
 import { toolbarMeta } from "@/organisms/toolbar/meta";
@@ -81,7 +80,6 @@ export const REGISTRY: ComponentMeta[] = [
   sidePanelMeta,
   statusBarMeta,
   tabBarMeta,
-  terminalMeta,
   titleBarMeta,
   toastMeta,
   toolbarMeta,

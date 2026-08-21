@@ -26,7 +26,7 @@ export function Switch({ checked, onChange, label, labelHidden = true, disabled,
   );
   if (labelHidden) return input;
   return (
-    <label class="inline-flex items-center gap-2">
+    <label class="ui-switch-label">
       {input}
       <span>{label}</span>
     </label>

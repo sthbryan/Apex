@@ -12,7 +12,7 @@ import { SettingsModal } from "@/features/workspace/Settings";
 import {
   AgentIcon, AppMain, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
   DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, Markdown, Pane, PaneGrid, PaneSplit,
-  Pill, Segmented, StatePill, Tab, TabBar, Terminal, Toast, ToastStack, ToggleChip, ToggleChipGroup,
+  Pill, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup,
 } from "@apex/ui";
 
 const TABS = [
@@ -139,7 +139,7 @@ function AuthSplit() {
         actions={<StatePill state="working">Running</StatePill>}
         scroll={false}
       >
-        <Terminal cursor>{"● Fix the flaky checkout tests\n\n⏺ The retry helper swallows the assertion.\n\n⏺ Patch tests/checkout.test.ts\n  ⎿ +18 −4\n\n⠸ Running the suite twice more…\n\n❯ "}</Terminal>
+        <img class="pane-mock" data-mock="tty" src="/mock/tty.svg" alt="Terminal session rendered by xterm" />
       </Pane>
     </PaneSplit>
   );
@@ -155,13 +155,7 @@ function BrowserPane() {
           <Search size={13} /><span class="err-count">2</span>
         </Button>
       </div>
-      <div class="browser-body">
-        <Card class="w-[min(520px,100%)] items-center text-center">
-          <b style="font-size:15px">Sign in with a passkey</b>
-          <p style="font-size:12px;color:var(--apex-muted)">The dev server preview of the new auth flow.</p>
-          <Button variant="primary">Continue</Button>
-        </Card>
-      </div>
+      <img class="pane-mock" data-mock="browser" src="/mock/browser.svg" alt="Web preview rendered by the native webview" />
       <div class="console">
         <div class="console-head">Console<button style="margin-left:auto;color:var(--apex-tty-dim)">Clear</button></div>
         <div class="console-list">

@@ -13,7 +13,6 @@ export * from "@/organisms/settings-dialog";
 export * from "@/organisms/side-panel";
 export * from "@/organisms/status-bar";
 export * from "@/organisms/tab-bar";
-export * from "@/organisms/terminal";
 export * from "@/organisms/title-bar";
 export * from "@/organisms/toast";
 export * from "@/organisms/toolbar";

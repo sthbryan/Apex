@@ -2,7 +2,7 @@
 
 @layer components {
   .ui-switch {
-    @apply relative inline-flex shrink-0 items-center;
+    @apply relative inline-flex flex-none items-center;
     width: 34px;
     height: 20px;
   }
@@ -16,20 +16,29 @@
   }
 
   .ui-switch-track {
-    @apply pointer-events-none block h-full w-full rounded-full border border-border bg-raised transition-colors;
+    @apply pointer-events-none block h-full w-full rounded-full border border-border bg-raised;
+    transition: background-color var(--apex-quick) var(--apex-ease), border-color var(--apex-quick) var(--apex-ease);
   }
 
   .ui-switch-track::after {
-    @apply absolute top-1/2 left-0.5 block size-3.5 -translate-y-1/2 rounded-full bg-muted transition-[translate,background-color];
+    @apply absolute rounded-full;
     content: "";
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background-color: var(--apex-muted);
+    box-shadow: var(--apex-shadow-sm);
+    transition: translate var(--apex-quick) var(--apex-ease), background-color var(--apex-quick) var(--apex-ease);
   }
 
   .ui-switch input:checked + .ui-switch-track {
-    @apply border-transparent bg-accent;
+    @apply bg-accent;
+    border-color: var(--apex-accent);
   }
 
   .ui-switch input:checked + .ui-switch-track::after {
-    @apply bg-accent-fg;
+    background-color: var(--apex-accent-fg);
     translate: 14px 0;
   }
 
@@ -40,5 +49,9 @@
 
   .ui-switch input:disabled + .ui-switch-track {
     @apply opacity-45;
+  }
+
+  .ui-switch-label {
+    @apply inline-flex items-center gap-2;
   }
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340" width="520" height="340" role="img" aria-label="Terminal session rendered by xterm">
+  <rect width="520" height="340" fill="#0c0d10"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="#adbac0">
+    <text x="20" y="34" fill="#5b636c">~/Codes/apex · apex/codex</text>
+    <text x="20" y="70">● Fix the flaky checkout tests</text>
+    <text x="20" y="104" fill="#8b919c">⏺ The retry helper swallows the assertion.</text>
+    <text x="20" y="138">⏺ Patch tests/checkout.test.ts</text>
+    <text x="34" y="160" fill="#3fb950">⎿ +18 <tspan fill="#ff6b6b">−4</tspan></text>
+    <text x="20" y="196" fill="#8b919c">⠸ Running the suite twice more…</text>
+    <text x="20" y="230">❯ </text>
+  </g>
+  <rect x="34" y="220" width="7" height="13" fill="#adbac0">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.1s" repeatCount="indefinite"/>
+  </rect>
+</svg>

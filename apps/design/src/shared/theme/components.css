@@ -176,7 +176,6 @@ html[data-theme="light"] .stage-links {
   background: var(--apex-state-failed); color: #fff; font-size: 8.5px; font-weight: 700;
   display: grid; place-items: center;
 }
-.browser-body { flex: 1; min-height: 0; overflow-y: auto; background: var(--apex-bg); padding: 22px; display: grid; place-items: center; }
 .console { flex: none; height: 148px; display: none; flex-direction: column; border-top: 1px solid var(--apex-border); background: var(--apex-tty); }
 .browser-pane.console-open .console { display: flex; }
 .console-head {
@@ -295,3 +294,14 @@ kbd {
   .apx { padding: 6px; gap: 6px; }
   .window { border-radius: 0; border: 0; box-shadow: none; width: 100%; }
 }
+
+.pane-mock {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+  object-position: top left;
+  display: block;
+}
+.pane-mock[data-mock="tty"] { background: #0c0d10; }
+.pane-mock[data-mock="browser"] { background: #f6f7f9; }
