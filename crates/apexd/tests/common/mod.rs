@@ -150,10 +150,43 @@ pub struct Harness {
     pub root: tempfile::TempDir,
 }
 
+pub fn make_repo(root: &std::path::Path) {
+    for args in [
+        vec!["init", "--initial-branch=main"],
+        vec!["config", "user.email", "test@apex.dev"],
+        vec!["config", "user.name", "Apex Test"],
+    ] {
+        std::process::Command::new("git")
+            .current_dir(root)
+            .args(&args)
+            .output()
+            .expect("git");
+    }
+    std::fs::write(root.join("README.md"), "# sample\n").expect("readme");
+    for args in [vec!["add", "."], vec!["commit", "-m", "first"]] {
+        std::process::Command::new("git")
+            .current_dir(root)
+            .args(&args)
+            .output()
+            .expect("git");
+    }
+}
+
 impl Harness {
     pub async fn start() -> Self {
+        Self::begin(false).await
+    }
+
+    pub async fn start_in_repo() -> Self {
+        Self::begin(true).await
+    }
+
+    async fn begin(versioned: bool) -> Self {
         let manager = manager();
         let root = tempfile::tempdir().expect("tempdir");
+        if versioned {
+            make_repo(root.path());
+        }
         let project =
             manager.open_project(&root.path().display().to_string()).await.expect("project").id;
         let id = Uuid::new_v4().simple().to_string();

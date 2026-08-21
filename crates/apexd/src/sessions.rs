@@ -217,6 +217,60 @@ impl SessionManager {
             .await
     }
 
+    pub async fn race(
+        &self,
+        project: Uuid,
+        agents: Vec<String>,
+        task: String,
+    ) -> Result<Vec<SessionSummary>> {
+        if agents.is_empty() {
+            bail!("pick at least one agent to run the task")
+        }
+        if task.trim().is_empty() {
+            bail!("a race needs a task to hand out")
+        }
+        let run = Uuid::new_v4();
+        let mut started = Vec::with_capacity(agents.len());
+        let mut refused = Vec::new();
+        for agent in &agents {
+            match self.enter_race(project, agent, &task, run).await {
+                Ok(session) => started.push(session),
+                Err(error) => refused.push(format!("{agent}: {error:#}")),
+            }
+        }
+        if started.is_empty() {
+            bail!("none of them started — {}", refused.join("; "))
+        }
+        if !refused.is_empty() {
+            tracing::warn!(refused = %refused.join("; "), "some agents stayed out of the race");
+        }
+        Ok(started)
+    }
+
+    async fn enter_race(
+        &self,
+        project: Uuid,
+        agent: &str,
+        task: &str,
+        run: Uuid,
+    ) -> Result<SessionSummary> {
+        let session = self
+            .create(NewSession {
+                project,
+                agent: agent.to_owned(),
+                cwd: None,
+                size: TerminalSize::default(),
+                isolation: Isolation::Worktree,
+                slug: None,
+                mode: None,
+                parent: None,
+                run: Some(run),
+            })
+            .await?;
+        self.hand_over(&session, task.to_owned()).await?;
+        Ok(session)
+    }
+
     pub async fn broadcast(
         &self,
         parent: Uuid,

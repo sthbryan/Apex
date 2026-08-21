@@ -673,6 +673,12 @@ pub enum Command {
         #[ts(type = "string")]
         id: Uuid,
     },
+    SessionRace {
+        #[ts(type = "string")]
+        project: Uuid,
+        agents: Vec<String>,
+        task: String,
+    },
     SessionBroadcast {
         #[ts(type = "string")]
         parent: Uuid,

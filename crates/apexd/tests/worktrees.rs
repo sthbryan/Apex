@@ -20,6 +20,7 @@ async fn an_isolated_session_runs_in_its_own_worktree() {
             slug: None,
             mode: None,
             parent: None,
+            run: None,
         })
         .await
         .expect("session");
@@ -72,6 +73,7 @@ async fn a_worktree_outlives_the_session_that_made_it() {
             slug: None,
             mode: None,
             parent: None,
+            run: None,
         })
         .await
         .expect("session");
@@ -122,6 +124,7 @@ async fn a_worktree_commit_never_touches_the_project() {
             slug: None,
             mode: None,
             parent: None,
+            run: None,
         })
         .await
         .expect("session");
@@ -172,6 +175,7 @@ async fn discarding_a_session_takes_its_worktree_with_it() {
             slug: None,
             mode: None,
             parent: None,
+            run: None,
         })
         .await
         .expect("session");

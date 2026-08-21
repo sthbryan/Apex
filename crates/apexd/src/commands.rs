@@ -304,6 +304,10 @@ async fn execute(
             manager.dismiss(asked_by, id).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
+        Command::SessionRace { project, agents, task } => {
+            let sessions = manager.race(project, agents, task).await.map_err(internal_error)?;
+            Ok(Reply::Spawned { sessions })
+        }
         Command::SessionBroadcast { parent, agents, task, isolation } => {
             let sessions =
                 manager.broadcast(parent, agents, task, isolation).await.map_err(internal_error)?;
@@ -475,6 +479,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::SessionDone { .. }
             | Command::SessionDismiss { .. }
             | Command::SessionBroadcast { .. }
+            | Command::SessionRace { .. }
             | Command::SessionSpawn { .. }
             | Command::SessionResume { .. }
             | Command::SessionClose { .. }
