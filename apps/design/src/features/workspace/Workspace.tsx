@@ -39,7 +39,7 @@ function Welcome() {
       <div style="position:relative;width:min(660px,100%);display:flex;flex-direction:column;align-items:center">
         <div style="text-align:center;margin-bottom:22px">
           <h1 style="font-size:44px;font-weight:600;letter-spacing:.14em;margin:0">APEX</h1>
-          <p style="margin-top:6px;color:var(--muted);font-size:14.5px">Run a team of AI agents, not a wall of terminals.</p>
+          <p style="margin-top:6px;color:var(--apex-muted);font-size:14.5px">Run a team of AI agents, not a wall of terminals.</p>
         </div>
         <form class="composer" onSubmit={(e) => { e.preventDefault(); showWelcome.value = false; activeTab.value = "tab-auth"; }}>
           <textarea rows={2} placeholder="Ask, delegate, or start a task…" />
@@ -69,7 +69,7 @@ function Sessions() {
       <div class="tabbar">
         {TABS.map((t) => (
           <div key={t.id} class="tab" aria-selected={activeTab.value === t.id} onClick={() => activeTab.value = t.id}>
-            {t.icon ? <t.icon size={13} style="color:var(--muted);flex:none" /> : <AgentIcon agent="claude" size="sm" />}
+            {t.icon ? <t.icon size={13} style="color:var(--apex-muted);flex:none" /> : <AgentIcon agent="claude" size="sm" />}
             <button class="tab-title">{t.title}</button>
           </div>
         ))}
@@ -103,7 +103,7 @@ function AuthSplit() {
           <div class="msg-user">Refactor auth middleware to use passkeys instead of session cookies.</div>
           <div class="tool">
             <div class="tool-head">
-              <ChevronRight size={11} style="rotate:90deg;color:var(--muted)" />
+              <ChevronRight size={11} style="rotate:90deg;color:var(--apex-muted)" />
               <span class="tool-cmd">bash bun test tests/auth.test.ts</span>
               <span class="tool-meta"><span class="ok">✓ 2.3s</span></span>
             </div>
@@ -145,7 +145,7 @@ function BrowserPane() {
     <article class={`pane browser-pane${consoleOpen.value ? " console-open" : ""}`}>
       <div class="browser-bar">
         <Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>
-        <div class="url-box"><Lock size={11} style="color:var(--done)" /><input value="localhost:5173/login" /></div>
+        <div class="url-box"><Lock size={11} style="color:var(--apex-state-done)" /><input value="localhost:5173/login" /></div>
         <Button variant="subtle" size="sm" iconOnly title="Console" onClick={() => consoleOpen.value = !consoleOpen.value}>
           <Search size={13} /><span class="err-count">2</span>
         </Button>
@@ -158,7 +158,7 @@ function BrowserPane() {
         </Card>
       </div>
       <div class="console">
-        <div class="console-head">Console<button style="margin-left:auto;color:var(--tty-dim)">Clear</button></div>
+        <div class="console-head">Console<button style="margin-left:auto;color:var(--apex-tty-dim)">Clear</button></div>
         <div class="console-list">
           <div class="l-err">[auth] Failed to verify legacy cookie: invalid signature</div>
           <div class="l-warn">[webauthn] Challenge expired after 120s, retrying</div>
@@ -179,7 +179,7 @@ function RacePane() {
           <div class={`race-col${kept ? "" : ""}`} style={kept ? undefined : undefined}>
             <div class="race-col-head">
               <AgentIcon agent="claude" size="sm" /><span class="c-name">claude</span>
-              {kept && <span class="dropped-tag" style="color:var(--done);border-color:color-mix(in oklab, var(--done) 40%, transparent)">kept</span>}
+              {kept && <span class="dropped-tag" style="color:var(--apex-state-done);border-color:color-mix(in oklab, var(--apex-state-done) 40%, transparent)">kept</span>}
               {!kept && <Dot state="done" />}
             </div>
             <p class="diff-line-plain">14 files <span class="fadd">+382</span><span class="fdel">−96</span></p>
@@ -218,7 +218,7 @@ function FilePane() {
   return (
     <article class="pane">
       <div class="pane-toolbar">
-        <FileText size={12} style="color:var(--muted)" />
+        <FileText size={12} style="color:var(--apex-muted)" />
         <span class="mono">docs/README.md</span>
         <Chip>markdown</Chip>
         <span style="flex:1" />
@@ -260,7 +260,7 @@ function DiffPane() {
   return (
     <article class="pane">
       <div class="pane-toolbar">
-        <GitBranch size={12} style="color:var(--muted)" />
+        <GitBranch size={12} style="color:var(--apex-muted)" />
         <span class="mono">apex/claude · DockResize.tsx</span>
         <Chip>staged</Chip>
         <span style="flex:1" />
@@ -327,11 +327,11 @@ function UsagePop() {
       </div>
       <div class="ua-big">
         <span class="n">{uaWindow.value === "5h" ? "62%" : "34%"}</span>
-        <span style="font-size:11px;color:var(--muted)">resets in 2h 30m · Tue 4:00</span>
+        <span style="font-size:11px;color:var(--apex-muted)">resets in 2h 30m · Tue 4:00</span>
       </div>
       <div class="u-row"><span class="u-win">used</span><Bar value={uaWindow.value === "5h" ? 62 : 34} tick={58} size="sm" label="used" /><span class="u-eta">pace ✓</span></div>
       <div class="u-row"><span class="u-win">7d</span><Bar value={34} tone="done" size="sm" label="7 day usage" /><span class="u-eta">on pace</span></div>
-      <div class="pop-head" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">codex<span class="ph-sub" style="color:var(--blocked)">71% · over pace</span></div>
+      <div class="pop-head" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--apex-border)">codex<span class="ph-sub" style="color:var(--apex-state-blocked)">71% · over pace</span></div>
       <div class="u-row"><span class="u-win">5h</span><Bar value={71} tone="blocked" size="sm" label="codex usage" /><span class="u-eta">tight</span></div>
     </Pop>
   );
@@ -340,15 +340,15 @@ function UsagePop() {
 function ResourcesPop() {
   return (
     <Pop title="Resources">
-      <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--text)">23%</span><span class="ph-sub mono">14 cores</span></div>
+      <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores</span></div>
       <svg class="spark" viewBox="0 0 300 54" preserveAspectRatio="none">
-        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16 L 300 54 L 0 54 Z" fill="var(--accent)" opacity="0.14" />
-        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16" fill="none" stroke="var(--accent)" stroke-width="1.6" />
+        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16 L 300 54 L 0 54 Z" fill="var(--apex-accent)" opacity="0.14" />
+        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16" fill="none" stroke="var(--apex-accent)" stroke-width="1.6" />
       </svg>
       <div class="meter"><span class="m-label">Memory</span><Bar value={56} label="Memory" /><span class="m-pct mono">56%</span><span class="m-detail">18.2/32 GB</span></div>
       <div class="meter"><span class="m-label">Apex</span><Bar value={12} tone="done" label="Apex memory" /><span class="m-pct mono">12%</span><span class="m-detail">312 MB</span></div>
-      <div class="sess-res-row"><AgentIcon agent="claude" size="sm" /><span style="flex:1">Refactor auth middleware</span><span class="mono" style="font-size:10.5px;color:var(--muted)">412 MB · 8%</span></div>
-      <div class="sess-res-row"><AgentIcon agent="codex" size="sm" /><span style="flex:1">Fix flaky checkout tests</span><span class="mono" style="font-size:10.5px;color:var(--muted)">188 MB · 3%</span></div>
+      <div class="sess-res-row"><AgentIcon agent="claude" size="sm" /><span style="flex:1">Refactor auth middleware</span><span class="mono" style="font-size:10.5px;color:var(--apex-muted)">412 MB · 8%</span></div>
+      <div class="sess-res-row"><AgentIcon agent="codex" size="sm" /><span style="flex:1">Fix flaky checkout tests</span><span class="mono" style="font-size:10.5px;color:var(--apex-muted)">188 MB · 3%</span></div>
     </Pop>
   );
 }
@@ -366,9 +366,9 @@ function NotificationsPop() {
           <Dot state={state as "blocked" | "done" | "failed"} />
           <div style="flex:1;min-width:0">
             <div style="font-size:12.5px">{title}</div>
-            <div style="font-size:11px;color:var(--muted)">{body}</div>
+            <div style="font-size:11px;color:var(--apex-muted)">{body}</div>
           </div>
-          <span style="font-size:10.5px;color:var(--muted)">{age}</span>
+          <span style="font-size:10.5px;color:var(--apex-muted)">{age}</span>
         </button>
       ))}
     </Pop>
@@ -378,14 +378,14 @@ function NotificationsPop() {
 function TargetPop() {
   return (
     <Pop title="Where git commands run">
-      <button class="tgt-row"><span style="color:var(--accent)"><Check size={13} /></span>
+      <button class="tgt-row"><span style="color:var(--apex-accent)"><Check size={13} /></span>
         <span class="tgt-name"><span class="t1">apex-sandbox <Chip class="h-4 text-2xs">project</Chip></span><span class="t2">main · 16 changed</span></span>
       </button>
       <div class="pl-label" style="padding-left:0">Worktrees · 2 live</div>
       <button class="tgt-row"><Dot state="working" /><span class="tgt-name"><span class="t1">Refactor auth middleware</span><span class="t2">apex/claude · 3 changed</span></span></button>
       <button class="tgt-row"><Dot state="working" /><span class="tgt-name"><span class="t1">Fix flaky checkout tests</span><span class="t2">apex/codex · 5 changed</span></span></button>
       <div class="pl-label" style="padding-left:0">Branches</div>
-      <button class="tgt-row"><span class="t1" style="color:var(--muted)">release</span><span class="t2">behind 4</span></button>
+      <button class="tgt-row"><span class="t1" style="color:var(--apex-muted)">release</span><span class="t2">behind 4</span></button>
     </Pop>
   );
 }
@@ -395,17 +395,17 @@ function ProjectsPop() {
     <div class="popover" style="left:10px;right:auto;width:264px" onClick={(e) => e.stopPropagation()}>
       <div class="pop-head">Projects<span style="flex:1" /><button onClick={() => openPop.value = null}><X size={12} /></button></div>
       <button class="notice-row"><span class="proj-glyph" style="width:22px;height:22px"><Check size={11} /></span>
-        <div style="flex:1;min-width:0"><div style="font-size:12.5px">apex-sandbox</div><div style="font-size:11px;color:var(--muted)" class="mono">~/Documents/Codes/apex-sandbox</div></div>
+        <div style="flex:1;min-width:0"><div style="font-size:12.5px">apex-sandbox</div><div style="font-size:11px;color:var(--apex-muted)" class="mono">~/Documents/Codes/apex-sandbox</div></div>
         <Pill tone="accent" class="h-[18px] text-2xs">2 running</Pill>
       </button>
       {!removedProject.value && (
         <button class="notice-row"><span class="proj-glyph" style="width:22px;height:22px"><FileText size={11} /></span>
-          <div style="flex:1;min-width:0"><div style="font-size:12.5px">apex-docs</div><div style="font-size:11px;color:var(--muted)" class="mono">~/Documents/Codes/apex-docs</div></div>
+          <div style="flex:1;min-width:0"><div style="font-size:12.5px">apex-docs</div><div style="font-size:11px;color:var(--apex-muted)" class="mono">~/Documents/Codes/apex-docs</div></div>
           <Pill tone="blocked" class="h-[18px] text-2xs">1 waiting</Pill>
           <button class="rev-act" style="width:22px;height:22px" title="Remove from Apex" onClick={(e) => { e.stopPropagation(); removedProject.value = true; }}><X size={11} /></button>
         </button>
       )}
-      {removedProject.value && <div style="font-size:12px;color:var(--done);padding:6px 8px">Removed apex-docs</div>}
+      {removedProject.value && <div style="font-size:12px;color:var(--apex-state-done);padding:6px 8px">Removed apex-docs</div>}
       <button class="notice-row"><span class="proj-glyph" style="width:22px;height:22px"><Plus size={11} /></span><div style="font-size:12.5px">Open project…</div></button>
     </div>
   );
@@ -431,7 +431,7 @@ function Launcher() {
             ))}
           </div>
           <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
-            <span style="font-size:11.5px;color:var(--muted);flex:1">
+            <span style="font-size:11.5px;color:var(--apex-muted);flex:1">
               {picked.v.size < 2 ? "Pick at least two." : `${picked.v.size} agents · one worktree each · no prompts`}
             </span>
             <Button variant="primary" disabled={picked.v.size < 2}

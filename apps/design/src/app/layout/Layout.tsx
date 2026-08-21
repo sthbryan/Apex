@@ -60,7 +60,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
                   <span class="proj-path">~/Documents/Codes/apex-sandbox</span>
                 </span>
                 <span class="proj-alert" title="1 session waiting in another project" />
-                <ChevronDown size={12} style="color:var(--muted);flex:none" />
+                <ChevronDown size={12} style="color:var(--apex-muted);flex:none" />
               </button>
             </div>
           </div>
@@ -82,8 +82,8 @@ export function Layout({ children }: { children: ComponentChildren }) {
           onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "target" ? null : "target"; }}>
           <GitBranch size={11} />
           <span class="mono">main</span>
-          <span style="color:var(--added)">↑2</span>
-          <span style="color:var(--blocked)">↓0</span>
+          <span style="color:var(--apex-git-added)">↑2</span>
+          <span style="color:var(--apex-state-blocked)">↓0</span>
         </button>
         <button class="sb-pill" onClick={() => activePanel.value = "git"}>
           <span class="mono">16</span> changed

@@ -107,9 +107,9 @@ function GitPanel() {
     <div class="dock-view git-flex active">
       <div class="git-scroll">
         <div class="sync-row">
-          <GitBranch size={12} style="color:var(--muted)" />
+          <GitBranch size={12} style="color:var(--apex-muted)" />
           <span class="mono" style="font-size:11.5px">main</span>
-          <span style="color:var(--added)" class="mono">↑2</span>
+          <span style="color:var(--apex-git-added)" class="mono">↑2</span>
           <span style="flex:1" />
           <button class="syn-btn" title="Pull"><ChevronRight size={12} style="transform:rotate(90deg)" /></button>
         </div>
