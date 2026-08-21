@@ -329,7 +329,7 @@ impl SessionRegistry {
         let cwd = match (&worktree, cwd) {
             (Some(tree), _) => PathBuf::from(&tree.path),
             (None, Some(explicit)) => PathBuf::from(explicit),
-            (None, None) => PathBuf::from(project_root),
+            (None, None) => PathBuf::from(&project_root),
         };
 
         let record = {
@@ -364,7 +364,13 @@ impl SessionRegistry {
         spec.rows = size.rows;
         spec.cols = size.cols;
 
-        let process = PtyProcess::spawn(spec)?;
+        let process = match PtyProcess::spawn(spec) {
+            Ok(process) => process,
+            Err(error) => {
+                self.abandon_worktree(&project_root, worktree.as_ref()).await;
+                return Err(error.into());
+            }
+        };
         let cwd_text = cwd.display().to_string();
 
         let summary = SessionSummary {
@@ -416,6 +422,22 @@ impl SessionRegistry {
             return agent.to_string();
         }
         format!("{agent} {}", taken + 1)
+    }
+
+    async fn abandon_worktree(&self, project_root: &str, worktree: Option<&WorktreeInfo>) {
+        let Some(tree) = worktree else {
+            return;
+        };
+        let root = PathBuf::from(project_root);
+        let path = PathBuf::from(&tree.path);
+        let branch = tree.branch.clone();
+        let removed = tokio::task::spawn_blocking(move || {
+            apex_git::remove_worktree(&root, &path, Some(&branch))
+        })
+        .await;
+        if let Ok(Err(error)) = removed {
+            tracing::warn!(%error, path = %tree.path, "could not clean up a worktree nobody got to use");
+        }
     }
 
     pub async fn open_worktree(&self, project_root: &str, wanted: &str) -> Result<WorktreeInfo> {
