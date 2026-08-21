@@ -31,8 +31,8 @@ const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis
 const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
 const BLOCKED_GRACE: std::time::Duration = std::time::Duration::from_secs(300);
 const POLL_WHILE_BLOCKED: std::time::Duration = std::time::Duration::from_millis(200);
-const ECHO_WAIT: std::time::Duration = std::time::Duration::from_millis(400);
-const TYPING_BUDGET: std::time::Duration = std::time::Duration::from_secs(20);
+const ECHO_WAIT: std::time::Duration = std::time::Duration::from_secs(1);
+const TYPING_TRIES: u32 = 6;
 const PROBE_LEN: usize = 16;
 pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
 
@@ -250,7 +250,7 @@ impl SessionManager {
             tracing::warn!(%reason, "an agent stayed out of the race");
             self.registry.announce(Event::Notify {
                 session: None,
-                notice: apex_proto::NotifyKind::Exited,
+                notice: apex_proto::NotifyKind::Quiet,
                 title: Some("Did not join the race".into()),
                 body: reason.clone(),
             });
@@ -278,7 +278,10 @@ impl SessionManager {
                 run: Some(run),
             })
             .await?;
-        self.hand_over(&session, task.to_owned()).await?;
+        if let Err(error) = self.hand_over(&session, task.to_owned()).await {
+            let _ = self.close(session.id, WorktreeDisposal::Discard).await;
+            return Err(error);
+        }
         Ok(session)
     }
 
@@ -499,19 +502,15 @@ impl SessionManager {
     async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {
         let typed = text.replace(['\n', '\r'], " ");
         let probe = probe_of(&typed);
-        let deadline = std::time::Instant::now() + TYPING_BUDGET;
-        let mut landed = false;
-        while !landed {
+        for attempt in 1..=TYPING_TRIES {
             self.write(id, &typed).await?;
-            tokio::time::sleep(ECHO_WAIT).await;
-            landed = self.echoed(id, &probe).await;
-            if !landed && std::time::Instant::now() >= deadline {
-                tracing::warn!(%id, "the agent never showed the task being typed");
-                return Ok(());
+            tokio::time::sleep(ECHO_WAIT * attempt).await;
+            if self.echoed(id, &probe).await {
+                tokio::time::sleep(BEFORE_ENTER).await;
+                return self.write(id, "\r").await;
             }
         }
-        tokio::time::sleep(BEFORE_ENTER).await;
-        self.write(id, "\r").await
+        bail!("never saw the task appear on screen")
     }
 
     async fn echoed(&self, id: Uuid, probe: &str) -> bool {

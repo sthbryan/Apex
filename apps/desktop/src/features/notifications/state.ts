@@ -77,6 +77,9 @@ export function lasting(kind: NoticeKind): boolean {
 }
 
 function shouldToast(notice: Notice): boolean {
+  if (notice.kind === "quiet") {
+    return false;
+  }
   if (notice.sessionId === null) {
     return true;
   }
@@ -95,6 +98,9 @@ export function forgetNotices(): void {
 }
 
 function shouldDisturb(notice: Notice): boolean {
+  if (notice.kind === "quiet") {
+    return false;
+  }
   if (!permitted.peek() || !notifyEnabled.peek()) {
     return false;
   }
