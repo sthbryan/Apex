@@ -256,6 +256,18 @@ export const es: Messages = {
     you: "Tú",
     latest: "Ir a lo último",
   },
+  race: {
+    title: "Corridas",
+    empty: "Todavía no hay corridas.",
+    new: "Correr una tarea entre agentes",
+    pickAgents: "Quiénes la corren",
+    needAgents: "Necesitás al menos dos agentes instalados para correr.",
+    taskPlaceholder: "La tarea que reciben todos…",
+    pickTwo: "Elegí al menos dos.",
+    willStart: "{count} agentes, un worktree cada uno",
+    start: "Arrancar",
+    cancel: "Cancelar",
+  },
   review: {
     title: "Revisión",
     empty: "No hay nada esperándote.",

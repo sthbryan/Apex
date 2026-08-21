@@ -254,6 +254,18 @@ export const en = {
     you: "You",
     latest: "Jump to latest",
   },
+  race: {
+    title: "Races",
+    empty: "No races yet.",
+    new: "Race a task across agents",
+    pickAgents: "Who runs it",
+    needAgents: "You need at least two agents installed to race.",
+    taskPlaceholder: "The task all of them get…",
+    pickTwo: "Pick at least two.",
+    willStart: "{count} agents, one worktree each",
+    start: "Start",
+    cancel: "Cancel",
+  },
   review: {
     title: "Review",
     empty: "Nothing is waiting for you.",
