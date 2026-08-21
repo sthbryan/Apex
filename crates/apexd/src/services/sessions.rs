@@ -76,6 +76,7 @@ pub struct Spawn {
     pub cwd: Option<String>,
     pub size: TerminalSize,
     pub override_args: Option<Vec<String>>,
+    pub unattended: bool,
     pub isolation: Isolation,
     pub slug: Option<String>,
     pub task: Option<String>,
@@ -162,6 +163,7 @@ impl SessionRegistry {
             cwd: None,
             size,
             override_args: Some(args),
+            unattended: false,
             isolation: Isolation::Directory,
             slug: None,
             task: None,
@@ -187,6 +189,7 @@ impl SessionRegistry {
             cwd: None,
             size,
             override_args: Some(vec!["-lc".to_owned(), command.to_owned()]),
+            unattended: false,
             isolation: Isolation::Directory,
             slug: None,
             task: Some(task.to_owned()),
@@ -301,6 +304,7 @@ impl SessionRegistry {
             cwd,
             size,
             override_args,
+            unattended,
             isolation,
             slug,
             task,
@@ -345,6 +349,9 @@ impl SessionRegistry {
 
         let mut spec = PtySpec::new(binary, &cwd);
         spec.args = override_args.unwrap_or_else(|| profile.args.clone());
+        if unattended {
+            spec.args.extend(profile.auto_args.clone());
+        }
         if let Some(delivery) = &profile.mcp {
             match crate::mcp_delivery::offer(
                 record.id,

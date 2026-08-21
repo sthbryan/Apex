@@ -181,8 +181,14 @@ export async function raceSession(
   project: string,
   agents: string[],
   task: string,
+  unattended: string[],
 ): Promise<SessionSummary[]> {
-  const started = await invoke<SessionSummary[]>("race_session", { project, agents, task });
+  const started = await invoke<SessionSummary[]>("race_session", {
+    project,
+    agents,
+    task,
+    unattended,
+  });
   sessions.value = started.reduce(upsert, sessions.value);
   return started;
 }

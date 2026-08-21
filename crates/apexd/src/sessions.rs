@@ -46,6 +46,7 @@ pub struct NewSession {
     pub mode: Option<apex_proto::AgentMode>,
     pub parent: Option<Uuid>,
     pub run: Option<Uuid>,
+    pub unattended: bool,
 }
 
 pub struct SessionManager {
@@ -171,7 +172,8 @@ impl SessionManager {
     }
 
     pub async fn create(&self, request: NewSession) -> Result<SessionSummary> {
-        let NewSession { project, agent, cwd, size, isolation, slug, mode, parent, run } = request;
+        let NewSession { project, agent, cwd, size, isolation, slug, mode, parent, run, unattended } =
+            request;
         let agent = agent.as_str();
         let wanted = match mode {
             Some(chosen) => chosen,
@@ -190,6 +192,7 @@ impl SessionManager {
                     task: None,
                     parent,
                     run,
+                    unattended,
                 })
                 .await;
         }
@@ -227,6 +230,7 @@ impl SessionManager {
         project: Uuid,
         agents: Vec<String>,
         task: String,
+        unattended: Vec<String>,
     ) -> Result<Vec<SessionSummary>> {
         if agents.is_empty() {
             bail!("pick at least one agent to run the task")
@@ -238,7 +242,7 @@ impl SessionManager {
         let mut started = Vec::with_capacity(agents.len());
         let mut refused = Vec::new();
         for agent in &agents {
-            match self.enter_race(project, agent, &task, run).await {
+            match self.enter_race(project, agent, &task, run, unattended.contains(agent)).await {
                 Ok(session) => started.push(session),
                 Err(error) => refused.push(format!("{agent}: {error:#}")),
             }
@@ -264,6 +268,7 @@ impl SessionManager {
         agent: &str,
         task: &str,
         run: Uuid,
+        unattended: bool,
     ) -> Result<SessionSummary> {
         let session = self
             .create(NewSession {
@@ -276,6 +281,7 @@ impl SessionManager {
                 mode: None,
                 parent: None,
                 run: Some(run),
+                unattended,
             })
             .await?;
         if let Err(error) = self.hand_over(&session, task.to_owned()).await {
@@ -384,6 +390,7 @@ impl SessionManager {
                 mode: None,
                 parent: Some(parent),
                 run,
+                unattended: false,
             })
             .await?;
 

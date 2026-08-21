@@ -96,6 +96,7 @@ async fn a_prompt_moves_the_session_to_blocked() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -120,6 +121,7 @@ async fn a_state_change_is_announced_as_an_event() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -166,6 +168,7 @@ async fn answering_the_prompt_moves_the_session_back_to_working() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -259,6 +262,7 @@ async fn a_session_defaults_to_the_project_root_as_its_cwd() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -334,6 +338,7 @@ async fn a_plain_transcript_carries_no_terminal_codes() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");

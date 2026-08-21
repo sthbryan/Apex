@@ -279,6 +279,7 @@ async fn execute(
                     mode,
                     parent: None,
                     run: None,
+                    unattended: false,
                 })
                 .await
                 .map_err(internal_error)?;
@@ -304,8 +305,9 @@ async fn execute(
             manager.dismiss(asked_by, id).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
-        Command::SessionRace { project, agents, task } => {
-            let sessions = manager.race(project, agents, task).await.map_err(internal_error)?;
+        Command::SessionRace { project, agents, task, unattended } => {
+            let sessions =
+                manager.race(project, agents, task, unattended).await.map_err(internal_error)?;
             Ok(Reply::Spawned { sessions })
         }
         Command::SessionBroadcast { parent, agents, task, isolation } => {

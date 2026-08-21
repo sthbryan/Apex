@@ -21,6 +21,7 @@ async fn an_isolated_session_runs_in_its_own_worktree() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -74,6 +75,7 @@ async fn a_worktree_outlives_the_session_that_made_it() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -125,6 +127,7 @@ async fn a_worktree_commit_never_touches_the_project() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -176,6 +179,7 @@ async fn discarding_a_session_takes_its_worktree_with_it() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -201,6 +205,7 @@ async fn a_session_in_a_plain_folder_cannot_be_isolated() {
                 mode: None,
                 parent: None,
                 run: None,
+                unattended: false,
             })
             .await
             .is_err()

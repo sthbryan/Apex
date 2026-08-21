@@ -275,6 +275,11 @@ export const es: Messages = {
     keepAsk: "¿Descartar los otros {count}?",
     keepYes: "Descartar",
     keepNo: "Cancelar",
+    yolo: "Los agentes de una corrida no piden permisos",
+    yoloHint:
+      "Un agente en corrida ejecuta sus herramientas sin preguntar. Elegí cuáles abajo — corren el comando que quieran dentro de su worktree, con tu máquina y tus credenciales.",
+    yoloShort: "Sin permisos",
+    yoloAgent: "Dejar que {agent} corra sin preguntar durante una corrida",
   },
   review: {
     title: "Revisión",

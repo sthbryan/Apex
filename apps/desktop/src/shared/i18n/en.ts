@@ -273,6 +273,11 @@ export const en = {
     keepAsk: "Drop the other {count}?",
     keepYes: "Drop",
     keepNo: "Cancel",
+    yolo: "Agents in a race skip permission prompts",
+    yoloHint:
+      "A racing agent runs its tools without asking. Pick which agents below — they run any command they like inside their worktree, with your machine and credentials.",
+    yoloShort: "No prompts",
+    yoloAgent: "Let {agent} run without asking during a race",
   },
   review: {
     title: "Review",

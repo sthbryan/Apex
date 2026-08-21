@@ -21,6 +21,7 @@ async fn spawning_asks_the_ui_to_open_the_child() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -57,6 +58,7 @@ async fn an_agent_cannot_ask_to_open_a_session_that_is_gone() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -84,6 +86,7 @@ async fn a_broadcast_starts_one_session_per_agent() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -119,6 +122,7 @@ async fn a_broadcast_that_names_nobody_is_refused() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -146,6 +150,7 @@ async fn spawning_an_unknown_agent_names_the_ones_that_exist() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -175,6 +180,7 @@ async fn a_plain_terminal_does_not_take_a_spawned_task() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -202,6 +208,7 @@ async fn an_agent_only_closes_the_sessions_it_started() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -235,6 +242,7 @@ async fn a_task_handed_to_a_terminal_agent_is_actually_submitted() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -274,6 +282,7 @@ async fn a_child_calls_itself_done_without_dying() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -316,6 +325,7 @@ async fn only_a_spawned_session_can_call_itself_done() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -343,6 +353,7 @@ async fn an_agent_cannot_spawn_a_third_generation() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");
@@ -364,7 +375,7 @@ async fn a_race_hands_the_same_task_to_every_agent_under_one_run() {
     let harness = Harness::start_in_repo().await;
     let started = harness
         .manager
-        .race(harness.project, vec!["sh".into(), "sh".into()], "count to three".into())
+        .race(harness.project, vec!["sh".into(), "sh".into()], "count to three".into(), vec![])
         .await
         .expect("race");
 
@@ -378,8 +389,8 @@ async fn a_race_hands_the_same_task_to_every_agent_under_one_run() {
 #[tokio::test]
 async fn a_race_needs_agents_and_a_task() {
     let harness = Harness::start_in_repo().await;
-    assert!(harness.manager.race(harness.project, vec![], "something".into()).await.is_err());
-    assert!(harness.manager.race(harness.project, vec!["sh".into()], "   ".into()).await.is_err());
+    assert!(harness.manager.race(harness.project, vec![], "something".into(), vec![]).await.is_err());
+    assert!(harness.manager.race(harness.project, vec!["sh".into()], "   ".into(), vec![]).await.is_err());
 }
 
 #[tokio::test]
@@ -397,6 +408,7 @@ async fn a_broadcast_groups_its_sessions_like_a_race() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("parent");

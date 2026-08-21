@@ -678,6 +678,8 @@ pub enum Command {
         project: Uuid,
         agents: Vec<String>,
         task: String,
+        #[serde(default)]
+        unattended: Vec<String>,
     },
     SessionBroadcast {
         #[ts(type = "string")]

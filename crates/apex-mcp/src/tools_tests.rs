@@ -16,6 +16,7 @@ fn session(title: &str, worktree: Option<WorktreeInfo>) -> SessionSummary {
         task: None,
         mode: apex_proto::AgentMode::Pty,
         parent: None,
+        run: None,
         url: None,
     }
 }

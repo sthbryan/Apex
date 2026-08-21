@@ -81,10 +81,11 @@ pub async fn race_session(
     project: Uuid,
     agents: Vec<String>,
     task: String,
+    unattended: Vec<String>,
 ) -> Answer<Vec<SessionSummary>> {
     match state
         .daemon()?
-        .request(Command::SessionRace { project, agents, task })
+        .request(Command::SessionRace { project, agents, task, unattended })
         .await
         .map_err(failed)?
     {

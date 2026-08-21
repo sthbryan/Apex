@@ -6,14 +6,18 @@ import {
   applyIdleGrace,
   idleGrace,
   notifyEnabled,
+  raceUnattended,
   setAgentMode,
+  setAgentUnattended,
   setIdleGrace,
   setNotifyEnabled,
+  setRaceUnattended,
   setSharedContext,
   setSplitCap,
   setViewLanding,
   sharedContext,
   splitCaps,
+  unattendedAgents,
   viewLanding,
 } from "@/features/settings/agentMode";
 import {
@@ -261,6 +265,21 @@ export function spaceSection(): Section {
           ]
         : []),
       {
+        id: "yolo",
+        label: t("race.yolo"),
+        hint: t("race.yoloHint"),
+        control: (
+          <Segmented label={t("race.yolo")}>
+            <Choice selected={raceUnattended.value} onSelect={() => setRaceUnattended(true)}>
+              {t("notify.on")}
+            </Choice>
+            <Choice selected={!raceUnattended.value} onSelect={() => setRaceUnattended(false)}>
+              {t("notify.off")}
+            </Choice>
+          </Segmented>
+        ),
+      },
+      {
         id: "notify",
         label: t("notify.enabled"),
         hint: t("notify.enabledHint"),
@@ -329,6 +348,26 @@ export function agentsSection(): Section {
                     >
                       <Icon name="context" size={12} />
                       {t("settings.shareContext")}
+                    </button>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={unattendedAgents.value.includes(agent.name)}
+                      disabled={!raceUnattended.value}
+                      title={t("race.yoloAgent", { agent: agent.name })}
+                      onClick={() =>
+                        setAgentUnattended(agent.name, !unattendedAgents.value.includes(agent.name))
+                      }
+                      class={cn(
+                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
+                        unattendedAgents.value.includes(agent.name)
+                          ? "border-git-removed bg-overlay text-git-removed"
+                          : "border-border text-faint enabled:hover:text-text",
+                        raceUnattended.value ? "" : "cursor-not-allowed opacity-40",
+                      )}
+                    >
+                      <Icon name="swap" size={12} />
+                      {t("race.yoloShort")}
                     </button>
                     <Segmented label={t("settings.agentMode", { agent: agent.name })}>
                       {(["pty", "acp"] as const).map((option) => (

@@ -25,6 +25,7 @@ async fn an_agent_with_an_mcp_flag_is_handed_our_own_config() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -78,6 +79,7 @@ async fn an_agent_that_wants_a_marked_path_gets_the_flag_prefixed() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -116,6 +118,7 @@ async fn an_agent_configured_by_overrides_gets_them_on_its_command_line() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -158,6 +161,7 @@ async fn an_agent_with_one_shared_config_gets_it_merged_and_taken_back_out() {
                 mode: None,
                 parent: None,
                 run: None,
+                unattended: false,
             })
             .await
             .expect("session")
@@ -203,6 +207,7 @@ async fn an_agent_without_a_flag_gets_its_config_in_the_folder_it_runs_in() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -248,6 +253,7 @@ async fn the_servers_the_agent_already_had_survive_ours() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -283,6 +289,7 @@ async fn the_config_left_in_a_folder_does_not_name_a_session() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");
@@ -318,6 +325,7 @@ async fn a_config_the_project_already_has_is_never_overwritten() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("session");

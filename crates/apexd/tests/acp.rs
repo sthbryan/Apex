@@ -19,6 +19,7 @@ async fn an_acp_session_streams_its_answer_and_waits_for_permission() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -85,6 +86,7 @@ async fn an_acp_agent_that_dies_leaves_its_session_marked_as_finished() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -113,6 +115,7 @@ async fn closing_an_acp_session_stops_its_agent_and_forgets_it() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -141,6 +144,7 @@ async fn an_acp_session_is_handed_the_apex_mcp_server() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -169,6 +173,7 @@ async fn an_acp_agent_that_never_greets_leaves_no_session_behind() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect_err("the handshake cannot succeed");
@@ -224,6 +229,7 @@ async fn an_agent_that_answers_nothing_says_so_in_the_transcript() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -254,6 +260,7 @@ async fn the_models_an_acp_agent_offers_can_be_switched() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -284,6 +291,7 @@ async fn the_http_mcp_endpoint_turns_away_a_caller_without_the_token() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");
@@ -314,6 +322,7 @@ async fn the_http_mcp_endpoint_serves_its_tools_to_the_token_it_issued() {
             mode: None,
             parent: None,
             run: None,
+            unattended: false,
         })
         .await
         .expect("create");

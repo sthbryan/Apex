@@ -4,6 +4,7 @@ import { useState } from "preact/hooks";
 import { activeProject } from "@/features/projects/state";
 import { openRace } from "@/features/race/state";
 import { raceSession } from "@/features/sessions/state";
+import { runsUnattended } from "@/features/settings/agentMode";
 import { complain, installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 
@@ -29,7 +30,7 @@ export function RaceLauncher({ onDone }: { onDone: () => void }) {
       return;
     }
     setStarting(true);
-    void raceSession(project.id, picked, task.trim())
+    void raceSession(project.id, picked, task.trim(), picked.filter(runsUnattended))
       .then((started) => {
         openRace.value = started[0]?.run ?? null;
         onDone();

@@ -132,3 +132,41 @@ export function setMuted(sessionId: string, muted: boolean): void {
   mutedSessions.value = muted ? [...rest, sessionId] : rest;
   localStorage.setItem(MUTED, JSON.stringify(mutedSessions.value));
 }
+
+const YOLO = "apex.race-unattended";
+const YOLO_AGENTS = "apex.race-unattended-agents";
+
+function restoreYolo(): boolean {
+  try {
+    return localStorage.getItem(YOLO) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function restoreYoloAgents(): string[] {
+  try {
+    const raw = localStorage.getItem(YOLO_AGENTS);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export const raceUnattended = signal<boolean>(restoreYolo());
+export const unattendedAgents = signal<string[]>(restoreYoloAgents());
+
+export function setRaceUnattended(on: boolean): void {
+  raceUnattended.value = on;
+  localStorage.setItem(YOLO, String(on));
+}
+
+export function setAgentUnattended(agent: string, on: boolean): void {
+  const rest = unattendedAgents.value.filter((name) => name !== agent);
+  unattendedAgents.value = on ? [...rest, agent] : rest;
+  localStorage.setItem(YOLO_AGENTS, JSON.stringify(unattendedAgents.value));
+}
+
+export function runsUnattended(agent: string): boolean {
+  return raceUnattended.value && unattendedAgents.value.includes(agent);
+}
