@@ -1,0 +1,94 @@
+@reference "../../theme.css";
+
+.ui-button {
+  @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-sm border border-transparent font-semibold whitespace-nowrap;
+  @apply transition-[background-color,color,border-color,filter,opacity];
+}
+
+.ui-button:active:not(:disabled) {
+  @apply scale-[0.97];
+}
+
+.ui-button:disabled {
+  @apply cursor-not-allowed opacity-45;
+}
+
+.ui-button[data-size="xs"] {
+  height: var(--apex-h-xs);
+  @apply px-2 text-2xs rounded-xs;
+}
+
+.ui-button[data-size="sm"] {
+  height: var(--apex-h-sm);
+  @apply px-2.5 text-xs;
+}
+
+.ui-button[data-size="md"] {
+  height: var(--apex-h-md);
+  @apply px-3 text-sm;
+}
+
+.ui-button[data-size="lg"] {
+  height: var(--apex-h-lg);
+  @apply px-4 text-md;
+}
+
+.ui-button[data-variant="primary"] {
+  @apply bg-accent text-accent-fg;
+}
+
+.ui-button[data-variant="primary"]:hover:not(:disabled) {
+  @apply brightness-110;
+}
+
+.ui-button[data-variant="ghost"] {
+  @apply border-border text-text;
+}
+
+.ui-button[data-variant="ghost"]:hover:not(:disabled) {
+  @apply bg-raised;
+}
+
+.ui-button[data-variant="subtle"] {
+  @apply text-muted;
+}
+
+.ui-button[data-variant="subtle"]:hover:not(:disabled) {
+  @apply bg-raised text-text;
+}
+
+.ui-button[data-variant="danger"] {
+  @apply text-state-failed;
+  background-color: color-mix(in oklab, var(--apex-state-failed) 12%, transparent);
+}
+
+.ui-button[data-variant="danger"]:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--apex-state-failed) 20%, transparent);
+}
+
+.ui-button[data-icon-only="true"] {
+  @apply px-0;
+  width: var(--ui-button-size);
+}
+
+.ui-button[data-icon-only="true"][data-size="xs"] { --ui-button-size: var(--apex-h-xs); }
+.ui-button[data-icon-only="true"][data-size="sm"] { --ui-button-size: var(--apex-h-sm); }
+.ui-button[data-icon-only="true"][data-size="md"] { --ui-button-size: var(--apex-h-md); }
+.ui-button[data-icon-only="true"][data-size="lg"] { --ui-button-size: var(--apex-h-lg); }
+
+.ui-button[data-loading="true"] {
+  @apply pointer-events-none;
+}
+
+.ui-button[data-loading="true"] .ui-button-content {
+  @apply invisible;
+}
+
+.ui-button-spinner {
+  @apply absolute size-3.5 rounded-full border-2 border-current border-t-transparent;
+  animation: apex-spin var(--apex-slow) linear infinite;
+}
+
+.ui-button-content {
+  @apply inline-flex items-center gap-1.5;
+}
