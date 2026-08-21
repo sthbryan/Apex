@@ -1,52 +1,54 @@
-html, body, #root { height: 100%; }
+@layer base {
+  html, body, #root { height: 100%; }
 
-body {
-  margin: 0;
-  color: var(--apex-text);
-  background: var(--apex-bg);
-  font-family: var(--font-sans, Inter, system-ui, sans-serif);
-  font-feature-settings: "calt", "kern", "liga", "ss03";
-  font-size: var(--apex-text-md);
-  line-height: var(--apex-leading-snug);
-  -webkit-font-smoothing: antialiased;
-}
-
-button:not(:disabled), select:not(:disabled), summary,
-[role="button"]:not([aria-disabled="true"]) {
-  cursor: pointer;
-}
-
-button { font: inherit; color: inherit; background: none; border: 0; }
-input, textarea, select { font: inherit; color: inherit; background: none; border: 0; outline: 0; }
-
-pre, code, .mono {
-  font-family: var(--font-mono, ui-monospace, monospace);
-}
-
-::selection { background: var(--apex-selection); }
-
-:focus-visible {
-  outline: 2px solid var(--apex-focus);
-  outline-offset: 2px;
-  border-radius: var(--apex-r-xs);
-}
-
-::-webkit-scrollbar { width: 9px; height: 9px; }
-::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--apex-faint) 32%, transparent);
-  border-radius: 5px;
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-
-[hidden] { display: none !important; }
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --apex-instant: 1ms;
-    --apex-quick: 1ms;
-    --apex-swift: 1ms;
-    --apex-slow: 1ms;
+  body {
+    margin: 0;
+    color: var(--apex-text);
+    background: var(--apex-bg);
+    font-family: var(--font-sans, Inter, system-ui, sans-serif);
+    font-feature-settings: "calt", "kern", "liga", "ss03";
+    font-size: var(--apex-text-md);
+    line-height: var(--apex-leading-snug);
+    -webkit-font-smoothing: antialiased;
   }
-  *, *::before, *::after { animation-iteration-count: 1 !important; }
+
+  button:not(:disabled), select:not(:disabled), summary,
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: 0; }
+  input, textarea, select { font: inherit; color: inherit; background: none; border: 0; outline: 0; }
+
+  pre, code, .mono {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+
+  ::selection { background: var(--apex-selection); }
+
+  :focus-visible {
+    outline: 2px solid var(--apex-focus);
+    outline-offset: 2px;
+    border-radius: var(--apex-r-xs);
+  }
+
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--apex-faint) 32%, transparent);
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  [hidden] { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --apex-instant: 1ms;
+      --apex-quick: 1ms;
+      --apex-swift: 1ms;
+      --apex-slow: 1ms;
+    }
+    *, *::before, *::after { animation-iteration-count: 1 !important; }
+  }
 }
