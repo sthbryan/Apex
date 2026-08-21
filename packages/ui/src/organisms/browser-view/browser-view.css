@@ -1,0 +1,52 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-browser-view {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .ui-browser-bar {
+    @apply flex flex-none items-center gap-1.5 px-2.5 py-1.5;
+    border-bottom: 1px solid var(--apex-border);
+  }
+
+  .ui-browser-url {
+    @apply flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-raised px-2.5;
+    height: var(--apex-h-md);
+  }
+
+  .ui-browser-url input {
+    @apply min-w-0 flex-1 font-mono text-sm;
+  }
+
+  .ui-browser-body {
+    @apply grid min-h-0 flex-1 place-items-center overflow-y-auto;
+    background-color: var(--apex-bg);
+  }
+
+  .ui-browser-console {
+    @apply hidden flex-none flex-col;
+    height: 148px;
+    background-color: var(--apex-tty);
+    border-top: 1px solid var(--apex-border);
+  }
+
+  .ui-browser-view[data-console="open"] .ui-browser-console {
+    @apply flex;
+  }
+
+  .ui-browser-console-head {
+    @apply flex flex-none items-center gap-2 px-3 py-1.5 text-xs font-semibold;
+    color: var(--apex-tty-fg);
+    border-bottom: 1px solid color-mix(in oklab, var(--apex-tty-fg) 12%, transparent);
+  }
+
+  .ui-browser-console-list {
+    @apply min-h-0 flex-1 overflow-y-auto px-3 py-1.5 font-mono text-xs;
+    line-height: 1.7;
+  }
+
+  .ui-browser-log[data-level="error"] { color: var(--apex-state-failed); }
+  .ui-browser-log[data-level="warn"] { color: var(--apex-state-blocked); }
+  .ui-browser-log[data-level="info"] { color: var(--apex-tty-dim); }
+}

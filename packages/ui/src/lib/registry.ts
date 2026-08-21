@@ -24,12 +24,13 @@ import { statePillMeta } from "@/molecules/state-pill/meta";
 import { toggleChipMeta } from "@/molecules/toggle-chip/meta";
 import { tooltipMeta } from "@/molecules/tooltip/meta";
 import { appWindowMeta } from "@/organisms/app-window/meta";
+import { browserViewMeta } from "@/organisms/browser-view/meta";
 import { codeViewMeta } from "@/organisms/code-view/meta";
 import { commandPaletteMeta } from "@/organisms/command-palette/meta";
 import { composerMeta } from "@/organisms/composer/meta";
 import { diffViewMeta } from "@/organisms/diff-view/meta";
 import { emptyStateMeta } from "@/organisms/empty-state/meta";
-import { markdownMeta } from "@/organisms/markdown/meta";
+import { markdownViewMeta } from "@/organisms/markdown-view/meta";
 import { modalMeta } from "@/organisms/modal/meta";
 import { paneMeta } from "@/organisms/pane/meta";
 import { popoverMeta } from "@/organisms/popover/meta";
@@ -68,12 +69,13 @@ export const REGISTRY: ComponentMeta[] = [
   toggleChipMeta,
   tooltipMeta,
   appWindowMeta,
+  browserViewMeta,
   codeViewMeta,
   commandPaletteMeta,
   composerMeta,
   diffViewMeta,
   emptyStateMeta,
-  markdownMeta,
+  markdownViewMeta,
   modalMeta,
   paneMeta,
   popoverMeta,

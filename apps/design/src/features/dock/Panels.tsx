@@ -24,21 +24,21 @@ function SumRow({ icon, k, val, sub, nums, ...go }: {
   );
 }
 
+export const DOCK_PANELS = [
+  { id: "summary", label: "Summary", Component: SummaryPanel },
+  { id: "sessions", label: "Sessions", Component: SessionsPanel },
+  { id: "files", label: "Files", Component: FilesPanel },
+  { id: "git", label: "Git · Changes", Component: GitPanel },
+  { id: "review", label: "Review", Component: ReviewPanel },
+  { id: "race", label: "Races", Component: RacePanel },
+  { id: "history", label: "History", Component: HistoryPanel },
+  { id: "context", label: "Context", Component: ContextPanel },
+  { id: "tasks", label: "Tasks", Component: TasksPanel },
+];
+
 export function Panels() {
-  const p = activePanel.value;
-  return (
-    <>
-      {p === "summary" && <SummaryPanel />}
-      {p === "sessions" && <SessionsPanel />}
-      {p === "files" && <FilesPanel />}
-      {p === "git" && <GitPanel />}
-      {p === "review" && <ReviewPanel />}
-      {p === "race" && <RacePanel />}
-      {p === "history" && <HistoryPanel />}
-      {p === "context" && <ContextPanel />}
-      {p === "tasks" && <TasksPanel />}
-    </>
-  );
+  const panel = DOCK_PANELS.find((p) => p.id === activePanel.value);
+  return panel ? <panel.Component /> : null;
 }
 
 function SummaryPanel() {

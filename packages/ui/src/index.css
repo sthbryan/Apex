@@ -28,12 +28,13 @@
 @import "./molecules/toggle-chip/toggle-chip.css";
 @import "./molecules/tooltip/tooltip.css";
 @import "./organisms/app-window/app-window.css";
+@import "./organisms/browser-view/browser-view.css";
 @import "./organisms/code-view/code-view.css";
 @import "./organisms/command-palette/command-palette.css";
 @import "./organisms/composer/composer.css";
 @import "./organisms/diff-view/diff-view.css";
 @import "./organisms/empty-state/empty-state.css";
-@import "./organisms/markdown/markdown.css";
+@import "./organisms/markdown-view/markdown-view.css";
 @import "./organisms/modal/modal.css";
 @import "./organisms/pane/pane.css";
 @import "./organisms/popover/popover.css";

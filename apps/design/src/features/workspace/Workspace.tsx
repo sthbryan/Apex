@@ -10,8 +10,8 @@ import {
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
 import {
-  AgentIcon, AppMain, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
-  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, Markdown, Pane, PaneGrid, PaneSplit,
+  AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
+  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, MarkdownView, Pane, PaneGrid, PaneSplit,
   Pill, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
 } from "@apex/ui";
 
@@ -84,15 +84,19 @@ function Sessions() {
       </TabBar>
 
       <PaneGrid>
-        {activeTab.value === "tab-auth" && <AuthSplit />}
-        {activeTab.value === "tab-browser" && <BrowserPane />}
-        {activeTab.value === "tab-race" && <RacePane />}
-        {activeTab.value === "tab-file" && <FilePane />}
-        {activeTab.value === "tab-diff" && <DiffPane />}
+        {PANE_TYPES.filter((p) => p.id === activeTab.value).map((p) => <p.Component key={p.id} />)}
       </PaneGrid>
     </section>
   );
 }
+
+export const PANE_TYPES = [
+  { id: "tab-auth", label: "Session · split", Component: () => <AuthSplit /> },
+  { id: "tab-browser", label: "Web preview", Component: () => <BrowserPane /> },
+  { id: "tab-race", label: "Race", Component: () => <RacePane /> },
+  { id: "tab-file", label: "File · markdown / source", Component: () => <FilePane /> },
+  { id: "tab-diff", label: "Diff", Component: () => <DiffPane /> },
+];
 
 function AuthSplit() {
   return (
@@ -147,23 +151,28 @@ function AuthSplit() {
 
 function BrowserPane() {
   return (
-    <Pane scroll={false} class={`browser-pane${consoleOpen.value ? " console-open" : ""}`}>
-      <div class="browser-bar">
-        <Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>
-        <div class="url-box"><Lock size={11} style="color:var(--apex-state-done)" /><input value="localhost:5173/login" /></div>
-        <Button variant="subtle" size="sm" iconOnly title="Console" onClick={() => consoleOpen.value = !consoleOpen.value}>
-          <Search size={13} /><span class="err-count">2</span>
-        </Button>
-      </div>
-      <img class="pane-mock" data-mock="browser" src="/mock/browser.svg" alt="Web preview rendered by the native webview" />
-      <div class="console">
-        <div class="console-head">Console<button style="margin-left:auto;color:var(--apex-tty-dim)">Clear</button></div>
-        <div class="console-list">
-          <div class="l-err">[auth] Failed to verify legacy cookie: invalid signature</div>
-          <div class="l-warn">[webauthn] Challenge expired after 120s, retrying</div>
-          <div class="l-info">[vite] hmr update /src/auth/passkey.ts</div>
-        </div>
-      </div>
+    <Pane scroll={false}>
+      <BrowserView
+        url="localhost:5173/login"
+        secure={<Lock size={11} style="color:var(--apex-state-done)" />}
+        consoleOpen={consoleOpen.value}
+        lead={<Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>}
+        actions={
+          <Button variant="subtle" size="sm" iconOnly title="Console" onClick={() => consoleOpen.value = !consoleOpen.value}>
+            <Search size={13} /><Badge tone="removed">2</Badge>
+          </Button>
+        }
+        consoleActions={<Button variant="subtle" size="xs">Clear</Button>}
+        console={
+          <>
+            <BrowserLog level="error">[auth] Failed to verify legacy cookie: invalid signature</BrowserLog>
+            <BrowserLog level="warn">[webauthn] Challenge expired after 120s, retrying</BrowserLog>
+            <BrowserLog level="info">[vite] hmr update /src/auth/passkey.ts</BrowserLog>
+          </>
+        }
+      >
+        <img class="pane-mock" data-mock="browser" src="/mock/browser.svg" alt="Web preview rendered by the native webview" />
+      </BrowserView>
     </Pane>
   );
 }
@@ -231,7 +240,7 @@ function FilePane() {
       }
     >
         {fmode.value === "preview" ? (
-          <Markdown>
+          <MarkdownView>
             <h1>Apex</h1>
             <p>Run a team of AI agents, not a wall of terminals.</p>
             <h2>Install</h2>
@@ -241,7 +250,7 @@ function FilePane() {
               <li><strong>Sessions</strong> — terminal or native rendering per agent</li>
               <li><strong>Races</strong> — fan one task across agents, keep the winner</li>
             </ul>
-          </Markdown>
+          </MarkdownView>
         ) : (
           <CodeView>
             <CodeLine number={1}><Code token="comment"># Apex</Code></CodeLine>

@@ -165,28 +165,6 @@ html[data-theme="light"] .stage-links {
 .reply-box input { flex: 1; height: 30px; font-size: 13px; min-width: 0; }
 .reply-send { width: 30px; height: 30px; border-radius: var(--apex-r-sm); background: var(--apex-accent); color: var(--apex-accent-fg); display: grid; place-items: center; flex: none; }
 .pane-toolbar .mono { font-size: 11px; color: var(--apex-muted); } .tok-f { color: var(--apex-accent); } .tok-c { color: var(--apex-faint); font-style: italic; }
-.browser-bar { flex: none; display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-bottom: 1px solid var(--apex-border); }
-.url-box {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; height: 27px;
-  padding: 0 10px; border-radius: 999px; background: var(--apex-raised); border: 1px solid var(--apex-border);
-}
-.url-box input { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 11.5px; }
-.err-count {
-  min-width: 13px; height: 13px; padding: 0 3px; border-radius: 7px;
-  background: var(--apex-state-failed); color: #fff; font-size: 8.5px; font-weight: 700;
-  display: grid; place-items: center;
-}
-.console { flex: none; height: 148px; display: none; flex-direction: column; border-top: 1px solid var(--apex-border); background: var(--apex-tty); }
-.browser-pane.console-open .console { display: flex; }
-.console-head {
-  flex: none; display: flex; align-items: center; gap: 8px; padding: 5px 12px;
-  border-bottom: 1px solid color-mix(in oklab, var(--apex-tty-fg) 12%, transparent);
-  color: var(--apex-tty-fg); font-size: 11px; font-weight: 600;
-}
-.console-list { flex: 1; overflow-y: auto; padding: 6px 12px; font-family: var(--font-mono); font-size: 11px; line-height: 1.7; }
-.console-list .l-err { color: var(--apex-state-failed); }
-.console-list .l-warn { color: var(--apex-state-blocked); }
-.console-list .l-info { color: var(--apex-tty-dim); }
 .race-view { display: flex; flex-direction: column; height: 100%; }
 .race-task {
   padding: 7px 12px; border-bottom: 1px solid var(--apex-border); color: var(--apex-muted);
@@ -296,12 +274,11 @@ kbd {
 }
 
 .pane-mock {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  object-fit: contain;
-  object-position: top left;
   display: block;
+  margin: auto;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
 }
-.pane-mock[data-mock="tty"] { background: #0c0d10; }
-.pane-mock[data-mock="browser"] { background: #f6f7f9; }
+.pane-mock[data-mock="tty"] { flex: 1; min-height: 0; object-fit: contain; object-position: top left; background: #0c0d10; max-width: none; }
+

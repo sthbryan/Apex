@@ -233,3 +233,45 @@
 .tk-composition {
   margin-top: 4px;
 }
+
+.vw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 16px;
+}
+
+.vw-dock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.vw-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.vw-label {
+  font-family: var(--font-mono);
+  font-size: var(--apex-text-2xs);
+  color: var(--apex-faint);
+}
+
+.vw-stage {
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+  overflow: hidden;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-r-md);
+  background: var(--apex-bg);
+}
+
+.vw-dock {
+  height: 380px;
+  border-radius: var(--apex-r-md);
+  border: 1px solid var(--apex-border);
+  overflow: hidden;
+}
