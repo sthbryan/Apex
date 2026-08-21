@@ -1,0 +1,38 @@
+/* Tailwind v4 bridge (CSS-first). Mirrors apps/desktop theme.css so
+   utilities like bg-chrome / text-muted work identically wherever the
+   tokens package is consumed with Tailwind. */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --text-petite: 7px;
+  --text-tiny: 10px;
+  --text-micro: 11px;
+  --text-small: 12px;
+  --text-code: 13px;
+
+  --color-bg: var(--apex-bg);
+  --color-surface: var(--apex-surface);
+  --color-raised: var(--apex-raised);
+  --color-overlay: var(--apex-overlay);
+  --color-chrome: var(--apex-surface);
+  --color-border: var(--apex-border);
+  --color-text: var(--apex-text);
+  --color-muted: var(--apex-muted);
+  --color-faint: var(--apex-faint);
+  --color-accent: var(--apex-accent);
+  --color-accent-soft: var(--apex-accent-soft);
+  --color-focus: var(--apex-focus);
+
+  --color-state-idle: var(--apex-state-idle);
+  --color-state-working: var(--apex-state-working);
+  --color-state-blocked: var(--apex-state-blocked);
+  --color-state-done: var(--apex-state-done);
+  --color-state-failed: var(--apex-state-failed);
+
+  --default-transition-duration: var(--apex-quick);
+  --default-transition-timing-function: var(--apex-ease);
+}
