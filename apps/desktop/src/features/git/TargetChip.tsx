@@ -70,7 +70,14 @@ export function TargetChip({ project, placement = "below" }: Props) {
   const orphans = worktrees.value.filter((candidate) => !owners.has(candidate.path));
   const above = placement === "above";
   const current = onProject ? status?.branch : tree?.branch;
-  const idle = branches.value.filter((branch) => !branch.worktree && branch.name !== current);
+  const others = branches.value.filter((branch) => branch.name !== current);
+  const holderOf = (branch: GitBranch): GitTarget | null => {
+    if (!branch.worktree) {
+      return null;
+    }
+    const held = worktrees.value.find((candidate) => candidate.path === branch.worktree);
+    return held ? { type: "worktree", path: held.path } : { type: "project" };
+  };
 
   const row = (candidate: WorktreeEntry) => (
     <Target
@@ -151,19 +158,27 @@ export function TargetChip({ project, placement = "below" }: Props) {
             )}
             {orphans.map(row)}
             <li class="px-2 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
-              {t("git.branches", { count: String(idle.length) })}
+              {t("git.branches", { count: String(others.length) })}
             </li>
-            {idle.length === 0 && <li class="px-2 py-1 text-faint">{t("git.branchesEmpty")}</li>}
-            {idle.map((branch) => (
-              <Branch
-                key={branch.name}
-                branch={branch}
-                onPick={() => {
-                  setOpen(false);
-                  void checkoutBranch(branch.name).catch(complain);
-                }}
-              />
-            ))}
+            {others.length === 0 && <li class="px-2 py-1 text-faint">{t("git.branchesEmpty")}</li>}
+            {others.map((branch) => {
+              const holder = holderOf(branch);
+              return (
+                <Branch
+                  key={branch.name}
+                  branch={branch}
+                  holder={holder ? shortName(branch.worktree ?? "") : null}
+                  onPick={() => {
+                    setOpen(false);
+                    if (holder) {
+                      selectTarget(holder);
+                      return;
+                    }
+                    void checkoutBranch(branch.name).catch(complain);
+                  }}
+                />
+              );
+            })}
           </ul>
         </div>
       )}
@@ -267,17 +282,31 @@ function Target({
   );
 }
 
-function Branch({ branch, onPick }: { branch: GitBranch; onPick: () => void }) {
+type BranchProps = {
+  branch: GitBranch;
+  holder: string | null;
+  onPick: () => void;
+};
+
+function Branch({ branch, holder, onPick }: BranchProps) {
   return (
     <li class="flex items-center">
       <button
         type="button"
-        title={t("git.branchSwitch", { branch: branch.name })}
+        title={
+          holder
+            ? t("git.branchHeld", { branch: branch.name, worktree: holder })
+            : t("git.branchSwitch", { branch: branch.name })
+        }
         onClick={onPick}
-        class="flex min-w-0 flex-1 items-center gap-2 px-2 py-1 text-left text-muted transition-colors hover:bg-raised hover:text-text"
+        class={cn(
+          "flex min-w-0 flex-1 items-center gap-2 px-2 py-1 text-left transition-colors hover:bg-raised hover:text-text",
+          holder ? "text-faint" : "text-muted",
+        )}
       >
         <Icon name="branch" size={12} class="shrink-0 text-faint" />
         <span class="truncate">{branch.name}</span>
+        {holder && <span class="ml-auto shrink-0 truncate text-faint">{holder}</span>}
       </button>
     </li>
   );

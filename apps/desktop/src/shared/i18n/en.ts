@@ -279,6 +279,7 @@ export const en = {
     orphanTrees: "No session · {count}",
     branches: "Branches · {count}",
     branchSwitch: "Switch to {branch}",
+    branchHeld: "{branch} lives in {worktree} — go there",
     branchesEmpty: "No other branches.",
     changed: "{count} changed",
     openChanges: "Open the git panel",

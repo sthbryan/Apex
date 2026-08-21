@@ -281,6 +281,7 @@ export const es: Messages = {
     orphanTrees: "Sin sesión · {count}",
     branches: "Ramas · {count}",
     branchSwitch: "Cambiar a {branch}",
+    branchHeld: "{branch} vive en {worktree} — ir ahí",
     branchesEmpty: "No hay otras ramas.",
     changed: "{count} cambiados",
     openChanges: "Abrir el panel de git",
