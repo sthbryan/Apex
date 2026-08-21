@@ -2,6 +2,7 @@ import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { DiffScope } from "@/bindings/DiffScope";
+import type { GitBranch } from "@/bindings/GitBranch";
 import type { GitCommit } from "@/bindings/GitCommit";
 import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitSyncOp } from "@/bindings/GitSyncOp";
@@ -34,6 +35,7 @@ export const gitStatus = signal<GitStatus | null>(null);
 export const gitFailure = signal<string | null>(null);
 export const worktrees = signal<WorktreeEntry[]>([]);
 export const pending = signal<PendingReview[]>([]);
+export const branches = signal<GitBranch[]>([]);
 
 export const sessionOfWorktree = computed(() => {
   const owners = new Map<string, string>();
@@ -60,6 +62,7 @@ export function sameTarget(left: GitTarget, right: GitTarget): boolean {
 
 export function selectTarget(target: GitTarget): void {
   gitTarget.value = target;
+  branches.value = [];
   void refreshGit();
   void readLog();
 }
@@ -119,6 +122,7 @@ export function startGitWatch(): () => void {
     gitFailure.value = null;
     worktrees.value = [];
     pending.value = [];
+    branches.value = [];
     tick();
     void readLog();
   });
@@ -250,6 +254,34 @@ export async function dropWorktree(path: string, branch: string): Promise<void> 
     void readLog();
   }
   await refreshGit();
+}
+
+export async function readBranches(): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    branches.value = [];
+    return;
+  }
+  try {
+    branches.value = await invoke<GitBranch[]>("git_branches", {
+      project,
+      target: gitTarget.value,
+    });
+  } catch (error) {
+    branches.value = [];
+    gitFailure.value = String(error);
+  }
+}
+
+export async function checkoutBranch(branch: string): Promise<void> {
+  await invoke("git_checkout", {
+    project: activeProjectId.value,
+    target: gitTarget.value,
+    branch,
+  });
+  await refreshGit();
+  await readLog();
+  await readBranches();
 }
 
 export async function mergeWorktree(target: GitTarget): Promise<MergeReport> {

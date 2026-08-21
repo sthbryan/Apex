@@ -1,13 +1,17 @@
 import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 
+import type { GitBranch } from "@/bindings/GitBranch";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { ProjectSummary } from "@/bindings/ProjectSummary";
 import type { WorktreeEntry } from "@/bindings/WorktreeEntry";
 import {
+  branches,
+  checkoutBranch,
   dropWorktree,
   gitStatus,
   gitTarget,
+  readBranches,
   selectTarget,
   sessionOfWorktree,
   worktrees,
@@ -46,6 +50,7 @@ export function TargetChip({ project, placement = "below" }: Props) {
         setAsking(null);
       }
     };
+    void readBranches();
     window.addEventListener("mousedown", dismiss);
     window.addEventListener("keydown", onEscape);
     return () => {
@@ -64,6 +69,8 @@ export function TargetChip({ project, placement = "below" }: Props) {
   const attached = worktrees.value.filter((candidate) => owners.has(candidate.path));
   const orphans = worktrees.value.filter((candidate) => !owners.has(candidate.path));
   const above = placement === "above";
+  const current = onProject ? status?.branch : tree?.branch;
+  const idle = branches.value.filter((branch) => !branch.worktree && branch.name !== current);
 
   const row = (candidate: WorktreeEntry) => (
     <Target
@@ -143,6 +150,20 @@ export function TargetChip({ project, placement = "below" }: Props) {
               </li>
             )}
             {orphans.map(row)}
+            <li class="px-2 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
+              {t("git.branches", { count: String(idle.length) })}
+            </li>
+            {idle.length === 0 && <li class="px-2 py-1 text-faint">{t("git.branchesEmpty")}</li>}
+            {idle.map((branch) => (
+              <Branch
+                key={branch.name}
+                branch={branch}
+                onPick={() => {
+                  setOpen(false);
+                  void checkoutBranch(branch.name).catch(complain);
+                }}
+              />
+            ))}
           </ul>
         </div>
       )}
@@ -242,6 +263,22 @@ function Target({
           <Icon name="close" size={12} />
         </button>
       )}
+    </li>
+  );
+}
+
+function Branch({ branch, onPick }: { branch: GitBranch; onPick: () => void }) {
+  return (
+    <li class="flex items-center">
+      <button
+        type="button"
+        title={t("git.branchSwitch", { branch: branch.name })}
+        onClick={onPick}
+        class="flex min-w-0 flex-1 items-center gap-2 px-2 py-1 text-left text-muted transition-colors hover:bg-raised hover:text-text"
+      >
+        <Icon name="branch" size={12} class="shrink-0 text-faint" />
+        <span class="truncate">{branch.name}</span>
+      </button>
     </li>
   );
 }
