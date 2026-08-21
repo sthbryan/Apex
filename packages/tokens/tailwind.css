@@ -13,14 +13,23 @@
   --radius-full: var(--apex-r-full);
 
   --text-2xs: var(--apex-text-2xs);
+  --text-2xs--line-height: var(--apex-leading-tight);
   --text-xs: var(--apex-text-xs);
+  --text-xs--line-height: var(--apex-leading-tight);
   --text-sm: var(--apex-text-sm);
+  --text-sm--line-height: var(--apex-leading-snug);
   --text-md: var(--apex-text-md);
+  --text-md--line-height: var(--apex-leading-snug);
   --text-lg: var(--apex-text-lg);
+  --text-lg--line-height: var(--apex-leading-snug);
   --text-xl: var(--apex-text-xl);
+  --text-xl--line-height: var(--apex-leading-tight);
   --text-2xl: var(--apex-text-2xl);
+  --text-2xl--line-height: var(--apex-leading-tight);
   --text-3xl: var(--apex-text-3xl);
+  --text-3xl--line-height: var(--apex-leading-tight);
   --text-4xl: var(--apex-text-4xl);
+  --text-4xl--line-height: var(--apex-leading-tight);
 
   --leading-tight: var(--apex-leading-tight);
   --leading-snug: var(--apex-leading-snug);
