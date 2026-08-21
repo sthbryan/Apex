@@ -62,6 +62,7 @@ pub fn run() {
             commands::open_url,
             commands::resume_session,
             commands::create_session,
+            commands::race_session,
             commands::attach_session,
             commands::send_input,
             commands::resize_session,

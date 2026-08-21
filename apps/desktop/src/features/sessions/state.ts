@@ -177,6 +177,16 @@ export function decodeUuid(bytes: Uint8Array): string {
   ].join("-");
 }
 
+export async function raceSession(
+  project: string,
+  agents: string[],
+  task: string,
+): Promise<SessionSummary[]> {
+  const started = await invoke<SessionSummary[]>("race_session", { project, agents, task });
+  sessions.value = started.reduce(upsert, sessions.value);
+  return started;
+}
+
 export async function createSession(
   project: string,
   agent: string,

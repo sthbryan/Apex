@@ -76,6 +76,24 @@ pub async fn create_session(
 }
 
 #[tauri::command]
+pub async fn race_session(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    agents: Vec<String>,
+    task: String,
+) -> Answer<Vec<SessionSummary>> {
+    match state
+        .daemon()?
+        .request(Command::SessionRace { project, agents, task })
+        .await
+        .map_err(failed)?
+    {
+        Reply::Spawned { sessions } => Ok(sessions),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 pub async fn attach_session(state: tauri::State<'_, AppState>, id: Uuid) -> Answer<()> {
     state.daemon()?.request(Command::SessionAttach { id }).await.map_err(failed)?;
     Ok(())
