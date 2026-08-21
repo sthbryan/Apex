@@ -1,0 +1,111 @@
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant veil (&:where([data-veil="on"], [data-veil="on"] *));
+
+@theme {
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --spacing-0: var(--apex-space-0);
+  --spacing-1: var(--apex-space-1);
+  --spacing-2: var(--apex-space-2);
+  --spacing-3: var(--apex-space-3);
+  --spacing-4: var(--apex-space-4);
+  --spacing-5: var(--apex-space-5);
+  --spacing-6: var(--apex-space-6);
+  --spacing-7: var(--apex-space-7);
+  --spacing-8: var(--apex-space-8);
+  --spacing-9: var(--apex-space-9);
+  --spacing-10: var(--apex-space-10);
+  --spacing-11: var(--apex-space-11);
+  --spacing-12: var(--apex-space-12);
+
+  --radius-xs: var(--apex-r-xs);
+  --radius-s: var(--apex-r-s);
+  --radius-m: var(--apex-r-m);
+  --radius-l: var(--apex-r-l);
+  --radius-xl: var(--apex-r-xl);
+  --radius-full: var(--apex-r-full);
+
+  --height-control-xs: var(--apex-h-xs);
+  --height-control-s: var(--apex-h-s);
+  --height-control-m: var(--apex-h-m);
+  --height-control-l: var(--apex-h-l);
+  --height-control-xl: var(--apex-h-xl);
+
+  --text-2xs: var(--apex-text-2xs);
+  --text-xs: var(--apex-text-xs);
+  --text-s: var(--apex-text-s);
+  --text-m: var(--apex-text-m);
+  --text-l: var(--apex-text-l);
+  --text-xl: var(--apex-text-xl);
+  --text-2xl: var(--apex-text-2xl);
+  --text-3xl: var(--apex-text-3xl);
+  --text-4xl: var(--apex-text-4xl);
+
+  --leading-tight: var(--apex-leading-tight);
+  --leading-snug: var(--apex-leading-snug);
+  --leading-normal: var(--apex-leading-normal);
+
+  --font-weight-normal: var(--apex-weight-normal);
+  --font-weight-medium: var(--apex-weight-medium);
+  --font-weight-semibold: var(--apex-weight-semibold);
+  --font-weight-bold: var(--apex-weight-bold);
+
+  --tracking-tight: var(--apex-tracking-tight);
+  --tracking-normal: var(--apex-tracking-normal);
+  --tracking-wide: var(--apex-tracking-wide);
+  --tracking-caps: var(--apex-tracking-caps);
+
+  --color-bg: var(--apex-bg);
+  --color-surface: var(--apex-surface);
+  --color-raised: var(--apex-raised);
+  --color-overlay: var(--apex-overlay);
+  --color-float: var(--apex-float);
+  --color-tty: var(--apex-tty);
+  --color-border: var(--apex-border);
+  --color-text: var(--apex-text);
+  --color-muted: var(--apex-muted);
+  --color-faint: var(--apex-faint);
+  --color-accent: var(--apex-accent);
+  --color-accent-fg: var(--apex-accent-fg);
+  --color-accent-soft: var(--apex-accent-soft);
+  --color-focus: var(--apex-focus);
+
+  --color-state-idle: var(--apex-state-idle);
+  --color-state-working: var(--apex-state-working);
+  --color-state-blocked: var(--apex-state-blocked);
+  --color-state-done: var(--apex-state-done);
+  --color-state-failed: var(--apex-state-failed);
+
+  --color-git-added: var(--apex-git-added);
+  --color-git-removed: var(--apex-git-removed);
+  --color-git-modified: var(--apex-git-modified);
+  --color-git-dirty: var(--apex-git-dirty);
+
+  --color-tty-fg: var(--apex-tty-fg);
+  --color-tty-dim: var(--apex-tty-dim);
+  --color-tty-bright: var(--apex-tty-bright);
+
+  --shadow-s: var(--apex-shadow-s);
+  --shadow-m: var(--apex-shadow-m);
+  --shadow-l: var(--apex-shadow-l);
+  --shadow-xl: var(--apex-shadow-xl);
+
+  --z-index-base: var(--apex-z-base);
+  --z-index-raised: var(--apex-z-raised);
+  --z-index-sticky: var(--apex-z-sticky);
+  --z-index-dock: var(--apex-z-dock);
+  --z-index-tooltip: var(--apex-z-tooltip);
+  --z-index-overlay: var(--apex-z-overlay);
+  --z-index-modal: var(--apex-z-modal);
+  --z-index-toast: var(--apex-z-toast);
+  --z-index-palette: var(--apex-z-palette);
+
+  --ease-apex: var(--apex-ease);
+  --ease-apex-out: var(--apex-ease-out);
+  --ease-apex-in: var(--apex-ease-in);
+  --ease-apex-spring: var(--apex-ease-spring);
+
+  --default-transition-duration: var(--apex-quick);
+  --default-transition-timing-function: var(--apex-ease);
+}

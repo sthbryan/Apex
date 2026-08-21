@@ -18,8 +18,8 @@ Tailwind v4), so approved pieces port to desktop nearly copy-paste.
 
 ## Tokens
 
-Colors, radii and motion come from `packages/design-tokens`
-(`@apex/design-tokens`), the single source of truth. It ships the
+Colors, radii and motion come from `packages/tokens`
+(`@apex/tokens`), the single source of truth. It ships the
 **current** palette (mirrors `apps/desktop` tokens.css) and the
 **proposal** (warm graphite/paper) behind `data-palette="proposal"`,
 plus veil translucency and the Tailwind `@theme` bridge. The top-bar

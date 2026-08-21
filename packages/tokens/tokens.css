@@ -1,0 +1,170 @@
+:root {
+  --apex-space-0: 0px;
+  --apex-space-1: 2px;
+  --apex-space-2: 4px;
+  --apex-space-3: 6px;
+  --apex-space-4: 8px;
+  --apex-space-5: 10px;
+  --apex-space-6: 12px;
+  --apex-space-7: 16px;
+  --apex-space-8: 20px;
+  --apex-space-9: 24px;
+  --apex-space-10: 32px;
+  --apex-space-11: 40px;
+  --apex-space-12: 56px;
+
+  --apex-r-xs: 6px;
+  --apex-r-s: 9px;
+  --apex-r-m: 12px;
+  --apex-r-l: 14px;
+  --apex-r-xl: 16px;
+  --apex-r-full: 999px;
+
+  --apex-h-xs: 20px;
+  --apex-h-s: 24px;
+  --apex-h-m: 28px;
+  --apex-h-l: 32px;
+  --apex-h-xl: 36px;
+
+  --apex-text-2xs: 9.5px;
+  --apex-text-xs: 10.5px;
+  --apex-text-s: 11.5px;
+  --apex-text-m: 12.5px;
+  --apex-text-l: 14px;
+  --apex-text-xl: 17px;
+  --apex-text-2xl: 20px;
+  --apex-text-3xl: 26px;
+  --apex-text-4xl: 32px;
+
+  --apex-leading-tight: 1.2;
+  --apex-leading-snug: 1.4;
+  --apex-leading-normal: 1.6;
+
+  --apex-weight-normal: 400;
+  --apex-weight-medium: 500;
+  --apex-weight-semibold: 600;
+  --apex-weight-bold: 700;
+
+  --apex-tracking-tight: -0.02em;
+  --apex-tracking-normal: 0em;
+  --apex-tracking-wide: 0.06em;
+  --apex-tracking-caps: 0.08em;
+
+  --apex-ease: cubic-bezier(0.2, 0, 0, 1);
+  --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --apex-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --apex-ease-spring: cubic-bezier(0.34, 1.45, 0.5, 1);
+  --apex-instant: 90ms;
+  --apex-quick: 140ms;
+  --apex-swift: 300ms;
+  --apex-slow: 480ms;
+
+  --apex-z-base: 0;
+  --apex-z-raised: 10;
+  --apex-z-sticky: 20;
+  --apex-z-dock: 30;
+  --apex-z-tooltip: 40;
+  --apex-z-overlay: 50;
+  --apex-z-modal: 60;
+  --apex-z-toast: 70;
+  --apex-z-palette: 80;
+
+  --apex-shadow-s: 0 1px 2px rgb(0 0 0 / 0.08);
+  --apex-shadow-m: 0 4px 14px rgb(0 0 0 / 0.16);
+  --apex-shadow-l: 0 10px 30px rgb(0 0 0 / 0.24);
+  --apex-shadow-xl: 0 24px 80px rgb(0 0 0 / 0.4);
+}
+
+:root {
+  --apex-bg-solid: light-dark(#ffffff, #0c0d10);
+  --apex-surface-solid: light-dark(#f6f7f9, #131519);
+  --apex-raised-solid: light-dark(#eceef0, #1a1d22);
+  --apex-overlay-solid: light-dark(#ffffff, #1f2228);
+  --apex-tty-solid: light-dark(#ffffff, #0c0d10);
+  --apex-border-solid: light-dark(#dfe2e6, #24272e);
+  --apex-text-solid: light-dark(#1c1e21, #e4e6eb);
+  --apex-muted-solid: light-dark(#656d76, #8b919c);
+  --apex-faint-solid: light-dark(#8a929c, #7d8595);
+
+  --apex-accent: light-dark(#b45309, #f59e0b);
+  --apex-accent-fg: light-dark(#ffffff, #1c1e21);
+  --apex-accent-soft: color-mix(in oklab, var(--apex-accent) 13%, transparent);
+  --apex-focus: light-dark(#92400e, #fbbf24);
+  --apex-selection: color-mix(in oklab, var(--apex-accent) 24%, transparent);
+
+  --apex-state-idle: light-dark(#8c959f, #6e7681);
+  --apex-state-working: light-dark(#0969da, #4a9eff);
+  --apex-state-blocked: light-dark(#bf8700, #e8a33d);
+  --apex-state-done: light-dark(#1a7f37, #3fb950);
+  --apex-state-failed: light-dark(#cf222e, #ff6b6b);
+
+  --apex-git-added: var(--apex-state-done);
+  --apex-git-removed: var(--apex-state-failed);
+  --apex-git-modified: var(--apex-state-working);
+  --apex-git-dirty: var(--apex-muted);
+
+  --apex-tty-fg: light-dark(#5b636c, #adbac0);
+  --apex-tty-dim: light-dark(#8a929c, #5b636c);
+  --apex-tty-bright: var(--apex-text);
+
+  color-scheme: light dark;
+}
+
+:root {
+  --apex-veil-surface: 100%;
+  --apex-veil-raised: 100%;
+  --apex-veil-overlay: 100%;
+  --apex-veil-tty: 100%;
+  --apex-veil-blur: 0px;
+  --apex-veil-saturate: 1;
+  --apex-veil-contrast: 0%;
+}
+
+[data-veil="on"] {
+  --apex-veil-surface: 76%;
+  --apex-veil-raised: 82%;
+  --apex-veil-overlay: 88%;
+  --apex-veil-tty: 90%;
+  --apex-veil-blur: 26px;
+  --apex-veil-saturate: 1.5;
+  --apex-veil-contrast: 22%;
+}
+
+:root {
+  --apex-bg: var(--apex-bg-solid);
+  --apex-surface: color-mix(in oklab, var(--apex-surface-solid) var(--apex-veil-surface), transparent);
+  --apex-raised: color-mix(in oklab, var(--apex-raised-solid) var(--apex-veil-raised), transparent);
+  --apex-overlay: color-mix(in oklab, var(--apex-overlay-solid) var(--apex-veil-overlay), transparent);
+  --apex-float: var(--apex-overlay);
+  --apex-tty: color-mix(in oklab, var(--apex-tty-solid) var(--apex-veil-tty), transparent);
+  --apex-border: color-mix(in oklab, var(--apex-border-solid), var(--apex-text-solid) var(--apex-veil-contrast));
+  --apex-text: var(--apex-text-solid);
+  --apex-muted: color-mix(in oklab, var(--apex-muted-solid), var(--apex-text-solid) var(--apex-veil-contrast));
+  --apex-faint: color-mix(in oklab, var(--apex-faint-solid), var(--apex-text-solid) var(--apex-veil-contrast));
+}
+
+[data-palette="proposal"] {
+  --apex-bg-solid: light-dark(#fbfaf8, #141312);
+  --apex-surface-solid: light-dark(#f3f1ed, #1b1917);
+  --apex-raised-solid: light-dark(#eae7e2, #242120);
+  --apex-overlay-solid: light-dark(#ffffff, #2b2927);
+  --apex-tty-solid: light-dark(#171614, #121110);
+  --apex-border-solid: light-dark(#e0dcd5, #322f2c);
+  --apex-text-solid: light-dark(#24211d, #ede9e3);
+  --apex-muted-solid: light-dark(#6b655c, #a49d93);
+  --apex-faint-solid: light-dark(#6f6a5f, #8a8378);
+
+  --apex-accent-fg: light-dark(#ffffff, #1c1917);
+
+  --apex-state-idle: light-dark(#8b857b, #7d766c);
+  --apex-state-working: light-dark(#075fc4, #58a8ff);
+  --apex-state-blocked: light-dark(#96650d, #e6a23c);
+  --apex-state-done: light-dark(#17803c, #48b95a);
+  --apex-state-failed: light-dark(#c62828, #ff7566);
+
+  --apex-tty-fg: #b3aca1;
+  --apex-tty-dim: #6a645a;
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }

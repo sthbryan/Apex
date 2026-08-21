@@ -2,7 +2,8 @@
 @import "@fontsource/inter/latin-400.css";
 @import "@fontsource/inter/latin-500.css";
 @import "@fontsource/inter/latin-600.css";
-@import "@apex/design-tokens/tokens.css";
-@import "@apex/design-tokens/theme.css";
-@import "@apex/design-tokens/base.css";
+@import "@apex/tokens/tokens.css";
+@import "@apex/tokens/tailwind.css";
+@import "@apex/tokens/reset.css";
+@import "./legacy-aliases.css";
 @import "./components.css";

@@ -1,11 +1,11 @@
 {
-  "name": "@apex/design-tokens",
+  "name": "@apex/tokens",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
     "./tokens.css": "./tokens.css",
-    "./theme.css": "./theme.css",
-    "./base.css": "./base.css"
+    "./tailwind.css": "./tailwind.css",
+    "./reset.css": "./reset.css"
   }
 }
