@@ -31,6 +31,9 @@ const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis
 const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
 const BLOCKED_GRACE: std::time::Duration = std::time::Duration::from_secs(300);
 const POLL_WHILE_BLOCKED: std::time::Duration = std::time::Duration::from_millis(200);
+const ECHO_WAIT: std::time::Duration = std::time::Duration::from_millis(400);
+const TYPING_TRIES: usize = 6;
+const PROBE_LEN: usize = 16;
 pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
 
 pub struct NewSession {
@@ -489,9 +492,29 @@ impl SessionManager {
 
     async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {
         let typed = text.replace(['\n', '\r'], " ");
-        self.write(id, &typed).await?;
+        let probe = probe_of(&typed);
+        for attempt in 0..TYPING_TRIES {
+            self.write(id, &typed).await?;
+            tokio::time::sleep(ECHO_WAIT).await;
+            if self.echoed(id, &probe).await {
+                break;
+            }
+            if attempt + 1 == TYPING_TRIES {
+                tracing::warn!(%id, "the agent never showed the task being typed");
+            }
+        }
         tokio::time::sleep(BEFORE_ENTER).await;
         self.write(id, "\r").await
+    }
+
+    async fn echoed(&self, id: Uuid, probe: &str) -> bool {
+        if probe.is_empty() {
+            return true;
+        }
+        match self.registry.transcript(id, 16384, true).await {
+            Ok(seen) => squash(&seen).contains(probe),
+            Err(_) => true,
+        }
     }
 
     pub async fn call_it_done(&self, id: Uuid, summary: Option<String>) -> Result<()> {
@@ -898,6 +921,14 @@ impl SessionManager {
     async fn project_root(&self, project: Uuid) -> Result<String> {
         self.registry.project_root(project).await
     }
+}
+
+fn squash(text: &str) -> String {
+    text.chars().filter(|letter| !letter.is_whitespace()).collect()
+}
+
+fn probe_of(text: &str) -> String {
+    squash(text).chars().take(PROBE_LEN).collect()
 }
 
 fn waiting_rank(state: Option<SessionState>) -> u8 {
