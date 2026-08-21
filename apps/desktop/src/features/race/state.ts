@@ -38,6 +38,7 @@ export const races = computed<Race[]>(() => {
       startedAt: Math.min(...contenders.map((session) => session.started_at)),
       contenders: contenders.slice().sort((left, right) => left.agent.localeCompare(right.agent)),
     }))
+    .filter((race) => race.contenders.length > 1)
     .sort((left, right) => right.startedAt - left.startedAt);
 });
 
