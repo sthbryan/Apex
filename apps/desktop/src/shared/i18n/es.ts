@@ -282,6 +282,7 @@ export const es: Messages = {
     rejectAllNo: "Conservar",
     mergeDropsRejects: "Mergear descarta {count} rechazos guardados.",
     mergeAnyway: "Mergear",
+    commitFirst: "Commiteá lo aprobado antes de mergear.",
   },
   git: {
     noRepo: "Este proyecto no es un repositorio git.",

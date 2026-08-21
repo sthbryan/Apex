@@ -124,7 +124,9 @@ function Closing() {
       <CommitBox status={status} />
       {status.isolated && (
         <div class="shrink-0 border-t border-border p-2">
-          {asking ? (
+          {status.changes.length > 0 ? (
+            <p class="text-faint">{t("review.commitFirst")}</p>
+          ) : asking ? (
             <>
               <p class="mb-1 text-state-failed">
                 {t("review.mergeDropsRejects", { count: String(shelved) })}

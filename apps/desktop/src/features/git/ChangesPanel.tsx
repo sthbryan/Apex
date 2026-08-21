@@ -68,6 +68,7 @@ export function ChangesPanel() {
         <div class="shrink-0 border-t border-border p-2">
           <button
             type="button"
+            disabled={(status?.changes.length ?? 0) > 0}
             onClick={() => {
               setReport(null);
               void mergeWorktree(target)
@@ -79,10 +80,11 @@ export function ChangesPanel() {
                   gitFailure.value = String(error);
                 });
             }}
-            class="w-full rounded border border-border py-1 text-muted transition-colors hover:bg-raised hover:text-text"
+            class="w-full rounded border border-border py-1 text-muted transition-colors enabled:hover:bg-raised enabled:hover:text-text disabled:opacity-40"
           >
             {t("git.merge", { base: status.base })}
           </button>
+          {status.changes.length > 0 && <p class="mt-1 text-faint">{t("review.commitFirst")}</p>}
           {report?.type === "merged" && <p class="mt-1 text-git-added">{t("git.merged")}</p>}
           {report?.type === "conflicted" && (
             <p class="mt-1 text-git-conflict">

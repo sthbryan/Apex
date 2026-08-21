@@ -280,6 +280,7 @@ export const en = {
     rejectAllNo: "Keep",
     mergeDropsRejects: "Merging throws away {count} saved rejects.",
     mergeAnyway: "Merge",
+    commitFirst: "Commit what you approved before merging.",
   },
   git: {
     noRepo: "This project is not a git repository.",
