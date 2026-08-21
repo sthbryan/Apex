@@ -23,6 +23,9 @@ const FileView = lazy(async () => ({
 const DiffView = lazy(async () => ({
   default: (await import("@/features/git/DiffView")).DiffView,
 }));
+const RaceView = lazy(async () => ({
+  default: (await import("@/features/race/RaceView")).RaceView,
+}));
 const BrowserView = lazy(async () => ({
   default: (await import("@/features/browser/BrowserView")).BrowserView,
 }));
@@ -136,6 +139,7 @@ function PaneLeaf({
               />
             )}
             {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+            {node.view.type === "race" && <RaceView run={node.view.run} />}
             {node.view.type === "browser" && (
               <BrowserView id={node.id} url={node.view.url} visible={visible} />
             )}

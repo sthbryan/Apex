@@ -3,6 +3,7 @@ import type { DockPanel } from "@/app/layout/state";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { fileName } from "@/features/files/state";
 import type { PaneView } from "@/features/workspace/tree";
+import { t } from "@/shared/i18n";
 import type { IconName } from "@/shared/ui/Icon";
 
 export function paneTitle(view: PaneView, sessions: SessionSummary[]): string {
@@ -18,6 +19,9 @@ export function paneTitle(view: PaneView, sessions: SessionSummary[]): string {
   }
   if (view.type === "browser") {
     return hostOf(view.url);
+  }
+  if (view.type === "race") {
+    return t("race.title");
   }
   return (
     sessions.find((session) => session.id === view.sessionId)?.title ?? view.sessionId.slice(0, 8)
@@ -36,6 +40,9 @@ export function paneIcon(view: PaneView): IconName {
   }
   if (view.type === "browser") {
     return "globe";
+  }
+  if (view.type === "race") {
+    return "swap";
   }
   return "sessions";
 }

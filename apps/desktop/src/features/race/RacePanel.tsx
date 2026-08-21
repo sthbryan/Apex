@@ -6,6 +6,7 @@ import type { SessionState } from "@/bindings/SessionState";
 import { activeProject } from "@/features/projects/state";
 import { RaceLauncher } from "@/features/race/RaceLauncher";
 import { openRace, type Race, raceSettled, races } from "@/features/race/state";
+import { openRaceView } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -65,6 +66,7 @@ function Entry({ race }: { race: Race }) {
         type="button"
         onClick={() => {
           openRace.value = race.id;
+          openRaceView(race.id);
         }}
         class={cn(
           "flex w-full items-center gap-2 px-2 py-1 text-left transition-colors hover:bg-raised",

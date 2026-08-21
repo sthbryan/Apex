@@ -265,6 +265,10 @@ export const en = {
     willStart: "{count} agents, one worktree each",
     start: "Start",
     cancel: "Cancel",
+    gone: "That race is gone.",
+    stillWorking: "Still working…",
+    leftNothing: "Left nothing behind.",
+    inspect: "Look at it",
   },
   review: {
     title: "Review",

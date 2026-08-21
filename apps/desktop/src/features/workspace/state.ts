@@ -94,6 +94,10 @@ export function openFile(path: string): void {
   openBeside({ type: "file", path }, (view) => view.type === "file");
 }
 
+export function openRaceView(run: string): void {
+  openBeside({ type: "race", run }, (view) => view.type === "race");
+}
+
 export function openBrowser(url: string): void {
   openBeside({ type: "browser", url }, (view) => view.type === "browser");
 }
@@ -137,6 +141,9 @@ function same(left: PaneView, right: PaneView): boolean {
   }
   if (left.type === "browser" && right.type === "browser") {
     return left.url === right.url;
+  }
+  if (left.type === "race" && right.type === "race") {
+    return left.run === right.run;
   }
   return false;
 }

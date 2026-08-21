@@ -267,6 +267,10 @@ export const es: Messages = {
     willStart: "{count} agentes, un worktree cada uno",
     start: "Arrancar",
     cancel: "Cancelar",
+    gone: "Esa corrida ya no está.",
+    stillWorking: "Todavía trabajando…",
+    leftNothing: "No dejó nada.",
+    inspect: "Mirarlo",
   },
   review: {
     title: "Revisión",
