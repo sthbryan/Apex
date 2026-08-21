@@ -32,7 +32,7 @@ const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
 const BLOCKED_GRACE: std::time::Duration = std::time::Duration::from_secs(300);
 const POLL_WHILE_BLOCKED: std::time::Duration = std::time::Duration::from_millis(200);
 const ECHO_WAIT: std::time::Duration = std::time::Duration::from_millis(400);
-const TYPING_TRIES: usize = 6;
+const TYPING_BUDGET: std::time::Duration = std::time::Duration::from_secs(20);
 const PROBE_LEN: usize = 16;
 pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
 
@@ -499,14 +499,15 @@ impl SessionManager {
     async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {
         let typed = text.replace(['\n', '\r'], " ");
         let probe = probe_of(&typed);
-        for attempt in 0..TYPING_TRIES {
+        let deadline = std::time::Instant::now() + TYPING_BUDGET;
+        let mut landed = false;
+        while !landed {
             self.write(id, &typed).await?;
             tokio::time::sleep(ECHO_WAIT).await;
-            if self.echoed(id, &probe).await {
-                break;
-            }
-            if attempt + 1 == TYPING_TRIES {
+            landed = self.echoed(id, &probe).await;
+            if !landed && std::time::Instant::now() >= deadline {
                 tracing::warn!(%id, "the agent never showed the task being typed");
+                return Ok(());
             }
         }
         tokio::time::sleep(BEFORE_ENTER).await;
