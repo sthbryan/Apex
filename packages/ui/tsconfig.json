@@ -11,6 +11,8 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
     "verbatimModuleSyntax": true
   },
   "include": ["src"]

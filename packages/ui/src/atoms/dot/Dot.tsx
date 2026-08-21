@@ -1,5 +1,5 @@
 import type { JSX } from "preact";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export type AgentState = "idle" | "working" | "blocked" | "done" | "failed";
 export type DotSize = "sm" | "md" | "lg";

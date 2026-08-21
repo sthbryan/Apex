@@ -1,3 +1,3 @@
-export { Spinner } from "./Spinner";
-export type { SpinnerProps, SpinnerSize } from "./Spinner";
-export { spinnerMeta } from "./meta";
+export { Spinner } from "@/atoms/spinner/Spinner";
+export type { SpinnerProps, SpinnerSize } from "@/atoms/spinner/Spinner";
+export { spinnerMeta } from "@/atoms/spinner/meta";

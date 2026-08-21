@@ -1,3 +1,3 @@
-export { Switch } from "./Switch";
-export type { SwitchProps } from "./Switch";
-export { switchMeta } from "./meta";
+export { Switch } from "@/atoms/switch/Switch";
+export type { SwitchProps } from "@/atoms/switch/Switch";
+export { switchMeta } from "@/atoms/switch/meta";

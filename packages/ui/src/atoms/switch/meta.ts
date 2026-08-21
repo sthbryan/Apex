@@ -1,4 +1,4 @@
-import type { ComponentMeta } from "../../lib/meta";
+import type { ComponentMeta } from "@/lib/meta";
 
 export const switchMeta: ComponentMeta = {
   name: "Switch",

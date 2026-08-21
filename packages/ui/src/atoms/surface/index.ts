@@ -1,3 +1,3 @@
-export { Surface } from "./Surface";
-export type { Elevation, SurfaceProps, SurfaceRadius, SurfaceShadow } from "./Surface";
-export { surfaceMeta } from "./meta";
+export { Surface } from "@/atoms/surface/Surface";
+export type { Elevation, SurfaceProps, SurfaceRadius, SurfaceShadow } from "@/atoms/surface/Surface";
+export { surfaceMeta } from "@/atoms/surface/meta";

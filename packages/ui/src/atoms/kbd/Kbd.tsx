@@ -1,5 +1,5 @@
 import type { ComponentChildren, JSX } from "preact";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export interface KbdProps extends Omit<JSX.IntrinsicElements["kbd"], "ref"> {
   children?: ComponentChildren;

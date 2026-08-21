@@ -1,5 +1,5 @@
 import type { JSX } from "preact";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export type BarTone = "accent" | "done" | "blocked" | "failed";
 export type BarSize = "sm" | "md" | "lg";

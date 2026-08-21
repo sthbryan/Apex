@@ -1,3 +1,3 @@
-export { Pill } from "./Pill";
-export type { PillProps, PillTone } from "./Pill";
-export { pillMeta } from "./meta";
+export { Pill } from "@/atoms/pill/Pill";
+export type { PillProps, PillTone } from "@/atoms/pill/Pill";
+export { pillMeta } from "@/atoms/pill/meta";

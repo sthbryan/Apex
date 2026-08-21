@@ -1,6 +1,6 @@
 import type { ComponentChildren, JSX } from "preact";
-import { cn } from "../../lib/cn";
-import type { AgentState } from "../dot/Dot";
+import { cn } from "@/lib/cn";
+import type { AgentState } from "@/atoms/dot/Dot";
 
 export type PillTone = "neutral" | "accent" | AgentState;
 

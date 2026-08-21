@@ -12,11 +12,15 @@
     },
     "./ui.css": "./dist/ui.css"
   },
-  "files": ["dist"],
-  "sideEffects": ["*.css"],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "build": "bun run build:js && bun run build:css",
-    "build:js": "bun build ./src/index.ts --outdir dist --target browser --format esm --external preact --external 'preact/*' && tsc -p tsconfig.json",
+    "build:js": "bun build ./src/index.ts --outdir dist --target browser --format esm --external preact --external 'preact/*' && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "build:css": "tailwindcss -i ./src/index.css -o ./dist/ui.css --minify",
     "dev": "bun run build:js --watch"
   },
@@ -30,6 +34,7 @@
     "@tailwindcss/cli": "^4.3.3",
     "preact": "^10.29.8",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "tsc-alias": "^1.8.16"
   }
 }

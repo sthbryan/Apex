@@ -1,5 +1,5 @@
 import type { ComponentChildren, JSX } from "preact";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export type BadgeTone = "accent" | "neutral" | "added" | "removed" | "modified";
 

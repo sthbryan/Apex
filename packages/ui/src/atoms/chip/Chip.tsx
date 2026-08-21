@@ -1,5 +1,5 @@
 import type { ComponentChildren, JSX } from "preact";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export interface ChipProps extends Omit<JSX.IntrinsicElements["span"], "ref"> {
   children?: ComponentChildren;

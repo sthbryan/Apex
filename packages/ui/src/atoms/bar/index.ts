@@ -1,3 +1,3 @@
-export { Bar } from "./Bar";
-export type { BarProps, BarSize, BarTone } from "./Bar";
-export { barMeta } from "./meta";
+export { Bar } from "@/atoms/bar/Bar";
+export type { BarProps, BarSize, BarTone } from "@/atoms/bar/Bar";
+export { barMeta } from "@/atoms/bar/meta";

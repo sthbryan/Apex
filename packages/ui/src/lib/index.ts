@@ -1,3 +1,3 @@
-export { cn } from "./cn";
-export type { ClassValue } from "./cn";
-export type { ComponentLayer, ComponentMeta, ComponentVariant } from "./meta";
+export { cn } from "@/lib/cn";
+export type { ClassValue } from "@/lib/cn";
+export type { ComponentLayer, ComponentMeta, ComponentVariant } from "@/lib/meta";

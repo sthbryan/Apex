@@ -1,3 +1,3 @@
-export { Button } from "./Button";
-export type { ButtonProps, ButtonSize, ButtonVariant } from "./Button";
-export { buttonMeta } from "./meta";
+export { Button } from "@/atoms/button/Button";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "@/atoms/button/Button";
+export { buttonMeta } from "@/atoms/button/meta";

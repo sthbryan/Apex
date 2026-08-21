@@ -1,5 +1,5 @@
 import type { ComponentChildren, JSX } from "preact";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export type Elevation = "bg" | "surface" | "raised" | "overlay" | "tty";
 export type SurfaceRadius = "none" | "xs" | "sm" | "md" | "lg" | "xl";
