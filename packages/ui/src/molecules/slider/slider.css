@@ -1,0 +1,17 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-slider {
+    @apply flex flex-none items-center gap-2.5;
+  }
+
+  .ui-slider input[type="range"] {
+    width: var(--ui-slider-width, 130px);
+    accent-color: var(--apex-accent);
+  }
+
+  .ui-slider-value {
+    @apply flex-none text-right font-mono text-xs text-muted tabular-nums;
+    width: 38px;
+  }
+}

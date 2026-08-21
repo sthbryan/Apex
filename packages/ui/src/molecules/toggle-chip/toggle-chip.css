@@ -1,0 +1,31 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-toggle-chip {
+    @apply flex flex-none items-center gap-1.5 rounded-full border border-border px-3 font-medium text-muted;
+    height: var(--apex-h-lg);
+    @apply transition-[background-color,color,border-color];
+  }
+
+  .ui-toggle-chip:hover:not(:disabled) {
+    @apply text-text;
+  }
+
+  .ui-toggle-chip[aria-pressed="true"] {
+    @apply bg-accent-soft text-accent;
+    border-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
+  }
+
+  .ui-toggle-chip[data-size="sm"] {
+    @apply px-2.5 text-sm;
+    height: var(--apex-h-md);
+  }
+
+  .ui-toggle-chip:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+
+  .ui-toggle-chip-group {
+    @apply flex flex-wrap items-center gap-1.5;
+  }
+}

@@ -1,5 +1,6 @@
 export * from "@/organisms/app-window";
 export * from "@/organisms/code-view";
+export * from "@/organisms/command-palette";
 export * from "@/organisms/composer";
 export * from "@/organisms/diff-view";
 export * from "@/organisms/empty-state";
@@ -8,6 +9,7 @@ export * from "@/organisms/modal";
 export * from "@/organisms/pane";
 export * from "@/organisms/popover";
 export * from "@/organisms/rail";
+export * from "@/organisms/settings-dialog";
 export * from "@/organisms/side-panel";
 export * from "@/organisms/status-bar";
 export * from "@/organisms/tab-bar";

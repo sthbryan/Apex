@@ -1,0 +1,54 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-settings-dialog {
+    @apply flex overflow-hidden p-0;
+    width: min(720px, 94vw);
+    height: min(520px, 88vh);
+  }
+
+  .ui-settings-nav {
+    @apply flex flex-none flex-col gap-0.5 px-2.5 py-3.5;
+    width: 172px;
+    background-color: var(--apex-raised);
+    border-right: 1px solid var(--apex-border);
+  }
+
+  .ui-settings-nav-title {
+    @apply mb-1.5 px-2.5 text-xs font-semibold tracking-caps text-muted uppercase;
+  }
+
+  .ui-settings-nav-item {
+    @apply flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-left text-md text-muted;
+  }
+
+  .ui-settings-nav-item:hover {
+    @apply bg-bg text-text;
+  }
+
+  .ui-settings-nav-item[aria-selected="true"] {
+    @apply bg-accent-soft font-medium text-accent;
+  }
+
+  .ui-settings-main {
+    @apply min-w-0 flex-1 overflow-y-auto px-5 py-4;
+  }
+
+  .ui-settings-title {
+    @apply mb-1 font-semibold;
+    font-size: var(--apex-text-xl);
+  }
+
+  .ui-settings-sub {
+    @apply mb-3.5 text-md text-muted;
+  }
+
+  .ui-settings-close {
+    @apply absolute top-2.5 right-2.5;
+    z-index: var(--apex-z-raised);
+  }
+
+  @media (max-width: 780px) {
+    .ui-settings-nav { display: none; }
+  }
+}

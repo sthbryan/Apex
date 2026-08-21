@@ -1,0 +1,30 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-checkbox {
+    @apply relative inline-grid flex-none place-items-center rounded-xs;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--apex-border);
+    color: transparent;
+    transition: all var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-checkbox input {
+    @apply absolute inset-0 m-0 cursor-pointer opacity-0;
+  }
+
+  .ui-checkbox:has(input:checked) {
+    @apply bg-accent text-accent-fg;
+    border-color: var(--apex-accent);
+  }
+
+  .ui-checkbox:has(input:focus-visible) {
+    outline: 2px solid var(--apex-focus);
+    outline-offset: 2px;
+  }
+
+  .ui-checkbox:has(input:disabled) {
+    @apply opacity-45;
+  }
+}

@@ -2,7 +2,7 @@ import type { ComponentChildren, JSX } from "preact";
 import { cn } from "@/lib/cn";
 import { Spinner } from "@/atoms/spinner/Spinner";
 
-export type ButtonVariant = "primary" | "ghost" | "subtle" | "danger";
+export type ButtonVariant = "primary" | "ghost" | "subtle" | "danger" | "dashed";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 export interface ButtonProps extends Omit<JSX.IntrinsicElements["button"], "size" | "ref"> {

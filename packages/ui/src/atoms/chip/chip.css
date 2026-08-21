@@ -5,4 +5,20 @@
     @apply inline-flex shrink-0 items-center gap-1 rounded-xs border border-border bg-raised px-1.5 font-mono text-2xs text-muted;
     height: var(--apex-h-xs);
   }
+
+  .ui-chip[data-tone="accent"] {
+    @apply border-transparent bg-accent-soft text-accent;
+  }
+
+  .ui-chip[data-tone="done"] {
+    @apply border-transparent font-semibold;
+    color: var(--apex-state-done);
+    background-color: color-mix(in oklab, var(--apex-state-done) 10%, transparent);
+  }
+
+  .ui-chip[data-tone="blocked"] {
+    @apply border-transparent font-semibold;
+    color: var(--apex-state-blocked);
+    background-color: color-mix(in oklab, var(--apex-state-blocked) 12%, transparent);
+  }
 }

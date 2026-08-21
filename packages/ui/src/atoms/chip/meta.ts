@@ -9,5 +9,8 @@ export const chipMeta: ComponentMeta = {
   variants: [
     { name: "branch", props: {}, children: "apex/claude" },
     { name: "format", props: {}, children: "PNG" },
+    { name: "accent", props: { tone: "accent" }, children: "preview" },
+    { name: "done", props: { tone: "done" }, children: ":5173" },
+    { name: "blocked", props: { tone: "blocked" }, children: "stale" },
   ],
 };

@@ -67,6 +67,17 @@
     background-color: color-mix(in oklab, var(--apex-state-failed) 20%, transparent);
   }
 
+  .ui-button[data-variant="dashed"] {
+    @apply w-full text-muted;
+    border-style: dashed;
+    border-color: var(--apex-border);
+  }
+
+  .ui-button[data-variant="dashed"]:hover:not(:disabled) {
+    @apply text-accent;
+    border-color: var(--apex-accent);
+  }
+
   .ui-button[data-icon-only="true"] {
     @apply px-0;
     width: var(--ui-button-size);

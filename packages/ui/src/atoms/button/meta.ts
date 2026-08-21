@@ -11,6 +11,7 @@ export const buttonMeta: ComponentMeta = {
     { name: "ghost", props: { variant: "ghost" }, children: "Cancel" },
     { name: "subtle", props: { variant: "subtle" }, children: "Move to sidebar" },
     { name: "danger", props: { variant: "danger" }, children: "Delete worktree" },
+    { name: "dashed", props: { variant: "dashed" }, children: "+ New session" },
     { name: "loading", props: { variant: "primary", loading: true }, children: "Starting" },
     { name: "disabled", props: { variant: "primary", disabled: true }, children: "Start race" },
     { name: "xs", props: { variant: "ghost", size: "xs" }, children: "xs" },

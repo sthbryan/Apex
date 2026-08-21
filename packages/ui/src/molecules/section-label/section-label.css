@@ -1,0 +1,15 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-section-label {
+    @apply flex items-center justify-between gap-2 px-1.5 pt-3 pb-1.5 text-xs font-semibold tracking-caps text-muted uppercase;
+  }
+
+  .ui-section-label[data-flush="true"] {
+    @apply px-0;
+  }
+
+  .ui-section-label-count {
+    @apply font-normal;
+  }
+}
