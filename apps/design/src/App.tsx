@@ -1,3 +1,4 @@
+import { LayoutGrid, SwatchBook } from "lucide-preact";
 import { veil } from "@/shared/theme/mode";
 import { navigate, route } from "@/app/router";
 import type { Route } from "@/app/router";
@@ -5,9 +6,9 @@ import { Layout } from "@/app/layout/Layout";
 import { Workspace } from "@/features/workspace/Workspace";
 import { Toolkit } from "@/features/toolkit/Toolkit";
 
-const PAGES: { to: Route; label: string }[] = [
-  { to: "/", label: "workspace" },
-  { to: "/toolkit", label: "toolkit" },
+const PAGES: { to: Route; label: string; Icon: typeof LayoutGrid }[] = [
+  { to: "/", label: "Workspace", Icon: LayoutGrid },
+  { to: "/toolkit", label: "Toolkit", Icon: SwatchBook },
 ];
 
 export function App() {
@@ -29,7 +30,7 @@ export function App() {
             aria-current={route.value === p.to ? "page" : undefined}
             onClick={(e) => { e.preventDefault(); navigate(p.to); }}
           >
-            {p.label}
+            <p.Icon size={13} />{p.label}
           </a>
         ))}
       </nav>
