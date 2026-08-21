@@ -1,0 +1,35 @@
+@reference "../../theme.css";
+
+.ui-surface {
+  background-color: var(--ui-surface-bg);
+  color: var(--apex-text);
+}
+
+.ui-surface[data-elevation="bg"] { --ui-surface-bg: var(--apex-bg); }
+.ui-surface[data-elevation="surface"] { --ui-surface-bg: var(--apex-surface); }
+.ui-surface[data-elevation="raised"] { --ui-surface-bg: var(--apex-raised); }
+.ui-surface[data-elevation="overlay"] { --ui-surface-bg: var(--apex-overlay); }
+.ui-surface[data-elevation="tty"] {
+  --ui-surface-bg: var(--apex-tty);
+  color: var(--apex-tty-fg);
+}
+
+.ui-surface[data-blur="true"] {
+  backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
+}
+
+.ui-surface[data-bordered="true"] {
+  @apply border border-border;
+}
+
+.ui-surface[data-radius="none"] { @apply rounded-none; }
+.ui-surface[data-radius="xs"] { @apply rounded-xs; }
+.ui-surface[data-radius="sm"] { @apply rounded-sm; }
+.ui-surface[data-radius="md"] { @apply rounded-md; }
+.ui-surface[data-radius="lg"] { @apply rounded-lg; }
+.ui-surface[data-radius="xl"] { @apply rounded-xl; }
+
+.ui-surface[data-shadow="sm"] { @apply shadow-sm; }
+.ui-surface[data-shadow="md"] { @apply shadow-md; }
+.ui-surface[data-shadow="lg"] { @apply shadow-lg; }
+.ui-surface[data-shadow="xl"] { @apply shadow-xl; }

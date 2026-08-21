@@ -1,0 +1,27 @@
+@reference "../../theme.css";
+
+.ui-pill {
+  @apply inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-2.5 text-xs font-medium text-muted;
+  height: var(--apex-h-sm);
+  @apply transition-[background-color,color,border-color];
+}
+
+.ui-pill[data-tone="accent"] {
+  @apply bg-accent-soft text-accent;
+  border-color: color-mix(in oklab, var(--apex-accent) 40%, transparent);
+}
+
+.ui-pill[data-tone="idle"] { color: var(--apex-state-idle); }
+.ui-pill[data-tone="working"] { color: var(--apex-state-working); }
+.ui-pill[data-tone="blocked"] { color: var(--apex-state-blocked); }
+.ui-pill[data-tone="done"] { color: var(--apex-state-done); }
+.ui-pill[data-tone="failed"] { color: var(--apex-state-failed); }
+
+.ui-pill[data-tone="idle"],
+.ui-pill[data-tone="working"],
+.ui-pill[data-tone="blocked"],
+.ui-pill[data-tone="done"],
+.ui-pill[data-tone="failed"] {
+  @apply border-transparent font-semibold;
+  background-color: color-mix(in oklab, currentcolor 12%, transparent);
+}

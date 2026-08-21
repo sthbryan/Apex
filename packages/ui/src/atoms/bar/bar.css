@@ -1,0 +1,24 @@
+@reference "../../theme.css";
+
+.ui-bar {
+  @apply relative w-full overflow-hidden rounded-full;
+  height: var(--ui-bar-size, 5px);
+  background-color: color-mix(in oklab, var(--apex-faint) 22%, transparent);
+}
+
+.ui-bar[data-size="sm"] { --ui-bar-size: 4px; }
+.ui-bar[data-size="md"] { --ui-bar-size: 5px; }
+.ui-bar[data-size="lg"] { --ui-bar-size: 8px; }
+
+.ui-bar-fill {
+  @apply block h-full rounded-full transition-[width];
+  background-color: var(--ui-bar-color, var(--apex-accent));
+}
+
+.ui-bar[data-tone="done"] { --ui-bar-color: var(--apex-state-done); }
+.ui-bar[data-tone="blocked"] { --ui-bar-color: var(--apex-state-blocked); }
+.ui-bar[data-tone="failed"] { --ui-bar-color: var(--apex-state-failed); }
+
+.ui-bar-tick {
+  @apply absolute -top-0.5 -bottom-0.5 w-px bg-muted;
+}

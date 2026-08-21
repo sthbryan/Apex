@@ -1,2 +1,2 @@
 export * from "./lib";
-export * from "./atoms/button";
+export * from "./atoms";

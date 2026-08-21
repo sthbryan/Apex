@@ -1,5 +1,6 @@
 import type { ComponentChildren, JSX } from "preact";
 import { cn } from "../../lib/cn";
+import { Spinner } from "../spinner/Spinner";
 
 export type ButtonVariant = "primary" | "ghost" | "subtle" | "danger";
 export type ButtonSize = "xs" | "sm" | "md" | "lg";
@@ -34,7 +35,7 @@ export function Button({
       aria-busy={loading || undefined}
       {...rest}
     >
-      {loading ? <span class="ui-button-spinner" aria-hidden="true" /> : null}
+      {loading ? <Spinner class="ui-button-spinner" size="sm" /> : null}
       <span class="ui-button-content">{children}</span>
     </button>
   );

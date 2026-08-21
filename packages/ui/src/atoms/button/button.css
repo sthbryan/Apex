@@ -85,8 +85,7 @@
 }
 
 .ui-button-spinner {
-  @apply absolute size-3.5 rounded-full border-2 border-current border-t-transparent;
-  animation: apex-spin var(--apex-slow) linear infinite;
+  @apply absolute;
 }
 
 .ui-button-content {

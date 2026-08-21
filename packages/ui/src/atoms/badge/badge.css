@@ -1,0 +1,29 @@
+@reference "../../theme.css";
+
+.ui-badge {
+  @apply inline-flex shrink-0 items-center justify-center rounded-full px-1 font-mono text-2xs font-bold tabular-nums;
+  min-width: 16px;
+  height: 16px;
+  color: var(--ui-badge-fg, var(--apex-accent-fg));
+  background-color: var(--ui-badge-bg, var(--apex-accent));
+}
+
+.ui-badge[data-tone="neutral"] {
+  --ui-badge-fg: var(--apex-muted);
+  --ui-badge-bg: var(--apex-raised);
+}
+
+.ui-badge[data-tone="added"] {
+  --ui-badge-fg: var(--apex-git-added);
+  --ui-badge-bg: color-mix(in oklab, var(--apex-git-added) 14%, transparent);
+}
+
+.ui-badge[data-tone="removed"] {
+  --ui-badge-fg: var(--apex-git-removed);
+  --ui-badge-bg: color-mix(in oklab, var(--apex-git-removed) 14%, transparent);
+}
+
+.ui-badge[data-tone="modified"] {
+  --ui-badge-fg: var(--apex-git-modified);
+  --ui-badge-bg: color-mix(in oklab, var(--apex-git-modified) 14%, transparent);
+}

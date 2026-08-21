@@ -41,14 +41,6 @@ pre, code, .mono {
 
 [hidden] { display: none !important; }
 
-@keyframes apex-pulse { 50% { opacity: 0.35; } }
-@keyframes apex-pop-in { from { opacity: 0; transform: translateY(-14px) scale(0.97); } }
-@keyframes apex-rise-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
-@keyframes apex-fade-in { from { opacity: 0; } }
-@keyframes apex-dock-view { from { opacity: 0; transform: translateY(6px); } }
-@keyframes apex-shrink { to { transform: scaleX(0); } }
-@keyframes apex-spin { to { transform: rotate(360deg); } }
-
 @media (prefers-reduced-motion: reduce) {
   :root {
     --apex-instant: 1ms;
