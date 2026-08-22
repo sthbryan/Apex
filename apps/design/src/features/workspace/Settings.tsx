@@ -3,8 +3,8 @@ import { Bot, CircleHelp, Globe, Keyboard, Server, Sparkles, X } from "lucide-pr
 import { themeMode, veil } from "@/shared/theme/mode";
 import { settingsOpen, settingsSection, updateState } from "@/app/state";
 import {
-  AgentIcon, Button, Field, Kbd, Pill, Segmented, SettingsDialog, SettingsHeading,
-  Slider, Select, StatePill, Switch, Wordmark,
+  AgentIcon, Button, DataRow, Field, KbdGroup, Pill, SectionLabel, Segmented, SettingsDialog,
+  SettingsHeading, Slider, Select, StatePill, Switch, Wordmark,
 } from "@apex/ui";
 
 const SECTIONS = [
@@ -43,7 +43,7 @@ function SetRow({ label, desc, children }: { label: string; desc?: string; child
 
 function LookSection() {
   return (
-    <div class="set-section">
+    <div>
       <SettingsHeading title="Look" sub="How Apex feels on this machine." />
       <SetRow label="Theme" desc="Applies instantly, saved for next time.">
         <Segmented
@@ -74,7 +74,7 @@ function LookSection() {
 
 function WorkspaceSection() {
   return (
-    <div class="set-section">
+    <div>
       <SettingsHeading title="Workspace" sub="Where files, previews and agent views go." />
       <SetRow label="External editor">
         <Select
@@ -112,32 +112,37 @@ const AGENTS = [
 function AgentsSection() {
   const [off, setOff] = useState<string[]>([]);
   return (
-    <div class="set-section">
+    <div>
       <SettingsHeading title="Agents" sub="Rendering belongs to each agent: native when it speaks ACP, terminal otherwise." />
       {AGENTS.map((a) => {
         const enabled = !off.includes(a.id);
         return (
-          <div class="agent-set-row" key={a.id} data-off={enabled ? undefined : "true"}>
-            <AgentIcon agent={a.id} size="sm" />
-            <div style="flex:1;min-width:0">
-              <div class="as-name">{a.name} <span class="as-ver">{a.ver}</span></div>
-            </div>
-            <span class="agent-set-controls">
-              <Pill tone={a.shares ? "accent" : "neutral"} title="Shares context">shares context</Pill>
-              <Segmented
-                label={`${a.name} rendering`}
-                options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
-                value={a.mode}
-                disabled={!enabled}
-                onChange={() => {}}
+          <DataRow
+            key={a.id}
+            label={a.name}
+            sub={a.ver}
+            dim={!enabled}
+            lead={<AgentIcon agent={a.id} size="sm" />}
+            trail={
+              <>
+                {a.shares ? <Pill tone="accent" title="Shares your project context">shares context</Pill> : null}
+                <Segmented
+                  label={`${a.name} rendering`}
+                  options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
+                  value={a.mode}
+                  disabled={!enabled}
+                  onChange={() => {}}
+                />
+              </>
+            }
+            actions={
+              <Switch
+                label={`Enable ${a.name}`}
+                checked={enabled}
+                onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
               />
-            </span>
-            <Switch
-              label={`Enable ${a.name}`}
-              checked={enabled}
-              onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
-            />
-          </div>
+            }
+          />
         );
       })}
     </div>
@@ -146,7 +151,7 @@ function AgentsSection() {
 
 function DaemonSection() {
   return (
-    <div class="set-section">
+    <div>
       <SettingsHeading title="Daemon" sub="The background service keeping sessions alive." />
       <SetRow label="Daemon background time" desc="After you close Apex, agents keep running for this long.">
         <Segmented
@@ -185,16 +190,13 @@ const SHORTCUTS: { group: string; rows: [string, string[]][] }[] = [
 
 function ShortcutsSection() {
   return (
-    <div class="set-section">
+    <div>
       <SettingsHeading title="Keyboard shortcuts" sub="Everything reachable without the mouse." />
       {SHORTCUTS.map(({ group, rows }) => (
         <div key={group}>
-          <div class="pl-label" style="padding-left:0">{group}</div>
+          <SectionLabel flush>{group}</SectionLabel>
           {rows.map(([label, keys]) => (
-            <div class="sc-row" key={label}>
-              <span class="sc-label">{label}</span>
-              <span class="keys">{keys.map((k) => <Kbd key={k}>{k}</Kbd>)}</span>
-            </div>
+            <DataRow key={label} label={label} trail={<KbdGroup keys={keys} />} />
           ))}
         </div>
       ))}
@@ -202,10 +204,16 @@ function ShortcutsSection() {
   );
 }
 
+const FACTS: [string, string][] = [
+  ["apexd", "0.5.0"],
+  ["Agent files", "~/.apex/agents"],
+  ["Config", "~/.apex/config.toml"],
+];
+
 function AboutSection() {
   const checking = updateState.value === "Checking…";
   return (
-    <div class="set-section">
+    <div>
       <SettingsHeading title="About" sub="What is running on this machine." />
 
       <div class="about-card">
@@ -232,11 +240,11 @@ function AboutSection() {
         </div>
       </div>
 
-      <dl>
-        <div class="fact-row"><dt>apexd</dt><dd>0.5.0</dd></div>
-        <div class="fact-row"><dt>Agent files</dt><dd>~/.apex/agents</dd></div>
-        <div class="fact-row"><dt>Config</dt><dd>~/.apex/config.toml</dd></div>
-      </dl>
+      <div>
+        {FACTS.map(([label, value]) => (
+          <DataRow key={label} label={label} trail={<span class="mono">{value}</span>} />
+        ))}
+      </div>
     </div>
   );
 }

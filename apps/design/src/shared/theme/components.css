@@ -81,6 +81,7 @@ html[data-theme="light"] .stage-links {
   margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-lg));
 }
 .note { color: var(--apex-muted); font-size: var(--apex-text-xs); }
+.launch { display: flex; flex-direction: column; gap: var(--apex-space-md); }
 .dock-code {
   font-family: var(--font-mono); font-size: var(--apex-text-xs); color: var(--apex-muted);
   display: flex; flex-direction: column; gap: 2px;
@@ -104,38 +105,6 @@ html[data-theme="light"] .stage-links {
 .reply textarea { font-size: var(--apex-text-md); min-height: 0; padding: 8px 12px 0; }
 .reply .ui-composer-bar { padding: 2px 8px 6px; }
 
-.pl-label {
-  font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--apex-muted); padding: 8px 10px 4px;
-}
-.set-sub { font-size: 12px; color: var(--apex-muted); margin-bottom: 14px; }
-.fact-row {
-  display: flex; justify-content: space-between; gap: 14px; padding: 10px 0;
-  border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
-}
-.fact-row dt { font-size: 12.5px; color: var(--apex-muted); }
-.fact-row dd { font-family: var(--font-mono); font-size: 12px; }
-.sc-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  padding: 9px 0; border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
-}
-.sc-row:last-child { border-bottom: 0; }
-.sc-label { font-size: 12.5px; }
-.keys { display: flex; gap: 4px; }
-kbd {
-  font-family: var(--font-sans); font-size: 10.5px; padding: 2px 5px; border-radius: 4px;
-  border: 1px solid var(--apex-border); background: var(--apex-raised); color: var(--apex-text);
-}
-.agent-set-row {
-  display: flex; align-items: center; gap: 11px; padding: 10px 0;
-  border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
-}
-.agent-set-row:last-child { border-bottom: 0; }
-.as-name { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; }
-.as-ver { font-size: 10.5px; color: var(--apex-muted); font-family: var(--font-mono); }
-.agent-set-controls { display: flex; align-items: center; gap: 10px; transition: opacity var(--apex-quick) var(--apex-ease); }
-.agent-set-row[data-off] .agent-set-controls { opacity: .4; }
-.agent-set-row[data-off] .as-name { color: var(--apex-muted); }
 
 @media (max-width: 1180px) { .panes { grid-auto-columns: minmax(340px, 1fr); } }
 @media (max-width: 1020px) { .rail, .dock { display: none; } }

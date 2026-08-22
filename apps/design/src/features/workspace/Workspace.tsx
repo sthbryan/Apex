@@ -414,6 +414,8 @@ function Overlays() {
   );
 }
 
+const CONTENDER_POOL = ["claude", "codex", "grok", "opencode"];
+
 export function Launcher({ inline, open = true, onClose }: { inline?: boolean; open?: boolean; onClose?: () => void } = {}) {
   const [picked, setPicked] = useState<string[]>(["claude", "codex"]);
   return (
@@ -424,29 +426,34 @@ export function Launcher({ inline, open = true, onClose }: { inline?: boolean; o
       title="Race a task"
       actions={<Button variant="subtle" size="sm" iconOnly title="Close" onClick={onClose ?? (() => launcherOpen.value = false)}><X size={13} /></Button>}
     >
-        <div>
-          <div class="set-sub">Every contender gets the same task and its own worktree. You keep the winner.</div>
-          <textarea class="commit-msg" style="min-height:64px">Fix the dock resize jank</textarea>
-          <div class="pl-label" style="padding-left:0">Who runs it</div>
-          <ToggleChipGroup label="Contenders">
-            {["claude", "codex", "grok", "opencode"].map((a) => (
-              <ToggleChip key={a} pressed={picked.includes(a)}
-                lead={<AgentIcon agent={a} size="sm" />}
-                trail={picked.includes(a) ? <Check size={11} /> : undefined}
-                onClick={() => setPicked(picked.includes(a) ? picked.filter((x) => x !== a) : [...picked, a])}>
-                {a}
-              </ToggleChip>
-            ))}
-          </ToggleChipGroup>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
-            <span style="font-size:11.5px;color:var(--apex-muted);flex:1">
-              {picked.length < 2 ? "Pick at least two." : `${picked.length} agents · one worktree each · no prompts`}
-            </span>
-            <Button variant="primary" disabled={picked.length < 2}
-              onClick={() => { launcherOpen.value = false; activeTab.value = "tab-race"; }}>
-              Start race
-            </Button>
-          </div>
+        <div class="launch">
+          <p class="note">Every contender gets the same task and its own worktree. You keep the winner.</p>
+          <Composer
+            label="Task"
+            value={RACE_PROMPT}
+            rows={2}
+            lead={
+              <ToggleChipGroup label="Contenders">
+                {CONTENDER_POOL.map((a) => (
+                  <ToggleChip key={a} pressed={picked.includes(a)}
+                    lead={<AgentIcon agent={a} size="sm" />}
+                    trail={picked.includes(a) ? <Check size={11} /> : undefined}
+                    onClick={() => setPicked(picked.includes(a) ? picked.filter((x) => x !== a) : [...picked, a])}>
+                    {a}
+                  </ToggleChip>
+                ))}
+              </ToggleChipGroup>
+            }
+            actions={
+              <Button variant="primary" disabled={picked.length < 2}
+                onClick={() => { launcherOpen.value = false; activeTab.value = "tab-race"; }}>
+                Start race
+              </Button>
+            }
+          />
+          <p class="note">
+            {picked.length < 2 ? "Pick at least two." : `${picked.length} agents · one worktree each · no prompts`}
+          </p>
         </div>
     </Modal>
   );
