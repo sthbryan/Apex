@@ -43,6 +43,7 @@ export function Spark({
     <svg
       class={cn("ui-spark", className)}
       data-tone={tone}
+      style={{ "--ui-spark-height": `${height}px` }}
       viewBox={`0 0 ${WIDTH} ${height}`}
       preserveAspectRatio="none"
       role="img"
