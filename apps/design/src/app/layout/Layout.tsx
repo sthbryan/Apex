@@ -63,7 +63,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
         </Rail>
 
         <SidePanel
-          hidden={railOnly.value}
+          collapsed={railOnly.value}
           head={<ProjectsPop />}
           foot={<Button variant="dashed" size="xl" onClick={() => activeTab.value = "home"}>+ New Session</Button>}
         >
