@@ -20,7 +20,7 @@ export function Meter({ label, value, tone, tick, display, lead, detail, class: 
       {lead ? <span class="ui-meter-lead">{lead}</span> : null}
       <span class="ui-meter-label">{label}</span>
       <Bar value={value} tone={tone} tick={tick} label={label} />
-      <span class="ui-meter-value">{display ?? `${Math.round(value)}%`}</span>
+      {display === "" ? null : <span class="ui-meter-value">{display ?? `${Math.round(value)}%`}</span>}
       {detail ? <span class="ui-meter-detail">{detail}</span> : null}
     </div>
   );

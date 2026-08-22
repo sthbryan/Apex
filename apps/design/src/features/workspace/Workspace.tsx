@@ -421,16 +421,16 @@ export function UsagePop() {
       </div>
       <div class="ua-big">
         <span class="n" data-tone={tone(pct)}>{pct}%</span>
-        <span style="font-size:11px;color:var(--apex-muted)">resets in 2h 30m · Tue 4:00</span>
+        <span class="dock-note">resets in 2h 30m · Tue 4:00</span>
       </div>
-      <Meter label="used" value={pct} tick={58} display="" detail="pace ✓" />
-      <Meter label="7d" value={34} tone="done" display="" detail="on pace" />
+      <Meter label="used" value={pct} tick={58} detail="pace ✓" />
+      <Meter label="7d" value={34} tone="done" detail="on pace" />
 
       <div class="pop-head pop-sub">
         codex
-        <span class="ph-sub" data-tone={tone(71)}>71% · over pace</span>
+        <span class="ph-sub" data-tone={tone(71)}>over pace</span>
       </div>
-      <Meter label="5h" value={71} tone="blocked" display="" detail="tight" />
+      <Meter label="5h" value={71} tone="blocked" detail="tight" />
 
       {grokFailed ? (
         <div class="pop-fail">
@@ -442,9 +442,9 @@ export function UsagePop() {
         <>
           <div class="pop-head pop-sub">
             grok
-            <span class="ph-sub" data-tone={tone(12)}>12% · plenty left</span>
+            <span class="ph-sub" data-tone={tone(12)}>plenty left</span>
           </div>
-          <Meter label="5h" value={12} tone="done" display="" detail="easy" />
+          <Meter label="5h" value={12} tone="done" detail="easy" />
         </>
       )}
     </Pop>
