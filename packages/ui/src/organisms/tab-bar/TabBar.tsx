@@ -1,4 +1,5 @@
 import type { ComponentChildren, JSX } from "preact";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { cn } from "@/lib/cn";
 
 export interface TabBarProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
@@ -9,10 +10,38 @@ export interface TabBarProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   children?: ComponentChildren;
 }
 
+const STEP: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
+
 export function TabBar({ label, onAdd, addLabel = "New tab", addIcon, class: className, children, ...rest }: TabBarProps) {
+  const list = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const found = list.current?.querySelectorAll<HTMLElement>('[role="tab"]');
+    const tabs = found ? Array.from(found) : [];
+    if (tabs.length === 0) return;
+    const stop = tabs.find((tab) => tab.getAttribute("aria-selected") === "true") ?? tabs[0];
+    for (const tab of tabs) tab.tabIndex = tab === stop ? 0 : -1;
+  });
+
+  const onKeyDown = (event: JSX.TargetedKeyboardEvent<HTMLDivElement>) => {
+    const step = STEP[event.key];
+    if (step === undefined && event.key !== "Home" && event.key !== "End") return;
+    const found = list.current?.querySelectorAll<HTMLElement>('[role="tab"]:not([disabled])');
+    const tabs = found ? Array.from(found) : [];
+    if (tabs.length === 0) return;
+    const from = tabs.indexOf(document.activeElement as HTMLElement);
+    const to = event.key === "Home" ? 0
+      : event.key === "End" ? tabs.length - 1
+      : (from + step + tabs.length) % tabs.length;
+    event.preventDefault();
+    tabs[to]?.focus();
+  };
+
   return (
-    <div class={cn("ui-tab-bar ui-chrome", className as string)} role="tablist" aria-label={label} {...rest}>
-      {children}
+    <div class={cn("ui-tab-bar ui-chrome", className as string)} {...rest}>
+      <div class="ui-tab-bar-tabs" role="tablist" aria-label={label} onKeyDown={onKeyDown} ref={list}>
+        {children}
+      </div>
       {onAdd ? (
         <button type="button" class="ui-tab-add" aria-label={addLabel} title={addLabel} onClick={onAdd}>
           {addIcon ?? "+"}
@@ -36,6 +65,7 @@ export function Tab({ title, selected, lead, trail, class: className, ...rest }:
       class={cn("ui-tab", className as string)}
       role="tab"
       aria-selected={selected ?? false}
+      tabIndex={selected ? 0 : -1}
       {...rest}
     >
       {lead}
