@@ -26,6 +26,7 @@ import { toggleChipMeta } from "@/molecules/toggle-chip/meta";
 import { tooltipMeta } from "@/molecules/tooltip/meta";
 import { treeRowMeta } from "@/molecules/tree-row/meta";
 import { appWindowMeta } from "@/organisms/app-window/meta";
+import { approvalCardMeta } from "@/organisms/approval-card/meta";
 import { browserViewMeta } from "@/organisms/browser-view/meta";
 import { codeViewMeta } from "@/organisms/code-view/meta";
 import { commandPaletteMeta } from "@/organisms/command-palette/meta";
@@ -75,6 +76,7 @@ export const REGISTRY: ComponentMeta[] = [
   tooltipMeta,
   treeRowMeta,
   appWindowMeta,
+  approvalCardMeta,
   browserViewMeta,
   codeViewMeta,
   commandPaletteMeta,

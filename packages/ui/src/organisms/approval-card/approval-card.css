@@ -1,0 +1,38 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-approval-card {
+    @apply flex flex-col gap-md p-lg;
+    border-radius: var(--apex-r-md);
+    background-color: var(--apex-overlay);
+    border: 1px solid color-mix(in oklab, var(--apex-state-blocked) 45%, var(--apex-border));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--apex-state-blocked) 8%, transparent);
+  }
+
+  .ui-approval-card-head {
+    @apply flex items-center gap-md;
+  }
+
+  .ui-approval-card-lead {
+    @apply flex shrink-0 items-center;
+    color: var(--apex-state-blocked);
+  }
+
+  .ui-approval-card-question {
+    @apply min-w-0 flex-1 font-semibold text-md;
+    color: var(--apex-state-blocked);
+  }
+
+  .ui-approval-card-meta {
+    @apply shrink-0 font-mono text-2xs text-muted tabular-nums;
+  }
+
+  .ui-approval-card-command {
+    @apply block truncate rounded-xs px-md py-sm font-mono text-sm text-muted;
+    background-color: color-mix(in oklab, var(--apex-raised) 70%, transparent);
+  }
+
+  .ui-approval-card-actions {
+    @apply flex items-center gap-md;
+  }
+}

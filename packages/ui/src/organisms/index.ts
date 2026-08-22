@@ -1,4 +1,5 @@
 export * from "@/organisms/app-window";
+export * from "@/organisms/approval-card";
 export * from "@/organisms/browser-view";
 export * from "@/organisms/code-view";
 export * from "@/organisms/command-palette";
