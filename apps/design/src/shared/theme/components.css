@@ -55,6 +55,11 @@ html[data-theme="light"] .stage-links {
   margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-lg));
 }
 .note { color: var(--apex-muted); font-size: var(--apex-text-xs); }
+.agent-head {
+  padding-top: 0; padding-bottom: 4px; border-bottom: 0;
+  font-size: var(--apex-text-2xs); text-transform: uppercase;
+  letter-spacing: var(--apex-tracking-caps); color: var(--apex-faint);
+}
 .home-summary {
   display: grid; gap: var(--apex-space-xl) var(--apex-space-2xl);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

@@ -114,6 +114,17 @@ function AgentsSection() {
   return (
     <div>
       <SettingsHeading title="Agents" sub="Rendering belongs to each agent: native when it speaks ACP, terminal otherwise." />
+      <DataRow
+        class="agent-head"
+        label=""
+        trail={
+          <>
+            <span class="w-24 text-right">Context</span>
+            <span class="w-32 text-right">Rendering</span>
+          </>
+        }
+        actions={<span class="w-9 text-right">On</span>}
+      />
       {AGENTS.map((a) => {
         const enabled = !off.includes(a.id);
         return (
@@ -125,22 +136,28 @@ function AgentsSection() {
             lead={<AgentIcon agent={a.id} size="sm" />}
             trail={
               <>
-                {a.shares ? <Pill tone="accent" title="Shares your project context">shares context</Pill> : null}
-                <Segmented
-                  label={`${a.name} rendering`}
-                  options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
-                  value={a.mode}
-                  disabled={!enabled}
-                  onChange={() => {}}
-                />
+                <span class="flex w-24 justify-end">
+                  {a.shares ? <Pill tone="accent" title="Shares your project context">shares</Pill> : null}
+                </span>
+                <span class="flex w-32 justify-end">
+                  <Segmented
+                    label={`${a.name} rendering`}
+                    options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
+                    value={a.mode}
+                    disabled={!enabled}
+                    onChange={() => {}}
+                  />
+                </span>
               </>
             }
             actions={
-              <Switch
-                label={`Enable ${a.name}`}
-                checked={enabled}
-                onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
-              />
+              <span class="flex w-9 justify-end">
+                <Switch
+                  label={`Enable ${a.name}`}
+                  checked={enabled}
+                  onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
+                />
+              </span>
             }
           />
         );
