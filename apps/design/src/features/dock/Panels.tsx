@@ -8,7 +8,7 @@ import {
   RACE_PROMPT, REVIEWS, SESSIONS, TASKS, WORKTREES,
 } from "@/features/dock/fixtures";
 import {
-  AgentIcon, BranchBar, Button, Card, Chip, CommitBox, DiffStat, Dot, ListRow,
+  AgentIcon, BranchBar, Button, Card, Checkbox, Chip, CommitBox, DiffStat, Dot, ListRow,
   SectionLabel, TreeRow,
 } from "@apex/ui";
 
@@ -78,9 +78,15 @@ function FilesPanel() {
 }
 
 function GitPanel() {
-  const unstagedFirst = gitStaged.value ? CHANGES : CHANGES.map((c) => ({ ...c, staged: false }));
-  const staged = unstagedFirst.filter((c) => c.staged);
-  const changed = unstagedFirst.filter((c) => !c.staged);
+  const [flipped, setFlipped] = useState<string[]>([]);
+  const toggle = (path: string) => setFlipped((f) =>
+    f.includes(path) ? f.filter((p) => p !== path) : [...f, path]);
+  const rows = CHANGES.map((c) => ({
+    ...c,
+    staged: (gitStaged.value && c.staged) !== flipped.includes(c.path),
+  }));
+  const staged = rows.filter((c) => c.staged);
+  const changed = rows.filter((c) => !c.staged);
   return (
     <div class="dock-view git-flex">
       <div class="git-scroll">
@@ -92,9 +98,9 @@ function GitPanel() {
           lead={<GitBranch size={12} />}
         />
         <SectionLabel count={staged.length}>Staged</SectionLabel>
-        {staged.map((c) => <ChangeRow key={c.path} change={c} />)}
+        {staged.map((c) => <ChangeRow key={c.path} change={c} onToggle={() => toggle(c.path)} />)}
         <SectionLabel count={changed.length}>Changes</SectionLabel>
-        {changed.map((c) => <ChangeRow key={c.path} change={c} />)}
+        {changed.map((c) => <ChangeRow key={c.path} change={c} onToggle={() => toggle(c.path)} />)}
       </div>
       <CommitBox
         class="dock-flush"
@@ -107,16 +113,24 @@ function GitPanel() {
   );
 }
 
-function ChangeRow({ change }: { change: { path: string; added: number; removed: number; staged: boolean } }) {
+interface ChangeRowProps {
+  change: { path: string; added: number; removed: number; staged: boolean };
+  onToggle: () => void;
+}
+
+function ChangeRow({ change, onToggle }: ChangeRowProps) {
   return (
     <ListRow
       as="div"
       label={change.path}
       mono
       lead={
-        <span class="stage-box" data-on={change.staged || undefined}>
-          <Check size={9} strokeWidth={3} />
-        </span>
+        <Checkbox
+          checked={change.staged}
+          onChange={onToggle}
+          label={`Stage ${change.path}`}
+          mark={<Check size={9} strokeWidth={3} />}
+        />
       }
       trail={<DiffStat added={change.added || undefined} removed={change.removed || undefined} />}
     />
