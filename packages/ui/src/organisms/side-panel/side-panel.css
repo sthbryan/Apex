@@ -44,6 +44,6 @@
   }
 
   @media (max-width: 1020px) {
-    .ui-side-panel { display: none; }
+    .ui-app-body > .ui-side-panel { display: none; }
   }
 }

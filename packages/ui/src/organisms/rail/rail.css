@@ -45,6 +45,6 @@
   .ui-rail-badge[data-state="dirty"] { background-color: var(--apex-muted); }
 
   @media (max-width: 780px) {
-    .ui-rail { display: none; }
+    .ui-app-body > .ui-rail { display: none; }
   }
 }
