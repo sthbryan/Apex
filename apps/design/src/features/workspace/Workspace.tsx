@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import {
-  ArrowLeftRight, Check, FileText, GitBranch, Globe, Image as ImageIcon, Lock,
-  Plus, RotateCw, Search, Send, X,
+  ArrowLeft, ArrowLeftRight, ArrowRight, Check, FileText, GitBranch, Globe, Image as ImageIcon,
+  Lock, Plus, RotateCw, Send, Terminal, X,
 } from "lucide-preact";
 import {
   activeTab, consoleOpen, fmode, launcherOpen,
@@ -229,10 +229,22 @@ function BrowserPane() {
         url="localhost:5173/login"
         secure={<Lock size={11} style="color:var(--apex-state-done)" />}
         consoleOpen={consoleOpen.value}
-        lead={<Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>}
+        nav={
+          <>
+            <Button variant="subtle" size="sm" iconOnly title="Back" disabled><ArrowLeft size={14} /></Button>
+            <Button variant="subtle" size="sm" iconOnly title="Forward" disabled><ArrowRight size={14} /></Button>
+            <Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>
+          </>
+        }
         actions={
-          <Button variant="subtle" size="sm" iconOnly title="Console" onClick={() => consoleOpen.value = !consoleOpen.value}>
-            <Search size={13} /><Badge tone="removed">2</Badge>
+          <Button
+            variant={consoleOpen.value ? "primary" : "subtle"}
+            size="sm"
+            aria-pressed={consoleOpen.value}
+            title="Console ⌥⌘J"
+            onClick={() => consoleOpen.value = !consoleOpen.value}
+          >
+            <Terminal size={13} />Console<Badge tone="removed">2</Badge>
           </Button>
         }
         consoleActions={<Button variant="subtle" size="xs">Clear</Button>}
