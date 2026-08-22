@@ -1,9 +1,8 @@
 import { signal } from "@preact/signals";
 
-export const activePanel = signal<string>("summary");
+export const activePanel = signal<string>("sessions");
 export const railOnly = signal(false);
-export const showWelcome = signal(true);
-export const activeTab = signal("tab-auth");
+export const activeTab = signal("home");
 export const openPop = signal<string | null>(null);
 export const paletteOpen = signal(false);
 export const settingsOpen = signal(false);

@@ -37,11 +37,8 @@ html[data-theme="light"] .stage-links {
 .stage-links a[aria-current="page"] { background: var(--apex-accent); color: var(--apex-accent-fg); font-weight: 600; }
 
 .window { z-index: 1; width: min(1480px, 100%); min-height: 0; }
-.window[data-veil="on"] .chrome-blur { background: var(--apex-surface); backdrop-filter: blur(26px) saturate(1.5); }
 
 .view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-
-.window.rail .dock { display: none; }
 .proj-btn {
   width: 100%; display: flex; align-items: center; gap: 8px; padding: 6px 7px;
   border-radius: var(--apex-r-sm); text-align: left;
@@ -56,77 +53,49 @@ html[data-theme="light"] .stage-links {
 .proj-path { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--apex-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .proj-alert { width: 6px; height: 6px; border-radius: 50%; background: var(--apex-state-blocked); animation: apex-pulse 2s var(--apex-ease) infinite; flex: none; }
 
-.dock-view { display: none; }
-.dock-view.active { display: block; animation: apex-dock-view 200ms var(--apex-ease) both; }
-.sec-label {
-  font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--apex-muted); padding: 12px 6px 6px; display: flex;
-  justify-content: space-between; align-items: center;
+.home {
+  flex: 1; min-height: 0; display: grid; place-items: center; overflow: auto;
+  padding: var(--apex-space-3xl); background: var(--apex-bg);
 }
-
-.cta-btn {
-  width: 100%; height: 34px; border-radius: var(--apex-r-sm); display: flex; align-items: center;
-  justify-content: center; gap: 8px; border: 1px dashed var(--apex-border); color: var(--apex-muted);
-  font-weight: 500; transition: border-color var(--apex-quick) var(--apex-ease), color var(--apex-quick) var(--apex-ease);
+.home-inner {
+  width: min(660px, 100%); display: flex; flex-direction: column; align-items: center;
+  gap: var(--apex-space-xl);
 }
-.cta-btn:hover { border-color: var(--apex-accent); color: var(--apex-accent); }
+.home-mark { display: flex; flex-direction: column; gap: var(--apex-space-sm); text-align: center; }
+.home-tagline { margin: 0; color: var(--apex-muted); font-size: var(--apex-text-lg); }
+.home-suggestions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--apex-space-md); }
 
-.fadd { color: var(--apex-git-added); font-family: var(--font-mono); font-size: 10.5px; }
-.fdel { color: var(--apex-git-removed); font-family: var(--font-mono); font-size: 10.5px; }
-
-.sum-row {
-  display: flex; align-items: center; gap: 10px; padding: 8px 6px;
-  border-radius: var(--apex-r-sm); text-align: left; width: 100%;
+.dock-view {
+  display: flex; flex-direction: column; gap: var(--apex-space-2xs);
+  animation: apex-dock-view 200ms var(--apex-ease) both;
 }
-.sum-row:hover { background: var(--apex-raised); }
-.sum-ico { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--apex-muted); flex: none; }
-.sum-key { width: 58px; flex: none; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--apex-muted); }
-.sum-val { flex: 1; min-width: 0; font-size: 12.5px; }
-.sum-val .sub { display: block; font-size: 10.5px; color: var(--apex-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sum-nums { font-family: var(--font-mono); font-size: 11px; color: var(--apex-muted); flex: none; text-align: right; }
-
-.dock-view.git-flex { display: none; flex-direction: column; }
-.dock-view.git-flex.active { display: flex; }
-.git-scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.sync-row { display: flex; align-items: center; gap: 6px; padding: 2px 6px 8px; }
-.syn-btn { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: var(--apex-muted); }
-.syn-btn:hover { background: var(--apex-raised); color: var(--apex-text); }
-.commit-dock { flex-shrink: 0; background: var(--apex-surface); padding: 8px 8px 2px; border-top: 1px solid var(--apex-border); margin-top: 4px; }
-.commit-msg {
-  width: 100%; resize: none; min-height: 54px; max-height: 160px;
-  background: var(--apex-overlay); border: 1px solid var(--apex-border); border-radius: var(--apex-r-sm);
-  padding: 8px 10px; font-size: 12.5px; line-height: 1.5;
+.dock-view.git-flex { flex: 1; min-height: 0; gap: 0; }
+.git-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--apex-space-2xs);
 }
-.commit-msg:focus { border-color: var(--apex-focus); }
-.commit-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.commit-count { font-size: 11px; color: var(--apex-muted); flex: 1; }
+.dock-flush {
+  margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-lg));
+}
+.dock-note { color: var(--apex-muted); font-size: var(--apex-text-xs); }
+.dock-code {
+  font-family: var(--font-mono); font-size: var(--apex-text-xs); color: var(--apex-muted);
+  display: flex; flex-direction: column; gap: 2px;
+}
 .stage-box {
   width: 13px; height: 13px; border-radius: 4px; border: 1.5px solid var(--apex-border);
   display: grid; place-items: center; flex: none; color: transparent;
   transition: all var(--apex-quick) var(--apex-ease);
 }
-.staged .stage-box { background: var(--apex-accent); border-color: var(--apex-accent); color: var(--apex-accent-fg); }
-
-.rev-row { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 8px; border-radius: var(--apex-r-sm); }
-.rev-row:hover { background: var(--apex-raised); }
-.rev-info { flex: 1; min-width: 0; }
-.rev-title { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rev-meta { font-size: 10.5px; color: var(--apex-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rev-acts { display: flex; gap: 2px; flex: none; }
-.rev-act { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: var(--apex-muted); }
-.rev-act:hover { background: var(--apex-bg); color: var(--apex-text); }
-.rev-act.approve:hover { color: var(--apex-state-done); background: color-mix(in oklab, var(--apex-state-done) 12%, transparent); }
-.rev-act.reject:hover { color: var(--apex-state-failed); background: color-mix(in oklab, var(--apex-state-failed) 12%, transparent); }
+.stage-box[data-on] {
+  background: var(--apex-accent); border-color: var(--apex-accent); color: var(--apex-accent-fg);
+}
 .url-chip {
   font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--apex-state-done);
   background: color-mix(in oklab, var(--apex-state-done) 10%, transparent);
   border-radius: 5px; padding: 1px 6px; flex: none;
 }
 .chash { font-family: var(--font-mono); font-size: 10.5px; color: var(--apex-muted); flex: none; }
-.commit-row { display: flex; gap: 9px; padding: 7px 8px; border-radius: 7px; align-items: baseline; width: 100%; text-align: left; }
-.commit-row:hover { background: var(--apex-raised); }
-.cmsg { font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ctime { font-size: 10.5px; color: var(--apex-muted); flex: none; }
 
 .transcript { flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 .msg-user {
@@ -154,7 +123,6 @@ html[data-theme="light"] .stage-links {
 .reply-box:focus-within { border-color: var(--apex-focus); }
 .reply-box input { flex: 1; height: 30px; font-size: 13px; min-width: 0; }
 .reply-send { width: 30px; height: 30px; border-radius: var(--apex-r-sm); background: var(--apex-accent); color: var(--apex-accent-fg); display: grid; place-items: center; flex: none; }
-.pane-toolbar .mono { font-size: 11px; color: var(--apex-muted); } .tok-f { color: var(--apex-state-done); } .tok-c { color: var(--apex-faint); font-style: italic; }
 .race-view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .race-task {
   padding: 7px 12px; border-bottom: 1px solid var(--apex-border); color: var(--apex-muted);
@@ -179,20 +147,11 @@ html[data-theme="light"] .stage-links {
 
 .sb-bar { width: 34px; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--apex-faint) 25%, transparent); overflow: hidden; }
 .sb-bar i { display: block; height: 100%; background: var(--apex-muted); }
-
-.window[data-theme="dark"] .backdrop { background: rgb(0 0 0 / .5); }
 .pl-label {
   font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
   color: var(--apex-muted); padding: 8px 10px 4px;
 }
-.window[data-theme="dark"] .modal-backdrop { background: rgb(0 0 0 / .5); }
 .set-sub { font-size: 12px; color: var(--apex-muted); margin-bottom: 14px; }
-.set-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  padding: 11px 0; border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
-}
-.set-label { font-size: 13px; font-weight: 500; }
-.set-desc { font-size: 11.5px; color: var(--apex-muted); margin-top: 2px; max-width: 340px; }
 .fact-row {
   display: flex; justify-content: space-between; gap: 14px; padding: 10px 0;
   border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
@@ -275,7 +234,6 @@ kbd {
   height: auto;
 }
 .pane-mock[data-mock="tty"] { flex: 1; min-height: 0; object-fit: contain; object-position: top left; background: #0c0d10; max-width: none; }
-
 
 .pop-fresh { font-size: 10.5px; color: var(--apex-muted); font-weight: 400; }
 .pop-sub { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--apex-border); }

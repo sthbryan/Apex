@@ -6,7 +6,7 @@ import {
 import {
   activeTab, consoleOpen, fmode, launcherOpen,
   openPop, raceAsking, raceKept, removedProject,
-  settingsOpen, showWelcome, toastCount, uaWindow,
+  settingsOpen, toastCount, uaWindow,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
 import { ReviewPanel } from "@/features/dock/Panels";
@@ -39,24 +39,26 @@ export function Workspace() {
 
   return (
     <AppMain>
-      {showWelcome.value ? <Welcome /> : <Sessions />}
+      <Sessions />
       <Overlays />
     </AppMain>
   );
 }
 
-function Welcome() {
+const SUGGESTIONS = ["Refactor auth middleware", "Race a task across agents"];
+
+function Home() {
   return (
-    <section class="view" style="position:relative;align-items:center;justify-content:center;padding:32px;overflow:hidden">
-      <div style="position:relative;width:min(660px,100%);display:flex;flex-direction:column;align-items:center">
-        <div style="text-align:center;margin-bottom:22px">
+    <div class="home">
+      <div class="home-inner">
+        <div class="home-mark">
           <Wordmark size="xl">APEX</Wordmark>
-          <p style="margin-top:6px;color:var(--apex-muted);font-size:14.5px">Run a team of AI agents, not a wall of terminals.</p>
+          <p class="home-tagline">Run a team of AI agents, not a wall of terminals.</p>
         </div>
         <Composer
           label="Task"
           placeholder="Ask, delegate, or start a task…"
-          onSubmit={(e) => { e.preventDefault(); showWelcome.value = false; activeTab.value = "tab-auth"; }}
+          onSubmit={(e) => { e.preventDefault(); activeTab.value = "tab-auth"; }}
           lead={
             <ToggleChipGroup label="Agents">
               <ToggleChip pressed lead={<AgentIcon agent="claude" size="sm" />}>claude</ToggleChip>
@@ -66,20 +68,18 @@ function Welcome() {
           }
           actions={<Button type="submit" variant="primary"><Send size={13} />Start</Button>}
         />
-        <div style="display:flex;gap:8px;margin-top:16px">
-          {["Refactor auth middleware", "Race a task across agents"].map((t) => (
-            <Button key={t} size="sm" class="rounded-full">{t}</Button>
-          ))}
+        <div class="home-suggestions">
+          {SUGGESTIONS.map((t) => <Button key={t} size="sm" class="rounded-full">{t}</Button>)}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
 function Sessions() {
   return (
     <section class="view">
-      <TabBar label="Sessions" addLabel="New session in a new tab" addIcon={<Plus size={14} />} onAdd={() => showWelcome.value = true}>
+      <TabBar label="Sessions" addLabel="New session in a new tab" addIcon={<Plus size={14} />} onAdd={() => activeTab.value = "home"}>
         {TABS.map((t) => (
           <Tab
             key={t.id}
@@ -92,14 +92,14 @@ function Sessions() {
       </TabBar>
 
       <PaneGrid>
-        {PANE_TYPES.filter((p) => p.id === activeTab.value).map((p) => <p.Component key={p.id} />)}
+        {ALL_VIEWS.filter((v) => v.id === activeTab.value).map((v) => <v.Component key={v.id} />)}
       </PaneGrid>
     </section>
   );
 }
 
 export const WORKSPACE_VIEWS = [
-  { id: "home", label: "Home", Component: () => <Welcome /> },
+  { id: "home", label: "Home", Component: Home },
 ];
 
 export const PANE_TYPES = [
@@ -636,7 +636,7 @@ export function Launcher({ inline, open = true, onClose }: { inline?: boolean; o
               {picked.length < 2 ? "Pick at least two." : `${picked.length} agents · one worktree each · no prompts`}
             </span>
             <Button variant="primary" disabled={picked.length < 2}
-              onClick={() => { launcherOpen.value = false; showWelcome.value = false; activeTab.value = "tab-race"; }}>
+              onClick={() => { launcherOpen.value = false; activeTab.value = "tab-race"; }}>
               Start race
             </Button>
           </div>

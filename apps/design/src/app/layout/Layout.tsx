@@ -1,18 +1,17 @@
 import type { ComponentChildren } from "preact";
 import {
   ArrowLeftRight, Bell, BookOpen, ChevronDown, Cpu, Folder, GitBranch,
-  History, Inbox, LayoutGrid, PanelLeft, Play, Settings, SquareTerminal,
+  History, House, Inbox, LayoutGrid, PanelLeft, Play, Settings, SquareTerminal,
 } from "lucide-preact";
-import { openPop, activePanel, railOnly, settingsOpen, settingsSection, showWelcome } from "@/app/state";
+import { openPop, activePanel, activeTab, railOnly, settingsOpen, settingsSection } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
 import {
-  AppBody, Badge, Button, Rail, RailButton, RailSpacer,
+  AppBody, Badge, Button, Rail, RailButton, RailDivider, RailSpacer,
   SidePanel, StatusBar, StatusPill, TitleBar, Wordmark,
 } from "@apex/ui";
 import type { RailBadge } from "@apex/ui";
 
 const PANELS: { id: string; icon: typeof LayoutGrid; label: string; badge?: RailBadge }[] = [
-  { id: "summary", icon: LayoutGrid, label: "Summary" },
   { id: "sessions", icon: SquareTerminal, label: "Sessions", badge: "blocked" },
   { id: "files", icon: Folder, label: "Files" },
   { id: "git", icon: GitBranch, label: "Git · Changes", badge: "dirty" },
@@ -39,6 +38,14 @@ export function Layout({ children }: { children: ComponentChildren }) {
 
       <AppBody>
         <Rail aria-label="Panels">
+          <RailButton
+            label="Home"
+            current={activeTab.value === "home"}
+            onClick={() => activeTab.value = "home"}
+          >
+            <House size={16} />
+          </RailButton>
+          <RailDivider />
           {PANELS.map((p) => (
             <RailButton
               key={p.id}
@@ -68,7 +75,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
               <ChevronDown size={12} style="color:var(--apex-muted);flex:none" />
             </button>
           }
-          foot={<Button variant="dashed" size="xl" onClick={() => showWelcome.value = true}>+ New Session</Button>}
+          foot={<Button variant="dashed" size="xl" onClick={() => activeTab.value = "home"}>+ New Session</Button>}
         >
           <Panels />
         </SidePanel>
