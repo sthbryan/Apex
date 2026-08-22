@@ -10,6 +10,7 @@ export interface CommandPaletteProps {
   value?: string;
   onInput?: JSX.GenericEventHandler<HTMLInputElement>;
   lead?: ComponentChildren;
+  autoFocus?: boolean;
   class?: string;
   children?: ComponentChildren;
 }
@@ -22,6 +23,7 @@ export function CommandPalette({
   value,
   onInput,
   lead,
+  autoFocus = true,
   class: className,
   children,
 }: CommandPaletteProps) {
@@ -39,7 +41,7 @@ export function CommandPalette({
       <div class={cn("ui-command-palette", className)} role="dialog" aria-label={label}>
         <div class="ui-command-input">
           {lead}
-          <input placeholder={placeholder} aria-label={label} value={value} onInput={onInput} autofocus />
+          <input placeholder={placeholder} aria-label={label} value={value} onInput={onInput} autofocus={autoFocus} />
         </div>
         <div class="ui-command-list" role="listbox" aria-label={label}>{children}</div>
       </div>

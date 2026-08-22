@@ -22,7 +22,15 @@ export function Modal({ open, onClose, title, width = "md", modal = true, action
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) modal ? dialog.showModal() : dialog.show();
+    if (open && !dialog.open) {
+      if (modal) {
+        dialog.showModal();
+      } else {
+        dialog.inert = true;
+        dialog.show();
+        requestAnimationFrame(() => { dialog.inert = false; });
+      }
+    }
     if (!open && dialog.open) dialog.close();
   }, [open, modal]);
 

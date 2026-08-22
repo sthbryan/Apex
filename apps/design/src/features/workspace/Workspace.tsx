@@ -481,15 +481,15 @@ export function ProjectsPop() {
   );
 }
 
-export function Launcher({ inline }: { inline?: boolean } = {}) {
+export function Launcher({ inline, open = true, onClose }: { inline?: boolean; open?: boolean; onClose?: () => void } = {}) {
   const [picked, setPicked] = useState<string[]>(["claude", "codex"]);
   return (
     <Modal
-      open
+      open={open}
       modal={!inline}
-      onClose={() => launcherOpen.value = false}
+      onClose={onClose ?? (() => launcherOpen.value = false)}
       title="Race a task"
-      actions={<Button variant="subtle" size="sm" iconOnly title="Close" onClick={() => launcherOpen.value = false}><X size={13} /></Button>}
+      actions={<Button variant="subtle" size="sm" iconOnly title="Close" onClick={onClose ?? (() => launcherOpen.value = false)}><X size={13} /></Button>}
     >
         <div>
           <div class="set-sub">Every contender gets the same task and its own worktree. You keep the winner.</div>

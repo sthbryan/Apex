@@ -1,8 +1,16 @@
 @reference "../../theme.css";
 
 @layer components {
+  .ui-settings-dialog:not([open]) {
+    @apply hidden;
+  }
+
+  .ui-settings-dialog[open] {
+    @apply flex;
+  }
+
   .ui-settings-dialog {
-    @apply flex overflow-hidden p-0;
+    @apply overflow-hidden p-0;
     width: min(720px, 94vw);
     height: min(520px, 88vh);
   }

@@ -234,18 +234,6 @@
   margin-top: 4px;
 }
 
-.vw-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
-  gap: 16px;
-}
-
-.vw-dock-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-}
-
 .vw-cell {
   display: flex;
   flex-direction: column;
@@ -254,6 +242,10 @@
 }
 
 .vw-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
   font-family: var(--font-mono);
   font-size: var(--apex-text-2xs);
   color: var(--apex-faint);
@@ -262,7 +254,7 @@
 .vw-stage {
   display: flex;
   flex-direction: column;
-  height: 380px;
+  height: 420px;
   overflow: hidden;
   border: 1px solid var(--apex-border);
   border-radius: var(--apex-r-md);
@@ -300,7 +292,7 @@
 .vw-carousel-track::-webkit-scrollbar { display: none; }
 
 .vw-carousel-track > .vw-cell {
-  flex: 0 0 240px;
+  flex: 0 0 var(--vw-item, 240px);
   scroll-snap-align: start;
 }
 
@@ -310,15 +302,9 @@
   gap: 6px;
 }
 
-.vw-overlay-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
-}
-
 .vw-overlay-stage {
   position: relative;
-  height: 380px;
+  height: 420px;
   overflow: hidden;
   border: 1px solid var(--apex-border);
   border-radius: var(--apex-r-md);

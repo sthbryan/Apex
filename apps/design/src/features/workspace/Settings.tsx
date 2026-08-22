@@ -15,16 +15,16 @@ const SECTIONS = [
   { id: "about", label: "About", Icon: CircleHelp },
 ] as const;
 
-export function SettingsModal({ inline }: { inline?: boolean } = {}) {
+export function SettingsModal({ inline, open = true, onClose }: { inline?: boolean; open?: boolean; onClose?: () => void } = {}) {
   return (
     <SettingsDialog
-      open
+      open={open}
       modal={!inline}
-      onClose={() => settingsOpen.value = false}
+      onClose={onClose ?? (() => settingsOpen.value = false)}
       sections={SECTIONS.map(({ id, label, Icon }) => ({ id, label, icon: <Icon size={14} strokeWidth={1.75} /> }))}
       section={settingsSection.value}
       onSection={(id) => settingsSection.value = id}
-      close={<Button variant="subtle" size="lg" iconOnly title="Close" onClick={() => settingsOpen.value = false}><X size={13} /></Button>}
+      close={<Button variant="subtle" size="lg" iconOnly title="Close" onClick={onClose ?? (() => settingsOpen.value = false)}><X size={13} /></Button>}
     >
       {settingsSection.value === "look" && <LookSection />}
       {settingsSection.value === "workspace" && <WorkspaceSection />}

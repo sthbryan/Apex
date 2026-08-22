@@ -1,7 +1,10 @@
-import { Pill, SidePanel, Wordmark } from "@apex/ui";
+import { Button, Pill, SidePanel, Wordmark } from "@apex/ui";
+import { useState } from "preact/hooks";
+import { Maximize2 } from "lucide-preact";
 import { DOCK_PANELS } from "@/features/dock/Panels";
 import { Carousel } from "@/features/views/Carousel";
 import { OVERLAYS } from "@/features/views/Overlays";
+import type { Overlay } from "@/features/views/Overlays";
 import { PANE_TYPES } from "@/features/workspace/Workspace";
 
 export function Views() {
@@ -22,14 +25,14 @@ export function Views() {
           <Pill>{PANE_TYPES.length}</Pill>
         </h2>
         <p class="tk-blurb">What a workspace tab renders. One subject per view.</p>
-        <div class="vw-grid">
+        <Carousel label="Views" width={560} perPage={1}>
           {PANE_TYPES.map((v) => (
             <article class="vw-cell" key={v.id}>
               <span class="vw-label">{v.label}</span>
-              <div class="vw-stage vw-stage-wide"><v.Component /></div>
+              <div class="vw-stage"><v.Component /></div>
             </article>
           ))}
-        </div>
+        </Carousel>
       </section>
 
       <section class="tk-section">
@@ -38,14 +41,9 @@ export function Views() {
           <Pill>{OVERLAYS.length}</Pill>
         </h2>
         <p class="tk-blurb">Everything that floats above a view. Popovers anchor to the status bar; overlays take the window.</p>
-        <div class="vw-overlay-grid">
-          {OVERLAYS.map((o) => (
-            <article class="vw-cell" key={o.id}>
-              <span class="vw-label">{o.label} · {o.kind}</span>
-              <div class="vw-overlay-stage"><o.Component /></div>
-            </article>
-          ))}
-        </div>
+        <Carousel label="Overlays" width={520} perPage={1}>
+          {OVERLAYS.map((o) => <OverlayCard overlay={o} key={o.id} />)}
+        </Carousel>
       </section>
 
       <section class="tk-section">
@@ -54,7 +52,7 @@ export function Views() {
           <Pill>{DOCK_PANELS.length}</Pill>
         </h2>
         <p class="tk-blurb">What the rail switches between, at the real dock width.</p>
-        <Carousel label="Dock panels">
+        <Carousel label="Dock panels" width={240} perPage={2}>
           {DOCK_PANELS.map((p) => (
             <article class="vw-cell" key={p.id}>
               <span class="vw-label">{p.label}</span>
@@ -64,5 +62,23 @@ export function Views() {
         </Carousel>
       </section>
     </div>
+  );
+}
+
+function OverlayCard({ overlay }: { overlay: Overlay }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <article class="vw-cell">
+      <span class="vw-label">
+        {overlay.label} · {overlay.kind}
+        {overlay.Live ? (
+          <Button variant="subtle" size="xs" class="ml-auto" onClick={() => setOpen(true)}>
+            <Maximize2 size={11} />Open for real
+          </Button>
+        ) : null}
+      </span>
+      <div class="vw-overlay-stage"><overlay.Component /></div>
+      {overlay.Live ? <overlay.Live open={open} onClose={() => setOpen(false)} /> : null}
+    </article>
   );
 }
