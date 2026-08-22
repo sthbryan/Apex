@@ -52,7 +52,7 @@ export function Views() {
           <Pill>{DOCK_PANELS.length}</Pill>
         </h2>
         <p class="tk-blurb">What the rail switches between, at the real dock width.</p>
-        <Carousel label="Dock panels" width={240} perPage={2}>
+        <Carousel label="Dock panels" width={270} perPage={2}>
           {DOCK_PANELS.map((p) => (
             <article class="vw-cell" key={p.id}>
               <span class="vw-label">{p.label}</span>
