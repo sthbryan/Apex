@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import {
-  ArrowLeft, ArrowLeftRight, ArrowRight, Check, FileText, GitBranch, Globe, Image as ImageIcon,
-  Lock, Plus, RotateCw, Search, Send, Terminal, X,
+  ArrowLeft, ArrowLeftRight, ArrowRight, Check, Columns3, FileText, GitBranch, Globe,
+  Image as ImageIcon, Lock, Plus, RotateCw, Search, Send, Terminal, X,
 } from "lucide-preact";
 import {
   activePanel, activeTab, consoleOpen, fmode, launcherOpen, paletteOpen,
@@ -23,6 +23,7 @@ const TABS = [
   { id: "tab-auth", title: "Refactor auth middleware" },
   { id: "tab-browser", title: "localhost:5173", icon: Globe },
   { id: "tab-race", title: "Race · dock resize jank", icon: ArrowLeftRight },
+  { id: "tab-layout", title: "Ship passkeys", icon: Columns3 },
   { id: "tab-file", title: "README.md", icon: FileText },
   { id: "tab-code", title: "DockResize.ts", icon: FileText },
   { id: "tab-diff", title: "± DockResize.tsx", icon: GitBranch },
@@ -160,6 +161,7 @@ export const PANE_TYPES = [
   { id: "tab-tty", label: "Session · terminal", Component: () => <TerminalSessionPane /> },
   { id: "tab-browser", label: "Web preview", Component: () => <BrowserPane /> },
   { id: "tab-race", label: "Race", Component: () => <RacePane /> },
+  { id: "tab-layout", label: "Layout · five panes", Component: () => <FivePaneLayout /> },
   { id: "tab-file", label: "Markdown", Component: () => <MarkdownPane /> },
   { id: "tab-code", label: "Code", Component: () => <CodePane /> },
   { id: "tab-diff", label: "Diff", Component: () => <DiffPane /> },
@@ -251,6 +253,22 @@ function AuthSplit() {
       <AcpPane />
       <TerminalSessionPane />
     </PaneSplit>
+  );
+}
+
+function FivePaneLayout() {
+  return (
+    <PaneGrid min={200}>
+      <AcpPane />
+      <PaneSplit axis="col">
+        <BrowserPane />
+        <TerminalSessionPane />
+      </PaneSplit>
+      <PaneSplit axis="col">
+        <DiffPane />
+        <CodePane />
+      </PaneSplit>
+    </PaneGrid>
   );
 }
 
