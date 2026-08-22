@@ -2,7 +2,10 @@
 
 @layer components {
   .ui-popover {
-    @apply absolute min-w-52 rounded-md border border-border p-3;
+    @apply absolute flex min-w-52 flex-col gap-0.5 overflow-y-auto rounded-md border border-border p-3;
+    width: var(--ui-popover-width, max-content);
+    max-width: min(90vw, 24rem);
+    max-height: 26rem;
     z-index: var(--apex-z-overlay);
     background-color: var(--apex-overlay);
     box-shadow: var(--apex-shadow-lg);
@@ -17,10 +20,22 @@
   .ui-popover[data-align="center"] { @apply left-1/2 -translate-x-1/2; }
 
   .ui-popover-anchor {
-    @apply relative inline-flex;
+    @apply relative inline-flex flex-none;
+  }
+
+  .ui-popover-anchor[data-block="true"] {
+    @apply flex w-full;
   }
 
   .ui-popover-head {
-    @apply mb-2 flex items-center gap-2 text-xs font-semibold tracking-caps text-muted uppercase;
+    @apply flex flex-none items-center gap-2 pb-1 text-xs font-semibold tracking-caps text-muted uppercase;
   }
+
+  .ui-popover-meta {
+    @apply ml-auto text-2xs font-normal tracking-normal normal-case;
+    color: var(--apex-faint);
+  }
+
+  .ui-popover-meta + .ui-popover-actions { @apply ml-0; }
+  .ui-popover-actions { @apply ml-auto flex items-center gap-1; }
 }

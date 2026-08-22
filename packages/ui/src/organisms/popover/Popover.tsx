@@ -8,10 +8,14 @@ export type PopoverAlign = "start" | "center" | "end";
 export interface PopoverProps {
   open: boolean;
   onClose: () => void;
-  anchor: ComponentChildren;
-  title?: string;
+  anchor?: ComponentChildren;
+  title?: ComponentChildren;
+  meta?: ComponentChildren;
+  actions?: ComponentChildren;
   side?: PopoverSide;
   align?: PopoverAlign;
+  width?: number;
+  block?: boolean;
   label?: string;
   class?: string;
   children?: ComponentChildren;
@@ -22,8 +26,12 @@ export function Popover({
   onClose,
   anchor,
   title,
+  meta,
+  actions,
   side = "bottom",
   align = "start",
+  width,
+  block,
   label,
   class: className,
   children,
@@ -47,17 +55,24 @@ export function Popover({
   }, [open, onClose]);
 
   return (
-    <span class="ui-popover-anchor" ref={ref}>
+    <span class="ui-popover-anchor" data-block={block || undefined} ref={ref}>
       {anchor}
       {open ? (
         <div
           class={cn("ui-popover", className)}
           data-side={side}
           data-align={align}
+          style={width ? { "--ui-popover-width": `${width}px` } : undefined}
           role="dialog"
-          aria-label={label ?? title}
+          aria-label={label ?? (typeof title === "string" ? title : undefined)}
         >
-          {title ? <div class="ui-popover-head">{title}</div> : null}
+          {title || meta || actions ? (
+            <div class="ui-popover-head">
+              {title}
+              {meta ? <span class="ui-popover-meta">{meta}</span> : null}
+              {actions ? <span class="ui-popover-actions">{actions}</span> : null}
+            </div>
+          ) : null}
           {children}
         </div>
       ) : null}
