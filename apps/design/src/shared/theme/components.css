@@ -98,8 +98,6 @@ html[data-theme="light"] .stage-links {
 .reply .ui-composer-bar { padding: 2px 8px 6px; }
 
 
-@media (max-width: 1180px) { .panes { grid-auto-columns: minmax(340px, 1fr); } }
-@media (max-width: 1020px) { .rail, .dock { display: none; } }
 @media (max-width: 780px) {
   .apx { padding: 6px; gap: 6px; }
   .window { border-radius: 0; border: 0; box-shadow: none; width: 100%; }

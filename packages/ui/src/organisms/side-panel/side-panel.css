@@ -24,4 +24,8 @@
     @apply flex-none p-3;
     border-top: 1px solid var(--apex-border);
   }
+
+  @media (max-width: 1020px) {
+    .ui-side-panel { display: none; }
+  }
 }
