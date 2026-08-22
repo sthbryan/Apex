@@ -1,0 +1,37 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-commit-box {
+    @apply flex flex-none flex-col gap-md p-lg;
+    border-top: 1px solid var(--apex-border);
+    background-color: var(--apex-surface);
+  }
+
+  .ui-commit-box-input {
+    @apply w-full resize-none rounded-sm px-md py-sm text-md text-text;
+    background-color: var(--apex-raised);
+    border: 1px solid var(--apex-border);
+    field-sizing: content;
+    max-height: 140px;
+  }
+
+  .ui-commit-box-input::placeholder {
+    color: var(--apex-faint);
+  }
+
+  .ui-commit-box-foot {
+    @apply flex items-center gap-md;
+  }
+
+  .ui-commit-box-hint {
+    @apply min-w-0 flex-1 truncate text-2xs;
+  }
+
+  .ui-commit-box-hint[data-tone="muted"] { color: var(--apex-muted); }
+  .ui-commit-box-hint[data-tone="blocked"] { color: var(--apex-state-blocked); }
+  .ui-commit-box-hint[data-tone="failed"] { color: var(--apex-state-failed); }
+
+  .ui-commit-box-hint + * {
+    @apply ml-auto;
+  }
+}

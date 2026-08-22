@@ -33,6 +33,7 @@
 @import "./organisms/browser-view/browser-view.css";
 @import "./organisms/code-view/code-view.css";
 @import "./organisms/command-palette/command-palette.css";
+@import "./organisms/commit-box/commit-box.css";
 @import "./organisms/composer/composer.css";
 @import "./organisms/diff-view/diff-view.css";
 @import "./organisms/empty-state/empty-state.css";

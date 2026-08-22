@@ -2,6 +2,7 @@ export * from "@/organisms/app-window";
 export * from "@/organisms/browser-view";
 export * from "@/organisms/code-view";
 export * from "@/organisms/command-palette";
+export * from "@/organisms/commit-box";
 export * from "@/organisms/composer";
 export * from "@/organisms/diff-view";
 export * from "@/organisms/empty-state";

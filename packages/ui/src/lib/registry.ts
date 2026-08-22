@@ -29,6 +29,7 @@ import { appWindowMeta } from "@/organisms/app-window/meta";
 import { browserViewMeta } from "@/organisms/browser-view/meta";
 import { codeViewMeta } from "@/organisms/code-view/meta";
 import { commandPaletteMeta } from "@/organisms/command-palette/meta";
+import { commitBoxMeta } from "@/organisms/commit-box/meta";
 import { composerMeta } from "@/organisms/composer/meta";
 import { diffViewMeta } from "@/organisms/diff-view/meta";
 import { emptyStateMeta } from "@/organisms/empty-state/meta";
@@ -77,6 +78,7 @@ export const REGISTRY: ComponentMeta[] = [
   browserViewMeta,
   codeViewMeta,
   commandPaletteMeta,
+  commitBoxMeta,
   composerMeta,
   diffViewMeta,
   emptyStateMeta,
