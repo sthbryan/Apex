@@ -6,6 +6,7 @@ export type LogLevel = "error" | "warn" | "info";
 export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   url: string;
   onUrlInput?: JSX.GenericEventHandler<HTMLInputElement>;
+  nav?: ComponentChildren;
   lead?: ComponentChildren;
   actions?: ComponentChildren;
   secure?: ComponentChildren;
@@ -18,6 +19,7 @@ export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "re
 export function BrowserView({
   url,
   onUrlInput,
+  nav,
   lead,
   actions,
   secure,
@@ -35,6 +37,7 @@ export function BrowserView({
       {...rest}
     >
       <div class="ui-browser-bar">
+        {nav ? <div class="ui-browser-nav">{nav}</div> : null}
         {lead}
         <div class="ui-browser-url">
           {secure}

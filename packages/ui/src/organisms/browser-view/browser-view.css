@@ -10,6 +10,10 @@
     border-bottom: 1px solid var(--apex-border);
   }
 
+  .ui-browser-nav {
+    @apply flex flex-none items-center;
+  }
+
   .ui-browser-url {
     @apply flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-raised px-2.5;
     height: var(--apex-h-md);
