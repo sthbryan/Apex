@@ -288,3 +288,37 @@ kbd {
 }
 .pane-mock[data-mock="tty"] { flex: 1; min-height: 0; object-fit: contain; object-position: top left; background: #0c0d10; max-width: none; }
 
+
+.pop-fresh { font-size: 10.5px; color: var(--apex-muted); font-weight: 400; }
+.pop-sub { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--apex-border); }
+.pop-total { padding-left: 0; padding-right: 0; }
+.pop-fail {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 10px;
+  border-radius: var(--apex-r-sm); font-size: 12px; color: var(--apex-muted);
+  border: 1px dashed color-mix(in oklab, var(--apex-state-failed) 45%, var(--apex-border));
+  background: color-mix(in oklab, var(--apex-state-failed) 6%, transparent);
+}
+.ua-big .n[data-tone="done"] { color: var(--apex-state-done); }
+.ua-big .n[data-tone="blocked"] { color: var(--apex-state-blocked); }
+.ua-big .n[data-tone="failed"] { color: var(--apex-state-failed); }
+.ph-sub[data-tone="done"] { color: var(--apex-state-done); }
+.ph-sub[data-tone="blocked"] { color: var(--apex-state-blocked); }
+.ph-sub[data-tone="failed"] { color: var(--apex-state-failed); }
+
+.about-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-r-md);
+  background: var(--apex-overlay);
+}
+.about-icon { flex: none; border-radius: 10px; }
+.about-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.about-name { display: flex; align-items: baseline; gap: 7px; }
+.about-product { font-size: 14px; font-weight: 500; color: var(--apex-muted); }
+.about-meta { font-size: 11px; color: var(--apex-muted); white-space: nowrap; }
+.about-action { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.about-update { font-size: 10.5px; color: var(--apex-muted); text-align: right; max-width: 210px; }

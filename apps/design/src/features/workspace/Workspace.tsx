@@ -13,8 +13,14 @@ import { ReviewPanel } from "@/features/dock/Panels";
 import {
   AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
   DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Pane, PaneGrid, PaneSplit,
-  Pill, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
+  Pill, SectionLabel, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
 } from "@apex/ui";
+
+function tone(pct: number) {
+  if (pct >= 80) return "failed";
+  if (pct >= 60) return "blocked";
+  return "done";
+}
 
 const TABS = [
   { id: "tab-auth", title: "Refactor auth middleware" },
@@ -385,44 +391,79 @@ function Overlays() {
   );
 }
 
-function Pop({ title, children }: { title: string; children: any }) {
+function Pop({ title, meta, actions, children }: { title: string; meta?: string; actions?: any; children: any }) {
   return (
     <div class="popover" onClick={(e) => e.stopPropagation()}>
-      <div class="pop-head">{title}<span style="flex:1" /><button onClick={() => openPop.value = null}><X size={12} /></button></div>
+      <div class="pop-head">
+        {title}
+        <span style="flex:1" />
+        {meta ? <span class="pop-fresh">{meta}</span> : null}
+        {actions}
+        <Button variant="subtle" size="xs" iconOnly aria-label="Close" onClick={() => openPop.value = null}><X size={12} /></Button>
+      </div>
       {children}
     </div>
   );
 }
 
 export function UsagePop() {
+  const [grokFailed, setGrokFailed] = useState(true);
+  const pct = uaWindow.value === "5h" ? 62 : 34;
   return (
-    <Pop title="claude · usage">
+    <Pop
+      title="claude · usage"
+      meta="updated 2m ago"
+      actions={<Button variant="subtle" size="xs" iconOnly aria-label="Refresh" title="Refresh"><RotateCw size={11} /></Button>}
+    >
       <div class="ua-window" role="group">
         <button aria-pressed={uaWindow.value === "5h"} onClick={() => uaWindow.value = "5h"}>5h</button>
         <button aria-pressed={uaWindow.value === "7d"} onClick={() => uaWindow.value = "7d"}>7d</button>
       </div>
       <div class="ua-big">
-        <span class="n">{uaWindow.value === "5h" ? "62%" : "34%"}</span>
+        <span class="n" data-tone={tone(pct)}>{pct}%</span>
         <span style="font-size:11px;color:var(--apex-muted)">resets in 2h 30m · Tue 4:00</span>
       </div>
-      <div class="u-row"><span class="u-win">used</span><Bar value={uaWindow.value === "5h" ? 62 : 34} tick={58} size="sm" label="used" /><span class="u-eta">pace ✓</span></div>
+      <div class="u-row"><span class="u-win">used</span><Bar value={pct} tick={58} size="sm" label="used" /><span class="u-eta">pace ✓</span></div>
       <div class="u-row"><span class="u-win">7d</span><Bar value={34} tone="done" size="sm" label="7 day usage" /><span class="u-eta">on pace</span></div>
-      <div class="pop-head" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--apex-border)">codex<span class="ph-sub" style="color:var(--apex-state-blocked)">71% · over pace</span></div>
+
+      <div class="pop-head pop-sub">
+        codex
+        <span class="ph-sub" data-tone={tone(71)}>71% · over pace</span>
+      </div>
       <div class="u-row"><span class="u-win">5h</span><Bar value={71} tone="blocked" size="sm" label="codex usage" /><span class="u-eta">tight</span></div>
+
+      {grokFailed ? (
+        <div class="pop-fail">
+          <AgentIcon agent="grok" size="sm" />
+          <span style="flex:1">grok quota unavailable</span>
+          <Button variant="subtle" size="xs" onClick={() => setGrokFailed(false)}>Retry</Button>
+        </div>
+      ) : (
+        <>
+          <div class="pop-head pop-sub">
+            grok
+            <span class="ph-sub" data-tone={tone(12)}>12% · plenty left</span>
+          </div>
+          <div class="u-row"><span class="u-win">5h</span><Bar value={12} tone="done" size="sm" label="grok usage" /><span class="u-eta">easy</span></div>
+        </>
+      )}
     </Pop>
   );
 }
 
 export function ResourcesPop() {
   return (
-    <Pop title="Resources">
-      <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores</span></div>
+    <Pop title="Resources" meta="sampled every 5s">
+      <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores · user 18% sys 5%</span></div>
       <svg class="spark" viewBox="0 0 300 54" preserveAspectRatio="none">
         <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16 L 300 54 L 0 54 Z" fill="var(--apex-accent)" opacity="0.14" />
         <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16" fill="none" stroke="var(--apex-accent)" stroke-width="1.6" />
       </svg>
       <div class="meter"><span class="m-label">Memory</span><Bar value={56} label="Memory" /><span class="m-pct mono">56%</span><span class="m-detail">18.2/32 GB</span></div>
+      <div class="meter"><span class="m-label">Swap</span><Bar value={6} tone="done" label="Swap" /><span class="m-pct mono">6%</span><span class="m-detail">0.18/3 GB</span></div>
       <div class="meter"><span class="m-label">Apex</span><Bar value={12} tone="done" label="Apex memory" /><span class="m-pct mono">12%</span><span class="m-detail">312 MB</span></div>
+
+      <SectionLabel class="pop-total" count="600 MB · 11%">Sessions</SectionLabel>
       <div class="sess-res-row"><AgentIcon agent="claude" size="sm" /><span style="flex:1">Refactor auth middleware</span><span class="mono" style="font-size:10.5px;color:var(--apex-muted)">412 MB · 8%</span></div>
       <div class="sess-res-row"><AgentIcon agent="codex" size="sm" /><span style="flex:1">Fix flaky checkout tests</span><span class="mono" style="font-size:10.5px;color:var(--apex-muted)">188 MB · 3%</span></div>
     </Pop>
