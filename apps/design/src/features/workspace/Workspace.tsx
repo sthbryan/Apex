@@ -451,7 +451,70 @@ export function UsagePop() {
   );
 }
 
+const SESSIONS = [
+  {
+    id: "auth",
+    name: "Refactor auth middleware",
+    agent: "claude",
+    state: "working" as const,
+    mem: "520 MB",
+    pct: "14%",
+    procs: [
+      { pid: 4821, cmd: "claude", mem: "412 MB", agent: true },
+      { pid: 4933, cmd: "bun test tests/auth.test.ts", mem: "96 MB", agent: false },
+    ],
+  },
+  {
+    id: "checkout",
+    name: "Fix flaky checkout tests",
+    agent: "codex",
+    state: "done" as const,
+    mem: "362 MB",
+    pct: "2%",
+    procs: [{ pid: 3987, cmd: "codex", mem: "288 MB", agent: true }],
+  },
+];
+
+function ProcRow({ proc, onKill }: { proc: typeof SESSIONS[0]["procs"][0]; onKill: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+
+  if (confirming) {
+    return (
+      <div class="proc-confirm">
+        <span>End this session? The agent stops, the worktree stays.</span>
+        <span class="proc-confirm-actions">
+          <Button variant="subtle" size="xs" onClick={() => setConfirming(false)}>Cancel</Button>
+          <Button variant="danger" size="xs" onClick={onKill}>End session</Button>
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div class="proc-row">
+      <span class="proc-cmd mono">{proc.cmd}</span>
+      <span class="proc-pid mono">{proc.pid}</span>
+      <span class="proc-mem mono">{proc.mem}</span>
+      <Button
+        class="proc-kill"
+        variant="subtle"
+        size="xs"
+        iconOnly
+        title={proc.agent ? `End the session running ${proc.cmd}` : `Kill ${proc.cmd} (${proc.pid})`}
+        aria-label={proc.agent ? `End the session running ${proc.cmd}` : `Kill ${proc.cmd} (${proc.pid})`}
+        onClick={() => proc.agent ? setConfirming(true) : onKill()}
+      >
+        <X size={11} />
+      </Button>
+    </div>
+  );
+}
+
 export function ResourcesPop() {
+  const [killed, setKilled] = useState<number[]>([]);
+  const live = SESSIONS.map((s) => ({ ...s, procs: s.procs.filter((p) => !killed.includes(p.pid)) }))
+    .filter((s) => s.procs.length > 0);
+
   return (
     <Pop title="Resources" meta="sampled every 5s">
       <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores · user 18% sys 5%</span></div>
@@ -463,9 +526,25 @@ export function ResourcesPop() {
       <div class="meter"><span class="m-label">Swap</span><Bar value={6} tone="done" label="Swap" /><span class="m-pct mono">6%</span><span class="m-detail">0.18/3 GB</span></div>
       <div class="meter"><span class="m-label">Apex</span><Bar value={12} tone="done" label="Apex memory" /><span class="m-pct mono">12%</span><span class="m-detail">312 MB</span></div>
 
-      <SectionLabel class="pop-total" count="600 MB · 11%">Sessions</SectionLabel>
-      <div class="sess-res-row"><AgentIcon agent="claude" size="sm" /><span style="flex:1">Refactor auth middleware</span><span class="mono" style="font-size:10.5px;color:var(--apex-muted)">412 MB · 8%</span></div>
-      <div class="sess-res-row"><AgentIcon agent="codex" size="sm" /><span style="flex:1">Fix flaky checkout tests</span><span class="mono" style="font-size:10.5px;color:var(--apex-muted)">188 MB · 3%</span></div>
+      <SectionLabel class="pop-total" count="882 MB · 16%">Sessions and processes</SectionLabel>
+      {live.length === 0 ? (
+        <div class="proc-empty">Nothing running.</div>
+      ) : live.map((s) => (
+        <div class="proc-group" key={s.id}>
+          <div class="sess-res-row">
+            <Dot state={s.state} />
+            <span style="flex:1;min-width:0">{s.name}</span>
+            <span class="mono" style="font-size:10.5px;color:var(--apex-muted)">{s.mem} · {s.pct}</span>
+          </div>
+          {s.procs.map((p) => (
+            <ProcRow
+              key={p.pid}
+              proc={p}
+              onKill={() => setKilled((k) => [...k, ...(p.agent ? s.procs.map((x) => x.pid) : [p.pid])])}
+            />
+          ))}
+        </div>
+      ))}
     </Pop>
   );
 }

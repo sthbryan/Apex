@@ -322,3 +322,25 @@ kbd {
 .about-meta { font-size: 11px; color: var(--apex-muted); white-space: nowrap; }
 .about-action { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .about-update { font-size: 10.5px; color: var(--apex-muted); text-align: right; max-width: 210px; }
+
+.proc-group { margin-bottom: 6px; }
+.proc-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0 3px 22px; font-size: 11px; color: var(--apex-muted);
+}
+.proc-cmd { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proc-pid { flex: none; color: var(--apex-faint); }
+.proc-mem { flex: none; width: 58px; text-align: right; }
+.proc-kill { opacity: 0; transition: opacity var(--apex-quick) var(--apex-ease); }
+.proc-row:hover .proc-kill,
+.proc-kill:focus-visible { opacity: 1; }
+.proc-kill:hover { color: var(--apex-state-failed); }
+.proc-confirm {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 8px 10px; border-radius: var(--apex-r-sm); margin: 3px 0 3px 22px;
+  color: var(--apex-text); font-size: 11.5px; line-height: 1.45;
+  background: color-mix(in oklab, var(--apex-state-failed) 8%, transparent);
+  border: 1px solid color-mix(in oklab, var(--apex-state-failed) 35%, transparent);
+}
+.proc-confirm-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.proc-empty { padding: 10px 0; font-size: 11.5px; color: var(--apex-muted); }
