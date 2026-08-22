@@ -1,0 +1,35 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-notice {
+    @apply flex items-center gap-2 rounded-sm border border-dashed px-2.5 py-2 text-sm leading-snug text-muted;
+    border-color: color-mix(in oklab, var(--ui-notice-color, var(--apex-faint)) 45%, var(--apex-border));
+    background-color: color-mix(in oklab, var(--ui-notice-color, var(--apex-faint)) 7%, transparent);
+  }
+
+  .ui-notice[data-tone="accent"] { --ui-notice-color: var(--apex-accent); }
+  .ui-notice[data-tone="working"] { --ui-notice-color: var(--apex-state-working); }
+  .ui-notice[data-tone="done"] { --ui-notice-color: var(--apex-state-done); }
+  .ui-notice[data-tone="blocked"] { --ui-notice-color: var(--apex-state-blocked); }
+  .ui-notice[data-tone="failed"] { --ui-notice-color: var(--apex-state-failed); }
+
+  .ui-notice[data-stacked="true"] {
+    @apply flex-col items-stretch gap-2;
+  }
+
+  .ui-notice-lead {
+    @apply flex shrink-0 items-center;
+  }
+
+  .ui-notice-text {
+    @apply min-w-0 flex-1;
+  }
+
+  .ui-notice-actions {
+    @apply flex shrink-0 items-center gap-1.5;
+  }
+
+  .ui-notice[data-stacked="true"] .ui-notice-actions {
+    @apply justify-end;
+  }
+}

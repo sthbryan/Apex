@@ -1,0 +1,34 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-process-row {
+    @apply flex items-center gap-2 py-0.5 pl-5 font-mono text-2xs text-muted tabular-nums;
+  }
+
+  .ui-process-row-command {
+    @apply min-w-0 flex-1 truncate;
+  }
+
+  .ui-process-row-pid {
+    @apply shrink-0;
+    color: var(--apex-faint);
+  }
+
+  .ui-process-row-mem {
+    @apply shrink-0 text-right;
+    width: 58px;
+  }
+
+  .ui-process-row-actions {
+    @apply flex shrink-0 items-center opacity-0 transition-opacity;
+  }
+
+  .ui-process-row:hover .ui-process-row-actions,
+  .ui-process-row:focus-within .ui-process-row-actions {
+    @apply opacity-100;
+  }
+
+  @media (hover: none) {
+    .ui-process-row-actions { @apply opacity-100; }
+  }
+}

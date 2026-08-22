@@ -25,6 +25,8 @@
 @import "./molecules/list-row/list-row.css";
 @import "./molecules/meter/meter.css";
 @import "./molecules/readout/readout.css";
+@import "./molecules/notice/notice.css";
+@import "./molecules/process-row/process-row.css";
 @import "./molecules/section-label/section-label.css";
 @import "./molecules/segmented/segmented.css";
 @import "./molecules/slider/slider.css";

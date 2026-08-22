@@ -20,6 +20,8 @@ import { dataRowMeta } from "@/molecules/data-row/meta";
 import { fieldMeta } from "@/molecules/field/meta";
 import { listRowMeta } from "@/molecules/list-row/meta";
 import { meterMeta } from "@/molecules/meter/meta";
+import { noticeMeta } from "@/molecules/notice/meta";
+import { processRowMeta } from "@/molecules/process-row/meta";
 import { readoutMeta } from "@/molecules/readout/meta";
 import { sectionLabelMeta } from "@/molecules/section-label/meta";
 import { segmentedMeta } from "@/molecules/segmented/meta";
@@ -75,6 +77,8 @@ export const REGISTRY: ComponentMeta[] = [
   fieldMeta,
   listRowMeta,
   meterMeta,
+  noticeMeta,
+  processRowMeta,
   readoutMeta,
   sectionLabelMeta,
   segmentedMeta,
