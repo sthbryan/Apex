@@ -2,8 +2,9 @@
 
 @layer components {
   .ui-status-bar {
-    @apply flex min-w-0 flex-none items-center gap-1 px-2.5 text-sm whitespace-nowrap text-muted;
+    @apply relative flex min-w-0 flex-none items-center gap-1 px-2.5 text-sm whitespace-nowrap text-muted;
     height: var(--apex-h-lg);
+    z-index: var(--apex-z-dock);
     border-top: 1px solid var(--apex-border);
   }
 

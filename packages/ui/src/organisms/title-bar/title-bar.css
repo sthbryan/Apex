@@ -2,8 +2,9 @@
 
 @layer components {
   .ui-title-bar {
-    @apply flex flex-none items-center gap-3 px-3.5;
+    @apply relative flex flex-none items-center gap-3 px-3.5;
     height: var(--apex-title-bar-height);
+    z-index: var(--apex-z-dock);
     border-bottom: 1px solid var(--apex-border);
   }
 
