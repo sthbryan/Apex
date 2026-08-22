@@ -1,100 +1,64 @@
 .vw-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  @apply flex min-w-0 flex-col gap-1.5;
 }
 
 .vw-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 20px;
-  font-family: var(--font-mono);
-  font-size: var(--apex-text-2xs);
-  color: var(--apex-faint);
+  @apply flex min-h-5 items-center gap-2 font-mono text-2xs text-faint;
 }
 
 .vw-stage {
-  display: flex;
-  flex-direction: column;
-  height: 420px;
-  overflow: hidden;
-  border: 1px solid var(--apex-border);
-  border-radius: var(--apex-r-md);
-  background: var(--apex-bg);
+  @apply flex h-[420px] flex-col overflow-hidden rounded-md border border-border bg-bg;
 }
 
 .vw-stage > * {
-  flex: 1;
-  min-height: 0;
+  @apply min-h-0 flex-1;
 }
 
 .vw-dock {
-  height: 600px;
-  border-radius: var(--apex-r-md);
-  border: 1px solid var(--apex-border);
-  overflow: hidden;
+  @apply h-[600px] overflow-hidden rounded-md border border-border;
 }
 
 .vw-carousel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  @apply relative flex flex-col gap-2.5;
 }
 
 .vw-carousel-track {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  padding-bottom: 2px;
+  @apply flex gap-4 overflow-x-auto pb-0.5 [scrollbar-width:none] [scroll-snap-type:x_mandatory];
 }
 
-.vw-carousel-track::-webkit-scrollbar { display: none; }
+.vw-carousel-track::-webkit-scrollbar {
+  display: none;
+}
 
 .vw-carousel-track > .vw-cell {
   flex: 0 0 var(--vw-item, 240px);
-  scroll-snap-align: start;
+  @apply [scroll-snap-align:start];
 }
 
 .vw-carousel-nav {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
+  @apply flex justify-end gap-1.5;
 }
 
 .vw-overlay-stage {
-  position: relative;
-  height: 420px;
-  overflow: hidden;
-  border: 1px solid var(--apex-border);
-  border-radius: var(--apex-r-md);
-  background: var(--apex-bg);
-  display: flex;
+  @apply relative flex h-[420px] overflow-hidden rounded-md border border-border bg-bg;
 }
 
 .vw-overlay-stage > * {
-  flex: 1;
-  min-height: 0;
+  @apply min-h-0 flex-1;
 }
 
 .vw-overlay-stage[data-kind="popover"] {
-  align-items: flex-end;
-  justify-content: center;
-  padding: 10px;
+  @apply items-end justify-center p-2.5;
 }
 
 .vw-overlay-stage[data-kind="popover"]:has(.ui-popover[data-side="bottom"]) {
-  align-items: flex-start;
+  @apply items-start;
 }
 
 .vw-overlay-stage[data-kind="popover"] > * {
-  flex: none;
+  @apply flex-none;
 }
 
 .vw-overlay-stage[data-kind="popover"] .ui-popover {
-  max-height: 340px;
+  @apply max-h-[340px];
 }
