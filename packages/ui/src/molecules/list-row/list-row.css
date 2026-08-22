@@ -35,7 +35,7 @@
   }
 
   .ui-list-row-sub {
-    @apply block truncate text-2xs text-muted;
+    @apply flex items-center gap-sm truncate text-2xs text-muted;
   }
 
   .ui-list-row-trail {

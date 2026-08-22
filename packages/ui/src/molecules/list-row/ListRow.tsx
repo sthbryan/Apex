@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 export interface ListRowProps extends Omit<JSX.IntrinsicElements["button"], "ref"> {
   label: string;
-  sub?: string;
+  sub?: ComponentChildren;
   lead?: ComponentChildren;
   trail?: ComponentChildren;
   actions?: ComponentChildren;
