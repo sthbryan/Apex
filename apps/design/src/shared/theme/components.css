@@ -60,6 +60,7 @@ html[data-theme="light"] .stage-links {
 
 .dock-flush {
   margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-lg));
+  max-width: none;
 }
 
 .note {
