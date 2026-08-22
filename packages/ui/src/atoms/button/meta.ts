@@ -19,5 +19,6 @@ export const buttonMeta: ComponentMeta = {
     { name: "sm", props: { variant: "ghost", size: "sm" }, children: "sm" },
     { name: "md", props: { variant: "ghost", size: "md" }, children: "md" },
     { name: "lg", props: { variant: "ghost", size: "lg" }, children: "lg" },
+    { name: "xl", props: { variant: "ghost", size: "xl" }, children: "xl" },
   ],
 };

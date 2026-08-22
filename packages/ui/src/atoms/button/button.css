@@ -34,6 +34,11 @@
     @apply px-4 text-md;
   }
 
+  .ui-button[data-size="xl"] {
+    height: var(--apex-h-xl);
+    @apply px-lg text-md;
+  }
+
   .ui-button[data-variant="primary"] {
     @apply bg-accent text-accent-fg;
   }
@@ -87,6 +92,7 @@
   .ui-button[data-icon-only="true"][data-size="sm"] { --ui-button-size: var(--apex-h-sm); }
   .ui-button[data-icon-only="true"][data-size="md"] { --ui-button-size: var(--apex-h-md); }
   .ui-button[data-icon-only="true"][data-size="lg"] { --ui-button-size: var(--apex-h-lg); }
+  .ui-button[data-icon-only="true"][data-size="xl"] { --ui-button-size: var(--apex-h-xl); }
 
   .ui-button[data-loading="true"] {
     @apply pointer-events-none;
