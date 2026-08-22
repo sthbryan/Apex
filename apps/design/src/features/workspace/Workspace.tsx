@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import {
-  ArrowLeftRight, Check, ChevronRight, FileText, GitBranch, Globe, Image as ImageIcon, Lock,
+  ArrowLeftRight, Check, FileText, GitBranch, Globe, Image as ImageIcon, Lock,
   Plus, RotateCw, Search, Send, X,
 } from "lucide-preact";
 import {
@@ -10,9 +10,10 @@ import {
 import { SettingsModal } from "@/features/workspace/Settings";
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
-  AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView, Code, Composer,
-  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Pane, PaneGrid, PaneSplit,
-  Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
+  AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView,
+  Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Message,
+  Pane, PaneGrid, PaneSplit, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup,
+  ToolCall, Transcript, Wordmark,
 } from "@apex/ui";
 
 const TABS = [
@@ -111,43 +112,66 @@ export const PANE_TYPES = [
 export const ALL_VIEWS = [...WORKSPACE_VIEWS, ...PANE_TYPES];
 
 function AcpPane() {
+  const [openTool, setOpenTool] = useState<string | null>(null);
   return (
-      <Pane
-        title="Refactor auth middleware"
-        sub={<><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span></>}
-        lead={<AgentIcon agent="claude" />}
-        actions={<StatePill state="blocked">Waiting</StatePill>}
-        scroll={false}
-        foot={
-          <div class="reply-bar">
-            <div class="reply-box">
-              <input placeholder="Reply to claude…" aria-label="Reply to claude" />
-              <button class="reply-send" aria-label="Send"><Send size={13} /></button>
-            </div>
-          </div>
-        }
-      >
-        <div class="transcript">
-          <div class="msg-user">Refactor auth middleware to use passkeys instead of session cookies.</div>
-          <div class="tool">
-            <div class="tool-head">
-              <ChevronRight size={11} style="rotate:90deg;color:var(--apex-muted)" />
-              <span class="tool-cmd">bash bun test tests/auth.test.ts</span>
-              <span class="tool-meta"><span class="ok">✓ 2.3s</span></span>
-            </div>
-          </div>
-          <div class="perm-card">
-            <div class="perm-head"><Lock size={14} />Run a migration on the dev database?</div>
-            <div class="perm-desc">bun run db:migrate --name passkeys</div>
-            <div class="perm-actions">
-              <Button variant="primary">Yes, run it</Button>
-              <Button variant="danger">Deny</Button>
-            </div>
-          </div>
-        </div>
-      </Pane>
+    <Pane
+      title="Refactor auth middleware"
+      sub={<><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span></>}
+      lead={<AgentIcon agent="claude" />}
+      actions={<StatePill state="blocked">Waiting</StatePill>}
+      scroll={false}
+      foot={
+        <Composer
+          class="reply"
+          label="Reply to claude"
+          placeholder="Reply to claude…"
+          rows={1}
+          onSubmit={(e) => e.preventDefault()}
+          actions={<Button type="submit" variant="primary" size="sm" iconOnly title="Send"><Send size={13} /></Button>}
+        />
+      }
+    >
+      <Transcript>
+        <Message from="user">Refactor auth middleware to use passkeys instead of session cookies.</Message>
+        <Message meta="claude">
+          The middleware still reads a session cookie on every request, so passkeys need a challenge
+          store first. Running the suite to see what depends on it.
+        </Message>
+        {TOOL_CALLS.map((t) => (
+          <ToolCall
+            key={t.command}
+            name={t.name}
+            command={t.command}
+            status={t.status}
+            detail={t.detail}
+            open={openTool === t.command}
+            onToggle={t.output ? () => setOpenTool(openTool === t.command ? null : t.command) : undefined}
+          >
+            {t.output}
+          </ToolCall>
+        ))}
+        <ApprovalCard
+          question="Run a migration on the dev database?"
+          command="bun run db:migrate --name passkeys"
+          meta="idle 2m"
+          lead={<Lock size={14} />}
+          approveLabel="Yes, run it"
+        />
+      </Transcript>
+    </Pane>
   );
 }
+
+const TOOL_CALLS: { name: string; command: string; status?: "ok" | "failed" | "running"; detail: string; output?: string }[] = [
+  { name: "read", command: "src/auth/middleware.ts", detail: "142 lines" },
+  {
+    name: "bash",
+    command: "bun test tests/auth.test.ts",
+    detail: "2.3s",
+    output: "tests/auth.test.ts:\n  ✓ rejects an expired cookie\n  ✓ accepts a passkey assertion\n\n 2 pass, 0 fail",
+  },
+  { name: "bash", command: "bun run db:migrate --dry-run", status: "running", detail: "8s" },
+];
 
 function TerminalSessionPane() {
   return (

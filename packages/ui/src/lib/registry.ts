@@ -49,6 +49,7 @@ import { tabBarMeta } from "@/organisms/tab-bar/meta";
 import { titleBarMeta } from "@/organisms/title-bar/meta";
 import { toastMeta } from "@/organisms/toast/meta";
 import { toolbarMeta } from "@/organisms/toolbar/meta";
+import { messageMeta, toolCallMeta } from "@/organisms/transcript/meta";
 
 export const REGISTRY: ComponentMeta[] = [
   agentIconMeta,
@@ -101,4 +102,6 @@ export const REGISTRY: ComponentMeta[] = [
   titleBarMeta,
   toastMeta,
   toolbarMeta,
+  messageMeta,
+  toolCallMeta,
 ];

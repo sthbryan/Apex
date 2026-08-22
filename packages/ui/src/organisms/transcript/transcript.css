@@ -1,0 +1,85 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-transcript {
+    @apply flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4;
+  }
+
+  .ui-message {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+
+  .ui-message[data-from="user"] {
+    @apply items-end self-end;
+    max-width: 82%;
+  }
+
+  .ui-message-head {
+    @apply flex items-center gap-1.5 text-2xs text-faint;
+  }
+
+  .ui-message-body {
+    @apply text-md leading-normal text-text;
+  }
+
+  .ui-message[data-from="user"] .ui-message-body {
+    @apply border border-border px-3 py-2;
+    background-color: var(--apex-raised);
+    border-radius: var(--apex-r-md) var(--apex-r-md) var(--apex-r-xs) var(--apex-r-md);
+  }
+
+  .ui-tool-call {
+    @apply overflow-hidden rounded-md border border-border;
+    background-color: var(--apex-overlay);
+  }
+
+  .ui-tool-call-head {
+    @apply flex w-full items-center gap-2 px-2.5 py-2 text-left;
+  }
+
+  button.ui-tool-call-head:hover {
+    @apply bg-raised;
+  }
+
+  .ui-tool-call-chevron {
+    @apply size-2 shrink-0 border-r border-b;
+    border-color: var(--apex-muted);
+    rotate: -45deg;
+    transition: rotate var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-tool-call[data-open] .ui-tool-call-chevron {
+    rotate: 45deg;
+  }
+
+  .ui-tool-call-name {
+    @apply shrink-0 rounded-xs px-1.5 font-mono text-2xs text-muted uppercase;
+    background-color: color-mix(in oklab, var(--apex-raised) 70%, transparent);
+  }
+
+  .ui-tool-call-command {
+    @apply min-w-0 flex-1 truncate font-mono text-sm text-text;
+  }
+
+  .ui-tool-call-status {
+    @apply flex shrink-0 items-center gap-1.5 text-xs font-semibold;
+    color: var(--apex-state-done);
+  }
+
+  .ui-tool-call[data-status="failed"] .ui-tool-call-status {
+    color: var(--apex-state-failed);
+  }
+
+  .ui-tool-call[data-status="running"] .ui-tool-call-status {
+    color: var(--apex-state-working);
+  }
+
+  .ui-tool-call-detail {
+    @apply font-mono font-normal text-2xs text-muted tabular-nums;
+  }
+
+  .ui-tool-call-output {
+    @apply max-h-52 overflow-auto border-t border-border px-2.5 py-2 font-mono text-2xs whitespace-pre-wrap text-muted;
+    background-color: color-mix(in oklab, var(--apex-raised) 55%, transparent);
+  }
+}

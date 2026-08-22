@@ -20,3 +20,4 @@ export * from "@/organisms/tab-bar";
 export * from "@/organisms/title-bar";
 export * from "@/organisms/toast";
 export * from "@/organisms/toolbar";
+export * from "@/organisms/transcript";
