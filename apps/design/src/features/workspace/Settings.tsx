@@ -3,8 +3,8 @@ import { Bot, CircleHelp, Globe, Keyboard, Server, Sparkles, X } from "lucide-pr
 import { themeMode, veil } from "@/shared/theme/mode";
 import { settingsOpen, settingsSection, updateState } from "@/app/state";
 import {
-  AgentIcon, Button, DataRow, Field, KbdGroup, Pill, SectionLabel, Segmented, SettingsDialog,
-  SettingsHeading, Slider, Select, StatePill, Switch, Wordmark,
+  AgentIcon, Button, DataRow, Field, IdentityCard, KbdGroup, Pill, SectionLabel, Segmented,
+  SettingsDialog, SettingsHeading, Slider, Select, StatePill, Switch, Wordmark,
 } from "@apex/ui";
 
 const SECTIONS = [
@@ -216,17 +216,14 @@ function AboutSection() {
     <div>
       <SettingsHeading title="About" sub="What is running on this machine." />
 
-      <div class="about-card">
-        <img class="about-icon" src="/brand/apex-icon.svg" alt="" width="44" height="44" />
-        <div class="about-id">
-          <div class="about-name">
-            <Wordmark size="sm">APEX</Wordmark>
-            <span class="about-product">Desktop</span>
-          </div>
-          <div class="about-meta mono">v0.5.0 · Tauri 2</div>
-          <StatePill state="done" class="about-daemon">daemon connected</StatePill>
-        </div>
-        <div class="about-action">
+      <IdentityCard
+        icon={<img src="/brand/apex-icon.svg" alt="" width="44" height="44" />}
+        name={<Wordmark size="sm">APEX</Wordmark>}
+        sub="Desktop"
+        meta="v0.5.0 · Tauri 2"
+        status={<StatePill state="done">daemon connected</StatePill>}
+        note={updateState.value}
+        action={
           <Button
             disabled={checking}
             onClick={() => {
@@ -236,9 +233,8 @@ function AboutSection() {
           >
             {checking ? "Checking…" : "Check updates"}
           </Button>
-          <span class="about-update">{updateState.value}</span>
-        </div>
-      </div>
+        }
+      />
 
       <div>
         {FACTS.map(([label, value]) => (

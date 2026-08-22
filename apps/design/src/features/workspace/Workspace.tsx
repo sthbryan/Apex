@@ -14,7 +14,7 @@ import {
   AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView,
   Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Message,
   Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, Segmented, StatePill, Tab, TabBar, Toast,
-  ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript, Wordmark,
+  ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript, Welcome, Wordmark,
 } from "@apex/ui";
 
 const TABS = [
@@ -44,13 +44,12 @@ const SUGGESTIONS = ["Refactor auth middleware", "Race a task across agents"];
 
 function Home() {
   return (
-    <div class="home">
-      <div class="home-inner">
-        <div class="home-mark">
-          <Wordmark size="xl">APEX</Wordmark>
-          <p class="home-tagline">Run a team of AI agents, not a wall of terminals.</p>
-        </div>
-        <Composer
+    <Welcome
+      mark={<Wordmark size="xl">APEX</Wordmark>}
+      tagline="Run a team of AI agents, not a wall of terminals."
+      suggestions={SUGGESTIONS.map((t) => <Button key={t} size="sm" class="rounded-full">{t}</Button>)}
+    >
+      <Composer
           label="Task"
           placeholder="Ask, delegate, or start a task…"
           onSubmit={(e) => { e.preventDefault(); activeTab.value = "tab-auth"; }}
@@ -61,13 +60,9 @@ function Home() {
               <ToggleChip pressed={false} lead={<AgentIcon agent="grok" size="sm" />}>grok</ToggleChip>
             </ToggleChipGroup>
           }
-          actions={<Button type="submit" variant="primary"><Send size={13} />Start</Button>}
-        />
-        <div class="home-suggestions">
-          {SUGGESTIONS.map((t) => <Button key={t} size="sm" class="rounded-full">{t}</Button>)}
-        </div>
-      </div>
-    </div>
+        actions={<Button type="submit" variant="primary"><Send size={13} />Start</Button>}
+      />
+    </Welcome>
   );
 }
 

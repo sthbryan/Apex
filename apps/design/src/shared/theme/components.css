@@ -56,17 +56,6 @@ html[data-theme="light"] .stage-links {
 .proj-path { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--apex-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .proj-alert { width: 6px; height: 6px; border-radius: 50%; background: var(--apex-state-blocked); animation: apex-pulse 2s var(--apex-ease) infinite; flex: none; }
 
-.home {
-  flex: 1; min-height: 0; display: grid; place-items: center; overflow: auto;
-  padding: var(--apex-space-3xl); background: var(--apex-bg);
-}
-.home-inner {
-  width: min(660px, 100%); display: flex; flex-direction: column; align-items: center;
-  gap: var(--apex-space-xl);
-}
-.home-mark { display: flex; flex-direction: column; gap: var(--apex-space-sm); text-align: center; }
-.home-tagline { margin: 0; color: var(--apex-muted); font-size: var(--apex-text-lg); }
-.home-suggestions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--apex-space-md); }
 
 .dock-view {
   display: flex; flex-direction: column; gap: var(--apex-space-2xs);
@@ -113,23 +102,6 @@ html[data-theme="light"] .stage-links {
 .pane-mock[data-mock="tty"] { flex: 1; min-height: 0; object-fit: contain; object-position: top left; background: #0c0d10; max-width: none; }
 
 
-.about-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 16px;
-  border: 1px solid var(--apex-border);
-  border-radius: var(--apex-r-md);
-  background: var(--apex-overlay);
-}
-.about-icon { flex: none; border-radius: 10px; }
-.about-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
-.about-name { display: flex; align-items: baseline; gap: 7px; }
-.about-product { font-size: 14px; font-weight: 500; color: var(--apex-muted); }
-.about-meta { font-size: 11px; color: var(--apex-muted); white-space: nowrap; }
-.about-action { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.about-update { font-size: 10.5px; color: var(--apex-muted); text-align: right; max-width: 210px; }
 
 .proc-group {
   padding-top: 4px; margin-bottom: 4px;
