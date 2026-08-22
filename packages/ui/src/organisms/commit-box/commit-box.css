@@ -2,13 +2,13 @@
 
 @layer components {
   .ui-commit-box {
-    @apply flex flex-none flex-col gap-2 p-3;
+    @apply flex min-w-0 max-w-full flex-none flex-col gap-2 p-3;
     border-top: 1px solid var(--apex-border);
     background-color: var(--apex-surface);
   }
 
   .ui-commit-box-input {
-    @apply w-full resize-none rounded-sm px-2.5 py-2 text-md leading-normal text-text;
+    @apply w-full min-w-0 resize-none rounded-sm px-2.5 py-2 text-md leading-normal text-text;
     background-color: var(--apex-raised);
     border: 1px solid var(--apex-border);
     field-sizing: content;
