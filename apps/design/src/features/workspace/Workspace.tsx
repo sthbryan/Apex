@@ -4,17 +4,18 @@ import {
   Lock, Plus, RotateCw, Send, Terminal, X,
 } from "lucide-preact";
 import {
-  activeTab, consoleOpen, fmode, launcherOpen,
+  activePanel, activeTab, consoleOpen, fmode, launcherOpen,
   raceAsking, raceKept, settingsOpen, toastCount,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
-import { CONTENDERS, RACE_PROMPT } from "@/features/dock/fixtures";
+import { CONTENDERS, RACE_PROMPT, REVIEWS, SESSIONS } from "@/features/dock/fixtures";
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
   AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView,
   Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Message,
-  Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, Segmented, StatePill, Tab, TabBar, Toast,
-  ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript, Welcome, Wordmark,
+  ListRow, Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, SectionLabel, Segmented,
+  StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript,
+  Welcome, Wordmark,
 } from "@apex/ui";
 
 const TABS = [
@@ -42,12 +43,65 @@ export function Workspace() {
 
 const SUGGESTIONS = ["Refactor auth middleware", "Race a task across agents"];
 
+function HomeSummary() {
+  const blocked = SESSIONS.filter((s) => s.state === "blocked");
+  const running = SESSIONS.filter((s) => s.state === "working");
+  return (
+    <div class="home-summary">
+      <div>
+        <SectionLabel flush count={blocked.length + REVIEWS.length}>Waiting on you</SectionLabel>
+        {blocked.map((s) => (
+          <ListRow
+            key={s.id}
+            label={s.name}
+            sub={s.activity}
+            lead={<Dot state={s.state} />}
+            trail={<span class="mono">{s.elapsed}</span>}
+            onClick={() => activeTab.value = s.tab}
+          />
+        ))}
+        {REVIEWS.map((r) => (
+          <ListRow
+            key={r.id}
+            label={r.title}
+            sub={<>{r.branch} · {r.files} files<DiffStat added={r.added} removed={r.removed} /></>}
+            lead={<AgentIcon agent={r.agent} size="sm" />}
+            trail={<span>review</span>}
+            onClick={() => activePanel.value = "review"}
+          />
+        ))}
+      </div>
+      <div>
+        <SectionLabel flush count={running.length + 1}>Running</SectionLabel>
+        {running.map((s) => (
+          <ListRow
+            key={s.id}
+            label={s.name}
+            sub={s.activity}
+            lead={<Dot state={s.state} />}
+            trail={<span class="mono">{s.elapsed}</span>}
+            onClick={() => activeTab.value = s.tab}
+          />
+        ))}
+        <ListRow
+          label={`Race · ${RACE_PROMPT}`}
+          sub={`${CONTENDERS.filter((c) => !c.dropped).length} contenders`}
+          lead={<Dot state="working" />}
+          trail={<span class="mono">4m</span>}
+          onClick={() => activeTab.value = "tab-race"}
+        />
+      </div>
+    </div>
+  );
+}
+
 function Home() {
   return (
     <Welcome
       mark={<Wordmark size="xl">APEX</Wordmark>}
       tagline="Run a team of AI agents, not a wall of terminals."
       suggestions={SUGGESTIONS.map((t) => <Button key={t} size="sm" class="rounded-full">{t}</Button>)}
+      foot={<HomeSummary />}
     >
       <Composer
           label="Task"
