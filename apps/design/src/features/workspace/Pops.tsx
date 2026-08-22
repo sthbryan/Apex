@@ -7,8 +7,8 @@ import {
 } from "@/features/workspace/fixtures";
 import type { Proc, Target } from "@/features/workspace/fixtures";
 import {
-  AgentIcon, Badge, Bar, Button, Chip, Dot, ListRow, Meter, Notice, Pill, Popover,
-  ProcessRow, Readout, SectionLabel, Segmented, Spark, StatusPill,
+  AgentIcon, Badge, Bar, Button, Chip, Dot, Glyph, ListRow, Meter, Notice, Pill, Popover,
+  ProcessRow, ProjectButton, Readout, SectionLabel, Segmented, Spark, StatusPill,
 } from "@apex/ui";
 
 function toggle(id: string) {
@@ -258,15 +258,15 @@ export function ProjectsPop({ open, onClose }: PopProps = {}) {
       block
       title="Projects"
       anchor={
-        <button class="proj-btn" title="Switch project" onClick={() => toggle("projects")}>
-          <span class="proj-glyph"><LayoutGrid size={13} /></span>
-          <span class="proj-main">
-            <span class="proj-name">{TARGET.name}</span>
-            <span class="proj-path">~/Documents/Codes/{TARGET.name}</span>
-          </span>
-          <span class="proj-alert" title="1 session waiting in another project" />
-          <ChevronDown size={12} style="color:var(--apex-muted);flex:none" />
-        </button>
+        <ProjectButton
+          name={TARGET.name}
+          path={`~/Documents/Codes/${TARGET.name}`}
+          icon={<LayoutGrid size={13} />}
+          alert="1 session waiting in another project"
+          title="Switch project"
+          trail={<ChevronDown size={12} style="color:var(--apex-muted);flex:none" />}
+          onClick={() => toggle("projects")}
+        />
       }
     >
       {live.map((p) => (
@@ -274,7 +274,7 @@ export function ProjectsPop({ open, onClose }: PopProps = {}) {
           key={p.id}
           label={p.name}
           sub={<span class="mono">{p.path}</span>}
-          lead={<span class="proj-glyph" data-size="sm">{p.current ? <Check size={11} /> : <FileText size={11} />}</span>}
+          lead={<Glyph size="sm">{p.current ? <Check size={11} /> : <FileText size={11} />}</Glyph>}
           trail={p.note ? <Pill tone={p.tone}>{p.note}</Pill> : undefined}
           actions={p.removable ? (
             <Button
@@ -290,7 +290,7 @@ export function ProjectsPop({ open, onClose }: PopProps = {}) {
         />
       ))}
       {removedProject.value ? <Notice tone="done">Removed apex-docs</Notice> : null}
-      <ListRow label="Open project…" lead={<span class="proj-glyph" data-size="sm"><Plus size={11} /></span>} />
+      <ListRow label="Open project…" lead={<Glyph size="sm"><Plus size={11} /></Glyph>} />
     </Popover>
   );
 }

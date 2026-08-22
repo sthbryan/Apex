@@ -245,8 +245,8 @@ function TasksPanel() {
           sub={t.note}
           lead={<Dot state={t.state} />}
           trail={t.port
-            ? <button class="url-chip" title={`Open localhost${t.port} in a pane`}
-                onClick={() => activeTab.value = "tab-browser"}>{t.port}</button>
+            ? <Chip as="button" tone="done" title={`Open localhost${t.port} in a pane`}
+                onClick={() => activeTab.value = "tab-browser"}>{t.port}</Chip>
             : undefined}
         />
       ))}

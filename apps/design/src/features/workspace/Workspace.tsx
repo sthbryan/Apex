@@ -68,7 +68,7 @@ function Home() {
 
 function Sessions() {
   return (
-    <section class="view">
+    <>
       <TabBar label="Sessions" addLabel="New session in a new tab" addIcon={<Plus size={14} />} onAdd={() => activeTab.value = "home"}>
         {TABS.map((t) => (
           <Tab
@@ -84,7 +84,7 @@ function Sessions() {
       <PaneGrid>
         {ALL_VIEWS.filter((v) => v.id === activeTab.value).map((v) => <v.Component key={v.id} />)}
       </PaneGrid>
-    </section>
+    </>
   );
 }
 
