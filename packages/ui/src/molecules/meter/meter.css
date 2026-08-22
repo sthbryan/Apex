@@ -14,4 +14,13 @@
     @apply shrink-0 text-right font-mono text-2xs text-muted tabular-nums;
     width: var(--ui-meter-value-width, 44px);
   }
+
+  .ui-meter-lead {
+    @apply flex shrink-0 items-center;
+  }
+
+  .ui-meter-detail {
+    @apply shrink-0 text-right font-mono text-2xs text-faint tabular-nums;
+    width: var(--ui-meter-detail-width, 64px);
+  }
 }

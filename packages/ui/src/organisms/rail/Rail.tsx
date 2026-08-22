@@ -17,6 +17,10 @@ export function RailSpacer() {
   return <span class="ui-rail-spacer" />;
 }
 
+export function RailDivider() {
+  return <span class="ui-rail-divider" />;
+}
+
 export interface RailButtonProps extends Omit<JSX.IntrinsicElements["button"], "ref"> {
   label: string;
   current?: boolean;
