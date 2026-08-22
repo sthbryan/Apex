@@ -13,9 +13,10 @@
 
   .ui-bar-fill {
     @apply block h-full rounded-full transition-[width];
-    background-color: var(--ui-bar-color, var(--apex-accent));
+    background-color: var(--ui-bar-color, var(--apex-muted));
   }
 
+  .ui-bar[data-tone="accent"] { --ui-bar-color: var(--apex-accent); }
   .ui-bar[data-tone="done"] { --ui-bar-color: var(--apex-state-done); }
   .ui-bar[data-tone="blocked"] { --ui-bar-color: var(--apex-state-blocked); }
   .ui-bar[data-tone="failed"] { --ui-bar-color: var(--apex-state-failed); }

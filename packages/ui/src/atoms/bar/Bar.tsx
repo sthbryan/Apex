@@ -1,7 +1,7 @@
 import type { JSX } from "preact";
 import { cn } from "@/lib/cn";
 
-export type BarTone = "accent" | "done" | "blocked" | "failed";
+export type BarTone = "neutral" | "accent" | "done" | "blocked" | "failed";
 export type BarSize = "sm" | "md" | "lg";
 
 export interface BarProps extends Omit<JSX.IntrinsicElements["div"], "size" | "ref"> {
@@ -14,7 +14,7 @@ export interface BarProps extends Omit<JSX.IntrinsicElements["div"], "size" | "r
 
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
-export function Bar({ value, tone = "accent", size = "md", tick, label, class: className, ...rest }: BarProps) {
+export function Bar({ value, tone = "neutral", size = "md", tick, label, class: className, ...rest }: BarProps) {
   const pct = clamp(value);
   return (
     <div

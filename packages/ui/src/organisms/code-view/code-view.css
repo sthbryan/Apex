@@ -17,7 +17,7 @@
   }
 
   .ui-code-token[data-token="keyword"] { color: var(--apex-state-working); }
-  .ui-code-token[data-token="function"] { color: var(--apex-accent); }
-  .ui-code-token[data-token="string"] { color: var(--apex-state-done); }
+  .ui-code-token[data-token="function"] { color: var(--apex-state-done); }
+  .ui-code-token[data-token="string"] { color: var(--apex-state-blocked); }
   .ui-code-token[data-token="comment"] { color: var(--apex-faint); font-style: italic; }
 }
