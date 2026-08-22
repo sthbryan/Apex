@@ -3,6 +3,7 @@ export * from "@/molecules/card";
 export * from "@/molecules/field";
 export * from "@/molecules/list-row";
 export * from "@/molecules/meter";
+export * from "@/molecules/readout";
 export * from "@/molecules/section-label";
 export * from "@/molecules/segmented";
 export * from "@/molecules/slider";

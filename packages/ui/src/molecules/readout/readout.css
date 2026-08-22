@@ -1,0 +1,23 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-readout {
+    @apply flex flex-wrap items-baseline gap-2 py-1;
+  }
+
+  .ui-readout-value {
+    @apply flex-none text-3xl font-bold tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--apex-text);
+  }
+
+  .ui-readout[data-tone="accent"] .ui-readout-value { color: var(--apex-accent); }
+  .ui-readout[data-tone="working"] .ui-readout-value { color: var(--apex-state-working); }
+  .ui-readout[data-tone="done"] .ui-readout-value { color: var(--apex-state-done); }
+  .ui-readout[data-tone="blocked"] .ui-readout-value { color: var(--apex-state-blocked); }
+  .ui-readout[data-tone="failed"] .ui-readout-value { color: var(--apex-state-failed); }
+
+  .ui-readout-note {
+    @apply min-w-0 flex-1 text-xs text-muted;
+  }
+}

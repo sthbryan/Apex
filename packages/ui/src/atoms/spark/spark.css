@@ -1,0 +1,27 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-spark {
+    @apply block w-full;
+    height: var(--ui-spark-height, 54px);
+    color: var(--apex-state-working);
+  }
+
+  .ui-spark[data-tone="neutral"] { color: var(--apex-muted); }
+  .ui-spark[data-tone="accent"] { color: var(--apex-accent); }
+  .ui-spark[data-tone="done"] { color: var(--apex-state-done); }
+  .ui-spark[data-tone="blocked"] { color: var(--apex-state-blocked); }
+  .ui-spark[data-tone="failed"] { color: var(--apex-state-failed); }
+
+  .ui-spark-area {
+    fill: currentcolor;
+    opacity: 0.16;
+  }
+
+  .ui-spark-line {
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.6;
+    vector-effect: non-scaling-stroke;
+  }
+}

@@ -9,6 +9,7 @@ import { dotMeta } from "@/atoms/dot/meta";
 import { kbdMeta } from "@/atoms/kbd/meta";
 import { pillMeta } from "@/atoms/pill/meta";
 import { selectMeta } from "@/atoms/select/meta";
+import { sparkMeta } from "@/atoms/spark/meta";
 import { spinnerMeta } from "@/atoms/spinner/meta";
 import { surfaceMeta } from "@/atoms/surface/meta";
 import { switchMeta } from "@/atoms/switch/meta";
@@ -18,6 +19,7 @@ import { cardMeta } from "@/molecules/card/meta";
 import { fieldMeta } from "@/molecules/field/meta";
 import { listRowMeta } from "@/molecules/list-row/meta";
 import { meterMeta } from "@/molecules/meter/meta";
+import { readoutMeta } from "@/molecules/readout/meta";
 import { sectionLabelMeta } from "@/molecules/section-label/meta";
 import { segmentedMeta } from "@/molecules/segmented/meta";
 import { sliderMeta } from "@/molecules/slider/meta";
@@ -59,6 +61,7 @@ export const REGISTRY: ComponentMeta[] = [
   kbdMeta,
   pillMeta,
   selectMeta,
+  sparkMeta,
   spinnerMeta,
   surfaceMeta,
   switchMeta,
@@ -68,6 +71,7 @@ export const REGISTRY: ComponentMeta[] = [
   fieldMeta,
   listRowMeta,
   meterMeta,
+  readoutMeta,
   sectionLabelMeta,
   segmentedMeta,
   sliderMeta,

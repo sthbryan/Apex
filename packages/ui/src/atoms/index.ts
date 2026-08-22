@@ -8,6 +8,7 @@ export * from "@/atoms/dot";
 export * from "@/atoms/kbd";
 export * from "@/atoms/pill";
 export * from "@/atoms/select";
+export * from "@/atoms/spark";
 export * from "@/atoms/spinner";
 export * from "@/atoms/surface";
 export * from "@/atoms/switch";
