@@ -1,6 +1,6 @@
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import {
-  ArrowLeftRight, Check, ChevronRight, FileText, GitBranch, Globe, Lock,
+  ArrowLeftRight, Check, ChevronRight, FileText, GitBranch, Globe, Image as ImageIcon, Lock,
   Plus, RotateCw, Search, Send, Settings, X,
 } from "lucide-preact";
 import {
@@ -9,9 +9,10 @@ import {
   settingsOpen, showWelcome, toastCount, uaWindow,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
+import { ReviewPanel } from "@/features/dock/Panels";
 import {
   AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
-  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, MarkdownView, Pane, PaneGrid, PaneSplit,
+  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Pane, PaneGrid, PaneSplit,
   Pill, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
 } from "@apex/ui";
 
@@ -93,16 +94,19 @@ function Sessions() {
 
 export const PANE_TYPES = [
   { id: "tab-auth", label: "Session · split", Component: () => <AuthSplit /> },
+  { id: "tab-acp", label: "Session · native", Component: () => <AcpPane /> },
+  { id: "tab-tty", label: "Session · terminal", Component: () => <TerminalSessionPane /> },
   { id: "tab-browser", label: "Web preview", Component: () => <BrowserPane /> },
   { id: "tab-race", label: "Race", Component: () => <RacePane /> },
   { id: "tab-file", label: "Markdown", Component: () => <MarkdownPane /> },
   { id: "tab-code", label: "Code", Component: () => <CodePane /> },
   { id: "tab-diff", label: "Diff", Component: () => <DiffPane /> },
+  { id: "tab-image", label: "Image", Component: () => <ImagePane /> },
+  { id: "tab-panel", label: "Panel in a tab", Component: () => <PanelTabPane /> },
 ];
 
-function AuthSplit() {
+function AcpPane() {
   return (
-    <PaneSplit>
       <Pane
         title="Refactor auth middleware"
         sub={<><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span></>}
@@ -137,17 +141,59 @@ function AuthSplit() {
           </div>
         </div>
       </Pane>
+  );
+}
 
-      <Pane
-        title="Fix flaky checkout tests"
-        sub={<><Chip>⎇ apex/codex</Chip><span class="mono">14m</span></>}
-        lead={<AgentIcon agent="codex" />}
-        actions={<StatePill state="working">Running</StatePill>}
-        scroll={false}
-      >
-        <img class="pane-mock" data-mock="tty" src="/mock/tty.svg" alt="Terminal session rendered by xterm" />
-      </Pane>
+function TerminalSessionPane() {
+  return (
+    <Pane
+      title="Fix flaky checkout tests"
+      sub={<><Chip>⎇ apex/codex</Chip><span class="mono">14m</span></>}
+      lead={<AgentIcon agent="codex" />}
+      actions={<StatePill state="working">Running</StatePill>}
+      scroll={false}
+    >
+      <img class="pane-mock" data-mock="tty" src="/mock/tty.svg" alt="Terminal session rendered by xterm" />
+    </Pane>
+  );
+}
+
+function AuthSplit() {
+  return (
+    <PaneSplit>
+      <AcpPane />
+      <TerminalSessionPane />
     </PaneSplit>
+  );
+}
+
+function ImagePane() {
+  return (
+    <Pane
+      lead={<ImageIcon size={12} style="color:var(--apex-muted)" />}
+      title="assets/brand/welcome.png"
+      actions={<Chip>PNG</Chip>}
+      scroll={false}
+    >
+      <ImageView
+        src="/mock/browser.svg"
+        alt="welcome.png"
+        meta="520 × 340 · 48 KB"
+        actions={<Chip tone="accent">fit</Chip>}
+      />
+    </Pane>
+  );
+}
+
+function PanelTabPane() {
+  return (
+    <Pane
+      lead={<ArrowLeftRight size={12} style="color:var(--apex-muted)" />}
+      title="Review"
+      actions={<Button variant="subtle" size="sm">Move to sidebar</Button>}
+    >
+      <ReviewPanel />
+    </Pane>
   );
 }
 
@@ -342,7 +388,7 @@ function Pop({ title, children }: { title: string; children: any }) {
   );
 }
 
-function UsagePop() {
+export function UsagePop() {
   return (
     <Pop title="claude · usage">
       <div class="ua-window" role="group">
@@ -361,7 +407,7 @@ function UsagePop() {
   );
 }
 
-function ResourcesPop() {
+export function ResourcesPop() {
   return (
     <Pop title="Resources">
       <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores</span></div>
@@ -377,7 +423,7 @@ function ResourcesPop() {
   );
 }
 
-function NotificationsPop() {
+export function NotificationsPop() {
   const notices = [
     ["blocked", "Waiting for your approval", "antigravity wants to run a migration", "2m"],
     ["done", "Codex finished", "Fix the race settle flow · exit 0", "14m"],
@@ -399,7 +445,7 @@ function NotificationsPop() {
   );
 }
 
-function TargetPop() {
+export function TargetPop() {
   return (
     <Pop title="Where git commands run">
       <button class="tgt-row"><span style="color:var(--apex-accent)"><Check size={13} /></span>
@@ -414,7 +460,7 @@ function TargetPop() {
   );
 }
 
-function ProjectsPop() {
+export function ProjectsPop() {
   return (
     <div class="popover" style="left:10px;right:auto;width:264px" onClick={(e) => e.stopPropagation()}>
       <div class="pop-head">Projects<span style="flex:1" /><button onClick={() => openPop.value = null}><X size={12} /></button></div>
@@ -435,11 +481,12 @@ function ProjectsPop() {
   );
 }
 
-function Launcher() {
-  const [picked, setPicked] = (globalThis as any).__picked ??= { v: new Set(["claude", "codex"]) };
+export function Launcher({ inline }: { inline?: boolean } = {}) {
+  const [picked, setPicked] = useState<string[]>(["claude", "codex"]);
   return (
     <Modal
       open
+      modal={!inline}
       onClose={() => launcherOpen.value = false}
       title="Race a task"
       actions={<Button variant="subtle" size="sm" iconOnly title="Close" onClick={() => launcherOpen.value = false}><X size={13} /></Button>}
@@ -450,19 +497,19 @@ function Launcher() {
           <div class="pl-label" style="padding-left:0">Who runs it</div>
           <ToggleChipGroup label="Contenders">
             {["claude", "codex", "grok", "opencode"].map((a) => (
-              <ToggleChip key={a} pressed={picked.v.has(a)}
+              <ToggleChip key={a} pressed={picked.includes(a)}
                 lead={<AgentIcon agent={a} size="sm" />}
-                trail={picked.v.has(a) ? <Check size={11} /> : undefined}
-                onClick={() => { picked.v.has(a) ? picked.v.delete(a) : picked.v.add(a); setPicked({ v: picked.v }); }}>
+                trail={picked.includes(a) ? <Check size={11} /> : undefined}
+                onClick={() => setPicked(picked.includes(a) ? picked.filter((x) => x !== a) : [...picked, a])}>
                 {a}
               </ToggleChip>
             ))}
           </ToggleChipGroup>
           <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
             <span style="font-size:11.5px;color:var(--apex-muted);flex:1">
-              {picked.v.size < 2 ? "Pick at least two." : `${picked.v.size} agents · one worktree each · no prompts`}
+              {picked.length < 2 ? "Pick at least two." : `${picked.length} agents · one worktree each · no prompts`}
             </span>
-            <Button variant="primary" disabled={picked.v.size < 2}
+            <Button variant="primary" disabled={picked.length < 2}
               onClick={() => { launcherOpen.value = false; showWelcome.value = false; activeTab.value = "tab-race"; }}>
               Start race
             </Button>

@@ -15,10 +15,11 @@ const SECTIONS = [
   { id: "about", label: "About", Icon: CircleHelp },
 ] as const;
 
-export function SettingsModal() {
+export function SettingsModal({ inline }: { inline?: boolean } = {}) {
   return (
     <SettingsDialog
       open
+      modal={!inline}
       onClose={() => settingsOpen.value = false}
       sections={SECTIONS.map(({ id, label, Icon }) => ({ id, label, icon: <Icon size={14} strokeWidth={1.75} /> }))}
       section={settingsSection.value}

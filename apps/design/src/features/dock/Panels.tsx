@@ -137,7 +137,7 @@ function GitPanel() {
   );
 }
 
-function ReviewPanel() {
+export function ReviewPanel() {
   return (
     <div class="dock-view active">
       <div class="sec-label" style="padding-top:4px">Waiting on you <span>· 2</span></div>

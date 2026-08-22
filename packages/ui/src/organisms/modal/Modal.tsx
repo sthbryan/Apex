@@ -9,27 +9,29 @@ export interface ModalProps {
   onClose: () => void;
   title: string;
   width?: ModalWidth;
+  modal?: boolean;
   actions?: ComponentChildren;
   footer?: ComponentChildren;
   class?: string;
   children?: ComponentChildren;
 }
 
-export function Modal({ open, onClose, title, width = "md", actions, footer, class: className, children }: ModalProps) {
+export function Modal({ open, onClose, title, width = "md", modal = true, actions, footer, class: className, children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) modal ? dialog.showModal() : dialog.show();
     if (!open && dialog.open) dialog.close();
-  }, [open]);
+  }, [open, modal]);
 
   return (
     <dialog
       ref={ref}
       class={cn("ui-modal", className)}
       data-width={width}
+      data-modal={modal ? undefined : "false"}
       aria-label={title}
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onClick={(e) => { if (e.target === ref.current) onClose(); }}

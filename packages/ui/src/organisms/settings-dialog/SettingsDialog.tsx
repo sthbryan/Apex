@@ -16,6 +16,7 @@ export interface SettingsDialogProps {
   onSection: (id: string) => void;
   title?: string;
   navTitle?: string;
+  modal?: boolean;
   close?: ComponentChildren;
   class?: string;
   children?: ComponentChildren;
@@ -29,6 +30,7 @@ export function SettingsDialog({
   onSection,
   title = "Settings",
   navTitle = "Settings",
+  modal = true,
   close,
   class: className,
   children,
@@ -38,14 +40,15 @@ export function SettingsDialog({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) modal ? dialog.showModal() : dialog.show();
     if (!open && dialog.open) dialog.close();
-  }, [open]);
+  }, [open, modal]);
 
   return (
     <dialog
       ref={ref}
       class={cn("ui-modal ui-settings-dialog", className)}
+      data-modal={modal ? undefined : "false"}
       aria-label={title}
       onCancel={(e: Event) => { e.preventDefault(); onClose(); }}
       onClick={(e) => { if (e.target === ref.current) onClose(); }}

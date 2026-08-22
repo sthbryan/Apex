@@ -14,6 +14,11 @@
   .ui-modal[data-width="md"] { --ui-modal-width: 560px; }
   .ui-modal[data-width="lg"] { --ui-modal-width: 760px; }
 
+  .ui-modal[data-modal="false"] {
+    @apply static m-0 max-h-full w-full;
+    animation: none;
+  }
+
   .ui-modal::backdrop {
     background-color: rgb(0 0 0 / 0.42);
     animation: apex-fade-in var(--apex-quick) var(--apex-ease) both;

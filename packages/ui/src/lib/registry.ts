@@ -30,6 +30,7 @@ import { commandPaletteMeta } from "@/organisms/command-palette/meta";
 import { composerMeta } from "@/organisms/composer/meta";
 import { diffViewMeta } from "@/organisms/diff-view/meta";
 import { emptyStateMeta } from "@/organisms/empty-state/meta";
+import { imageViewMeta } from "@/organisms/image-view/meta";
 import { markdownViewMeta } from "@/organisms/markdown-view/meta";
 import { modalMeta } from "@/organisms/modal/meta";
 import { paneMeta } from "@/organisms/pane/meta";
@@ -75,6 +76,7 @@ export const REGISTRY: ComponentMeta[] = [
   composerMeta,
   diffViewMeta,
   emptyStateMeta,
+  imageViewMeta,
   markdownViewMeta,
   modalMeta,
   paneMeta,

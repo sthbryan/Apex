@@ -34,6 +34,7 @@
 @import "./organisms/composer/composer.css";
 @import "./organisms/diff-view/diff-view.css";
 @import "./organisms/empty-state/empty-state.css";
+@import "./organisms/image-view/image-view.css";
 @import "./organisms/markdown-view/markdown-view.css";
 @import "./organisms/modal/modal.css";
 @import "./organisms/pane/pane.css";

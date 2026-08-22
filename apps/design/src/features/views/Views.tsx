@@ -1,5 +1,7 @@
 import { Pill, SidePanel, Wordmark } from "@apex/ui";
 import { DOCK_PANELS } from "@/features/dock/Panels";
+import { Carousel } from "@/features/views/Carousel";
+import { OVERLAYS } from "@/features/views/Overlays";
 import { PANE_TYPES } from "@/features/workspace/Workspace";
 
 export function Views() {
@@ -32,18 +34,34 @@ export function Views() {
 
       <section class="tk-section">
         <h2 class="tk-h2">
+          Overlays
+          <Pill>{OVERLAYS.length}</Pill>
+        </h2>
+        <p class="tk-blurb">Everything that floats above a view. Popovers anchor to the status bar; overlays take the window.</p>
+        <div class="vw-overlay-grid">
+          {OVERLAYS.map((o) => (
+            <article class="vw-cell" key={o.id}>
+              <span class="vw-label">{o.label} · {o.kind}</span>
+              <div class="vw-overlay-stage"><o.Component /></div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="tk-section">
+        <h2 class="tk-h2">
           Dock panels
           <Pill>{DOCK_PANELS.length}</Pill>
         </h2>
         <p class="tk-blurb">What the rail switches between, at the real dock width.</p>
-        <div class="vw-dock-grid">
+        <Carousel label="Dock panels">
           {DOCK_PANELS.map((p) => (
             <article class="vw-cell" key={p.id}>
               <span class="vw-label">{p.label}</span>
               <SidePanel class="vw-dock"><p.Component /></SidePanel>
             </article>
           ))}
-        </div>
+        </Carousel>
       </section>
     </div>
   );

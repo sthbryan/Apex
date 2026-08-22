@@ -280,3 +280,59 @@
   border: 1px solid var(--apex-border);
   overflow: hidden;
 }
+
+.vw-carousel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vw-carousel-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.vw-carousel-track::-webkit-scrollbar { display: none; }
+
+.vw-carousel-track > .vw-cell {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
+}
+
+.vw-carousel-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.vw-overlay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.vw-overlay-stage {
+  position: relative;
+  height: 380px;
+  overflow: hidden;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-r-md);
+  background: var(--apex-bg);
+  display: flex;
+}
+
+.vw-overlay-stage > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.vw-overlay-stage .popover {
+  position: absolute;
+  inset: auto 10px 10px auto;
+  max-height: 340px;
+}

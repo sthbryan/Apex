@@ -7,6 +7,10 @@
     height: min(520px, 88vh);
   }
 
+  .ui-settings-dialog[data-modal="false"] {
+    @apply h-full w-full;
+  }
+
   .ui-settings-nav {
     @apply flex flex-none flex-col gap-0.5 px-2.5 py-3.5;
     width: 172px;
@@ -49,6 +53,10 @@
   }
 
   @media (max-width: 780px) {
-    .ui-settings-nav { display: none; }
+    .ui-settings-dialog[data-modal="false"] {
+    @apply h-full w-full;
+  }
+
+  .ui-settings-nav { display: none; }
   }
 }

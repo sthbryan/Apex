@@ -5,6 +5,7 @@ export * from "@/organisms/command-palette";
 export * from "@/organisms/composer";
 export * from "@/organisms/diff-view";
 export * from "@/organisms/empty-state";
+export * from "@/organisms/image-view";
 export * from "@/organisms/markdown-view";
 export * from "@/organisms/modal";
 export * from "@/organisms/pane";
