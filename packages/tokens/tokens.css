@@ -1,16 +1,16 @@
 :root {
-  --apex-r-xs: 6px;
-  --apex-r-sm: 9px;
-  --apex-r-md: 12px;
-  --apex-r-lg: 14px;
-  --apex-r-xl: 16px;
+  --apex-r-xs: 8px;
+  --apex-r-sm: 10px;
+  --apex-r-md: 14px;
+  --apex-r-lg: 18px;
+  --apex-r-xl: 24px;
   --apex-r-full: 999px;
 
   --apex-h-xs: 20px;
   --apex-h-sm: 24px;
-  --apex-h-md: 28px;
-  --apex-h-lg: 32px;
-  --apex-h-xl: 36px;
+  --apex-h-md: 30px;
+  --apex-h-lg: 34px;
+  --apex-h-xl: 38px;
 
   --apex-space-2xs: 2px;
   --apex-space-xs: 4px;
