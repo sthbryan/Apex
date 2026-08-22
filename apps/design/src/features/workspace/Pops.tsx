@@ -7,8 +7,8 @@ import {
 } from "@/features/workspace/fixtures";
 import type { Proc, Target } from "@/features/workspace/fixtures";
 import {
-  AgentIcon, Badge, Bar, Button, Chip, Dot, ListRow, Meter, Pill, Popover,
-  Readout, SectionLabel, Segmented, Spark, StatusPill,
+  AgentIcon, Badge, Bar, Button, Chip, Dot, ListRow, Meter, Notice, Pill, Popover,
+  ProcessRow, Readout, SectionLabel, Segmented, Spark, StatusPill,
 } from "@apex/ui";
 
 function toggle(id: string) {
@@ -65,11 +65,15 @@ export function UsagePop({ open, onClose }: PopProps = {}) {
       <Meter label="7d" value={USAGE.week.value} tone="done" detail={USAGE.week.detail} />
 
       {USAGE_AGENTS.map((a) => a.unavailable && unavailable ? (
-        <div class="pop-fail" key={a.agent}>
-          <AgentIcon agent={a.agent} size="sm" />
-          <span style="flex:1">{a.agent} quota unavailable</span>
-          <Button variant="subtle" size="xs" onClick={() => setUnavailable(false)}>Retry</Button>
-        </div>
+        <Notice
+          key={a.agent}
+          tone="failed"
+          class="mt-1.5"
+          lead={<AgentIcon agent={a.agent} size="sm" />}
+          actions={<Button variant="subtle" size="xs" onClick={() => setUnavailable(false)}>Retry</Button>}
+        >
+          {a.agent} quota unavailable
+        </Notice>
       ) : (
         <div key={a.agent}>
           <SectionLabel flush count={a.pace}>{a.agent}</SectionLabel>
@@ -85,34 +89,41 @@ function ProcRow({ proc, onKill }: { proc: Proc; onKill: () => void }) {
 
   if (confirming) {
     return (
-      <div class="proc-confirm">
-        <span>End this session? The agent stops, the worktree stays.</span>
-        <span class="proc-confirm-actions">
-          <Button variant="subtle" size="xs" onClick={() => setConfirming(false)}>Cancel</Button>
-          <Button variant="danger" size="xs" onClick={onKill}>End session</Button>
-        </span>
-      </div>
+      <Notice
+        tone="failed"
+        stacked
+        class="ml-5"
+        actions={
+          <>
+            <Button variant="subtle" size="xs" onClick={() => setConfirming(false)}>Cancel</Button>
+            <Button variant="danger" size="xs" onClick={onKill}>End session</Button>
+          </>
+        }
+      >
+        End this session? The agent stops, the worktree stays.
+      </Notice>
     );
   }
 
   const label = proc.agent ? `End the session running ${proc.cmd}` : `Kill ${proc.cmd} (${proc.pid})`;
   return (
-    <div class="proc-row">
-      <span class="proc-cmd mono">{proc.cmd}</span>
-      <span class="proc-pid mono">{proc.pid}</span>
-      <span class="proc-mem mono">{proc.mem}</span>
-      <Button
-        class="proc-kill"
-        variant="subtle"
-        size="xs"
-        iconOnly
-        title={label}
-        aria-label={label}
-        onClick={() => proc.agent ? setConfirming(true) : onKill()}
-      >
-        <X size={11} />
-      </Button>
-    </div>
+    <ProcessRow
+      command={proc.cmd}
+      pid={proc.pid}
+      mem={proc.mem}
+      actions={
+        <Button
+          variant="subtle"
+          size="xs"
+          iconOnly
+          title={label}
+          aria-label={label}
+          onClick={() => proc.agent ? setConfirming(true) : onKill()}
+        >
+          <X size={11} />
+        </Button>
+      }
+    />
   );
 }
 
@@ -147,7 +158,7 @@ export function ResourcesPop({ open, onClose }: PopProps = {}) {
       ))}
 
       <SectionLabel flush count={RESOURCE_TOTAL}>Sessions and processes</SectionLabel>
-      {live.length === 0 ? <div class="note">Nothing running.</div> : live.map((s) => (
+      {live.length === 0 ? <Notice class="mt-1.5">Nothing running.</Notice> : live.map((s) => (
         <div class="proc-group" key={s.id}>
           <ListRow
             as="div"
@@ -278,7 +289,7 @@ export function ProjectsPop({ open, onClose }: PopProps = {}) {
           ) : undefined}
         />
       ))}
-      {removedProject.value ? <div class="note">Removed apex-docs</div> : null}
+      {removedProject.value ? <Notice tone="done">Removed apex-docs</Notice> : null}
       <ListRow label="Open project…" lead={<span class="proj-glyph" data-size="sm"><Plus size={11} /></span>} />
     </Popover>
   );
