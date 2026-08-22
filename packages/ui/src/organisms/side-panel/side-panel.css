@@ -13,15 +13,15 @@
   }
 
   .ui-side-panel-head {
-    @apply flex-none px-lg pt-lg pb-sm;
+    @apply flex-none px-3 pt-3 pb-1.5;
   }
 
   .ui-side-panel-body {
-    @apply min-h-0 flex-1 overflow-y-auto px-md pt-xs pb-lg;
+    @apply flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pt-1 pb-3;
   }
 
   .ui-side-panel-foot {
-    @apply flex-none p-lg;
+    @apply flex-none p-3;
     border-top: 1px solid var(--apex-border);
   }
 }
