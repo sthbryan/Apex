@@ -1,26 +1,19 @@
 import { useEffect, useState } from "preact/hooks";
 import {
   ArrowLeftRight, Check, ChevronRight, FileText, GitBranch, Globe, Image as ImageIcon, Lock,
-  Plus, RotateCw, Search, Send, Settings, X,
+  Plus, RotateCw, Search, Send, X,
 } from "lucide-preact";
 import {
   activeTab, consoleOpen, fmode, launcherOpen,
-  openPop, raceAsking, raceKept, removedProject,
-  settingsOpen, toastCount, uaWindow,
+  raceAsking, raceKept, settingsOpen, toastCount,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
-  AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
-  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Meter, Pane, PaneGrid, PaneSplit,
-  Pill, SectionLabel, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
+  AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView, Code, Composer,
+  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Pane, PaneGrid, PaneSplit,
+  Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
 } from "@apex/ui";
-
-function tone(pct: number) {
-  if (pct >= 80) return "failed";
-  if (pct >= 60) return "blocked";
-  return "done";
-}
 
 const TABS = [
   { id: "tab-auth", title: "Refactor auth middleware" },
@@ -380,230 +373,9 @@ function Overlays() {
         </ToastStack>
       )}
 
-      {openPop.value === "usage" && <UsagePop />}
-      {openPop.value === "resources" && <ResourcesPop />}
-      {openPop.value === "notifications" && <NotificationsPop />}
-      {openPop.value === "target" && <TargetPop />}
-      {openPop.value === "projects" && <ProjectsPop />}
       {launcherOpen.value && <Launcher />}
       {settingsOpen.value && <SettingsModal />}
     </>
-  );
-}
-
-function Pop({ title, meta, actions, children }: { title: string; meta?: string; actions?: any; children: any }) {
-  return (
-    <div class="popover" onClick={(e) => e.stopPropagation()}>
-      <div class="pop-head">
-        {title}
-        <span style="flex:1" />
-        {meta ? <span class="pop-fresh">{meta}</span> : null}
-        {actions}
-        <Button variant="subtle" size="xs" iconOnly aria-label="Close" onClick={() => openPop.value = null}><X size={12} /></Button>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-export function UsagePop() {
-  const [grokFailed, setGrokFailed] = useState(true);
-  const pct = uaWindow.value === "5h" ? 62 : 34;
-  return (
-    <Pop
-      title="claude · usage"
-      meta="updated 2m ago"
-      actions={<Button variant="subtle" size="xs" iconOnly aria-label="Refresh" title="Refresh"><RotateCw size={11} /></Button>}
-    >
-      <div class="ua-window" role="group">
-        <button aria-pressed={uaWindow.value === "5h"} onClick={() => uaWindow.value = "5h"}>5h</button>
-        <button aria-pressed={uaWindow.value === "7d"} onClick={() => uaWindow.value = "7d"}>7d</button>
-      </div>
-      <div class="ua-big">
-        <span class="n" data-tone={tone(pct)}>{pct}%</span>
-        <span class="dock-note">resets in 2h 30m · Tue 4:00</span>
-      </div>
-      <Meter label="used" value={pct} tick={58} detail="pace ✓" />
-      <Meter label="7d" value={34} tone="done" detail="on pace" />
-
-      <div class="pop-head pop-sub">
-        codex
-        <span class="ph-sub" data-tone={tone(71)}>over pace</span>
-      </div>
-      <Meter label="5h" value={71} tone="blocked" detail="tight" />
-
-      {grokFailed ? (
-        <div class="pop-fail">
-          <AgentIcon agent="grok" size="sm" />
-          <span style="flex:1">grok quota unavailable</span>
-          <Button variant="subtle" size="xs" onClick={() => setGrokFailed(false)}>Retry</Button>
-        </div>
-      ) : (
-        <>
-          <div class="pop-head pop-sub">
-            grok
-            <span class="ph-sub" data-tone={tone(12)}>plenty left</span>
-          </div>
-          <Meter label="5h" value={12} tone="done" detail="easy" />
-        </>
-      )}
-    </Pop>
-  );
-}
-
-const SESSIONS = [
-  {
-    id: "auth",
-    name: "Refactor auth middleware",
-    agent: "claude",
-    state: "working" as const,
-    mem: "520 MB",
-    pct: "14%",
-    procs: [
-      { pid: 4821, cmd: "claude", mem: "412 MB", agent: true },
-      { pid: 4933, cmd: "bun test tests/auth.test.ts", mem: "96 MB", agent: false },
-    ],
-  },
-  {
-    id: "checkout",
-    name: "Fix flaky checkout tests",
-    agent: "codex",
-    state: "done" as const,
-    mem: "362 MB",
-    pct: "2%",
-    procs: [{ pid: 3987, cmd: "codex", mem: "288 MB", agent: true }],
-  },
-];
-
-function ProcRow({ proc, onKill }: { proc: typeof SESSIONS[0]["procs"][0]; onKill: () => void }) {
-  const [confirming, setConfirming] = useState(false);
-
-  if (confirming) {
-    return (
-      <div class="proc-confirm">
-        <span>End this session? The agent stops, the worktree stays.</span>
-        <span class="proc-confirm-actions">
-          <Button variant="subtle" size="xs" onClick={() => setConfirming(false)}>Cancel</Button>
-          <Button variant="danger" size="xs" onClick={onKill}>End session</Button>
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div class="proc-row">
-      <span class="proc-cmd mono">{proc.cmd}</span>
-      <span class="proc-pid mono">{proc.pid}</span>
-      <span class="proc-mem mono">{proc.mem}</span>
-      <Button
-        class="proc-kill"
-        variant="subtle"
-        size="xs"
-        iconOnly
-        title={proc.agent ? `End the session running ${proc.cmd}` : `Kill ${proc.cmd} (${proc.pid})`}
-        aria-label={proc.agent ? `End the session running ${proc.cmd}` : `Kill ${proc.cmd} (${proc.pid})`}
-        onClick={() => proc.agent ? setConfirming(true) : onKill()}
-      >
-        <X size={11} />
-      </Button>
-    </div>
-  );
-}
-
-export function ResourcesPop() {
-  const [killed, setKilled] = useState<number[]>([]);
-  const live = SESSIONS.map((s) => ({ ...s, procs: s.procs.filter((p) => !killed.includes(p.pid)) }))
-    .filter((s) => s.procs.length > 0);
-
-  return (
-    <Pop title="Resources" meta="sampled every 5s">
-      <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores · user 18% sys 5%</span></div>
-      <svg class="spark" viewBox="0 0 300 54" preserveAspectRatio="none">
-        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16 L 300 54 L 0 54 Z" fill="var(--apex-state-working)" opacity="0.16" />
-        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16" fill="none" stroke="var(--apex-state-working)" stroke-width="1.6" />
-      </svg>
-      <Meter label="Memory" value={56} detail="18.2/32 GB" />
-      <Meter label="Swap" value={6} tone="done" detail="0.18/3 GB" />
-      <Meter label="Apex" value={12} tone="done" detail="312 MB" />
-
-      <SectionLabel class="pop-total" count="882 MB · 16%">Sessions and processes</SectionLabel>
-      {live.length === 0 ? (
-        <div class="proc-empty">Nothing running.</div>
-      ) : live.map((s) => (
-        <div class="proc-group" key={s.id}>
-          <div class="sess-res-row">
-            <Dot state={s.state} />
-            <span style="flex:1;min-width:0">{s.name}</span>
-            <span class="mono" style="font-size:10.5px;color:var(--apex-muted)">{s.mem} · {s.pct}</span>
-          </div>
-          {s.procs.map((p) => (
-            <ProcRow
-              key={p.pid}
-              proc={p}
-              onKill={() => setKilled((k) => [...k, ...(p.agent ? s.procs.map((x) => x.pid) : [p.pid])])}
-            />
-          ))}
-        </div>
-      ))}
-    </Pop>
-  );
-}
-
-export function NotificationsPop() {
-  const notices = [
-    ["blocked", "Waiting for your approval", "antigravity wants to run a migration", "2m"],
-    ["done", "Codex finished", "Fix the race settle flow · exit 0", "14m"],
-    ["failed", "Weekly quota almost gone", "claude · 71% used, over pace", "1h"],
-  ];
-  return (
-    <Pop title="Notifications">
-      {notices.map(([state, title, body, age]) => (
-        <button class="notice-row" key={title}>
-          <Dot state={state as "blocked" | "done" | "failed"} />
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12.5px">{title}</div>
-            <div style="font-size:11px;color:var(--apex-muted)">{body}</div>
-          </div>
-          <span style="font-size:10.5px;color:var(--apex-muted)">{age}</span>
-        </button>
-      ))}
-    </Pop>
-  );
-}
-
-export function TargetPop() {
-  return (
-    <Pop title="Where git commands run">
-      <button class="tgt-row"><span style="color:var(--apex-accent)"><Check size={13} /></span>
-        <span class="tgt-name"><span class="t1">apex-sandbox <Chip class="h-4 text-2xs">project</Chip></span><span class="t2">main · 16 changed</span></span>
-      </button>
-      <div class="pl-label" style="padding-left:0">Worktrees · 2 live</div>
-      <button class="tgt-row"><Dot state="working" /><span class="tgt-name"><span class="t1">Refactor auth middleware</span><span class="t2">apex/claude · 3 changed</span></span></button>
-      <button class="tgt-row"><Dot state="working" /><span class="tgt-name"><span class="t1">Fix flaky checkout tests</span><span class="t2">apex/codex · 5 changed</span></span></button>
-      <div class="pl-label" style="padding-left:0">Branches</div>
-      <button class="tgt-row"><span class="t1" style="color:var(--apex-muted)">release</span><span class="t2">behind 4</span></button>
-    </Pop>
-  );
-}
-
-export function ProjectsPop() {
-  return (
-    <div class="popover" style="left:10px;right:auto;width:264px" onClick={(e) => e.stopPropagation()}>
-      <div class="pop-head">Projects<span style="flex:1" /><button onClick={() => openPop.value = null}><X size={12} /></button></div>
-      <button class="notice-row"><span class="proj-glyph" style="width:22px;height:22px"><Check size={11} /></span>
-        <div style="flex:1;min-width:0"><div style="font-size:12.5px">apex-sandbox</div><div style="font-size:11px;color:var(--apex-muted)" class="mono">~/Documents/Codes/apex-sandbox</div></div>
-        <Pill tone="accent" class="h-[18px] text-2xs">2 running</Pill>
-      </button>
-      {!removedProject.value && (
-        <button class="notice-row"><span class="proj-glyph" style="width:22px;height:22px"><FileText size={11} /></span>
-          <div style="flex:1;min-width:0"><div style="font-size:12.5px">apex-docs</div><div style="font-size:11px;color:var(--apex-muted)" class="mono">~/Documents/Codes/apex-docs</div></div>
-          <Pill tone="blocked" class="h-[18px] text-2xs">1 waiting</Pill>
-          <button class="rev-act" style="width:22px;height:22px" title="Remove from Apex" onClick={(e) => { e.stopPropagation(); removedProject.value = true; }}><X size={11} /></button>
-        </button>
-      )}
-      {removedProject.value && <div style="font-size:12px;color:var(--apex-state-done);padding:6px 8px">Removed apex-docs</div>}
-      <button class="notice-row"><span class="proj-glyph" style="width:22px;height:22px"><Plus size={11} /></span><div style="font-size:12.5px">Open project…</div></button>
-    </div>
   );
 }
 

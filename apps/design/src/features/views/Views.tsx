@@ -40,7 +40,7 @@ export function Views() {
           Overlays
           <Pill>{OVERLAYS.length}</Pill>
         </h2>
-        <p class="tk-blurb">Everything that floats above a view. Popovers anchor to the status bar; overlays take the window.</p>
+        <p class="tk-blurb">Everything that floats above a view. Popovers anchor to their trigger; overlays take the window.</p>
         <Carousel label="Overlays" width={600} perPage={1}>
           {OVERLAYS.map((o) => <OverlayCard overlay={o} key={o.id} />)}
         </Carousel>
@@ -77,7 +77,7 @@ function OverlayCard({ overlay }: { overlay: Overlay }) {
           </Button>
         ) : null}
       </span>
-      <div class="vw-overlay-stage"><overlay.Component /></div>
+      <div class="vw-overlay-stage" data-kind={overlay.kind}><overlay.Component /></div>
       {overlay.Live ? <overlay.Live open={open} onClose={() => setOpen(false)} /> : null}
     </article>
   );

@@ -317,8 +317,20 @@
   min-height: 0;
 }
 
-.vw-overlay-stage .popover {
-  position: absolute;
-  inset: auto 10px 10px auto;
+.vw-overlay-stage[data-kind="popover"] {
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px;
+}
+
+.vw-overlay-stage[data-kind="popover"]:has(.ui-popover[data-side="bottom"]) {
+  align-items: flex-start;
+}
+
+.vw-overlay-stage[data-kind="popover"] > * {
+  flex: none;
+}
+
+.vw-overlay-stage[data-kind="popover"] .ui-popover {
   max-height: 340px;
 }

@@ -1,9 +1,10 @@
 import { Search } from "lucide-preact";
 import { CommandItem, CommandPalette, Kbd, KbdGroup, Toast, ToastStack } from "@apex/ui";
 import { SettingsModal } from "@/features/workspace/Settings";
+import { Launcher } from "@/features/workspace/Workspace";
 import {
-  Launcher, NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
-} from "@/features/workspace/Workspace";
+  NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
+} from "@/features/workspace/Pops";
 import { AgentIcon } from "@apex/ui";
 
 export interface Overlay {
@@ -37,6 +38,8 @@ function Toasts() {
   );
 }
 
+const noop = () => {};
+
 export const OVERLAYS: Overlay[] = [
   {
     id: "settings",
@@ -60,9 +63,9 @@ export const OVERLAYS: Overlay[] = [
     Live: ({ open, onClose }) => <Launcher open={open} onClose={onClose} />,
   },
   { id: "toasts", label: "Toasts", kind: "overlay", Component: Toasts },
-  { id: "usage", label: "Usage", kind: "popover", Component: UsagePop },
-  { id: "resources", label: "Resources", kind: "popover", Component: ResourcesPop },
-  { id: "notifications", label: "Notifications", kind: "popover", Component: NotificationsPop },
-  { id: "target", label: "Git target", kind: "popover", Component: TargetPop },
-  { id: "projects", label: "Projects", kind: "popover", Component: ProjectsPop },
+  { id: "usage", label: "Usage", kind: "popover", Component: () => <UsagePop open onClose={noop} /> },
+  { id: "resources", label: "Resources", kind: "popover", Component: () => <ResourcesPop open onClose={noop} /> },
+  { id: "notifications", label: "Notifications", kind: "popover", Component: () => <NotificationsPop open onClose={noop} /> },
+  { id: "target", label: "Git target", kind: "popover", Component: () => <TargetPop open onClose={noop} /> },
+  { id: "projects", label: "Projects", kind: "popover", Component: () => <ProjectsPop open onClose={noop} /> },
 ];

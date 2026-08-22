@@ -159,7 +159,7 @@ function RacePanel() {
     <div class="dock-view">
       <SectionLabel flush count={1}>Running</SectionLabel>
       <Card elevation="raised" title={`“${RACE_PROMPT}”`}>
-        <span class="dock-note">{CONTENDERS.length} contenders · no prompts · 4m 12s</span>
+        <span class="note">{CONTENDERS.length} contenders · no prompts · 4m 12s</span>
       </Card>
       {CONTENDERS.map((c) => (
         <ListRow

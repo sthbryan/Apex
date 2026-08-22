@@ -1,12 +1,15 @@
 import type { ComponentChildren } from "preact";
 import {
-  ArrowLeftRight, Bell, BookOpen, ChevronDown, Cpu, Folder, GitBranch,
+  ArrowLeftRight, BookOpen, Folder, GitBranch,
   History, House, Inbox, LayoutGrid, PanelLeft, Play, Settings, SquareTerminal,
 } from "lucide-preact";
-import { openPop, activePanel, activeTab, railOnly, settingsOpen, settingsSection } from "@/app/state";
+import { activePanel, activeTab, railOnly, settingsOpen, settingsSection } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
 import {
-  AppBody, Badge, Button, Rail, RailButton, RailDivider, RailSpacer,
+  NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
+} from "@/features/workspace/Pops";
+import {
+  AppBody, Button, Rail, RailButton, RailDivider, RailSpacer,
   SidePanel, StatusBar, StatusPill, TitleBar, Wordmark,
 } from "@apex/ui";
 import type { RailBadge } from "@apex/ui";
@@ -63,18 +66,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
 
         <SidePanel
           hidden={railOnly.value}
-          head={
-            <button class="proj-btn" title="Switch project"
-              onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "projects" ? null : "projects"; }}>
-              <span class="proj-glyph"><LayoutGrid size={13} /></span>
-              <span class="proj-main">
-                <span class="proj-name">apex-sandbox</span>
-                <span class="proj-path">~/Documents/Codes/apex-sandbox</span>
-              </span>
-              <span class="proj-alert" title="1 session waiting in another project" />
-              <ChevronDown size={12} style="color:var(--apex-muted);flex:none" />
-            </button>
-          }
+          head={<ProjectsPop />}
           foot={<Button variant="dashed" size="xl" onClick={() => activeTab.value = "home"}>+ New Session</Button>}
         >
           <Panels />
@@ -83,36 +75,13 @@ export function Layout({ children }: { children: ComponentChildren }) {
         {children}
       </AppBody>
 
-      <StatusBar
-        right={
-          <>
-            <StatusPill onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "notifications" ? null : "notifications"; }}>
-              <Bell size={11} /><Badge tone="neutral">3</Badge>
-            </StatusPill>
-            <StatusPill onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "resources" ? null : "resources"; }}>
-              <Cpu size={11} />
-              <span class="sb-bar"><i class="warn" style="width:23%" /></span>
-              <span class="mono">18G</span>
-            </StatusPill>
-          </>
-        }
-      >
-        <StatusPill title="Switch target"
-          onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "target" ? null : "target"; }}>
-          <GitBranch size={11} />
-          <span class="mono">main</span>
-          <span style="color:var(--apex-git-added)">↑2</span>
-          <span style="color:var(--apex-state-blocked)">↓0</span>
-        </StatusPill>
+      <StatusBar right={<><NotificationsPop /><ResourcesPop /></>}>
+        <TargetPop />
         <StatusPill onClick={() => activePanel.value = "git"}>
           <span class="mono">16</span> changed
         </StatusPill>
         <StatusPill live interactive={false}>2 racing</StatusPill>
-        <StatusPill onClick={(e) => { e.stopPropagation(); openPop.value = openPop.value === "usage" ? null : "usage"; }}>
-          <span class="sb-bar"><i style="width:62%" /></span>
-          <span class="sb-bar"><i class="warn" style="width:71%" /></span>
-          <span class="mono">71%</span>
-        </StatusPill>
+        <UsagePop />
       </StatusBar>
     </>
   );

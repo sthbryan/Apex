@@ -50,6 +50,7 @@ html[data-theme="light"] .stage-links {
   width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
   background: var(--apex-accent-soft); color: var(--apex-accent); flex: none;
 }
+.proj-glyph[data-size="sm"] { width: 20px; height: 20px; border-radius: 6px; }
 .proj-main { flex: 1; min-width: 0; line-height: 1.25; }
 .proj-name { display: block; font-weight: 600; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .proj-path { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--apex-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -79,7 +80,7 @@ html[data-theme="light"] .stage-links {
 .dock-flush {
   margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-lg));
 }
-.dock-note { color: var(--apex-muted); font-size: var(--apex-text-xs); }
+.note { color: var(--apex-muted); font-size: var(--apex-text-xs); }
 .dock-code {
   font-family: var(--font-mono); font-size: var(--apex-text-xs); color: var(--apex-muted);
   display: flex; flex-direction: column; gap: 2px;
@@ -147,8 +148,6 @@ html[data-theme="light"] .stage-links {
   border: 1px solid var(--apex-border); border-radius: 5px; padding: 1px 5px;
 }
 
-.sb-bar { width: 34px; height: 4px; border-radius: 2px; background: color-mix(in oklab, var(--apex-faint) 25%, transparent); overflow: hidden; }
-.sb-bar i { display: block; height: 100%; background: var(--apex-muted); }
 .pl-label {
   font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
   color: var(--apex-muted); padding: 8px 10px 4px;
@@ -181,38 +180,6 @@ kbd {
 .agent-set-controls { display: flex; align-items: center; gap: 10px; transition: opacity var(--apex-quick) var(--apex-ease); }
 .agent-set-row[data-off] .agent-set-controls { opacity: .4; }
 .agent-set-row[data-off] .as-name { color: var(--apex-muted); }
-.popover {
-  position: absolute; bottom: 40px; right: 10px; z-index: 55;
-  width: 308px; max-height: 420px; overflow-y: auto; background: var(--apex-overlay);
-  border: 1px solid var(--apex-border); border-radius: var(--apex-r-md);
-  padding: 12px 14px; animation: apex-rise-in 240ms var(--ease-out) both;
-}
-.pop-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 12.5px; margin-bottom: 4px; }
-.pop-head .ph-sub { font-size: 11px; color: var(--apex-muted); font-weight: 400; margin-left: auto; }
-.ua-window {
-  display: flex; gap: 2px; background: var(--apex-raised); border: 1px solid var(--apex-border);
-  border-radius: 8px; padding: 2px; margin-left: auto;
-}
-.ua-window button { height: 22px; padding: 0 10px; border-radius: 6px; font-size: 11px; font-weight: 500; color: var(--apex-muted); }
-.ua-window button[aria-pressed="true"] { background: var(--apex-bg); color: var(--apex-text); box-shadow: 0 0 0 1px var(--apex-border); }
-.ua-big { display: flex; align-items: baseline; gap: 8px; margin: 8px 0 4px; }
-.ua-big .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-
-.spark { width: 100%; height: 54px; display: block; margin: 4px 0 2px; }
-.sess-res-row {
-  display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px;
-  border-top: 1px solid color-mix(in oklab, var(--apex-border) 45%, transparent); margin-top: 5px;
-}
-.notice-row {
-  display: flex; align-items: flex-start; gap: 9px; width: 100%; text-align: left;
-  padding: 8px 6px; border-radius: var(--apex-r-sm);
-}
-.notice-row:hover { background: var(--apex-raised); }
-.tgt-row { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 7px 6px; border-radius: var(--apex-r-sm); }
-.tgt-row:hover { background: var(--apex-raised); }
-.tgt-name { flex: 1; min-width: 0; }
-.tgt-name .t1 { font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-.tgt-name .t2 { font-size: 10.5px; color: var(--apex-muted); font-family: var(--font-mono); }
 
 @media (max-width: 1180px) { .panes { grid-auto-columns: minmax(340px, 1fr); } }
 @media (max-width: 1020px) { .rail, .dock { display: none; } }
@@ -230,21 +197,13 @@ kbd {
 }
 .pane-mock[data-mock="tty"] { flex: 1; min-height: 0; object-fit: contain; object-position: top left; background: #0c0d10; max-width: none; }
 
-.pop-fresh { font-size: 10.5px; color: var(--apex-muted); font-weight: 400; }
-.pop-sub { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--apex-border); }
-.pop-total { padding-left: 0; padding-right: 0; }
 .pop-fail {
-  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 10px;
+  margin-top: 6px;
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
   border-radius: var(--apex-r-sm); font-size: 12px; color: var(--apex-muted);
   border: 1px dashed color-mix(in oklab, var(--apex-state-failed) 45%, var(--apex-border));
   background: color-mix(in oklab, var(--apex-state-failed) 6%, transparent);
 }
-.ua-big .n[data-tone="done"] { color: var(--apex-state-done); }
-.ua-big .n[data-tone="blocked"] { color: var(--apex-state-blocked); }
-.ua-big .n[data-tone="failed"] { color: var(--apex-state-failed); }
-.ph-sub[data-tone="done"] { color: var(--apex-state-done); }
-.ph-sub[data-tone="blocked"] { color: var(--apex-state-blocked); }
-.ph-sub[data-tone="failed"] { color: var(--apex-state-failed); }
 
 .about-card {
   display: flex;
@@ -264,7 +223,10 @@ kbd {
 .about-action { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .about-update { font-size: 10.5px; color: var(--apex-muted); text-align: right; max-width: 210px; }
 
-.proc-group { margin-bottom: 6px; }
+.proc-group {
+  padding-top: 4px; margin-bottom: 4px;
+  border-top: 1px solid color-mix(in oklab, var(--apex-border) 45%, transparent);
+}
 .proc-row {
   display: flex; align-items: center; gap: 8px;
   padding: 3px 0 3px 22px; font-size: 11px; color: var(--apex-muted);
@@ -284,4 +246,4 @@ kbd {
   border: 1px solid color-mix(in oklab, var(--apex-state-failed) 35%, transparent);
 }
 .proc-confirm-actions { display: flex; justify-content: flex-end; gap: 6px; }
-.proc-empty { padding: 10px 0; font-size: 11.5px; color: var(--apex-muted); }
+
