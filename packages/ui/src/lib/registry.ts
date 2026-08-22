@@ -6,6 +6,7 @@ import { buttonMeta } from "@/atoms/button/meta";
 import { checkboxMeta } from "@/atoms/checkbox/meta";
 import { chipMeta } from "@/atoms/chip/meta";
 import { dotMeta } from "@/atoms/dot/meta";
+import { glyphMeta } from "@/atoms/glyph/meta";
 import { kbdMeta } from "@/atoms/kbd/meta";
 import { pillMeta } from "@/atoms/pill/meta";
 import { selectMeta } from "@/atoms/select/meta";
@@ -22,6 +23,7 @@ import { listRowMeta } from "@/molecules/list-row/meta";
 import { meterMeta } from "@/molecules/meter/meta";
 import { noticeMeta } from "@/molecules/notice/meta";
 import { processRowMeta } from "@/molecules/process-row/meta";
+import { projectButtonMeta } from "@/molecules/project-button/meta";
 import { readoutMeta } from "@/molecules/readout/meta";
 import { sectionLabelMeta } from "@/molecules/section-label/meta";
 import { segmentedMeta } from "@/molecules/segmented/meta";
@@ -65,6 +67,7 @@ export const REGISTRY: ComponentMeta[] = [
   checkboxMeta,
   chipMeta,
   dotMeta,
+  glyphMeta,
   kbdMeta,
   pillMeta,
   selectMeta,
@@ -81,6 +84,7 @@ export const REGISTRY: ComponentMeta[] = [
   meterMeta,
   noticeMeta,
   processRowMeta,
+  projectButtonMeta,
   readoutMeta,
   sectionLabelMeta,
   segmentedMeta,

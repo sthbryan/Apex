@@ -21,4 +21,8 @@
     color: var(--apex-state-blocked);
     background-color: color-mix(in oklab, var(--apex-state-blocked) 12%, transparent);
   }
+
+  button.ui-chip:hover {
+    filter: brightness(1.12);
+  }
 }

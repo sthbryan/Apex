@@ -1,0 +1,20 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-glyph {
+    @apply grid shrink-0 place-items-center;
+    width: var(--ui-glyph-size, 24px);
+    height: var(--ui-glyph-size, 24px);
+    border-radius: var(--ui-glyph-radius, var(--apex-r-xs));
+    background-color: var(--apex-accent-soft);
+    color: var(--apex-accent);
+  }
+
+  .ui-glyph[data-size="sm"] { --ui-glyph-size: 20px; --ui-glyph-radius: 6px; }
+  .ui-glyph[data-size="lg"] { --ui-glyph-size: 40px; --ui-glyph-radius: var(--apex-r-md); }
+
+  .ui-glyph[data-tone="neutral"] {
+    background-color: var(--apex-raised);
+    color: var(--apex-muted);
+  }
+}

@@ -1,0 +1,29 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-project-button {
+    @apply flex w-full items-center gap-2 rounded-sm p-1.5 text-left;
+  }
+
+  .ui-project-button:hover {
+    @apply bg-raised;
+  }
+
+  .ui-project-button-text {
+    @apply min-w-0 flex-1 leading-tight;
+  }
+
+  .ui-project-button-name {
+    @apply block truncate font-semibold text-md text-text;
+  }
+
+  .ui-project-button-path {
+    @apply block truncate font-mono text-2xs text-muted;
+  }
+
+  .ui-project-button-alert {
+    @apply size-1.5 shrink-0 rounded-full;
+    background-color: var(--apex-state-blocked);
+    animation: apex-pulse 2s var(--apex-ease) infinite;
+  }
+}

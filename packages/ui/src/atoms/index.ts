@@ -5,6 +5,7 @@ export * from "@/atoms/button";
 export * from "@/atoms/checkbox";
 export * from "@/atoms/chip";
 export * from "@/atoms/dot";
+export * from "@/atoms/glyph";
 export * from "@/atoms/kbd";
 export * from "@/atoms/pill";
 export * from "@/atoms/select";
