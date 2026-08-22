@@ -25,7 +25,7 @@ export function Views() {
           <Pill>{ALL_VIEWS.length}</Pill>
         </h2>
         <p class="tk-blurb">What a workspace tab renders. One subject per view.</p>
-        <Carousel label="Views" width={560} perPage={1}>
+        <Carousel label="Views" width={600} perPage={1}>
           {ALL_VIEWS.map((v) => (
             <article class="vw-cell" key={v.id}>
               <span class="vw-label">{v.label}</span>
@@ -41,7 +41,7 @@ export function Views() {
           <Pill>{OVERLAYS.length}</Pill>
         </h2>
         <p class="tk-blurb">Everything that floats above a view. Popovers anchor to the status bar; overlays take the window.</p>
-        <Carousel label="Overlays" width={520} perPage={1}>
+        <Carousel label="Overlays" width={600} perPage={1}>
           {OVERLAYS.map((o) => <OverlayCard overlay={o} key={o.id} />)}
         </Carousel>
       </section>
