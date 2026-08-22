@@ -125,12 +125,7 @@ function ChangeRow({ change, onToggle }: ChangeRowProps) {
       label={change.path}
       mono
       lead={
-        <Checkbox
-          checked={change.staged}
-          onChange={onToggle}
-          label={`Stage ${change.path}`}
-          mark={<Check size={9} strokeWidth={3} />}
-        />
+        <Checkbox checked={change.staged} onChange={onToggle} label={`Stage ${change.path}`} />
       }
       trail={<DiffStat added={change.added || undefined} removed={change.removed || undefined} />}
     />
