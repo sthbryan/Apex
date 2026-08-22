@@ -6,7 +6,9 @@ export interface ListRowProps extends Omit<JSX.IntrinsicElements["button"], "ref
   sub?: string;
   lead?: ComponentChildren;
   trail?: ComponentChildren;
+  actions?: ComponentChildren;
   selected?: boolean;
+  mono?: boolean;
   as?: "button" | "div";
 }
 
@@ -15,7 +17,9 @@ export function ListRow({
   sub,
   lead,
   trail,
+  actions,
   selected,
+  mono,
   as = "button",
   disabled,
   class: className,
@@ -33,10 +37,11 @@ export function ListRow({
     >
       {lead ? <span class="ui-list-row-lead">{lead}</span> : null}
       <span class="ui-list-row-text">
-        <span class="ui-list-row-label">{label}</span>
+        <span class="ui-list-row-label" data-mono={mono || undefined}>{label}</span>
         {sub ? <span class="ui-list-row-sub">{sub}</span> : null}
       </span>
       {trail ? <span class="ui-list-row-trail">{trail}</span> : null}
+      {actions ? <span class="ui-list-row-actions">{actions}</span> : null}
     </Tag>
   );
 }

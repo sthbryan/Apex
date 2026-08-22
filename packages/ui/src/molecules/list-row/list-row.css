@@ -2,9 +2,8 @@
 
 @layer components {
   .ui-list-row {
-    @apply flex w-full items-center gap-2 rounded-sm px-2 text-left text-md text-text transition-colors;
+    @apply flex w-full items-center gap-md rounded-sm px-md py-xs text-left text-md text-text transition-colors;
     min-height: var(--apex-h-md);
-    @apply py-1.5;
   }
 
   .ui-list-row:hover:not([aria-disabled="true"]) {
@@ -20,7 +19,7 @@
   }
 
   .ui-list-row-lead {
-    @apply flex shrink-0 items-center gap-2;
+    @apply flex shrink-0 items-center gap-sm;
   }
 
   .ui-list-row-text {
@@ -31,11 +30,29 @@
     @apply block truncate;
   }
 
+  .ui-list-row-label[data-mono="true"] {
+    @apply font-mono text-sm;
+  }
+
   .ui-list-row-sub {
-    @apply block truncate font-mono text-2xs text-muted;
+    @apply block truncate text-2xs text-muted;
   }
 
   .ui-list-row-trail {
-    @apply flex shrink-0 items-center gap-2 text-xs text-muted;
+    @apply flex shrink-0 items-center gap-sm text-xs text-muted;
+  }
+
+  .ui-list-row-actions {
+    @apply flex shrink-0 items-center gap-2xs opacity-0 transition-opacity;
+  }
+
+  .ui-list-row:hover .ui-list-row-actions,
+  .ui-list-row:focus-within .ui-list-row-actions,
+  .ui-list-row[aria-selected="true"] .ui-list-row-actions {
+    @apply opacity-100;
+  }
+
+  @media (hover: none) {
+    .ui-list-row-actions { @apply opacity-100; }
   }
 }

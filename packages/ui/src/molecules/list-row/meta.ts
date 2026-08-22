@@ -6,12 +6,13 @@ export const listRowMeta: ComponentMeta = {
   component: ListRow,
   layer: "molecule",
   description: "Selectable row for sessions, files and tasks.",
-  rule: "One line of identity, one of context. Anything else goes in the trail slot.",
+  rule: "One line of identity, one of context. Rows with actions are divs, never buttons.",
   variants: [
     { name: "default", props: { label: "Refactor auth middleware" } },
     { name: "selected", props: { label: "Refactor auth middleware", selected: true } },
     { name: "with sub", props: { label: "Fix flaky checkout tests", sub: "apex/codex · 2 files" } },
     { name: "disabled", props: { label: "Archived worktree", disabled: true } },
+    { name: "mono", props: { label: "apps/desktop/src/app/layout/state.ts", mono: true } },
     { name: "long label", props: { label: "Rewrite the dock resize handler so it stops jittering on retina displays" } },
   ],
 };
