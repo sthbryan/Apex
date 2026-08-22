@@ -15,6 +15,10 @@
     height: var(--apex-h-md);
   }
 
+  .ui-browser-url:focus-within {
+    border-color: var(--apex-focus);
+  }
+
   .ui-browser-url input {
     @apply min-w-0 flex-1 font-mono text-sm;
   }

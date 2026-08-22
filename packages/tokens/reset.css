@@ -32,6 +32,12 @@
     border-radius: var(--apex-r-xs);
   }
 
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: var(--apex-focus);
+  }
+
   ::-webkit-scrollbar { width: 9px; height: 9px; }
   ::-webkit-scrollbar-thumb {
     background: color-mix(in oklab, var(--apex-faint) 32%, transparent);

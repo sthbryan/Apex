@@ -21,6 +21,11 @@
   .ui-command-input {
     @apply flex flex-none items-center gap-2.5 px-4 py-3;
     border-bottom: 1px solid var(--apex-border);
+    transition: border-color var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-command-input:focus-within {
+    border-bottom-color: var(--apex-focus);
   }
 
   .ui-command-input input {

@@ -109,6 +109,7 @@ html[data-theme="light"] .stage-links {
   background: var(--apex-overlay); border: 1px solid var(--apex-border); border-radius: var(--apex-r-sm);
   padding: 8px 10px; font-size: 12.5px; line-height: 1.5;
 }
+.commit-msg:focus { border-color: var(--apex-focus); }
 .commit-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .commit-count { font-size: 11px; color: var(--apex-muted); flex: 1; }
 .stage-box {
@@ -162,6 +163,7 @@ html[data-theme="light"] .stage-links {
   display: flex; align-items: center; gap: 8px; background: var(--apex-raised);
   border: 1px solid var(--apex-border); border-radius: var(--apex-r-md); padding: 4px 4px 4px 12px;
 }
+.reply-box:focus-within { border-color: var(--apex-focus); }
 .reply-box input { flex: 1; height: 30px; font-size: 13px; min-width: 0; }
 .reply-send { width: 30px; height: 30px; border-radius: var(--apex-r-sm); background: var(--apex-accent); color: var(--apex-accent-fg); display: grid; place-items: center; flex: none; }
 .pane-toolbar .mono { font-size: 11px; color: var(--apex-muted); } .tok-f { color: var(--apex-accent); } .tok-c { color: var(--apex-faint); font-style: italic; }
