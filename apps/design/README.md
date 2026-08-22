@@ -18,14 +18,13 @@ Tailwind v4), so approved pieces port to desktop nearly copy-paste.
 
 ## Tokens
 
-Colors, radii and motion come from `packages/tokens`
-(`@apex/tokens`), the single source of truth. It ships the
-**current** palette (mirrors `apps/desktop` tokens.css) and the
-**proposal** (warm graphite/paper) behind `data-palette="proposal"`,
-plus veil translucency and the Tailwind `@theme` bridge. The top-bar
-controls switch palette/theme/veil live. When a future web or mobile
-app needs the system, they consume this package (mobile can generate
-platform formats from the same values).
+Colors, spacing, radii and motion come from `packages/tokens`
+(`@apex/tokens`), the single source of truth: one warm
+graphite/paper palette in light and dark, veil translucency and the
+Tailwind `@theme` bridge. The top-bar controls switch theme and veil
+live. When a future web or mobile app needs the system, they consume
+this package (mobile can generate platform formats from the same
+values).
 
 ## Structure
 
