@@ -2,7 +2,7 @@
 
 @layer components {
   .ui-list-row {
-    @apply flex w-full items-center gap-md rounded-sm px-md py-xs text-left text-md text-text transition-colors;
+    @apply flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-md text-text transition-colors;
     min-height: var(--apex-h-md);
   }
 
@@ -19,7 +19,7 @@
   }
 
   .ui-list-row-lead {
-    @apply flex shrink-0 items-center gap-sm;
+    @apply flex shrink-0 items-center gap-1.5;
   }
 
   .ui-list-row-text {
@@ -35,15 +35,15 @@
   }
 
   .ui-list-row-sub {
-    @apply flex items-center gap-sm truncate text-2xs text-muted;
+    @apply flex items-center gap-1.5 truncate text-2xs text-muted;
   }
 
   .ui-list-row-trail {
-    @apply flex shrink-0 items-center gap-sm text-xs text-muted;
+    @apply flex shrink-0 items-center gap-1.5 text-xs text-muted;
   }
 
   .ui-list-row-actions {
-    @apply flex shrink-0 items-center gap-2xs opacity-0 transition-opacity;
+    @apply flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity;
   }
 
   .ui-list-row:hover .ui-list-row-actions,

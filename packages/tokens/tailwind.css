@@ -6,15 +6,6 @@
   --font-serif: var(--apex-font-serif);
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 
-  --spacing-2xs: var(--apex-space-2xs);
-  --spacing-xs: var(--apex-space-xs);
-  --spacing-sm: var(--apex-space-sm);
-  --spacing-md: var(--apex-space-md);
-  --spacing-lg: var(--apex-space-lg);
-  --spacing-xl: var(--apex-space-xl);
-  --spacing-2xl: var(--apex-space-2xl);
-  --spacing-3xl: var(--apex-space-3xl);
-
   --radius-xs: var(--apex-r-xs);
   --radius-sm: var(--apex-r-sm);
   --radius-md: var(--apex-r-md);

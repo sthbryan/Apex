@@ -2,7 +2,7 @@
 
 @layer components {
   .ui-tree-row {
-    @apply flex w-full items-center gap-sm rounded-sm py-2xs pr-md text-left font-mono text-sm text-text transition-colors;
+    @apply flex w-full items-center gap-1.5 rounded-sm py-0.5 pr-2 text-left font-mono text-sm text-text transition-colors;
     min-height: var(--apex-h-sm);
     padding-left: calc(var(--apex-space-md) + var(--ui-tree-depth, 0) * 14px);
   }

@@ -2,7 +2,7 @@
 
 @layer components {
   .ui-rail {
-    @apply flex flex-none flex-col items-center gap-xs py-md;
+    @apply flex flex-none flex-col items-center gap-1 py-2;
     width: var(--apex-rail-width);
     border-right: 1px solid var(--apex-border);
   }
@@ -12,7 +12,7 @@
   }
 
   .ui-rail-divider {
-    @apply my-xs w-5 flex-none;
+    @apply my-1 w-5 flex-none;
     height: 1px;
     background-color: var(--apex-border);
   }

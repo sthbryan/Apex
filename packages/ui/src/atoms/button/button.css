@@ -36,7 +36,7 @@
 
   .ui-button[data-size="xl"] {
     height: var(--apex-h-xl);
-    @apply px-lg text-md;
+    @apply px-3 text-md;
   }
 
   .ui-button[data-variant="primary"] {

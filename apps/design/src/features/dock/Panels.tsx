@@ -177,7 +177,7 @@ function RacePanel() {
           }
         />
       ))}
-      <Button variant="dashed" size="lg" class="mt-md" onClick={() => launcherOpen.value = true}>
+      <Button variant="dashed" size="lg" class="mt-2" onClick={() => launcherOpen.value = true}>
         + Race a task across agents
       </Button>
     </div>

@@ -2,13 +2,13 @@
 
 @layer components {
   .ui-commit-box {
-    @apply flex flex-none flex-col gap-md p-lg;
+    @apply flex flex-none flex-col gap-2 p-3;
     border-top: 1px solid var(--apex-border);
     background-color: var(--apex-surface);
   }
 
   .ui-commit-box-input {
-    @apply w-full resize-none rounded-sm px-md py-sm text-md text-text;
+    @apply w-full resize-none rounded-sm px-2 py-1.5 text-md text-text;
     background-color: var(--apex-raised);
     border: 1px solid var(--apex-border);
     field-sizing: content;
@@ -20,7 +20,7 @@
   }
 
   .ui-commit-box-foot {
-    @apply flex items-center gap-md;
+    @apply flex items-center gap-2;
   }
 
   .ui-commit-box-hint {

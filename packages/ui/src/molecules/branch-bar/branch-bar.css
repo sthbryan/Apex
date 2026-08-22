@@ -2,7 +2,7 @@
 
 @layer components {
   .ui-branch-bar {
-    @apply flex w-full items-center gap-sm px-md;
+    @apply flex w-full items-center gap-1.5 px-2;
     min-height: var(--apex-h-md);
   }
 
@@ -27,7 +27,7 @@
   }
 
   .ui-branch-bar-actions {
-    @apply ml-auto flex shrink-0 items-center gap-2xs;
+    @apply ml-auto flex shrink-0 items-center gap-0.5;
   }
 
   .ui-branch-bar-note + .ui-branch-bar-actions {

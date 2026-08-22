@@ -2,7 +2,7 @@
 
 @layer components {
   .ui-approval-card {
-    @apply flex flex-col gap-md p-lg;
+    @apply flex flex-col gap-2 p-3;
     border-radius: var(--apex-r-md);
     background-color: var(--apex-overlay);
     border: 1px solid color-mix(in oklab, var(--apex-state-blocked) 45%, var(--apex-border));
@@ -10,7 +10,7 @@
   }
 
   .ui-approval-card-head {
-    @apply flex items-center gap-md;
+    @apply flex items-center gap-2;
   }
 
   .ui-approval-card-lead {
@@ -28,11 +28,11 @@
   }
 
   .ui-approval-card-command {
-    @apply block truncate rounded-xs px-md py-sm font-mono text-sm text-muted;
+    @apply block truncate rounded-xs px-2 py-1.5 font-mono text-sm text-muted;
     background-color: color-mix(in oklab, var(--apex-raised) 70%, transparent);
   }
 
   .ui-approval-card-actions {
-    @apply flex items-center gap-md;
+    @apply flex items-center gap-2;
   }
 }
