@@ -195,15 +195,8 @@ kbd {
 .ua-window button[aria-pressed="true"] { background: var(--apex-bg); color: var(--apex-text); box-shadow: 0 0 0 1px var(--apex-border); }
 .ua-big { display: flex; align-items: baseline; gap: 8px; margin: 8px 0 4px; }
 .ua-big .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-.u-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-.u-win { font-family: var(--font-mono); font-size: 10px; color: var(--apex-muted); width: 26px; flex: none; }
 
-.u-eta { font-family: var(--font-mono); font-size: 10px; color: var(--apex-muted); width: 52px; text-align: right; flex: none; }
 .spark { width: 100%; height: 54px; display: block; margin: 4px 0 2px; }
-.meter { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-.m-label { width: 52px; font-size: 11px; color: var(--apex-muted); flex: none; }
-.m-pct { width: 30px; font-family: var(--font-mono); font-size: 10.5px; text-align: right; flex: none; }
-.m-detail { width: 60px; font-family: var(--font-mono); font-size: 10px; color: var(--apex-muted); text-align: right; flex: none; }
 .sess-res-row {
   display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px;
   border-top: 1px solid color-mix(in oklab, var(--apex-border) 45%, transparent); margin-top: 5px;

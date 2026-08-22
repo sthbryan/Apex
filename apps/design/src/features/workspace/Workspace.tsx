@@ -11,8 +11,8 @@ import {
 import { SettingsModal } from "@/features/workspace/Settings";
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
-  AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Bar, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
-  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Pane, PaneGrid, PaneSplit,
+  AgentIcon, AppMain, Badge, BrowserLog, BrowserView, Modal, Button, Card, Chip, CodeLine, CodeView, Code, Composer,
+  DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Meter, Pane, PaneGrid, PaneSplit,
   Pill, SectionLabel, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, Wordmark,
 } from "@apex/ui";
 
@@ -423,14 +423,14 @@ export function UsagePop() {
         <span class="n" data-tone={tone(pct)}>{pct}%</span>
         <span style="font-size:11px;color:var(--apex-muted)">resets in 2h 30m · Tue 4:00</span>
       </div>
-      <div class="u-row"><span class="u-win">used</span><Bar value={pct} tick={58} size="sm" label="used" /><span class="u-eta">pace ✓</span></div>
-      <div class="u-row"><span class="u-win">7d</span><Bar value={34} tone="done" size="sm" label="7 day usage" /><span class="u-eta">on pace</span></div>
+      <Meter label="used" value={pct} tick={58} display="" detail="pace ✓" />
+      <Meter label="7d" value={34} tone="done" display="" detail="on pace" />
 
       <div class="pop-head pop-sub">
         codex
         <span class="ph-sub" data-tone={tone(71)}>71% · over pace</span>
       </div>
-      <div class="u-row"><span class="u-win">5h</span><Bar value={71} tone="blocked" size="sm" label="codex usage" /><span class="u-eta">tight</span></div>
+      <Meter label="5h" value={71} tone="blocked" display="" detail="tight" />
 
       {grokFailed ? (
         <div class="pop-fail">
@@ -444,7 +444,7 @@ export function UsagePop() {
             grok
             <span class="ph-sub" data-tone={tone(12)}>12% · plenty left</span>
           </div>
-          <div class="u-row"><span class="u-win">5h</span><Bar value={12} tone="done" size="sm" label="grok usage" /><span class="u-eta">easy</span></div>
+          <Meter label="5h" value={12} tone="done" display="" detail="easy" />
         </>
       )}
     </Pop>
@@ -519,12 +519,12 @@ export function ResourcesPop() {
     <Pop title="Resources" meta="sampled every 5s">
       <div class="pop-head" style="margin-top:2px;padding:0">CPU<span class="ph-sub mono" style="color:var(--apex-text)">23%</span><span class="ph-sub mono">14 cores · user 18% sys 5%</span></div>
       <svg class="spark" viewBox="0 0 300 54" preserveAspectRatio="none">
-        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16 L 300 54 L 0 54 Z" fill="var(--apex-accent)" opacity="0.14" />
-        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16" fill="none" stroke="var(--apex-accent)" stroke-width="1.6" />
+        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16 L 300 54 L 0 54 Z" fill="var(--apex-state-working)" opacity="0.16" />
+        <path d="M0 40 C 20 38, 30 34, 45 35 S 70 28, 85 30 S 110 22, 125 26 S 150 30, 165 24 S 190 18, 205 22 S 230 28, 245 20 S 270 14, 285 18 L 300 16" fill="none" stroke="var(--apex-state-working)" stroke-width="1.6" />
       </svg>
-      <div class="meter"><span class="m-label">Memory</span><Bar value={56} label="Memory" /><span class="m-pct mono">56%</span><span class="m-detail">18.2/32 GB</span></div>
-      <div class="meter"><span class="m-label">Swap</span><Bar value={6} tone="done" label="Swap" /><span class="m-pct mono">6%</span><span class="m-detail">0.18/3 GB</span></div>
-      <div class="meter"><span class="m-label">Apex</span><Bar value={12} tone="done" label="Apex memory" /><span class="m-pct mono">12%</span><span class="m-detail">312 MB</span></div>
+      <Meter label="Memory" value={56} detail="18.2/32 GB" />
+      <Meter label="Swap" value={6} tone="done" detail="0.18/3 GB" />
+      <Meter label="Apex" value={12} tone="done" detail="312 MB" />
 
       <SectionLabel class="pop-total" count="882 MB · 16%">Sessions and processes</SectionLabel>
       {live.length === 0 ? (
