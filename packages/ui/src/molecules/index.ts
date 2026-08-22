@@ -7,4 +7,5 @@ export * from "@/molecules/segmented";
 export * from "@/molecules/slider";
 export * from "@/molecules/state-pill";
 export * from "@/molecules/toggle-chip";
+export * from "@/molecules/tree-row";
 export * from "@/molecules/tooltip";

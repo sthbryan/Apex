@@ -27,6 +27,7 @@
 @import "./molecules/state-pill/state-pill.css";
 @import "./molecules/toggle-chip/toggle-chip.css";
 @import "./molecules/tooltip/tooltip.css";
+@import "./molecules/tree-row/tree-row.css";
 @import "./organisms/app-window/app-window.css";
 @import "./organisms/browser-view/browser-view.css";
 @import "./organisms/code-view/code-view.css";

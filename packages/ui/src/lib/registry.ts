@@ -23,6 +23,7 @@ import { sliderMeta } from "@/molecules/slider/meta";
 import { statePillMeta } from "@/molecules/state-pill/meta";
 import { toggleChipMeta } from "@/molecules/toggle-chip/meta";
 import { tooltipMeta } from "@/molecules/tooltip/meta";
+import { treeRowMeta } from "@/molecules/tree-row/meta";
 import { appWindowMeta } from "@/organisms/app-window/meta";
 import { browserViewMeta } from "@/organisms/browser-view/meta";
 import { codeViewMeta } from "@/organisms/code-view/meta";
@@ -69,6 +70,7 @@ export const REGISTRY: ComponentMeta[] = [
   statePillMeta,
   toggleChipMeta,
   tooltipMeta,
+  treeRowMeta,
   appWindowMeta,
   browserViewMeta,
   codeViewMeta,
