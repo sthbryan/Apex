@@ -21,8 +21,14 @@
   }
 
   .ui-diff-hunk {
-    @apply flex items-center gap-2 rounded-xs px-2 py-1 font-mono text-xs text-muted;
-    background-color: var(--apex-raised);
+    @apply flex items-center gap-2 px-2.5 py-1 font-mono text-xs text-muted;
+    background-color: color-mix(in oklab, var(--apex-raised) 60%, transparent);
+    border-bottom: 1px solid var(--apex-border);
+  }
+
+  .ui-diff-hunk + .ui-diff-hunk,
+  .ui-diff-line + .ui-diff-hunk {
+    border-top: 1px solid var(--apex-border);
   }
 
   .ui-diff-hunk-actions {

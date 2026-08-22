@@ -8,11 +8,16 @@
   }
 
   .ui-commit-box-input {
-    @apply w-full resize-none rounded-sm px-2 py-1.5 text-md text-text;
+    @apply w-full resize-none rounded-sm px-2.5 py-2 text-md leading-normal text-text;
     background-color: var(--apex-raised);
     border: 1px solid var(--apex-border);
     field-sizing: content;
-    max-height: 140px;
+    min-height: 66px;
+    max-height: 180px;
+  }
+
+  .ui-commit-box-input:focus-visible {
+    border-color: var(--apex-focus);
   }
 
   .ui-commit-box-input::placeholder {

@@ -1,7 +1,7 @@
 import type { ComponentChildren } from "preact";
 import {
-  ArrowLeftRight, BookOpen, Folder, GitBranch,
-  History, House, Inbox, LayoutGrid, PanelLeft, Play, Settings, SquareTerminal,
+  ArrowLeftRight, BookOpen, Folder, GitBranch, History, House, Inbox, LayoutGrid,
+  PanelLeft, Play, Plus, Settings, SquareTerminal,
 } from "lucide-preact";
 import { activePanel, activeTab, railOnly, settingsOpen, settingsSection } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
@@ -65,7 +65,17 @@ export function Layout({ children }: { children: ComponentChildren }) {
         <SidePanel
           collapsed={railOnly.value}
           head={<ProjectsPop />}
-          foot={<Button variant="dashed" size="xl" onClick={() => activeTab.value = "home"}>+ New Session</Button>}
+          foot={
+            <Button
+              variant="primary"
+              size="lg"
+              class="w-full"
+              title="New session ⌘N"
+              onClick={() => activeTab.value = "home"}
+            >
+              <Plus size={14} />New session
+            </Button>
+          }
         >
           <Panels />
         </SidePanel>
