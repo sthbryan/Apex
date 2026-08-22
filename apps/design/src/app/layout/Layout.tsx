@@ -9,7 +9,7 @@ import {
   NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
 } from "@/features/workspace/Pops";
 import {
-  AppBody, Button, Rail, RailButton, RailDivider, RailSpacer,
+  AppBody, Button, Rail, RailButton, RailDivider,
   SidePanel, StatusBar, StatusPill, TitleBar, Wordmark,
 } from "@apex/ui";
 import type { RailBadge } from "@apex/ui";
@@ -60,8 +60,6 @@ export function Layout({ children }: { children: ComponentChildren }) {
               <p.icon size={16} />
             </RailButton>
           ))}
-          <RailSpacer />
-          <RailButton label="main · 16 changed"><GitBranch size={15} /></RailButton>
         </Rail>
 
         <SidePanel
