@@ -3,7 +3,7 @@ import {
   ArrowLeftRight, BookOpen, Folder, GitBranch, History, House, Inbox, LayoutGrid,
   PanelLeft, Play, Plus, Settings, SquareTerminal,
 } from "lucide-preact";
-import { activePanel, activeTab, railOnly, settingsOpen, settingsSection } from "@/app/state";
+import { activePanel, activeTab, paletteOpen, railOnly, settingsOpen, settingsSection } from "@/app/state";
 import { Panels } from "@/features/dock/Panels";
 import {
   NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
@@ -33,7 +33,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
         actions={
           <>
             <Button variant="subtle" size="lg" iconOnly title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></Button>
-            <Button variant="subtle" size="lg" iconOnly title="Command palette ⌘K"><LayoutGrid size={15} /></Button>
+            <Button variant="subtle" size="lg" iconOnly title="Command palette ⌘K" onClick={() => paletteOpen.value = true}><LayoutGrid size={15} /></Button>
             <Button variant="subtle" size="lg" iconOnly title="Settings ⌘," onClick={() => { settingsOpen.value = true; settingsSection.value = "look"; }}><Settings size={15} /></Button>
           </>
         }

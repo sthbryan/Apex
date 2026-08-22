@@ -1,18 +1,19 @@
 import { useEffect, useState } from "preact/hooks";
 import {
   ArrowLeft, ArrowLeftRight, ArrowRight, Check, FileText, GitBranch, Globe, Image as ImageIcon,
-  Lock, Plus, RotateCw, Send, Terminal, X,
+  Lock, Plus, RotateCw, Search, Send, Terminal, X,
 } from "lucide-preact";
 import {
-  activePanel, activeTab, consoleOpen, fmode, launcherOpen,
-  raceAsking, raceKept, settingsOpen, toastCount,
+  activePanel, activeTab, consoleOpen, fmode, launcherOpen, paletteOpen,
+  raceAsking, raceKept, railOnly, settingsOpen, toastCount,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
 import { CONTENDERS, RACE_PROMPT, REVIEWS, SESSIONS } from "@/features/dock/fixtures";
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
-  AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView,
-  Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Message,
+  AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, CommandItem, CommandPalette, Modal,
+  Button, Chip, CodeLine, CodeView, Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot,
+  ImageView, Kbd, KbdGroup, MarkdownView, Message,
   ListRow, Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, SectionLabel, Segmented,
   StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript,
   Welcome, Wordmark,
@@ -30,7 +31,14 @@ const TABS = [
 export function Workspace() {
   useEffect(() => {
     const t = setTimeout(() => toastCount.value = 0, 6500);
-    return () => clearTimeout(t);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key === "k") { e.preventDefault(); paletteOpen.value = !paletteOpen.value; }
+      if (e.key === "b") { e.preventDefault(); railOnly.value = !railOnly.value; }
+      if (e.key === ",") { e.preventDefault(); settingsOpen.value = true; }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => { clearTimeout(t); document.removeEventListener("keydown", onKeyDown); };
   }, []);
 
   return (
@@ -469,6 +477,7 @@ function Overlays() {
         </ToastStack>
       )}
 
+      {paletteOpen.value && <Palette live onClose={() => paletteOpen.value = false} />}
       {launcherOpen.value && <Launcher />}
       {settingsOpen.value && <SettingsModal />}
     </>
@@ -476,6 +485,28 @@ function Overlays() {
 }
 
 const CONTENDER_POOL = ["claude", "codex", "grok", "opencode"];
+
+export function Palette({ open = true, onClose, live }: { open?: boolean; onClose?: () => void; live?: boolean } = {}) {
+  return (
+    <CommandPalette
+      open={open}
+      onClose={onClose ?? (() => paletteOpen.value = false)}
+      autoFocus={live}
+      lead={<Search size={15} />}
+    >
+      <CommandItem name="New session" desc="In a new tab" selected trail={<KbdGroup keys={["⌘", "N"]} />}
+        onClick={() => { paletteOpen.value = false; activeTab.value = "home"; }} />
+      <CommandItem name="Race a task across agents" desc="Fan one task out, keep the winner" trail={<KbdGroup keys={["⌘", "R"]} />}
+        onClick={() => { paletteOpen.value = false; launcherOpen.value = true; }} />
+      <CommandItem name="Open settings" trail={<KbdGroup keys={["⌘", ","]} />}
+        onClick={() => { paletteOpen.value = false; settingsOpen.value = true; }} />
+      <CommandItem name="Toggle the sidebar" trail={<KbdGroup keys={["⌘", "B"]} />}
+        onClick={() => { paletteOpen.value = false; railOnly.value = !railOnly.value; }} />
+      <CommandItem name="Go to file…" trail={<Kbd>⌘P</Kbd>}
+        onClick={() => { paletteOpen.value = false; activePanel.value = "files"; }} />
+    </CommandPalette>
+  );
+}
 
 export function Launcher({ inline, open = true, onClose }: { inline?: boolean; open?: boolean; onClose?: () => void } = {}) {
   const [picked, setPicked] = useState<string[]>(["claude", "codex"]);

@@ -1,7 +1,6 @@
-import { Search } from "lucide-preact";
-import { CommandItem, CommandPalette, Kbd, KbdGroup, Toast, ToastStack } from "@apex/ui";
+import { Toast, ToastStack } from "@apex/ui";
 import { SettingsModal } from "@/features/workspace/Settings";
-import { Launcher } from "@/features/workspace/Workspace";
+import { Launcher, Palette } from "@/features/workspace/Workspace";
 import {
   NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
 } from "@/features/workspace/Pops";
@@ -13,18 +12,6 @@ export interface Overlay {
   kind: "popover" | "overlay";
   Component: () => any;
   Live?: (props: { open: boolean; onClose: () => void }) => any;
-}
-
-function Palette({ open = true, onClose, live }: { open?: boolean; onClose?: () => void; live?: boolean } = {}) {
-  return (
-    <CommandPalette open={open} onClose={onClose ?? (() => {})} autoFocus={live} lead={<Search size={15} />}>
-      <CommandItem name="New session" desc="In a new tab" selected trail={<KbdGroup keys={["⌘", "N"]} />} />
-      <CommandItem name="Race a task across agents" desc="Fan one task out, keep the winner" trail={<KbdGroup keys={["⌘", "R"]} />} />
-      <CommandItem name="Open settings" trail={<KbdGroup keys={["⌘", ","]} />} />
-      <CommandItem name="Toggle the sidebar" trail={<KbdGroup keys={["⌘", "B"]} />} />
-      <CommandItem name="Go to file…" trail={<Kbd>⌘P</Kbd>} />
-    </CommandPalette>
-  );
 }
 
 function Toasts() {
