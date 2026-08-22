@@ -1,0 +1,40 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-identity-card {
+    @apply flex flex-wrap items-start gap-3.5 rounded-md border border-border p-3.5;
+    background-color: var(--apex-overlay);
+  }
+
+  .ui-identity-card-icon {
+    @apply flex shrink-0 items-center;
+  }
+
+  .ui-identity-card-icon > * {
+    border-radius: var(--apex-r-sm);
+  }
+
+  .ui-identity-card-id {
+    @apply flex min-w-0 flex-1 flex-col items-start gap-1;
+  }
+
+  .ui-identity-card-name {
+    @apply flex items-baseline gap-2;
+  }
+
+  .ui-identity-card-sub {
+    @apply text-lg text-muted;
+  }
+
+  .ui-identity-card-meta {
+    @apply font-mono text-xs text-muted;
+  }
+
+  .ui-identity-card-action {
+    @apply flex shrink-0 flex-col items-end gap-1.5;
+  }
+
+  .ui-identity-card-note {
+    @apply max-w-52 text-right text-xs text-muted;
+  }
+}

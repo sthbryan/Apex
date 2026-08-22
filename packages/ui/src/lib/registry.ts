@@ -39,6 +39,7 @@ import { commitBoxMeta } from "@/organisms/commit-box/meta";
 import { composerMeta } from "@/organisms/composer/meta";
 import { diffViewMeta } from "@/organisms/diff-view/meta";
 import { emptyStateMeta } from "@/organisms/empty-state/meta";
+import { identityCardMeta } from "@/organisms/identity-card/meta";
 import { imageViewMeta } from "@/organisms/image-view/meta";
 import { markdownViewMeta } from "@/organisms/markdown-view/meta";
 import { modalMeta } from "@/organisms/modal/meta";
@@ -54,6 +55,7 @@ import { titleBarMeta } from "@/organisms/title-bar/meta";
 import { toastMeta } from "@/organisms/toast/meta";
 import { toolbarMeta } from "@/organisms/toolbar/meta";
 import { messageMeta, toolCallMeta } from "@/organisms/transcript/meta";
+import { welcomeMeta } from "@/organisms/welcome/meta";
 
 export const REGISTRY: ComponentMeta[] = [
   agentIconMeta,
@@ -96,6 +98,7 @@ export const REGISTRY: ComponentMeta[] = [
   composerMeta,
   diffViewMeta,
   emptyStateMeta,
+  identityCardMeta,
   imageViewMeta,
   markdownViewMeta,
   modalMeta,
@@ -112,4 +115,5 @@ export const REGISTRY: ComponentMeta[] = [
   toolbarMeta,
   messageMeta,
   toolCallMeta,
+  welcomeMeta,
 ];

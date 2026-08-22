@@ -1,0 +1,25 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-welcome {
+    @apply grid min-h-0 flex-1 place-items-center overflow-auto p-8;
+    background-color: var(--apex-bg);
+  }
+
+  .ui-welcome-inner {
+    @apply flex w-full flex-col items-center gap-4;
+    max-width: 660px;
+  }
+
+  .ui-welcome-mark {
+    @apply flex flex-col items-center gap-1.5 text-center;
+  }
+
+  .ui-welcome-tagline {
+    @apply m-0 text-lg text-muted;
+  }
+
+  .ui-welcome-suggestions {
+    @apply flex flex-wrap justify-center gap-2;
+  }
+}
