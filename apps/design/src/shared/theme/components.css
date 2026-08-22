@@ -67,10 +67,6 @@ html[data-theme="light"] .stage-links {
   @apply text-xs text-muted;
 }
 
-.agent-head {
-  @apply border-b-0 pb-1 pt-0 text-2xs uppercase tracking-caps text-faint;
-}
-
 .home-summary {
   @apply grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-x-6 gap-y-4 text-left;
 }

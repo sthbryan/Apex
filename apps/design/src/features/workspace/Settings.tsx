@@ -3,7 +3,7 @@ import { Bot, CircleHelp, Globe, Keyboard, Server, Sparkles, X } from "lucide-pr
 import { themeMode, veil } from "@/shared/theme/mode";
 import { settingsOpen, settingsSection, updateState } from "@/app/state";
 import {
-  AgentIcon, Button, DataRow, Field, IdentityCard, KbdGroup, Pill, SectionLabel, Segmented,
+  AgentIcon, Button, DataRow, Field, IdentityCard, KbdGroup, SectionLabel, Segmented,
   SettingsDialog, SettingsHeading, Slider, Select, StatePill, Switch, Wordmark,
 } from "@apex/ui";
 
@@ -111,55 +111,35 @@ const AGENTS = [
 
 function AgentsSection() {
   const [off, setOff] = useState<string[]>([]);
+  const [modes, setModes] = useState<Record<string, string>>(
+    Object.fromEntries(AGENTS.map((a) => [a.id, a.mode])),
+  );
   return (
     <div>
       <SettingsHeading title="Agents" sub="Rendering belongs to each agent: native when it speaks ACP, terminal otherwise." />
-      <DataRow
-        class="agent-head"
-        label=""
-        trail={
-          <>
-            <span class="w-24 text-right">Context</span>
-            <span class="w-32 text-right">Rendering</span>
-          </>
-        }
-        actions={<span class="w-9 text-right">On</span>}
-      />
       {AGENTS.map((a) => {
         const enabled = !off.includes(a.id);
         return (
-          <DataRow
+          <Field
             key={a.id}
+            lead={<AgentIcon agent={a.id} size="md" />}
             label={a.name}
-            sub={a.ver}
             dim={!enabled}
-            lead={<AgentIcon agent={a.id} size="sm" />}
-            trail={
-              <>
-                <span class="flex w-24 justify-end">
-                  {a.shares ? <Pill tone="accent" title="Shares your project context">shares</Pill> : null}
-                </span>
-                <span class="flex w-32 justify-end">
-                  <Segmented
-                    label={`${a.name} rendering`}
-                    options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
-                    value={a.mode}
-                    disabled={!enabled}
-                    onChange={() => {}}
-                  />
-                </span>
-              </>
-            }
-            actions={
-              <span class="flex w-9 justify-end">
-                <Switch
-                  label={`Enable ${a.name}`}
-                  checked={enabled}
-                  onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
-                />
-              </span>
-            }
-          />
+            hint={`v${a.ver} · ${a.shares ? "shares your project context" : "keeps its own context"}`}
+          >
+            <Segmented
+              label={`${a.name} rendering`}
+              options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
+              value={modes[a.id]}
+              disabled={!enabled}
+              onChange={(v) => setModes({ ...modes, [a.id]: v })}
+            />
+            <Switch
+              label={`Enable ${a.name}`}
+              checked={enabled}
+              onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
+            />
+          </Field>
         );
       })}
     </div>
