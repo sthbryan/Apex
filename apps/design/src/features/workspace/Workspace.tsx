@@ -302,8 +302,8 @@ function MarkdownPane() {
             <pre>curl -fsSL https://apex.dev/install.sh | sh</pre>
             <h2>What you get</h2>
             <ul>
-              <li><strong>Sessions</strong> — terminal or native rendering per agent</li>
-              <li><strong>Races</strong> — fan one task across agents, keep the winner</li>
+              <li><strong>Sessions</strong>: terminal or native rendering per agent</li>
+              <li><strong>Races</strong>: fan one task across agents, keep the winner</li>
             </ul>
           </MarkdownView>
         ) : (

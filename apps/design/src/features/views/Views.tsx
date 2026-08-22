@@ -14,7 +14,7 @@ export function Views() {
         <div>
           <h1 class="tk-title"><Wordmark size="lg">Apex</Wordmark> views</h1>
           <p class="tk-sub">
-            Every view that can fill a pane, and every panel that can fill the dock — all at once.
+            Every view that can fill a pane, and every panel that can fill the dock, all at once.
           </p>
         </div>
       </header>

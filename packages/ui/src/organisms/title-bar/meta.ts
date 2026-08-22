@@ -8,7 +8,7 @@ export const titleBarMeta: ComponentMeta = {
   rule: "Window identity and window-level actions only.",
   component: TitleBar,
   variants: [
-    { name: "with lights", props: { title: "APEX — apex-sandbox", class: "w-64" } },
-    { name: "no lights", props: { title: "APEX — apex-sandbox", lights: false, class: "w-64" } },
+    { name: "with lights", props: { title: "APEX · apex-sandbox", class: "w-64" } },
+    { name: "no lights", props: { title: "APEX · apex-sandbox", lights: false, class: "w-64" } },
   ],
 };

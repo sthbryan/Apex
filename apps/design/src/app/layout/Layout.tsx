@@ -27,7 +27,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
   return (
     <>
       <TitleBar
-        title={<><Wordmark size="sm">APEX</Wordmark> — apex-sandbox</>}
+        title={<><Wordmark size="sm">APEX</Wordmark> · apex-sandbox</>}
         actions={
           <>
             <Button variant="subtle" size="lg" iconOnly title="Toggle sidebar ⌘B" onClick={() => railOnly.value = !railOnly.value}><PanelLeft size={15} /></Button>

@@ -113,7 +113,7 @@ function AgentsSection() {
   const [off, setOff] = useState<string[]>([]);
   return (
     <div class="set-section">
-      <SettingsHeading title="Agents" sub="Rendering belongs to each agent — native when it speaks ACP, terminal otherwise." />
+      <SettingsHeading title="Agents" sub="Rendering belongs to each agent: native when it speaks ACP, terminal otherwise." />
       {AGENTS.map((a) => {
         const enabled = !off.includes(a.id);
         return (

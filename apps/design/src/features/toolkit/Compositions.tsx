@@ -118,7 +118,7 @@ export const COMPOSITIONS: Composition[] = [
     render: () => (
       <div class="flex h-72 flex-col overflow-hidden rounded-md border border-border">
         <TitleBar
-          title={<><Wordmark size="sm">APEX</Wordmark> <span class="text-muted">— apex-sandbox</span></>}
+          title={<><Wordmark size="sm">APEX</Wordmark> <span class="text-muted">· apex-sandbox</span></>}
           actions={<Button variant="subtle" size="lg" iconOnly aria-label="Settings"><Settings size={15} /></Button>}
         />
         <div class="flex-1 grid place-items-center bg-bg">
