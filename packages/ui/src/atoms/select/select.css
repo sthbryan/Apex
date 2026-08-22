@@ -2,11 +2,66 @@
 
 @layer components {
   .ui-select {
-    @apply flex-none rounded-sm border border-border bg-raised px-2 text-sm text-text;
-    height: var(--apex-h-md);
+    @apply relative inline-flex flex-none;
   }
 
-  .ui-select:disabled {
+  .ui-select-trigger {
+    @apply flex w-full items-center gap-2 rounded-sm border border-border bg-raised pr-2 pl-2.5 text-sm text-text;
+    height: var(--apex-h-md);
+    min-width: var(--ui-select-width, 152px);
+  }
+
+  .ui-select-trigger:hover:not(:disabled) {
+    border-color: var(--apex-faint);
+  }
+
+  .ui-select-trigger[aria-expanded="true"] {
+    border-color: var(--apex-focus);
+  }
+
+  .ui-select-trigger:disabled {
     @apply cursor-not-allowed opacity-45;
+  }
+
+  .ui-select-value {
+    @apply min-w-0 flex-1 truncate text-left;
+  }
+
+  .ui-select-caret {
+    @apply size-1.5 shrink-0 border-r border-b;
+    border-color: var(--apex-muted);
+    rotate: 45deg;
+    translate: 0 -1px;
+  }
+
+  .ui-select-list {
+    @apply absolute top-full right-0 left-0 mt-1 flex max-h-56 flex-col gap-0.5 overflow-y-auto rounded-sm border border-border p-1;
+    z-index: var(--apex-z-overlay);
+    background-color: var(--apex-overlay);
+    box-shadow: var(--apex-shadow-lg);
+    animation: apex-pop-in var(--apex-quick) var(--apex-ease-out) both;
+  }
+
+  .ui-select-option {
+    @apply flex cursor-pointer items-center gap-2 rounded-xs px-2 py-1.5 text-sm text-text;
+  }
+
+  .ui-select-option[data-active] {
+    @apply bg-raised;
+  }
+
+  .ui-select-option[aria-selected="true"] {
+    @apply font-medium text-accent;
+  }
+
+  .ui-select-option-label {
+    @apply min-w-0 flex-1 truncate;
+  }
+
+  .ui-select-check {
+    @apply size-1.5 shrink-0 border-r border-b;
+    border-color: currentcolor;
+    rotate: 45deg;
+    translate: 0 -1px;
   }
 }
