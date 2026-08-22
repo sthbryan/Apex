@@ -87,10 +87,10 @@
   --apex-muted-solid: light-dark(#797593, #908caa);
   --apex-faint-solid: light-dark(#9893a5, #6e6a86);
 
-  --apex-accent: light-dark(#ab1330, #df3049);
+  --apex-accent: light-dark(#98323f, #c04350);
   --apex-accent-fg: light-dark(#fffaf3, #fff1f2);
   --apex-accent-soft: color-mix(in oklab, var(--apex-accent) 13%, transparent);
-  --apex-focus: light-dark(#8a0f22, #f0697c);
+  --apex-focus: light-dark(#7f1f2c, #e88d93);
   --apex-selection: color-mix(in oklab, var(--apex-accent) 24%, transparent);
 
   --apex-state-idle: light-dark(#797593, #6e6a86);
