@@ -5,7 +5,7 @@ import { DOCK_PANELS } from "@/features/dock/Panels";
 import { Carousel } from "@/features/views/Carousel";
 import { OVERLAYS } from "@/features/views/Overlays";
 import type { Overlay } from "@/features/views/Overlays";
-import { PANE_TYPES } from "@/features/workspace/Workspace";
+import { ALL_VIEWS } from "@/features/workspace/Workspace";
 
 export function Views() {
   return (
@@ -22,11 +22,11 @@ export function Views() {
       <section class="tk-section">
         <h2 class="tk-h2">
           Views
-          <Pill>{PANE_TYPES.length}</Pill>
+          <Pill>{ALL_VIEWS.length}</Pill>
         </h2>
         <p class="tk-blurb">What a workspace tab renders. One subject per view.</p>
         <Carousel label="Views" width={560} perPage={1}>
-          {PANE_TYPES.map((v) => (
+          {ALL_VIEWS.map((v) => (
             <article class="vw-cell" key={v.id}>
               <span class="vw-label">{v.label}</span>
               <div class="vw-stage"><v.Component /></div>

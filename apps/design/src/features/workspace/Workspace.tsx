@@ -92,6 +92,10 @@ function Sessions() {
   );
 }
 
+export const WORKSPACE_VIEWS = [
+  { id: "home", label: "Home", Component: () => <Welcome /> },
+];
+
 export const PANE_TYPES = [
   { id: "tab-auth", label: "Session · split", Component: () => <AuthSplit /> },
   { id: "tab-acp", label: "Session · native", Component: () => <AcpPane /> },
@@ -104,6 +108,8 @@ export const PANE_TYPES = [
   { id: "tab-image", label: "Image", Component: () => <ImagePane /> },
   { id: "tab-panel", label: "Panel in a tab", Component: () => <PanelTabPane /> },
 ];
+
+export const ALL_VIEWS = [...WORKSPACE_VIEWS, ...PANE_TYPES];
 
 function AcpPane() {
   return (

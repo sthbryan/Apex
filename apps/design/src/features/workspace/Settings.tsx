@@ -1,3 +1,4 @@
+import { useState } from "preact/hooks";
 import { BookOpenText, Bot, CircleHelp, Globe, Keyboard, Server, Sparkles, X } from "lucide-preact";
 import { themeMode, veil } from "@/shared/theme/mode";
 import { settingsOpen, settingsSection, updateState } from "@/app/state";
@@ -109,23 +110,36 @@ const AGENTS = [
 ] as const;
 
 function AgentsSection() {
+  const [off, setOff] = useState<string[]>([]);
   return (
     <div class="set-section">
       <SettingsHeading title="Agents" sub="Rendering belongs to each agent — native when it speaks ACP, terminal otherwise." />
-      {AGENTS.map((a) => (
-        <div class="agent-set-row" key={a.id}>
-          <AgentIcon agent={a.id} size="md" />
-          <div style="flex:1;min-width:0">
-            <div class="as-name">{a.name} <span class="as-ver">{a.ver}</span></div>
+      {AGENTS.map((a) => {
+        const enabled = !off.includes(a.id);
+        return (
+          <div class="agent-set-row" key={a.id} data-off={enabled ? undefined : "true"}>
+            <AgentIcon agent={a.id} size="sm" />
+            <div style="flex:1;min-width:0">
+              <div class="as-name">{a.name} <span class="as-ver">{a.ver}</span></div>
+            </div>
+            <span class="agent-set-controls">
+              <Pill tone={a.shares ? "accent" : "neutral"} title="Shares context">shares context</Pill>
+              <Segmented
+                label={`${a.name} rendering`}
+                options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]}
+                value={a.mode}
+                disabled={!enabled}
+                onChange={() => {}}
+              />
+            </span>
+            <Switch
+              label={`Enable ${a.name}`}
+              checked={enabled}
+              onChange={(v) => setOff(v ? off.filter((x) => x !== a.id) : [...off, a.id])}
+            />
           </div>
-          <Pill tone={a.shares ? "accent" : "neutral"} title="Shares context">shares context</Pill>
-          {a.mode === "acp" ? (
-            <Segmented label={`${a.name} rendering`} options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]} value="acp" onChange={() => {}} />
-          ) : (
-            <Segmented label={`${a.name} rendering`} options={[{ value: "tty", label: "Terminal" }, { value: "acp", label: "Native" }]} value="tty" onChange={() => {}} />
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

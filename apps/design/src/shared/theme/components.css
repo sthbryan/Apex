@@ -229,6 +229,9 @@ kbd {
 .agent-set-row:last-child { border-bottom: 0; }
 .as-name { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; }
 .as-ver { font-size: 10.5px; color: var(--apex-muted); font-family: var(--font-mono); }
+.agent-set-controls { display: flex; align-items: center; gap: 10px; transition: opacity var(--apex-quick) var(--apex-ease); }
+.agent-set-row[data-off] .agent-set-controls { opacity: .4; }
+.agent-set-row[data-off] .as-name { color: var(--apex-muted); }
 .popover {
   position: absolute; bottom: 40px; right: 10px; z-index: 55;
   width: 308px; max-height: 420px; overflow-y: auto; background: var(--apex-overlay);

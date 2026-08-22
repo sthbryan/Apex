@@ -28,4 +28,9 @@
   .ui-segmented-option:disabled {
     @apply cursor-not-allowed opacity-45;
   }
+
+  .ui-segmented:has(> :disabled:first-child:last-of-type),
+  .ui-segmented[aria-disabled="true"] {
+    @apply opacity-45;
+  }
 }

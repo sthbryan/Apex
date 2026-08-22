@@ -14,6 +14,7 @@ export interface SegmentedProps<T extends string = string> {
   onChange: (value: T) => void;
   label: string;
   size?: SegmentedSize;
+  disabled?: boolean;
   class?: string;
 }
 
@@ -23,6 +24,7 @@ export function Segmented<T extends string = string>({
   onChange,
   label,
   size = "md",
+  disabled,
   class: className,
 }: SegmentedProps<T>) {
   return (
@@ -34,7 +36,7 @@ export function Segmented<T extends string = string>({
           class="ui-segmented-option"
           role="radio"
           aria-checked={option.value === value}
-          disabled={option.disabled}
+          disabled={disabled || option.disabled}
           onClick={() => onChange(option.value)}
         >
           {option.label}

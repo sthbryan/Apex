@@ -17,6 +17,7 @@ export const segmentedMeta: ComponentMeta = {
     { name: "sm", props: { options: THEME, value: "dark", label: "Theme", size: "sm" } },
     { name: "md", props: { options: THEME, value: "dark", label: "Theme" } },
     { name: "lg", props: { options: THEME, value: "light", label: "Theme", size: "lg" } },
+    { name: "disabled", props: { options: THEME, value: "dark", label: "Theme", disabled: true } },
     {
       name: "with disabled",
       props: {
