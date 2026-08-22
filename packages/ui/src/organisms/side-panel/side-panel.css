@@ -2,16 +2,22 @@
 
 @layer components {
   .ui-side-panel {
-    @apply relative flex min-h-0 flex-none flex-col overflow-hidden;
+    @apply relative flex min-h-0 flex-none flex-col overflow-visible;
     width: var(--ui-side-panel-width, var(--apex-dock-width));
     z-index: var(--apex-z-raised);
     border-right: 1px solid var(--apex-border);
-    transition: width var(--apex-swift) var(--apex-ease);
+    transition:
+      width var(--apex-swift) var(--apex-ease),
+      overflow var(--apex-swift) step-end allow-discrete;
   }
 
   .ui-side-panel[data-collapsed] {
+    @apply overflow-hidden;
     width: 0;
     border-right-width: 0;
+    transition:
+      width var(--apex-swift) var(--apex-ease),
+      overflow 0s allow-discrete;
   }
 
   .ui-side-panel-inner {
