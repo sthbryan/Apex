@@ -134,8 +134,8 @@ export const REVIEWS: ReviewItem[] = [
 export const RACE_PROMPT = "Fix the dock resize jank";
 
 export const CONTENDERS: ContenderItem[] = [
-  { agent: "claude", state: "done", files: 14, tests: "48 passed" },
-  { agent: "codex", state: "working", files: 9, tests: "31 passed" },
+  { agent: "claude", state: "done", files: 14, tests: "48 ✓" },
+  { agent: "codex", state: "working", files: 9, tests: "31 ✓" },
 ];
 
 export const COMMITS: CommitItem[] = [
