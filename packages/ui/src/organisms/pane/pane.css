@@ -4,7 +4,7 @@
   .ui-pane-grid {
     @apply grid min-h-0 flex-1 overflow-x-auto;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(420px, 1fr);
+    grid-auto-columns: minmax(var(--ui-pane-min, 420px), 1fr);
     gap: 1px;
     background-color: var(--apex-border);
   }
@@ -19,6 +19,12 @@
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     gap: 1px;
     background-color: var(--apex-border);
+  }
+
+  .ui-pane.ui-pane-split[data-axis="col"] {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
   }
 
   .ui-pane-head {
@@ -49,7 +55,7 @@
   }
 
   @media (max-width: 1180px) {
-    .ui-pane-grid { grid-auto-columns: minmax(340px, 1fr); }
+    .ui-pane-grid { grid-auto-columns: minmax(var(--ui-pane-min, 340px), 1fr); }
   }
 
   @media (max-width: 780px) {

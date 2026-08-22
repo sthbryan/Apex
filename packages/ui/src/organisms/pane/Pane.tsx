@@ -33,14 +33,34 @@ export function Pane({ title, sub, lead, actions, foot, scroll = true, class: cl
   );
 }
 
-export interface PaneLayoutProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
+export interface PaneGridProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
+  min?: number;
   children?: ComponentChildren;
 }
 
-export function PaneGrid({ class: className, children, ...rest }: PaneLayoutProps) {
-  return <div class={cn("ui-pane-grid", className as string)} {...rest}>{children}</div>;
+export function PaneGrid({ min, class: className, children, ...rest }: PaneGridProps) {
+  return (
+    <div
+      class={cn("ui-pane-grid", className as string)}
+      style={min ? `--ui-pane-min:${min}px` : undefined}
+      {...rest}
+    >
+      {children}
+    </div>
+  );
 }
 
-export function PaneSplit({ class: className, children, ...rest }: PaneLayoutProps) {
-  return <div class={cn("ui-pane ui-pane-split", className as string)} {...rest}>{children}</div>;
+export type PaneAxis = "row" | "col";
+
+export interface PaneSplitProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
+  axis?: PaneAxis;
+  children?: ComponentChildren;
+}
+
+export function PaneSplit({ axis = "row", class: className, children, ...rest }: PaneSplitProps) {
+  return (
+    <div class={cn("ui-pane ui-pane-split", className as string)} data-axis={axis} {...rest}>
+      {children}
+    </div>
+  );
 }
