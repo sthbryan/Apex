@@ -3,7 +3,7 @@
 @layer components {
   .ui-side-panel {
     @apply flex min-h-0 flex-none flex-col;
-    width: var(--ui-side-panel-width, 240px);
+    width: var(--ui-side-panel-width, var(--apex-dock-width));
     border-right: 1px solid var(--apex-border);
   }
 
@@ -13,15 +13,15 @@
   }
 
   .ui-side-panel-head {
-    @apply flex-none px-2.5 pt-2.5 pb-1.5;
+    @apply flex-none px-lg pt-lg pb-sm;
   }
 
   .ui-side-panel-body {
-    @apply min-h-0 flex-1 overflow-y-auto px-2 pt-1 pb-2.5;
+    @apply min-h-0 flex-1 overflow-y-auto px-md pt-xs pb-lg;
   }
 
   .ui-side-panel-foot {
-    @apply flex-none p-2.5;
+    @apply flex-none p-lg;
     border-top: 1px solid var(--apex-border);
   }
 }

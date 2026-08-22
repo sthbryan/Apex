@@ -2,8 +2,8 @@
 
 @layer components {
   .ui-rail {
-    @apply flex flex-none flex-col items-center gap-1 py-2;
-    width: 52px;
+    @apply flex flex-none flex-col items-center gap-xs py-md;
+    width: var(--apex-rail-width);
     border-right: 1px solid var(--apex-border);
   }
 

@@ -12,6 +12,19 @@
   --apex-h-lg: 32px;
   --apex-h-xl: 36px;
 
+  --apex-space-2xs: 2px;
+  --apex-space-xs: 4px;
+  --apex-space-sm: 6px;
+  --apex-space-md: 8px;
+  --apex-space-lg: 12px;
+  --apex-space-xl: 16px;
+  --apex-space-2xl: 24px;
+  --apex-space-3xl: 32px;
+
+  --apex-rail-width: 52px;
+  --apex-dock-width: 268px;
+  --apex-title-bar-height: 46px;
+
   --apex-text-2xs: 9.5px;
   --apex-text-xs: 10.5px;
   --apex-text-sm: 11.5px;
