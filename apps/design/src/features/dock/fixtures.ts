@@ -44,6 +44,10 @@ export interface ContenderItem {
   state: AgentState;
   files: number;
   tests: string;
+  added?: number;
+  removed?: number;
+  note?: string;
+  dropped?: boolean;
 }
 
 export interface CommitItem {
@@ -134,8 +138,9 @@ export const REVIEWS: ReviewItem[] = [
 export const RACE_PROMPT = "Fix the dock resize jank";
 
 export const CONTENDERS: ContenderItem[] = [
-  { agent: "claude", state: "done", files: 14, tests: "48 ✓" },
-  { agent: "codex", state: "working", files: 9, tests: "31 ✓" },
+  { agent: "claude", state: "done", files: 14, tests: "48 ✓", added: 382, removed: 96 },
+  { agent: "codex", state: "working", files: 9, tests: "31 ✓", added: 210, removed: 44, note: "Still working…" },
+  { agent: "antigravity", state: "idle", files: 0, tests: "none", note: "Left nothing behind.", dropped: true },
 ];
 
 export const COMMITS: CommitItem[] = [

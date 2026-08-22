@@ -12,6 +12,7 @@ export * from "@/organisms/markdown-view";
 export * from "@/organisms/modal";
 export * from "@/organisms/pane";
 export * from "@/organisms/popover";
+export * from "@/organisms/race-view";
 export * from "@/organisms/rail";
 export * from "@/organisms/settings-dialog";
 export * from "@/organisms/side-panel";

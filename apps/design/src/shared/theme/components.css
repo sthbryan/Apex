@@ -103,27 +103,6 @@ html[data-theme="light"] .stage-links {
 .reply { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .reply textarea { font-size: var(--apex-text-md); min-height: 0; padding: 8px 12px 0; }
 .reply .ui-composer-bar { padding: 2px 8px 6px; }
-.race-view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.race-task {
-  padding: 7px 12px; border-bottom: 1px solid var(--apex-border); color: var(--apex-muted);
-  font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;
-}
-.race-cols { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); overflow: auto; }
-.race-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--apex-border); }
-.race-col:last-child { border-right: 0; }
-.race-col-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--apex-border); flex-shrink: 0; }
-.race-col-head .c-name { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-.race-col .c-note { padding: 8px 10px; color: var(--apex-muted); }
-.diff-line-plain { padding: 8px 10px; font-family: var(--font-mono); font-size: 11.5px; color: var(--apex-muted); font-variant-numeric: tabular-nums; }
-.race-decide { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-top: 1px solid var(--apex-border); background: var(--apex-raised); }
-.rd-info { flex: 1; min-width: 0; font-size: 12px; color: var(--apex-muted); }
-.rd-info b { color: var(--apex-text); font-weight: 600; }
-.race-col.dropped { opacity: .45; }
-.race-col.dropped .c-name { text-decoration: line-through; }
-.dropped-tag {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--apex-muted);
-  border: 1px solid var(--apex-border); border-radius: 5px; padding: 1px 5px;
-}
 
 .pl-label {
   font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;

@@ -45,6 +45,7 @@
 @import "./organisms/modal/modal.css";
 @import "./organisms/pane/pane.css";
 @import "./organisms/popover/popover.css";
+@import "./organisms/race-view/race-view.css";
 @import "./organisms/rail/rail.css";
 @import "./organisms/settings-dialog/settings-dialog.css";
 @import "./organisms/side-panel/side-panel.css";

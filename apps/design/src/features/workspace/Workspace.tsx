@@ -8,12 +8,13 @@ import {
   raceAsking, raceKept, settingsOpen, toastCount,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
+import { CONTENDERS, RACE_PROMPT } from "@/features/dock/fixtures";
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
   AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, Modal, Button, Chip, CodeLine, CodeView,
   Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot, ImageView, MarkdownView, Message,
-  Pane, PaneGrid, PaneSplit, Segmented, StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup,
-  ToolCall, Transcript, Wordmark,
+  Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, Segmented, StatePill, Tab, TabBar, Toast,
+  ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript, Wordmark,
 } from "@apex/ui";
 
 const TABS = [
@@ -256,45 +257,55 @@ function BrowserPane() {
 
 function RacePane() {
   const kept = raceKept.value;
+  const winner = CONTENDERS.find((c) => c.state === "done");
+  const waiting = CONTENDERS.find((c) => c.state === "working");
   return (
     <Pane scroll={false}>
-      <div class="race-view">
-        <p class="race-task">Fix the dock resize jank</p>
-        <div class="race-cols">
-          <div class={`race-col${kept ? "" : ""}`} style={kept ? undefined : undefined}>
-            <div class="race-col-head">
-              <AgentIcon agent="claude" size="sm" /><span class="c-name">claude</span>
-              {kept && <span class="dropped-tag" style="color:var(--apex-state-done);border-color:color-mix(in oklab, var(--apex-state-done) 40%, transparent)">kept</span>}
-              {!kept && <Dot state="done" />}
-            </div>
-            <p class="diff-line-plain">14 files <DiffStat added={382} removed={96} /></p>
-          </div>
-          <div class={`race-col${kept ? " dropped" : ""}`}>
-            <div class="race-col-head">
-              <AgentIcon agent="codex" size="sm" /><span class="c-name">codex</span>
-              {!kept && <Dot state="working" />}
-            </div>
-            <p class="c-note">{kept ? "Dropped." : "Still working…"}</p>
-          </div>
-          <div class="race-col dropped">
-            <div class="race-col-head"><AgentIcon agent="antigravity" size="sm" /><span class="c-name">antigravity</span><span class="dropped-tag">dropped</span></div>
-            <p class="c-note">Left nothing behind.</p>
-          </div>
-        </div>
-        {!kept && (
-          <div class="race-decide">
-            <span class="rd-info">
-              {raceAsking.value
-                ? "Keep claude's work and drop codex's worktree?"
-                : <><b>claude</b> finished first · tests 48 ✓ · 14 files · waiting on you</>}
-            </span>
-            <Button onClick={() => raceAsking.value = false}>Wait for codex</Button>
-            <Button variant="primary" onClick={() => raceAsking.value ? raceKept.value = true : raceAsking.value = true}>
-              {raceAsking.value ? "Yes, keep claude" : "Keep claude's work"}
-            </Button>
-          </div>
+      <RaceView
+        task={RACE_PROMPT}
+        actions={<Chip>{CONTENDERS.length} contenders</Chip>}
+        foot={kept || !winner ? undefined : (
+          <RaceDecision
+            info={raceAsking.value
+              ? `Keep ${winner.agent}'s work and drop the other worktrees?`
+              : <><b>{winner.agent}</b> finished first · tests {winner.tests} · {winner.files} files · waiting on you</>}
+            actions={
+              <>
+                {waiting ? <Button onClick={() => raceAsking.value = false}>Wait for {waiting.agent}</Button> : null}
+                <Button variant="primary"
+                  onClick={() => raceAsking.value ? raceKept.value = true : raceAsking.value = true}>
+                  {raceAsking.value ? `Yes, keep ${winner.agent}` : `Keep ${winner.agent}'s work`}
+                </Button>
+              </>
+            }
+          />
         )}
-      </div>
+      >
+        {CONTENDERS.map((c) => {
+          const state = c.dropped || (kept && c.agent !== winner?.agent)
+            ? "dropped"
+            : kept ? "kept" : "running";
+          return (
+            <RaceColumn
+              key={c.agent}
+              name={c.agent}
+              state={state}
+              lead={<AgentIcon agent={c.agent} size="sm" />}
+              trail={
+                state === "kept" ? <Chip tone="done">kept</Chip>
+                  : state === "dropped" ? <Chip>dropped</Chip>
+                    : <Dot state={c.state} />
+              }
+            >
+              {state === "dropped" && c.dropped
+                ? c.note
+                : c.state === "working" && !kept
+                  ? c.note
+                  : <p class="mono">{c.files} files <DiffStat added={c.added} removed={c.removed} /></p>}
+            </RaceColumn>
+          );
+        })}
+      </RaceView>
     </Pane>
   );
 }

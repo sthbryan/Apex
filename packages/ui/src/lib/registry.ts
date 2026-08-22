@@ -41,6 +41,7 @@ import { markdownViewMeta } from "@/organisms/markdown-view/meta";
 import { modalMeta } from "@/organisms/modal/meta";
 import { paneMeta } from "@/organisms/pane/meta";
 import { popoverMeta } from "@/organisms/popover/meta";
+import { raceColumnMeta } from "@/organisms/race-view/meta";
 import { railMeta } from "@/organisms/rail/meta";
 import { settingsDialogMeta } from "@/organisms/settings-dialog/meta";
 import { sidePanelMeta } from "@/organisms/side-panel/meta";
@@ -94,6 +95,7 @@ export const REGISTRY: ComponentMeta[] = [
   modalMeta,
   paneMeta,
   popoverMeta,
+  raceColumnMeta,
   railMeta,
   settingsDialogMeta,
   sidePanelMeta,

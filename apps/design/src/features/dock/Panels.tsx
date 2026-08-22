@@ -166,14 +166,17 @@ function RacePanel() {
           as="div"
           key={c.agent}
           label={c.agent}
-          sub={`${c.files} files · tests ${c.tests}`}
+          sub={c.note ?? `${c.files} files · tests ${c.tests}`}
           lead={<AgentIcon agent={c.agent} size="sm" />}
+          style={c.dropped ? { opacity: 0.55 } : undefined}
           trail={
-            c.state === "working"
-              ? <Dot state="working" />
-              : pickWinner.value
-                ? <Chip tone="done">kept</Chip>
-                : <Button size="xs" onClick={() => pickWinner.value = true}>Keep</Button>
+            c.dropped
+              ? <Chip>dropped</Chip>
+              : c.state === "working"
+                ? <Dot state="working" />
+                : pickWinner.value
+                  ? <Chip tone="done">kept</Chip>
+                  : <Button size="xs" onClick={() => pickWinner.value = true}>Keep</Button>
           }
         />
       ))}

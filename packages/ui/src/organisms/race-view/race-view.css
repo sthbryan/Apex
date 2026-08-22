@@ -1,0 +1,63 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-race {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .ui-race-task {
+    @apply flex flex-none items-center gap-2 border-b border-border px-3 py-1.5;
+  }
+
+  .ui-race-task-name {
+    @apply min-w-0 flex-1 truncate text-sm text-muted;
+  }
+
+  .ui-race-cols {
+    @apply grid min-h-0 flex-1 grid-flow-col overflow-auto;
+    grid-auto-columns: minmax(200px, 1fr);
+  }
+
+  .ui-race-col {
+    @apply flex min-h-0 min-w-0 flex-col border-r border-border;
+    transition: opacity var(--apex-normal) var(--apex-ease);
+  }
+
+  .ui-race-col:last-child {
+    @apply border-r-0;
+  }
+
+  .ui-race-col[data-state="dropped"] {
+    @apply opacity-45;
+  }
+
+  .ui-race-col[data-state="dropped"] .ui-race-col-name {
+    @apply line-through;
+  }
+
+  .ui-race-col-head {
+    @apply flex flex-none items-center gap-2 border-b border-border px-2.5 py-2;
+  }
+
+  .ui-race-col-name {
+    @apply min-w-0 flex-1 truncate font-semibold text-md text-text;
+  }
+
+  .ui-race-col-body {
+    @apply min-h-0 flex-1 overflow-auto px-2.5 py-2 text-md text-muted;
+  }
+
+  .ui-race-decide {
+    @apply flex flex-none items-center gap-2.5 border-t border-border px-3 py-2;
+    background-color: var(--apex-raised);
+  }
+
+  .ui-race-decide-info {
+    @apply min-w-0 flex-1 text-sm text-muted;
+  }
+
+  .ui-race-decide-info b {
+    @apply font-semibold;
+    color: var(--apex-text);
+  }
+}
