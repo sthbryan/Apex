@@ -267,7 +267,7 @@
 }
 
 .vw-dock {
-  height: 380px;
+  height: 600px;
   border-radius: var(--apex-r-md);
   border: 1px solid var(--apex-border);
   overflow: hidden;
