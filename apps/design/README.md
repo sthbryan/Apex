@@ -32,6 +32,8 @@ values).
     src/app/layout/Layout.tsx     titlebar · rail · dock · statusbar
     src/app/state.ts              signals (panels, tabs, overlays…)
     src/features/workspace/       tabs + panes + overlays
+    src/features/workspace/Pops.tsx    statusbar popovers with their triggers
+    src/features/workspace/fixtures.ts the mock data behind them
     src/features/dock/Panels.tsx  the 8 dock panels
     src/features/dock/fixtures.ts the mock data every panel renders
     src/features/toolkit/         the catalog page
