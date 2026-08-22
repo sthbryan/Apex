@@ -16,6 +16,7 @@ import { switchMeta } from "@/atoms/switch/meta";
 import { wordmarkMeta } from "@/atoms/wordmark/meta";
 import { branchBarMeta } from "@/molecules/branch-bar/meta";
 import { cardMeta } from "@/molecules/card/meta";
+import { dataRowMeta } from "@/molecules/data-row/meta";
 import { fieldMeta } from "@/molecules/field/meta";
 import { listRowMeta } from "@/molecules/list-row/meta";
 import { meterMeta } from "@/molecules/meter/meta";
@@ -70,6 +71,7 @@ export const REGISTRY: ComponentMeta[] = [
   wordmarkMeta,
   branchBarMeta,
   cardMeta,
+  dataRowMeta,
   fieldMeta,
   listRowMeta,
   meterMeta,

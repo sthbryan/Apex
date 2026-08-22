@@ -1,5 +1,6 @@
 export * from "@/molecules/branch-bar";
 export * from "@/molecules/card";
+export * from "@/molecules/data-row";
 export * from "@/molecules/field";
 export * from "@/molecules/list-row";
 export * from "@/molecules/meter";

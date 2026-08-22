@@ -1,0 +1,45 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-data-row {
+    @apply flex items-center gap-3 py-2.5;
+    border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
+  }
+
+  .ui-data-row:last-child {
+    @apply border-b-0;
+  }
+
+  .ui-data-row-lead {
+    @apply flex shrink-0 items-center;
+  }
+
+  .ui-data-row-text {
+    @apply flex min-w-0 flex-1 flex-col;
+  }
+
+  .ui-data-row-label {
+    @apply truncate text-md text-text;
+  }
+
+  .ui-data-row-sub {
+    @apply truncate font-mono text-2xs text-muted;
+  }
+
+  .ui-data-row-trail {
+    @apply flex shrink-0 items-center gap-2.5 text-md text-muted;
+    transition: opacity var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-data-row-actions {
+    @apply flex shrink-0 items-center gap-1.5;
+  }
+
+  .ui-data-row[data-dim="true"] .ui-data-row-label {
+    color: var(--apex-muted);
+  }
+
+  .ui-data-row[data-dim="true"] .ui-data-row-trail {
+    @apply opacity-40;
+  }
+}
