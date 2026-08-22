@@ -3,7 +3,7 @@ body {
   background:
     radial-gradient(1100px 700px at 70% -10%, color-mix(in oklab, var(--apex-accent) 7%, transparent), transparent 60%),
     radial-gradient(900px 600px at 10% 110%, color-mix(in oklab, var(--apex-state-working) 6%, transparent), transparent 60%),
-    var(--apex-bg);
+    color-mix(in oklab, var(--apex-bg) 88%, var(--apex-text));
   background-attachment: fixed;
 }
 .apx {
@@ -17,7 +17,8 @@ body {
 }
 
 .stage-links {
-  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 5;
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  z-index: calc(var(--apex-z-palette) + 10);
   display: flex; gap: 2px; padding: 3px; border-radius: 999px;
   border: 1px solid var(--apex-border);
   background: color-mix(in oklab, var(--apex-overlay) 78%, transparent);
