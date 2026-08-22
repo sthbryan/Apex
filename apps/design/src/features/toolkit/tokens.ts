@@ -2,6 +2,7 @@ export interface TokenGroup {
   title: string;
   kind: "color" | "size";
   tokens: string[];
+  note?: string;
 }
 
 export const TOKEN_GROUPS: TokenGroup[] = [
@@ -49,10 +50,12 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       "--apex-git-modified",
       "--apex-git-dirty",
     ],
+    note: "Aliases of the State tokens.",
   },
   {
     title: "Radii",
     kind: "size",
+    note: "Corner rounding. The swatch shows the actual curve at real size.",
     tokens: [
       "--apex-r-xs",
       "--apex-r-sm",
@@ -65,6 +68,7 @@ export const TOKEN_GROUPS: TokenGroup[] = [
   {
     title: "Control heights",
     kind: "size",
+    note: "Height of buttons, inputs and other interactive controls.",
     tokens: [
       "--apex-h-xs",
       "--apex-h-sm",

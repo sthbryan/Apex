@@ -22,8 +22,37 @@ const ALL_TOKENS: Record<string, TokenKind> = {
   ...Object.fromEntries(TYPE_TOKENS.map((t) => [t, "size"] as const)),
 };
 
+function roundPx(value?: string): string {
+  if (!value?.endsWith("px")) return value ?? "";
+  const n = Number.parseFloat(value);
+  return `${Number.isInteger(n) ? n : n.toFixed(1)}px`;
+}
+
+function inkFor(hex?: string): string {
+  if (!hex?.startsWith("#") || hex.length < 7) return "#fff";
+  const [r, g, b] = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return lum > 0.55 ? "#191724" : "#fffaf3";
+}
+
+async function copyToken(token: string, light?: string, dark?: string): Promise<void> {
+  const text = `var(${token}); /* ${light} / ${dark} */`;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Clipboard unavailable (e.g. insecure context); ignore.
+  }
+}
+
+function flashCopied(el: EventTarget | null): void {
+  if (!(el instanceof HTMLElement)) return;
+  el.setAttribute("data-copied", "");
+  window.setTimeout(() => el.removeAttribute("data-copied"), 900);
+}
+
 export function Toolkit() {
-  const values = useTokenValues(ALL_TOKENS);
+  const revision = `${themeMode.value}:${veil.value}`;
+  const values = useTokenValues(ALL_TOKENS, revision);
 
   return (
     <div class="tk">
@@ -50,40 +79,72 @@ export function Toolkit() {
 
       <section class="tk-section">
         <h2 class="tk-h2">Tokens</h2>
-        <div class="tk-token-groups">
-          {TOKEN_GROUPS.map((group) => (
-            <div class="tk-token-group" key={group.title}>
+        {TOKEN_GROUPS.filter((g) => g.kind === "color").map((group) => (
+          <div class="tk-token-group" key={group.title}>
+            <div class="tk-token-group-head">
               <h3 class="tk-h3">{group.title}</h3>
+              <span class="tk-token-count">{group.tokens.length}</span>
+              {group.note && <span class="tk-group-note">{group.note}</span>}
+            </div>
+            <div class="tk-palette" style={`--tk-segments:${group.tokens.length}`}>
+              {group.tokens.map((token) => {
+                const value = values[token];
+                return (
+                  <button
+                    type="button"
+                    class="tk-segment"
+                    key={token}
+                    title={`${token} · click to copy`}
+                    style={`background:${value?.[themeMode.value]};color:${inkFor(value?.[themeMode.value])}`}
+                    onClick={(e) => {
+                      void copyToken(token, value?.light, value?.dark);
+                      flashCopied(e.currentTarget);
+                    }}
+                  >
+                    <span class="tk-segment-name">{token.replace("--apex-", "")}</span>
+                    <span class="tk-segment-hex">{value?.[themeMode.value]}</span>
+                    <span class="tk-copied">copied</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        <div class="tk-size-row">
+          {TOKEN_GROUPS.filter((g) => g.kind === "size").map((group) => (
+            <div class="tk-size-group" key={group.title}>
+              <div class="tk-token-group-head">
+                <h3 class="tk-h3">{group.title}</h3>
+                <span class="tk-token-count">{group.tokens.length}</span>
+              </div>
+              {group.note && <p class="tk-group-note">{group.note}</p>}
               <table class="tk-table">
                 <thead>
                   <tr>
-                    <th />
+                    <th class="tk-size-cell" />
                     <th>token</th>
-                    <th>light</th>
-                    <th>dark</th>
+                    <th>value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {group.tokens.map((token) => {
-                    const value = values[token];
-                    return (
-                      <tr key={token}>
-                        <td>
-                          {group.kind === "color" ? (
-                            <span
-                              class="tk-swatch"
-                              style={`background:linear-gradient(90deg, ${value?.light} 50%, ${value?.dark} 50%)`}
-                            />
-                          ) : (
-                            <span class="tk-radius" style={`border-radius:${value?.light}`} />
-                          )}
-                        </td>
-                        <td><code>{token.replace("--apex-", "")}</code></td>
-                        <td class="tk-value">{value?.light}</td>
-                        <td class="tk-value">{value?.dark}</td>
-                      </tr>
-                    );
-                  })}
+                  {group.tokens.map((token) => (
+                    <tr key={token}>
+                      <td>
+                        {token.includes("-h-") ? (
+                          <span
+                            class="tk-height"
+                            style={`height:${values[token]?.light}`}
+                            title={values[token]?.light}
+                          />
+                        ) : (
+                          <span class="tk-radius" style={`border-radius:${values[token]?.light}`} />
+                        )}
+                      </td>
+                      <td><code>{token.replace("--apex-", "")}</code></td>
+                      <td class="tk-value">{roundPx(values[token]?.light)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

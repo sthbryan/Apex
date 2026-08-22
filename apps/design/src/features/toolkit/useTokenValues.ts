@@ -39,7 +39,7 @@ function probe(theme: "light" | "dark", tokens: Record<string, TokenKind>): Reco
   return out;
 }
 
-export function useTokenValues(tokens: Record<string, TokenKind>): TokenValues {
+export function useTokenValues(tokens: Record<string, TokenKind>, revision: unknown = 0): TokenValues {
   const [values, setValues] = useState<TokenValues>({});
   const names = Object.keys(tokens);
   const key = names.join("|");
@@ -48,7 +48,7 @@ export function useTokenValues(tokens: Record<string, TokenKind>): TokenValues {
     const light = probe("light", tokens);
     const dark = probe("dark", tokens);
     setValues(Object.fromEntries(names.map((n) => [n, { light: light[n], dark: dark[n] }])));
-  }, [key]);
+  }, [key, revision]);
 
   return values;
 }
