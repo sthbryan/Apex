@@ -59,12 +59,16 @@ function LookSection() {
       <SetRow label="Translucent window" desc="Let the desktop show through the chrome.">
         <Switch label="Translucent window" checked={veil.value === "on"} onChange={(v) => (veil.value = v ? "on" : "off")} />
       </SetRow>
-      <SetRow label="Transparency">
-        <Slider label="Transparency" value={76} onChange={() => {}} />
-      </SetRow>
-      <SetRow label="Blur">
-        <Slider label="Blur" value={26} max={40} unit="px" onChange={() => {}} />
-      </SetRow>
+      {veil.value === "on" && (
+        <>
+          <SetRow label="Transparency">
+            <Slider label="Transparency" value={76} onChange={() => {}} />
+          </SetRow>
+          <SetRow label="Blur">
+            <Slider label="Blur" value={26} max={40} unit="px" onChange={() => {}} />
+          </SetRow>
+        </>
+      )}
       <SetRow label="Language">
         <Segmented label="Language" options={[{ value: "en", label: "English" }, { value: "es", label: "Español" }]} value="en" onChange={() => {}} />
       </SetRow>
