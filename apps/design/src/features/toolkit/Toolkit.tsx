@@ -154,14 +154,16 @@ export function Toolkit() {
 
       <section class="tk-section">
         <h2 class="tk-h2">Type scale</h2>
-        <div class="tk-type">
+        <p class="tk-blurb">Each step at its real size, with the token to reach for.</p>
+        <div class="tk-specimen-card">
           {[...TYPE_TOKENS].reverse().map((token) => (
-            <div class="tk-type-row" key={token}>
-              <span class="tk-type-sample" style={`font-size:${values[token]?.light}`}>
+            <div class="tk-specimen" key={token}>
+              <span class="tk-specimen-sample" style={`font-size:${values[token]?.light}`}>
                 {SAMPLES[token]}
               </span>
-              <span class="tk-value">
-                {token.replace("--apex-text-", "")} · {values[token]?.light}
+              <span class="tk-specimen-meta">
+                <code>{token.replace("--apex-text-", "")}</code>
+                <span class="tk-value">{roundPx(values[token]?.light)}</span>
               </span>
             </div>
           ))}

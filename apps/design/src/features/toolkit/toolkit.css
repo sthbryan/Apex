@@ -181,30 +181,32 @@
   @apply block size-11 rounded-xs border-[1.5px] border-accent bg-accent-soft;
 }
 
-.tk-type {
-  display: flex;
-  flex-direction: column;
+.tk-specimen-card {
+  @apply flex flex-col rounded-md border border-border bg-surface px-5 py-1;
 }
 
-.tk-type-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 8px 0;
-  border-bottom: 1px solid color-mix(in oklab, var(--apex-border) 60%, transparent);
+.tk-specimen {
+  @apply flex items-baseline justify-between gap-6 border-b border-border py-3;
 }
 
-.tk-type-row:last-child {
-  border-bottom: 0;
+.tk-specimen:last-child {
+  @apply border-b-0;
 }
 
-.tk-type-sample {
+.tk-specimen-sample {
   min-width: 0;
+  line-height: var(--apex-leading-tight);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: var(--apex-leading-tight);
+}
+
+.tk-specimen-meta {
+  @apply flex shrink-0 items-baseline gap-2;
+}
+
+.tk-specimen-meta code {
+  @apply font-mono text-sm text-text;
 }
 
 .tk-components {
