@@ -1,4 +1,4 @@
-import type { ComponentChildren, JSX } from "preact";
+import type { ComponentChildren, JSX, Ref } from "preact";
 import { useEffect } from "preact/hooks";
 import { cn } from "@/lib/cn";
 
@@ -8,6 +8,7 @@ export interface CommandPaletteProps {
   label?: string;
   placeholder?: string;
   value?: string;
+  elRef?: Ref<HTMLInputElement>;
   onInput?: JSX.GenericEventHandler<HTMLInputElement>;
   lead?: ComponentChildren;
   autoFocus?: boolean;
@@ -21,6 +22,7 @@ export function CommandPalette({
   label = "Command palette",
   placeholder = "Search commands…",
   value,
+  elRef,
   onInput,
   lead,
   autoFocus = true,
@@ -41,7 +43,14 @@ export function CommandPalette({
       <div class={cn("ui-command-palette", className)} role="dialog" aria-label={label}>
         <div class="ui-command-input">
           {lead}
-          <input placeholder={placeholder} aria-label={label} value={value} onInput={onInput} autofocus={autoFocus} />
+          <input
+            ref={elRef}
+            placeholder={placeholder}
+            aria-label={label}
+            value={value}
+            onInput={onInput}
+            autofocus={autoFocus}
+          />
         </div>
         <div class="ui-command-list" role="listbox" aria-label={label}>{children}</div>
       </div>
@@ -53,15 +62,17 @@ export interface CommandItemProps extends Omit<JSX.IntrinsicElements["button"], 
   name: string;
   desc?: string;
   selected?: boolean;
+  elRef?: Ref<HTMLButtonElement>;
   lead?: ComponentChildren;
   trail?: ComponentChildren;
 }
 
-export function CommandItem({ name, desc, selected, lead, trail, class: className, ...rest }: CommandItemProps) {
+export function CommandItem({ name, desc, selected, elRef, lead, trail, class: className, ...rest }: CommandItemProps) {
   return (
     <button
       type="button"
       class={cn("ui-command-item", className as string)}
+      ref={elRef}
       role="option"
       aria-selected={selected ?? false}
       {...rest}
