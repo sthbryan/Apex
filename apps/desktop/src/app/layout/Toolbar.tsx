@@ -25,14 +25,14 @@ export function ToolbarButton({
   return (
     <Button
       variant="subtle"
-      size="sm"
+      size="lg"
       iconOnly
       title={label}
       aria-label={label}
       aria-pressed={pressed}
       onClick={onClick}
     >
-      <Icon name={icon} />
+      <Icon name={icon} size={15} />
     </Button>
   );
 }

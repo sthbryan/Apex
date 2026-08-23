@@ -13,7 +13,6 @@ import {
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
 import { page, togglePage } from "@/app/view";
-import { gitStatus } from "@/features/git/state";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
 import { status } from "@/shared/daemon";
@@ -54,22 +53,6 @@ export function Layout({ onNewSession }: Props) {
               icon={NEXT[mode].icon}
               onClick={toggleDock}
             />
-            {status.value === "ready" && gitStatus.value && (
-              <span
-                title={
-                  gitStatus.value.upstream
-                    ? t("git.chipTracking", {
-                        branch: gitStatus.value.branch,
-                        upstream: gitStatus.value.upstream,
-                      })
-                    : t("git.chip", { branch: gitStatus.value.branch })
-                }
-                class="mr-2 flex max-w-48 items-center gap-1 truncate text-faint"
-              >
-                <Icon name="branch" size={12} class="shrink-0" />
-                <span class="truncate">{gitStatus.value.branch}</span>
-              </span>
-            )}
             <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
             <ToolbarButton
               label={t("settings.title")}
