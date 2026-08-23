@@ -38,12 +38,12 @@
     @apply flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pt-1 pb-3;
   }
 
+  .ui-side-panel-body[data-flush] {
+    @apply overflow-hidden p-0;
+  }
+
   .ui-side-panel-foot {
     @apply flex-none p-3;
     border-top: 1px solid var(--apex-border);
-  }
-
-  @media (max-width: 1020px) {
-    .ui-app-body > .ui-side-panel { display: none; }
   }
 }

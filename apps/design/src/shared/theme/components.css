@@ -117,3 +117,11 @@ html[data-theme="light"] .stage-links {
     @apply w-full rounded-none border-0 shadow-none;
   }
 }
+
+@media (max-width: 1020px) {
+  .ui-app-body > .ui-side-panel { display: none; }
+}
+
+@media (max-width: 780px) {
+  .ui-app-body > .ui-rail { display: none; }
+}

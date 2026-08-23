@@ -1,139 +1,35 @@
-import cn from "cnfast";
-import type { ComponentChildren } from "preact";
 import { Suspense } from "preact/compat";
 import { useState } from "preact/hooks";
 
 import { popPanelToTab } from "@/app/layout/actions";
 import { DockChrome } from "@/app/layout/DockChrome";
 import { DockResize } from "@/app/layout/DockResize";
-import { DOCK_PANELS, type PanelBadge } from "@/app/layout/panels";
-import {
-  type DockPanel,
-  dockOrder,
-  dockPanel,
-  setDockMode,
-  setDockPanel,
-} from "@/app/layout/state";
-import { gitStatus } from "@/features/git/state";
-import { ProjectPicker } from "@/features/projects/ProjectPicker";
+import { DOCK_PANELS } from "@/app/layout/panels";
+import { dockOrder, dockPanel } from "@/app/layout/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-const BADGE_TONE: Record<PanelBadge, string> = {
-  blocked: "bg-state-blocked",
-  working: "bg-state-working",
-  dirty: "bg-git-dirty",
-  done: "bg-state-done",
-};
-
-type Props = {
-  header?: ComponentChildren;
-  children?: ComponentChildren;
-  rail?: boolean;
-};
-
-export function Dock({ header, children, rail = false }: Props) {
+export function Dock() {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const order = dockOrder.value;
   const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
   const View = active ? DOCK_PANELS[active].View : null;
 
-  if (rail) {
-    const status = gitStatus.value;
-    const branch = status?.branch ?? null;
-    const dirty = (status?.changes.length ?? 0) > 0;
-    return (
-      <aside class="flex h-full w-full flex-col bg-chrome">
-        <div data-tauri-drag-region class="h-9 shrink-0 select-none" />
-        <nav
-          aria-label={t("dock.panels")}
-          class="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto border-r border-border py-1 scrollbar-none"
-        >
-          {order.map((id) => (
-            <PanelIcon
-              key={id}
-              id={id}
-              current={active === id}
-              badge={DOCK_PANELS[id].badge?.() ?? null}
-              large
-              onPick={() => {
-                setDockPanel(id);
-                setDockMode("expanded");
-              }}
-            />
-          ))}
-        </nav>
-
-        <div class="flex shrink-0 flex-col items-center gap-1 border-r border-border py-1.5">
-          <ProjectPicker variant="rail" />
-          {branch && (
-            <span
-              title={
-                dirty
-                  ? `${branch} · ${t("git.changed", { count: String(status?.changes.length ?? 0) })}`
-                  : branch
-              }
-              class="relative flex size-6 items-center justify-center text-faint"
-            >
-              <Icon name="branch" size={14} />
-              {dirty && (
-                <span
-                  aria-hidden="true"
-                  class="absolute right-0.5 bottom-0.5 size-1.5 rounded-full bg-git-dirty"
-                />
-              )}
-            </span>
-          )}
-        </div>
-      </aside>
-    );
-  }
-
   return (
-    <aside class="relative flex h-full w-full flex-col overflow-hidden border-r border-border bg-chrome">
-      <div
-        data-tauri-drag-region
-        class="flex h-9 shrink-0 select-none items-center"
-        style={{ paddingLeft: "max(var(--apex-controls-start, 0px), 0.75rem)" }}
-      >
-        {header}
-      </div>
-
-      {children && <div class="shrink-0 pb-1">{children}</div>}
-
-      {order.length > 0 && (
-        <nav
-          aria-label={t("dock.panels")}
-          class="flex min-h-8.5 shrink-0 items-center gap-0.5 overflow-x-auto border-b border-border px-1 py-1 scrollbar-none"
-        >
-          {order.map((id) => {
-            const entry = DOCK_PANELS[id];
-            const badge = entry.badge?.() ?? null;
-            const current = active === id;
-            return (
-              <PanelIcon
-                key={id}
-                id={id}
-                current={current}
-                badge={badge}
-                onPick={() => setDockPanel(id)}
-              />
-            );
-          })}
-
-          <div ref={setSlot} class="ml-auto flex shrink-0 items-center gap-1.5 pl-1" />
-
-          {active && (
-            <button
-              type="button"
-              title={t("dock.popOut")}
-              onClick={() => popPanelToTab(active)}
-              class="shrink-0 text-faint transition-colors hover:text-text"
-            >
-              <Icon name="external" size={12} />
-            </button>
-          )}
-        </nav>
+    <div class="relative flex h-full min-h-0 flex-col">
+      {active && (
+        <div class="flex min-h-8.5 shrink-0 items-center gap-1.5 border-b border-border px-2.5">
+          <span class="truncate text-text">{DOCK_PANELS[active].label()}</span>
+          <div ref={setSlot} class="ml-auto flex shrink-0 items-center gap-1.5" />
+          <button
+            type="button"
+            title={t("dock.popOut")}
+            onClick={() => popPanelToTab(active)}
+            class="shrink-0 text-faint transition-colors hover:text-text"
+          >
+            <Icon name="external" size={12} />
+          </button>
+        </div>
       )}
 
       <DockResize />
@@ -141,7 +37,7 @@ export function Dock({ header, children, rail = false }: Props) {
       <div class="min-h-0 flex-1 overflow-hidden">
         <DockChrome.Provider value={slot}>
           {View && active ? (
-            <div key={active} class="h-full animate-dock-view">
+            <div key={active} class="h-full animate-view-in">
               <Suspense fallback={<p class="p-3 text-faint">{t("dock.loading")}</p>}>
                 <View />
               </Suspense>
@@ -151,50 +47,6 @@ export function Dock({ header, children, rail = false }: Props) {
           )}
         </DockChrome.Provider>
       </div>
-    </aside>
-  );
-}
-
-type PanelIconProps = {
-  id: DockPanel;
-  current: boolean;
-  badge: PanelBadge | null;
-  large?: boolean;
-  onPick: () => void;
-};
-
-function PanelIcon({ id, current, badge, large = false, onPick }: PanelIconProps) {
-  const entry = DOCK_PANELS[id];
-
-  return (
-    <button
-      type="button"
-      title={entry.label()}
-      aria-current={current ? "true" : undefined}
-      onClick={onPick}
-      onDblClick={() => popPanelToTab(id)}
-      class={cn(
-        "relative flex shrink-0 items-center justify-center rounded transition-colors",
-        large ? "size-7" : "size-6",
-        current ? "bg-accent-soft text-accent" : "text-faint hover:bg-raised hover:text-text",
-      )}
-    >
-      <Icon name={entry.icon} size={large ? 16 : 14} />
-      {badge && !current && (
-        <span
-          aria-hidden="true"
-          class={cn(
-            "absolute top-0.5 right-0.5 size-1.5 rounded-full ring-2 ring-chrome",
-            BADGE_TONE[badge],
-          )}
-        />
-      )}
-      {current && (
-        <span
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-x-1 -bottom-1 h-0.5 rounded-full bg-accent"
-        />
-      )}
-    </button>
+    </div>
   );
 }

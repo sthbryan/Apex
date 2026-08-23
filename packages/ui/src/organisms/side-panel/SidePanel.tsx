@@ -7,11 +7,12 @@ export interface SidePanelProps extends Omit<JSX.IntrinsicElements["aside"], "re
   side?: "left" | "right";
   width?: number;
   collapsed?: boolean;
+  flush?: boolean;
   children?: ComponentChildren;
 }
 
 export function SidePanel({
-  head, foot, side = "left", width, collapsed, class: className, children, ...rest
+  head, foot, side = "left", width, collapsed, flush, class: className, children, ...rest
 }: SidePanelProps) {
   return (
     <aside
@@ -24,7 +25,7 @@ export function SidePanel({
     >
       <div class="ui-side-panel-inner">
         {head ? <div class="ui-side-panel-head">{head}</div> : null}
-        <div class="ui-side-panel-body">{children}</div>
+        <div class="ui-side-panel-body" data-flush={flush || undefined}>{children}</div>
         {foot ? <div class="ui-side-panel-foot">{foot}</div> : null}
       </div>
     </aside>

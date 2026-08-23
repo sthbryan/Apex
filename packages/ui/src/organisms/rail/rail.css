@@ -43,8 +43,4 @@
   .ui-rail-badge[data-state="done"] { background-color: var(--apex-state-done); }
   .ui-rail-badge[data-state="failed"] { background-color: var(--apex-state-failed); }
   .ui-rail-badge[data-state="dirty"] { background-color: var(--apex-muted); }
-
-  @media (max-width: 780px) {
-    .ui-app-body > .ui-rail { display: none; }
-  }
 }
