@@ -140,13 +140,13 @@
 
   --apex-veil-tint: 100%;
   --apex-veil-lift: 0%;
-  --apex-veil-shell: var(--apex-bg-solid);
+  --apex-shell: var(--apex-bg-solid);
 }
 
 [data-veil="on"] {
   --apex-veil-tint: 72%;
   --apex-veil-lift: 12%;
-  --apex-veil-shell: transparent;
+  --apex-shell: transparent;
 
   --apex-text-solid: light-dark(#26213a, #eae8fb);
   --apex-muted-solid: light-dark(#3b3757, #aaa6c0);
@@ -155,7 +155,7 @@
 }
 
 :root {
-  --apex-bg: var(--apex-veil-shell);
+  --apex-bg: var(--apex-bg-solid);
   --apex-surface: color-mix(in oklab, var(--apex-surface-solid) var(--apex-veil-tint), transparent);
   --apex-raised: color-mix(
     in oklab,
