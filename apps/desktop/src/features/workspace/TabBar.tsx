@@ -7,6 +7,7 @@ import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import type { SessionSummary } from "@/bindings/SessionSummary";
+import { togglePalette } from "@/features/palette/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { activeTabId, closeTab, mergeTabInto, type Tab } from "@/features/workspace/state";
 import { paneIcon, paneTitle } from "@/features/workspace/title";
@@ -15,6 +16,7 @@ import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 const OVERFLOW_W = 52;
+const ADD_W = 38;
 
 type Props = {
   tabs: Tab[];
@@ -33,7 +35,7 @@ export function TabBar({ tabs, sessions }: Props) {
       return;
     }
     const measure = () => {
-      const available = node.clientWidth - OVERFLOW_W;
+      const available = node.clientWidth - OVERFLOW_W - ADD_W;
       const widths = tabEls.current.map((el) => el?.offsetWidth ?? 0);
       let used = 0;
       let shown = 0;
@@ -52,14 +54,17 @@ export function TabBar({ tabs, sessions }: Props) {
     return () => observer.disconnect();
   }, [tabs]);
 
-  if (tabs.length === 0) {
-    return null;
-  }
-
   const overflowTabs = hidden > 0 ? tabs.slice(tabs.length - hidden) : [];
 
   return (
-    <KitTabBar elRef={holder} label={t("workspace.tabs")} class="relative">
+    <KitTabBar
+      elRef={holder}
+      label={t("workspace.tabs")}
+      class="relative"
+      addLabel={t("toolbar.newSession")}
+      addIcon={<Icon name="plus" size={14} />}
+      onAdd={togglePalette}
+    >
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId.value;
         const overflowed = index >= tabs.length - hidden;

@@ -1,5 +1,5 @@
 import { useSignalEffect } from "@preact/signals";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 
 import { DaemonFailed } from "@/app/DaemonFailed";
 import { useKeymap } from "@/app/keymap";
@@ -13,6 +13,7 @@ import { startGitWatch } from "@/features/git/state";
 import { startNotifications } from "@/features/notifications/state";
 import { Toasts } from "@/features/notifications/Toasts";
 import { CommandPalette } from "@/features/palette/CommandPalette";
+import { finderOpen, paletteOpen, toggleFinder, togglePalette } from "@/features/palette/state";
 import { activeProject, history, loadProjects } from "@/features/projects/state";
 import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
@@ -33,12 +34,6 @@ import { startThemeWatcher } from "@/shared/theme/mode";
 import { watchFullscreen } from "@/shared/window";
 
 export function App() {
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [finderOpen, setFinderOpen] = useState(false);
-
-  const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
-  const toggleFinder = useCallback(() => setFinderOpen((open) => !open), []);
-
   useEffect(() => {
     document.documentElement.lang = locale.value;
     void connect().then(loadProjects).then(loadEditors).then(applyIdleGrace);
@@ -100,15 +95,15 @@ export function App() {
     };
   });
 
-  useEffect(() => {
-    if (paletteOpen) {
+  useSignalEffect(() => {
+    if (paletteOpen.value) {
       return;
     }
     const session = activeSessionId.value;
     if (session) {
       focusTerminal(session);
     }
-  }, [paletteOpen]);
+  });
 
   useKeymap({ togglePalette, toggleFinder });
 
@@ -118,16 +113,23 @@ export function App() {
 
   return (
     <>
-      <Layout onNewSession={() => setPaletteOpen(true)} />
+      <Layout onNewSession={togglePalette} />
       <Toasts />
       <Settings />
       <Shortcuts />
       <NewSession />
       <CloseSession />
-      <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
+      <FileFinder
+        open={finderOpen.value}
+        onClose={() => {
+          finderOpen.value = false;
+        }}
+      />
       <CommandPalette
-        open={paletteOpen}
-        onClose={() => setPaletteOpen(false)}
+        open={paletteOpen.value}
+        onClose={() => {
+          paletteOpen.value = false;
+        }}
         agents={agents.value}
         sessions={sessions.value}
         history={history.value}
