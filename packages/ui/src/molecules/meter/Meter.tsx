@@ -10,13 +10,13 @@ export interface MeterProps {
   tick?: number;
   display?: string;
   lead?: ComponentChildren;
-  detail?: string;
+  detail?: ComponentChildren;
   class?: string;
 }
 
 export function Meter({ label, value, tone, tick, display, lead, detail, class: className }: MeterProps) {
   return (
-    <div class={cn("ui-meter", className)}>
+    <div class={cn("ui-meter", className)} data-tone={tone}>
       {lead ? <span class="ui-meter-lead">{lead}</span> : null}
       <span class="ui-meter-label">{label}</span>
       <Bar value={value} tone={tone} tick={tick} label={label} />

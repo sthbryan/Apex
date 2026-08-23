@@ -15,6 +15,9 @@
     width: var(--ui-meter-value-width, 44px);
   }
 
+  .ui-meter[data-tone="blocked"] .ui-meter-value { color: var(--apex-state-blocked); }
+  .ui-meter[data-tone="failed"] .ui-meter-value { color: var(--apex-state-failed); }
+
   .ui-meter-lead {
     @apply flex shrink-0 items-center;
   }
