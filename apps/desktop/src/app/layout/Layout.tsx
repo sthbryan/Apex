@@ -63,7 +63,7 @@ export function Layout({ onNewSession }: Props) {
               icon={NEXT[mode].icon}
               onClick={toggleDock}
             />
-            <ToolbarButton label={t("toolbar.newSession")} icon="plus" onClick={onNewSession} />
+            <ToolbarButton label={t("shortcuts.palette")} icon="grid" onClick={onNewSession} />
             <ToolbarButton
               label={t("settings.title")}
               icon="settings"
