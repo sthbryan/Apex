@@ -1,5 +1,4 @@
-import { Popover } from "@apex/ui";
-import cn from "cnfast";
+import { ListRow, Popover } from "@apex/ui";
 import type { ComponentChildren } from "preact";
 import type { Notice } from "@/features/notifications/state";
 import {
@@ -75,31 +74,25 @@ function NoticeRow({ notice }: { notice: Notice }) {
   const ago = roughly((Date.now() - notice.at) / 1000) ?? t("sessions.justNow");
 
   return (
-    <button
-      type="button"
+    <ListRow
+      label={notice.title}
+      sub={notice.body ?? undefined}
+      class={notice.read ? "text-muted" : undefined}
       disabled={!session}
+      lead={
+        session ? (
+          <AgentIcon agent={session.agent} class="text-faint" />
+        ) : (
+          <Icon name={glyph(notice)} size={12} class="text-faint" />
+        )
+      }
+      trail={<span class="tabular-nums">{ago}</span>}
       onClick={() => {
         if (session && !focusSession(session.id)) {
           openInNewTab(session);
         }
       }}
-      class={cn(
-        "flex w-full items-start gap-2 rounded-sm px-1 py-1 text-left transition-colors",
-        session ? "hover:bg-raised" : "cursor-default",
-        notice.read ? "text-muted" : "text-text",
-      )}
-    >
-      {session ? (
-        <AgentIcon agent={session.agent} class="mt-0.5 shrink-0 text-faint" />
-      ) : (
-        <Icon name={glyph(notice)} size={12} class="mt-0.5 shrink-0 text-faint" />
-      )}
-      <span class="min-w-0 flex-1">
-        <span class="block truncate text-sm">{notice.title}</span>
-        {notice.body && <span class="block truncate text-xs text-faint">{notice.body}</span>}
-      </span>
-      <span class="shrink-0 text-xs text-faint tabular-nums">{ago}</span>
-    </button>
+    />
   );
 }
 
