@@ -84,6 +84,7 @@ export function Toolkit() {
   const [run, setRun] = useState(false);
   const revision = `${themeMode.value}:${veil.value}`;
   const values = useTokenValues(ALL_TOKENS, revision);
+  const other = themeMode.value === "dark" ? "light" : "dark";
 
   return (
     <div class="tk">
@@ -134,6 +135,7 @@ export function Toolkit() {
                   >
                     <span class="tk-segment-name">{short(token)}</span>
                     <span class="tk-segment-hex">{value?.[themeMode.value]}</span>
+                    <span class="tk-segment-alt">{other} · {value?.[other]}</span>
                     <span class="tk-copied">copied</span>
                   </button>
                 );
