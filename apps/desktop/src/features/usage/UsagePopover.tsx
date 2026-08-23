@@ -64,17 +64,15 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
         {failures.map((agent) => (
           <section key={agent} class="flex items-center gap-1.5 px-1 py-1">
             <AgentIcon agent={agent} class="shrink-0 text-faint" />
-            <h3 class="text-micro uppercase tracking-wider text-faint">{agent}</h3>
-            <span class="ml-auto shrink-0 text-micro text-state-failed">
-              {t("usage.unavailable")}
-            </span>
+            <h3 class="text-xs uppercase tracking-wider text-faint">{agent}</h3>
+            <span class="ml-auto shrink-0 text-xs text-state-failed">{t("usage.unavailable")}</span>
             <button
               type="button"
               onClick={() => {
                 setRefreshing(true);
                 void refreshQuota().finally(() => setRefreshing(false));
               }}
-              class="shrink-0 text-micro text-faint underline transition-colors hover:text-text"
+              class="shrink-0 text-xs text-faint underline transition-colors hover:text-text"
             >
               {t("usage.retry")}
             </button>
@@ -90,8 +88,8 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
               <section key={report.agent} class="px-1 py-1">
                 <div class="mb-0.5 flex items-center gap-1.5">
                   <AgentIcon agent={report.agent} class="shrink-0 text-faint" />
-                  <h3 class="text-micro uppercase tracking-wider text-faint">{report.agent}</h3>
-                  <span class={cn("ml-auto shrink-0 text-micro font-medium", level.text)}>
+                  <h3 class="text-xs uppercase tracking-wider text-faint">{report.agent}</h3>
+                  <span class={cn("ml-auto shrink-0 text-xs font-medium", level.text)}>
                     {tight}%
                   </span>
                 </div>

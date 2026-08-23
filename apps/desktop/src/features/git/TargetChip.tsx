@@ -127,12 +127,12 @@ export function TargetChip({ project, placement = "below" }: Props) {
       />
       {attached.map(row)}
       {orphans.length > 0 && (
-        <p class="px-1 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
+        <p class="px-1 pt-2 pb-0.5 text-2xs uppercase tracking-wider text-faint">
           {t("git.orphanTrees", { count: String(orphans.length) })}
         </p>
       )}
       {orphans.map(row)}
-      <p class="px-1 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
+      <p class="px-1 pt-2 pb-0.5 text-2xs uppercase tracking-wider text-faint">
         {t("git.branches", { count: String(others.length) })}
       </p>
       {others.length === 0 && <p class="px-1 py-1 text-faint">{t("git.branchesEmpty")}</p>}

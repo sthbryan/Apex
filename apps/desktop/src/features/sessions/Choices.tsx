@@ -99,8 +99,8 @@ export function Choices() {
             </span>
             <Icon name={option.icon} size={14} class="shrink-0 text-faint" />
             <span class="min-w-0">
-              <span class="block text-code text-text">{t(`isolation.${option.value}`)}</span>
-              <span class="block text-micro text-faint">{t(`isolation.${option.value}Hint`)}</span>
+              <span class="block text-md text-text">{t(`isolation.${option.value}`)}</span>
+              <span class="block text-xs text-faint">{t(`isolation.${option.value}Hint`)}</span>
             </span>
           </button>
         ))}
@@ -108,7 +108,7 @@ export function Choices() {
 
       {CHOICES[cursor].value === "worktree" && (
         <label class="flex flex-col gap-0.5 px-3 pb-2">
-          <span class="text-micro text-faint">{t("isolation.name")}</span>
+          <span class="text-xs text-faint">{t("isolation.name")}</span>
           <input
             ref={field}
             type="text"
@@ -122,15 +122,15 @@ export function Choices() {
                 confirm("worktree");
               }
             }}
-            class="rounded border border-border bg-overlay px-2 py-1 text-code text-text outline-none placeholder:text-faint focus:border-muted"
+            class="rounded border border-border bg-overlay px-2 py-1 text-md text-text outline-none placeholder:text-faint focus:border-muted"
           />
-          <span class="text-tiny text-faint">
+          <span class="text-2xs text-faint">
             {t("isolation.branch", { branch: `apex/${slugify(name)}` })}
           </span>
         </label>
       )}
 
-      {failure && <p class="px-3 pb-2 text-micro text-state-failed">{failure}</p>}
+      {failure && <p class="px-3 pb-2 text-xs text-state-failed">{failure}</p>}
     </>
   );
 }

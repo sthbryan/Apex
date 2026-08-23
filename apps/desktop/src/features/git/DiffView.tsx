@@ -184,7 +184,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
   );
 
   return (
-    <div ref={frame} class="flex h-full flex-col bg-pane">
+    <div ref={frame} class="flex h-full flex-col bg-bg">
       {chrome && (
         <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
           <Icon name="branch" size={12} />
@@ -378,7 +378,7 @@ function Patch({ painted, path, split, target, commit, actions }: PatchProps) {
     return <SplitPatch path={path} patch={painted.patch} />;
   }
   const plain = (
-    <pre class="w-max min-w-full animate-veil-in px-3 py-2 leading-5">
+    <pre class="w-max min-w-full animate-fade-in px-3 py-2 leading-5">
       {painted.markup ? (
         <code dangerouslySetInnerHTML={{ __html: painted.markup }} />
       ) : (

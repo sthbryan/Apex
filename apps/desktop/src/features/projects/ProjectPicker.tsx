@@ -90,7 +90,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
         )}
       >
         {rail ? (
-          <span class="text-micro font-semibold text-text">{current?.name.charAt(0) ?? "·"}</span>
+          <span class="text-xs font-semibold text-text">{current?.name.charAt(0) ?? "·"}</span>
         ) : (
           <>
             <span class="min-w-0 flex-1">
@@ -98,7 +98,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
                 {current?.name ?? t("projects.none")}
               </span>
               {dock && current && (
-                <span class="block truncate text-tiny text-faint">{prettyRoot(current.root)}</span>
+                <span class="block truncate text-2xs text-faint">{prettyRoot(current.root)}</span>
               )}
             </span>
             {waitingElsewhere() > 0 && (

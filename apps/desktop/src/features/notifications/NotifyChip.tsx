@@ -34,7 +34,7 @@ export function NotifyChip() {
           )}
         >
           <Icon name={notifyEnabled.value ? "bell" : "bellOff"} size={12} />
-          {unread.value > 0 && <span class="text-micro tabular-nums">{unread.value}</span>}
+          {unread.value > 0 && <span class="text-xs tabular-nums">{unread.value}</span>}
         </button>
       }
     />

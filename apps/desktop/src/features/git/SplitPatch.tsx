@@ -41,7 +41,7 @@ export function SplitPatch({ path, patch }: Props) {
   }, [path, patch]);
 
   return (
-    <div class="w-full animate-veil-in font-mono text-code leading-5">
+    <div class="w-full animate-fade-in font-mono text-md leading-5">
       {files.map((file) => (
         <Fragment key={file.path}>
           {files.length > 1 && (

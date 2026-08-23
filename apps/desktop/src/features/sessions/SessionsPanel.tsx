@@ -141,7 +141,7 @@ function Branch({ session, byParent, depth = 0 }: BranchProps) {
           <button
             type="button"
             onClick={() => setOpen((shown) => !shown)}
-            class="ml-3 flex items-center gap-1 py-0.5 pl-2 text-micro text-faint transition-colors hover:text-text"
+            class="ml-3 flex items-center gap-1 py-0.5 pl-2 text-xs text-faint transition-colors hover:text-text"
           >
             <Icon
               name="chevron"

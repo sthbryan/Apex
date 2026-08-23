@@ -239,7 +239,7 @@ function Row({
       />
 
       {lines.length > 0 && (
-        <pre class="animate-veil-in overflow-hidden px-2 pb-1 pl-10 text-faint">
+        <pre class="animate-fade-in overflow-hidden px-2 pb-1 pl-10 text-faint">
           {lines.map((line) => (
             <div key={line} class="truncate">
               {line}

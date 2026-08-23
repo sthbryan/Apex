@@ -54,7 +54,7 @@ export function NotifyPanel({ open, anchor, onClose }: Props) {
         <button
           type="button"
           onClick={() => void askForPermission()}
-          class="flex items-center gap-1.5 rounded-sm px-1 py-1 text-left text-micro text-state-blocked transition-colors hover:bg-raised"
+          class="flex items-center gap-1.5 rounded-sm px-1 py-1 text-left text-xs text-state-blocked transition-colors hover:bg-raised"
         >
           <Icon name="bellOff" size={12} class="shrink-0" />
           {t("notify.denied")}
@@ -95,10 +95,10 @@ function NoticeRow({ notice }: { notice: Notice }) {
         <Icon name={glyph(notice)} size={12} class="mt-0.5 shrink-0 text-faint" />
       )}
       <span class="min-w-0 flex-1">
-        <span class="block truncate text-small">{notice.title}</span>
-        {notice.body && <span class="block truncate text-micro text-faint">{notice.body}</span>}
+        <span class="block truncate text-sm">{notice.title}</span>
+        {notice.body && <span class="block truncate text-xs text-faint">{notice.body}</span>}
       </span>
-      <span class="shrink-0 text-micro text-faint tabular-nums">{ago}</span>
+      <span class="shrink-0 text-xs text-faint tabular-nums">{ago}</span>
     </button>
   );
 }

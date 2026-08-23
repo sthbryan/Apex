@@ -74,7 +74,7 @@ export function AcpView({ id }: { id: string }) {
   }, [entries.length, stale]);
 
   return (
-    <div class="flex h-full flex-col bg-pane">
+    <div class="flex h-full flex-col bg-bg">
       <div class="relative flex min-h-0 flex-1 flex-col">
         <Transcript elRef={scroll}>
           {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
@@ -91,7 +91,7 @@ export function AcpView({ id }: { id: string }) {
               foot.current?.scrollIntoView({ block: "end" });
               setStale(false);
             }}
-            class="absolute right-3 bottom-2 z-10 flex animate-drop-in items-center gap-1 rounded-full border border-border bg-float px-2 py-1 text-tiny text-faint shadow-lg transition-colors hover:text-text"
+            class="absolute right-3 bottom-2 z-10 flex animate-drop-in items-center gap-1 rounded-full border border-border bg-float px-2 py-1 text-2xs text-faint shadow-lg transition-colors hover:text-text"
           >
             <Icon name="pull" size={12} />
             {t("acp.latest")}

@@ -31,7 +31,7 @@ export function UsageRow({ window }: Props) {
         )}
       </span>
       <span class={cn("w-9 shrink-0 text-right tabular-nums", level.text)}>{percent}%</span>
-      <span class={cn("w-12 shrink-0 truncate text-right text-tiny", pace?.tone ?? "text-faint")}>
+      <span class={cn("w-12 shrink-0 truncate text-right text-2xs", pace?.tone ?? "text-faint")}>
         {pace?.text ?? away ?? ""}
       </span>
     </div>

@@ -88,7 +88,7 @@ function EmptySessions() {
           ))}
         </ul>
       )}
-      <p class="text-micro text-faint">
+      <p class="text-xs text-faint">
         {t("workspace.emptyHintBefore")} <Kbd>⌘K</Kbd> {t("workspace.emptyHintAfter")}
       </p>
     </Splash>
@@ -106,9 +106,9 @@ function sample<T>(pool: readonly T[], count: number): T[] {
 
 function Splash({ children }: { children: ComponentChildren }) {
   return (
-    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-pane px-8 text-center">
+    <div class="relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden bg-bg px-8 text-center">
       <ApexMark />
-      <h1 class="relative font-display text-[clamp(3rem,12vw,7rem)] leading-none font-normal tracking-tight text-text">
+      <h1 class="relative font-serif text-[clamp(3rem,12vw,7rem)] leading-none font-normal tracking-tight text-text">
         APEX
       </h1>
       {children}
@@ -137,7 +137,7 @@ function ApexMark() {
 
 function Kbd({ children }: { children: ComponentChildren }) {
   return (
-    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-micro font-medium leading-none text-text">
+    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-xs font-medium leading-none text-text">
       {children}
     </kbd>
   );

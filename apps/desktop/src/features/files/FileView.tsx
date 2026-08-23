@@ -164,7 +164,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
   );
 
   return (
-    <div class="flex h-full flex-col bg-pane">
+    <div class="flex h-full flex-col bg-bg">
       {chrome && (
         <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
           <Icon name="file" size={12} />
@@ -215,7 +215,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
       {contents?.image && (
         <ImageView
-          class="animate-veil-in"
+          class="animate-fade-in"
           src={contents.image}
           alt={fileName(path)}
           meta={formatSize(contents.size)}
@@ -226,7 +226,7 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
 
       {drawn && text !== null && (
         <ImageView
-          class="animate-veil-in"
+          class="animate-fade-in"
           src={svgSource(text)}
           alt={fileName(path)}
           meta={contents ? formatSize(contents.size) : undefined}

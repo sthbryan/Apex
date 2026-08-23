@@ -56,7 +56,7 @@ export function ImageDiff({ target, paths, commit, named, children }: Props) {
               {entry.path}
             </h3>
           )}
-          <div class="grid animate-veil-in grid-cols-2 gap-px bg-border">
+          <div class="grid animate-fade-in grid-cols-2 gap-px bg-border">
             <Frame
               label={t("git.imageBefore")}
               source={entry.pair.before}
@@ -72,9 +72,9 @@ export function ImageDiff({ target, paths, commit, named, children }: Props) {
 
 function Frame({ label, source, tone }: { label: string; source: string | null; tone: string }) {
   return (
-    <figure class="flex min-h-0 flex-col bg-pane">
+    <figure class="flex min-h-0 flex-col bg-bg">
       <figcaption
-        class={`border-b border-border px-3 py-1 text-micro uppercase tracking-wider ${tone}`}
+        class={`border-b border-border px-3 py-1 text-xs uppercase tracking-wider ${tone}`}
       >
         {label}
       </figcaption>

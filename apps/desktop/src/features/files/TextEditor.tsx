@@ -39,10 +39,10 @@ export function TextEditor({ text, path, editable, onInput, onSave }: Props) {
 
   return (
     <div class="min-h-0 flex-1 overflow-auto">
-      <div class="ui-code-view flex min-h-full w-max min-w-full animate-veil-in py-0">
+      <div class="ui-code-view flex min-h-full w-max min-w-full animate-fade-in py-0">
         <div
           aria-hidden="true"
-          class="sticky left-0 shrink-0 select-none border-r border-border bg-pane px-2 py-3 text-right text-faint"
+          class="sticky left-0 shrink-0 select-none border-r border-border bg-bg px-2 py-3 text-right text-faint"
         >
           {Array.from({ length: lines }, (_, index) => (
             <div key={index}>{index + 1}</div>

@@ -145,7 +145,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
                       </span>
                     )}
                     {item.preview && (
-                      <span class="shrink-0 whitespace-pre rounded border border-border bg-black/20 px-1 py-0.5 font-mono text-petite leading-tight text-faint">
+                      <span class="shrink-0 whitespace-pre rounded border border-border bg-black/20 px-1 py-0.5 font-mono text-2xs leading-tight text-faint">
                         {item.preview.join("\n")}
                       </span>
                     )}

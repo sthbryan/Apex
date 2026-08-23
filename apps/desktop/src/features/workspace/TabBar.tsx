@@ -90,7 +90,7 @@ export function TabBar({ tabs, sessions }: Props) {
             trail={
               <>
                 {leaves(tab.root).length > 1 && (
-                  <span class="shrink-0 text-micro text-faint tabular-nums">
+                  <span class="shrink-0 text-xs text-faint tabular-nums">
                     +{leaves(tab.root).length - 1}
                   </span>
                 )}
@@ -143,7 +143,7 @@ export function TabBar({ tabs, sessions }: Props) {
               onClick={() => setOpen((value) => !value)}
               class={cn(
                 "flex h-full items-center gap-0.5 border-r border-border px-2.5 text-muted transition-colors hover:text-text",
-                open && "bg-pane text-text",
+                open && "bg-bg text-text",
               )}
             >
               <Icon name="plus" size={12} />
@@ -162,7 +162,7 @@ export function TabBar({ tabs, sessions }: Props) {
               class="flex w-full items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors hover:bg-raised"
             >
               <span class="flex shrink-0 items-center text-faint">{identity(tab, sessions)}</span>
-              <span class="truncate text-small text-text">{titleOf(tab, sessions)}</span>
+              <span class="truncate text-sm text-text">{titleOf(tab, sessions)}</span>
               {tab.id === activeTabId.value && (
                 <Icon name="check" size={12} class="ml-auto shrink-0 text-faint" />
               )}

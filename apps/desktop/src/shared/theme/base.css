@@ -31,7 +31,7 @@ pre,
 code,
 .code {
   font-family: var(--font-mono);
-  font-size: var(--text-code);
+  font-size: var(--text-md);
 }
 
 #root {
@@ -51,11 +51,10 @@ code,
 
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --apex-instant: 1ms;
     --apex-quick: 1ms;
     --apex-swift: 1ms;
-    --apex-exit: 1ms;
-    --apex-dock: 1ms;
-    --apex-view: 1ms;
+    --apex-slow: 1ms;
   }
 
   *,

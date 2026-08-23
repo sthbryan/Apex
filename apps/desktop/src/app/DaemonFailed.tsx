@@ -4,7 +4,7 @@ import { t } from "@/shared/i18n";
 
 export function DaemonFailed() {
   return (
-    <div class="flex h-full flex-col bg-pane text-text">
+    <div class="flex h-full flex-col bg-bg text-text">
       <TitleBar
         data-tauri-drag-region
         lights={false}

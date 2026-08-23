@@ -50,7 +50,7 @@ export function DockOrder() {
         <div key={id} class="flex items-center gap-1 text-faint">
           <Icon name={DOCK_PANELS[id].icon} />
           <span class="min-w-0 flex-1 truncate">{DOCK_PANELS[id].label()}</span>
-          <span class="text-micro">{t("settings.sidebarTab")}</span>
+          <span class="text-xs">{t("settings.sidebarTab")}</span>
           <button
             type="button"
             title={t("dock.popIn")}

@@ -94,8 +94,8 @@ function Choices() {
             </span>
             <Icon name={option.icon} size={14} class="shrink-0 text-faint" />
             <span class="min-w-0">
-              <span class="block text-code text-text">{t(`closing.${option.value}`)}</span>
-              <span class="block text-micro text-faint">
+              <span class="block text-md text-text">{t(`closing.${option.value}`)}</span>
+              <span class="block text-xs text-faint">
                 {t(`closing.${option.value}Hint`, { branch })}
               </span>
             </span>
@@ -103,7 +103,7 @@ function Choices() {
         ))}
       </div>
 
-      {failure && <p class="pt-2 text-micro text-state-failed">{failure}</p>}
+      {failure && <p class="pt-2 text-xs text-state-failed">{failure}</p>}
     </>
   );
 }

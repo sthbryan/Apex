@@ -50,7 +50,7 @@ export function ElsewhereList({ sessions, projects }: Props) {
             <button
               type="button"
               onClick={() => void switchTo(projectId)}
-              class="truncate px-1.5 pt-1 text-left text-micro text-faint hover:text-text"
+              class="truncate px-1.5 pt-1 text-left text-xs text-faint hover:text-text"
             >
               {projects.find((project) => project.id === projectId)?.name ?? projectId.slice(0, 8)}
             </button>

@@ -51,7 +51,7 @@ export function UnifiedPatch({ path, patch, actions }: Props) {
       {files.map((file) => (
         <DiffFile
           key={file.path}
-          class="animate-veil-in"
+          class="animate-fade-in"
           path={file.path}
           added={file.added}
           removed={file.removed}

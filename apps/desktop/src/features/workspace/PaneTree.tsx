@@ -213,12 +213,12 @@ function DockPanelView({ id }: { id: string }) {
   }
   const { View } = entry;
   return (
-    <div class="h-full overflow-auto bg-pane">
+    <div class="h-full overflow-auto bg-bg">
       <View />
     </div>
   );
 }
 
 function PanePlaceholder() {
-  return <div class="h-full w-full animate-pulse bg-pane" />;
+  return <div class="h-full w-full animate-pulse bg-bg" />;
 }

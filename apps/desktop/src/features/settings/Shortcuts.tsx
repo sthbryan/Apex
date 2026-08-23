@@ -9,7 +9,7 @@ const GROUPS: Shortcut["group"][] = ["navigation", "panes"];
 
 function Keycap({ value }: { value: string }) {
   return (
-    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-micro font-medium leading-none text-text shadow-[0_1px_0_0_var(--color-border)]">
+    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-xs font-medium leading-none text-text shadow-[0_1px_0_0_var(--color-border)]">
       {value}
     </kbd>
   );
