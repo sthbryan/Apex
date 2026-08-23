@@ -20,7 +20,7 @@
 
   .ui-race-col {
     @apply flex min-h-0 min-w-0 flex-col border-r border-border;
-    transition: opacity var(--apex-normal) var(--apex-ease);
+    transition: opacity var(--apex-swift) var(--apex-ease);
   }
 
   .ui-race-col:last-child {
