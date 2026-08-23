@@ -94,7 +94,10 @@ export function TabBar({ tabs, sessions }: Props) {
             }}
             title={titleOf(tab, sessions)}
             selected={active}
-            class={cn("group animate-row-in", overflowed && "invisible pointer-events-none absolute")}
+            class={cn(
+              "group animate-row-in",
+              overflowed && "invisible pointer-events-none absolute",
+            )}
             lead={identity(tab, sessions)}
             onOpen={() => {
               activeTabId.value = tab.id;
