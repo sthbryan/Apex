@@ -19,10 +19,9 @@ import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
-import { applyIdleGrace } from "@/features/settings/agentMode";
+import { adoptAgents, applyIdleGrace } from "@/features/settings/agentMode";
 import { applyAppearance } from "@/features/settings/appearance";
 import { Settings } from "@/features/settings/Settings";
-import { Shortcuts } from "@/features/settings/Shortcuts";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
@@ -36,7 +35,7 @@ import { watchFullscreen } from "@/shared/window";
 export function App() {
   useEffect(() => {
     document.documentElement.lang = locale.value;
-    void connect().then(loadProjects).then(loadEditors).then(applyIdleGrace);
+    void connect().then(loadProjects).then(loadEditors).then(applyIdleGrace).then(adoptAgents);
 
     let stopNotifications: (() => void) | undefined;
     void startNotifications().then((stop) => {
@@ -116,7 +115,6 @@ export function App() {
       <Layout onNewSession={togglePalette} />
       <Toasts />
       <Settings />
-      <Shortcuts />
       <NewSession />
       <CloseSession />
       <FileFinder

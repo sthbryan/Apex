@@ -1,6 +1,17 @@
-import { Segmented, Select, Slider, Switch } from "@apex/ui";
-import cn from "cnfast";
+import {
+  DataRow,
+  IdentityCard,
+  KbdGroup,
+  Pill,
+  Segmented,
+  Select,
+  Slider,
+  Switch,
+  Wordmark,
+} from "@apex/ui";
+import { SHORTCUTS } from "@/app/keymap";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
 import {
   agentModes,
   applyIdleGrace,
@@ -12,10 +23,8 @@ import {
   setIdleGrace,
   setNotifyEnabled,
   setRaceUnattended,
-  setSharedContext,
   setSplitCap,
   setViewLanding,
-  sharedContext,
   splitCaps,
   unattendedAgents,
   viewLanding,
@@ -53,8 +62,7 @@ import {
   VEIL_AREAS,
 } from "@/features/settings/constants";
 import { DockOrder } from "@/features/settings/DockOrder";
-import { Fact } from "@/features/settings/Fact";
-import { agents, complain, daemonVersion } from "@/shared/daemon";
+import { agents, daemonVersion } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
 import { Icon } from "@/shared/ui/Icon";
@@ -63,6 +71,8 @@ export function lookSection(): Section {
   return {
     id: "look",
     label: t("settings.groupLook"),
+    sub: t("settings.groupLookSub"),
+    icon: "sparkles",
     entries: [
       {
         id: "theme",
@@ -203,6 +213,8 @@ export function spaceSection(): Section {
   return {
     id: "space",
     label: t("settings.groupSpace"),
+    sub: t("settings.groupSpaceSub"),
+    icon: "globe",
     entries: [
       {
         id: "editor",
@@ -332,88 +344,51 @@ export function agentsSection(): Section {
   return {
     id: "agents",
     label: t("settings.groupAgents"),
-    entries: [
-      {
-        id: "agents",
-        label: t("settings.agents"),
-        hint: t("settings.agentsHint2"),
-        control: (
-          <div class="flex flex-col gap-1.5">
-            {agents.value
-              .filter((agent) => agent.resolved_path !== null)
-              .map((agent) => {
-                const sharing = sharedContext.value[agent.name] === true;
-                return (
-                  <div key={agent.name} class="flex items-center justify-end gap-3">
-                    <span class="text-muted">{agent.name}</span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={sharing}
-                      disabled={!agent.shares_config}
-                      title={t(
-                        !agent.shares_config
-                          ? "settings.shareContextNone"
-                          : sharing
-                            ? "settings.shareContextOn"
-                            : "settings.shareContextOff",
-                        { agent: agent.name },
-                      )}
-                      onClick={() => {
-                        void setSharedContext(agent.name, !sharing).catch(complain);
-                      }}
-                      class={cn(
-                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
-                        sharing
-                          ? "border-accent bg-overlay text-accent"
-                          : "border-border text-faint enabled:hover:text-text",
-                        agent.shares_config ? "" : "cursor-not-allowed opacity-40",
-                      )}
-                    >
-                      <Icon name="context" size={12} />
-                      {t("settings.shareContext")}
-                    </button>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={unattendedAgents.value.includes(agent.name)}
-                      disabled={!raceUnattended.value}
-                      title={t("race.yoloAgent", { agent: agent.name })}
-                      onClick={() =>
-                        setAgentUnattended(agent.name, !unattendedAgents.value.includes(agent.name))
-                      }
-                      class={cn(
-                        "flex items-center gap-1.5 rounded-md border px-2 py-1 transition enabled:active:scale-[0.97]",
-                        unattendedAgents.value.includes(agent.name)
-                          ? "border-git-removed bg-overlay text-git-removed"
-                          : "border-border text-faint enabled:hover:text-text",
-                        raceUnattended.value ? "" : "cursor-not-allowed opacity-40",
-                      )}
-                    >
-                      <Icon name="swap" size={12} />
-                      {t("race.yoloShort")}
-                    </button>
-                    <Segmented
-                      label={t("settings.agentMode", { agent: agent.name })}
-                      value={agentModes.value[agent.name] ?? agent.mode}
-                      onChange={(option) => setAgentMode(agent.name, option)}
-                      options={(["pty", "acp"] as const).map((option) => ({
-                        value: option,
-                        label: t(`isolation.${option}`),
-                        disabled: option === "acp" && !agent.speaks_acp,
-                        title:
-                          option === "acp" && !agent.speaks_acp
-                            ? t("settings.agentNoAcp", { agent: agent.name })
-                            : undefined,
-                      }))}
-                    />
-                  </div>
-                );
-              })}
-          </div>
-        ),
-      },
-    ],
+    sub: t("settings.groupAgentsSub"),
+    icon: "bot",
+    entries: [],
+    panel: (
+      <div class="flex flex-col">
+        {agents.value
+          .filter((agent) => agent.resolved_path !== null)
+          .map((agent) => {
+            const unattended = unattendedAgents.value.includes(agent.name);
+            return (
+              <DataRow
+                key={agent.name}
+                lead={<AgentIcon agent={agent.name} size="sm" />}
+                label={agent.name}
+                sub={t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")}
+                trail={
+                  <Segmented
+                    size="sm"
+                    label={t("settings.agentMode", { agent: agent.name })}
+                    value={agentModes.value[agent.name] ?? agent.mode}
+                    onChange={(option) => setAgentMode(agent.name, option)}
+                    options={(["pty", "acp"] as const).map((option) => ({
+                      value: option,
+                      label: t(`isolation.${option}`),
+                      disabled: option === "acp" && !agent.speaks_acp,
+                      title:
+                        option === "acp" && !agent.speaks_acp
+                          ? t("settings.agentNoAcp", { agent: agent.name })
+                          : undefined,
+                    }))}
+                  />
+                }
+                actions={
+                  <Switch
+                    label={t("race.yoloAgent", { agent: agent.name })}
+                    checked={unattended}
+                    disabled={!raceUnattended.value}
+                    onChange={(on) => setAgentUnattended(agent.name, on)}
+                  />
+                }
+              />
+            );
+          })}
+      </div>
+    ),
   };
 }
 
@@ -421,6 +396,8 @@ export function daemonSection(): Section {
   return {
     id: "daemon",
     label: t("settings.groupDaemon"),
+    sub: t("settings.groupDaemonSub"),
+    icon: "activity",
     entries: [
       {
         id: "idleGrace",
@@ -446,16 +423,52 @@ export function daemonSection(): Section {
 }
 
 export function aboutSection(appVersion: string): Section {
+  const linked = daemonVersion.value !== null;
   return {
     id: "about",
     label: t("settings.about"),
+    sub: t("settings.aboutSub"),
+    icon: "help",
     entries: [],
     panel: (
-      <dl class="flex flex-col gap-2">
-        <Fact term={t("app.name")} value={appVersion || "—"} />
-        <Fact term="apexd" value={daemonVersion.value ?? "—"} />
-        <Fact term={t("settings.agentsPath")} value="~/.apex/agents" />
-      </dl>
+      <div class="flex flex-col gap-3">
+        <IdentityCard
+          icon={<Wordmark size="md">A</Wordmark>}
+          name={<Wordmark size="sm">APEX</Wordmark>}
+          sub={t("app.name")}
+          meta={<span class="font-mono">{appVersion || "—"} · Tauri 2</span>}
+          status={
+            <Pill tone={linked ? "done" : "failed"}>
+              {t(linked ? "settings.daemonLinked" : "settings.daemonLost")}
+            </Pill>
+          }
+        />
+        <div class="flex flex-col">
+          <DataRow
+            label="apexd"
+            trail={<span class="font-mono">{daemonVersion.value ?? "—"}</span>}
+          />
+          <DataRow
+            label={t("settings.agentsPath")}
+            trail={<span class="font-mono">~/.apex/agents</span>}
+          />
+        </div>
+      </div>
     ),
+  };
+}
+
+export function shortcutsSection(): Section {
+  return {
+    id: "shortcuts",
+    label: t("shortcuts.title"),
+    sub: t("settings.shortcutsSub"),
+    icon: "keyboard",
+    entries: SHORTCUTS.map((shortcut) => ({
+      id: shortcut.id,
+      label: t(shortcut.label),
+      hint: t(`shortcuts.groups.${shortcut.group}` as const),
+      control: <KbdGroup keys={shortcut.keys.split(" + ")} />,
+    })),
   };
 }

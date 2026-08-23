@@ -1,5 +1,5 @@
 import { toggleDock } from "@/app/layout/state";
-import { togglePage } from "@/app/view";
+import { toggleSettings } from "@/app/view";
 import { cycleLayout, splitWithShell } from "@/features/sessions/pending";
 import { toggleUsagePopover } from "@/features/usage/state";
 import { activeTab, closePane } from "@/features/workspace/state";
@@ -19,8 +19,8 @@ export function useToggles(next: Toggles): void {
 export const COMMANDS: Record<string, () => void> = {
   palette: () => toggles.togglePalette(),
   finder: () => toggles.toggleFinder(),
-  settings: () => togglePage("settings"),
-  shortcuts: () => togglePage("shortcuts"),
+  settings: () => toggleSettings(),
+  shortcuts: () => toggleSettings("shortcuts"),
   usage: () => toggleUsagePopover(),
   dock: () => toggleDock(),
   "split-right": () => split("row"),

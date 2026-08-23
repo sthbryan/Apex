@@ -63,6 +63,8 @@ export type Entry = {
 export type Section = {
   id: string;
   label: string;
+  sub: string;
+  icon: IconName;
   entries: Entry[];
   panel?: VNode;
 };

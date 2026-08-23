@@ -12,7 +12,7 @@ import {
 } from "@/app/layout/state";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
-import { page, togglePage } from "@/app/view";
+import { page, toggleSettings } from "@/app/view";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
 import { status } from "@/shared/daemon";
@@ -58,7 +58,7 @@ export function Layout({ onNewSession }: Props) {
               label={t("settings.title")}
               icon="settings"
               pressed={page.value === "settings"}
-              onClick={() => togglePage("settings")}
+              onClick={() => toggleSettings()}
             />
           </Toolbar>
         }

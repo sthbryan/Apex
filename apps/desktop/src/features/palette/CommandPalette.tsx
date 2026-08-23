@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { togglePage } from "@/app/view";
+import { toggleSettings } from "@/app/view";
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
 import type { SessionSummary } from "@/bindings/SessionSummary";
@@ -133,7 +133,7 @@ function buildActions(
     label: t("palette.settings"),
     run: () => {
       onClose();
-      togglePage("settings");
+      toggleSettings();
     },
   });
 
@@ -142,7 +142,7 @@ function buildActions(
     label: t("palette.shortcuts"),
     run: () => {
       onClose();
-      togglePage("shortcuts");
+      toggleSettings("shortcuts");
     },
   });
 
