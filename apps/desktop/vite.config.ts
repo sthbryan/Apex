@@ -29,6 +29,12 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
+    coverage: {
+      provider: "v8",
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/bindings/**", "src-tauri/**"],
+    },
   },
   clearScreen: false,
   server: {
