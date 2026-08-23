@@ -1,5 +1,4 @@
 import cn from "cnfast";
-import { useEffect, useRef } from "preact/hooks";
 import type { QuotaReport } from "@/bindings/QuotaReport";
 import type { QuotaWindow } from "@/bindings/QuotaWindow";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
@@ -9,29 +8,13 @@ import { UsagePopover } from "@/features/usage/UsagePopover";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
 import { Icon } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
 
 const SHOWN = 2;
 
 type Entry = { agent: string; window: QuotaWindow };
 
 export function UsageStrip() {
-  const holder = useRef<HTMLDivElement>(null);
-  const popover = usePresence<HTMLDivElement>(usageOpen.value);
   const reports = (metrics.value?.quotas ?? []).filter((report) => report.windows.length > 0);
-
-  useEffect(() => {
-    if (!usageOpen.value) {
-      return;
-    }
-    const dismiss = (event: MouseEvent) => {
-      if (!holder.current?.contains(event.target as Node)) {
-        usageOpen.value = false;
-      }
-    };
-    window.addEventListener("mousedown", dismiss);
-    return () => window.removeEventListener("mousedown", dismiss);
-  }, [usageOpen.value]);
 
   const failures = metrics.value?.quota_failures ?? [];
   if (reports.length === 0 && failures.length === 0) {
@@ -43,40 +26,30 @@ export function UsageStrip() {
   const hidden = entries.length - shown.length;
 
   return (
-    <div ref={holder} class="relative flex min-w-0 items-center">
-      <button
-        type="button"
-        title={t("usage.title")}
-        onClick={toggleUsagePopover}
-        class="flex h-5 items-center gap-2 rounded px-1 transition-colors hover:bg-raised"
-      >
-        {shown.map((entry) => (
-          <Chip key={`${entry.agent}:${entry.window.label ?? ""}`} entry={entry} />
-        ))}
-        {hidden > 0 && <span class="shrink-0 text-faint">+{hidden}</span>}
-        {failures.length > 0 && (
-          <Icon size={11} name="activity" class="shrink-0 text-state-failed" />
-        )}
-      </button>
-
-      {popover.mounted && (
-        <div
-          ref={popover.holder}
-          class={cn("absolute bottom-full left-0 z-50 mb-1 origin-bottom-left", {
-            "animate-drop-out": popover.leaving,
-            "animate-drop-in": !popover.leaving,
-          })}
+    <UsagePopover
+      open={usageOpen.value}
+      reports={reports}
+      failures={failures}
+      onClose={() => {
+        usageOpen.value = false;
+      }}
+      anchor={
+        <button
+          type="button"
+          title={t("usage.title")}
+          onClick={toggleUsagePopover}
+          class="flex h-5 items-center gap-2 rounded px-1 transition-colors hover:bg-raised"
         >
-          <UsagePopover
-            reports={reports}
-            failures={metrics.value?.quota_failures ?? []}
-            onClose={() => {
-              usageOpen.value = false;
-            }}
-          />
-        </div>
-      )}
-    </div>
+          {shown.map((entry) => (
+            <Chip key={`${entry.agent}:${entry.window.label ?? ""}`} entry={entry} />
+          ))}
+          {hidden > 0 && <span class="shrink-0 text-faint">+{hidden}</span>}
+          {failures.length > 0 && (
+            <Icon size={11} name="activity" class="shrink-0 text-state-failed" />
+          )}
+        </button>
+      }
+    />
   );
 }
 
