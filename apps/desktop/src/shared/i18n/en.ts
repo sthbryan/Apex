@@ -405,6 +405,7 @@ export const en = {
     clearFinished: "Clear finished",
   },
   workspace: {
+    paneCrashed: "This pane crashed.",
     closePane: "Close this pane",
     toTab: "Open as its own tab",
     toSplit: "Split into this tab",

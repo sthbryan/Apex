@@ -407,6 +407,7 @@ export const es: Messages = {
     clearFinished: "Limpiar terminadas",
   },
   workspace: {
+    paneCrashed: "Este panel se cayó.",
     closePane: "Cerrar este pane",
     toTab: "Abrir como pestaña",
     toSplit: "Partir en esta pestaña",

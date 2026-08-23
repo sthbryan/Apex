@@ -1,4 +1,6 @@
+import { EmptyState } from "@apex/ui";
 import { Component, type ComponentChildren } from "preact";
+import { t } from "@/shared/i18n";
 
 type Props = {
   children: ComponentChildren;
@@ -22,9 +24,7 @@ export class Boundary extends Component<Props, State> {
   render() {
     if (this.state.failure !== null) {
       return (
-        <div class="h-full overflow-auto bg-bg p-3">
-          <p class="text-state-failed">{this.state.failure}</p>
-        </div>
+        <EmptyState class="h-full" title={t("workspace.paneCrashed")} detail={this.state.failure} />
       );
     }
     return this.props.children;
