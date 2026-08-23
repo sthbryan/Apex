@@ -139,7 +139,7 @@ function Sessions() {
             title={t.title}
             selected={activeTab.value === t.id}
             lead={t.icon ? <t.icon size={13} style="color:var(--apex-muted);flex:none" /> : <AgentIcon agent="claude" size="sm" />}
-            onClick={() => activeTab.value = t.id}
+            onOpen={() => activeTab.value = t.id}
           />
         ))}
       </TabBar>

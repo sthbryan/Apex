@@ -51,26 +51,36 @@ export function TabBar({ label, onAdd, addLabel = "New tab", addIcon, class: cla
   );
 }
 
-export interface TabProps extends Omit<JSX.IntrinsicElements["button"], "ref"> {
+export interface TabProps extends Omit<JSX.IntrinsicElements["div"], "ref" | "title"> {
   title: string;
   selected?: boolean;
   lead?: ComponentChildren;
   trail?: ComponentChildren;
+  onOpen?: () => void;
 }
 
-export function Tab({ title, selected, lead, trail, class: className, ...rest }: TabProps) {
+export function Tab({
+  title, selected, lead, trail, onOpen, class: className, ...rest
+}: TabProps) {
   return (
-    <button
-      type="button"
+    <div
       class={cn("ui-tab", className as string)}
       role="tab"
       aria-selected={selected ?? false}
       tabIndex={selected ? 0 : -1}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen?.();
+        }
+      }}
       {...rest}
     >
-      {lead}
-      <span class="ui-tab-title">{title}</span>
+      <button type="button" class="ui-tab-open" tabIndex={-1} title={title} onClick={onOpen}>
+        {lead}
+        <span class="ui-tab-title">{title}</span>
+      </button>
       {trail}
-    </button>
+    </div>
   );
 }
