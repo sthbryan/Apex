@@ -336,15 +336,18 @@ impl SessionRegistry {
             (None, None) => PathBuf::from(&project_root),
         };
 
-        let record = {
+        let (record, tools_off) = {
             let store = self.store.lock().await;
-            store.insert_session(
-                project,
-                &profile.name,
-                &title,
-                &cwd.display().to_string(),
-                worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
-            )?
+            (
+                store.insert_session(
+                    project,
+                    &profile.name,
+                    &title,
+                    &cwd.display().to_string(),
+                    worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
+                )?,
+                store.tools_off(&profile.name)?,
+            )
         };
 
         let mut spec = PtySpec::new(binary, &cwd);
@@ -396,7 +399,7 @@ impl SessionRegistry {
             parent,
             run,
             url: None,
-            tools_off: Vec::new(),
+            tools_off,
         };
 
         let session = Arc::new(LiveSession {

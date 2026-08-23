@@ -570,15 +570,18 @@ impl AcpRegistry {
                 .with_context(|| format!("\"{command}\" was not found in PATH"))?
         };
 
-        let record = {
+        let (record, tools_off) = {
             let store = self.store.lock().await;
-            store.insert_session(
-                project,
-                &profile.name,
-                &title,
-                &cwd.display().to_string(),
-                worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
-            )?
+            (
+                store.insert_session(
+                    project,
+                    &profile.name,
+                    &title,
+                    &cwd.display().to_string(),
+                    worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
+                )?,
+                store.tools_off(&profile.name)?,
+            )
         };
 
         let summary = Arc::new(Mutex::new(SessionSummary {
@@ -597,7 +600,7 @@ impl AcpRegistry {
             parent,
             run,
             url: None,
-            tools_off: Vec::new(),
+            tools_off,
         }));
 
         let transcript: Arc<Mutex<Transcript>> = Arc::default();
