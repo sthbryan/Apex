@@ -1,5 +1,5 @@
 import type { VNode } from "preact";
-import type { Frost, UiScale } from "@/features/settings/appearance";
+import type { Frost, UiScale, VeilArea } from "@/features/settings/appearance";
 import type { Locale } from "@/shared/i18n";
 import type { ThemeMode } from "@/shared/theme/mode";
 import type { IconName } from "@/shared/ui/Icon";
@@ -20,6 +20,13 @@ export const PANE_CAPS = [2, 3, 4, 5, 6, 8];
 export const UI_SCALES: UiScale[] = ["compact", "normal", "roomy"];
 
 export const FROSTS: Frost[] = ["soft", "glare", "bright", "deep"];
+
+export const VEIL_AREAS: VeilArea[] = ["window", "sidebar"];
+
+export const VEIL_AREA_LABEL = {
+  window: "settings.veilAreaWindow",
+  sidebar: "settings.veilAreaSidebar",
+} as const;
 
 export const FROST_LABEL = {
   soft: "settings.frostSoft",

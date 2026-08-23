@@ -11,7 +11,7 @@ export function StatusBar() {
   const onUsage = hasUsage.value;
 
   return (
-    <div class="flex h-(--apex-statusbar-h) shrink-0 items-center gap-2.5 border-t border-border bg-chrome px-2 text-faint">
+    <div class="flex h-(--apex-statusbar-h) shrink-0 items-center gap-2.5 border-t border-border bg-bar px-2 text-faint">
       {onGit && <GitChip />}
       {onGit && onUsage && <Divider />}
       {onUsage && <UsageStrip />}

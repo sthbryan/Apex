@@ -26,10 +26,12 @@ import {
   setFrost,
   setTranslucent,
   setUiScale,
+  setVeilArea,
   setVeilOpacity,
   translucencySupported,
   translucent,
   uiScale,
+  veilArea,
   veilOpacity,
 } from "@/features/settings/appearance";
 import { browsing, setBrowsing } from "@/features/settings/browsing";
@@ -44,6 +46,8 @@ import {
   THEMES,
   UI_SCALE_LABEL,
   UI_SCALES,
+  VEIL_AREA_LABEL,
+  VEIL_AREAS,
 } from "@/features/settings/constants";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { Fact } from "@/features/settings/Fact";
@@ -128,6 +132,22 @@ export function lookSection(): Section {
                   max={100 - MIN_OPACITY}
                   format={(value) => `${value}%`}
                   onChange={(value) => setVeilOpacity(100 - value)}
+                />
+              ),
+            },
+            {
+              id: "veilArea",
+              label: t("settings.veilArea"),
+              hint: t("settings.veilAreaHint"),
+              control: (
+                <Segmented
+                  label={t("settings.veilArea")}
+                  value={veilArea.value}
+                  onChange={setVeilArea}
+                  options={VEIL_AREAS.map((option) => ({
+                    value: option,
+                    label: t(VEIL_AREA_LABEL[option]),
+                  }))}
                 />
               ),
             },

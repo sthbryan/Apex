@@ -52,6 +52,7 @@
   --color-overlay: var(--apex-overlay);
   --color-float: var(--apex-float);
   --color-shell: var(--apex-shell);
+  --color-bar: var(--apex-bar);
   --color-tty: var(--apex-tty);
   --color-border: var(--apex-border);
   --color-text: var(--apex-text);

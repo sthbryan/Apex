@@ -10,7 +10,7 @@ export function TitleBar({ padStart, lead, children }: Props) {
   return (
     <header
       data-tauri-drag-region
-      class="flex h-9 shrink-0 select-none items-center justify-between gap-3 bg-chrome"
+      class="flex h-9 shrink-0 select-none items-center justify-between gap-3 bg-bar"
       style={{
         paddingLeft: padStart,
         paddingRight: "max(var(--apex-controls-end, 0px), 12px)",

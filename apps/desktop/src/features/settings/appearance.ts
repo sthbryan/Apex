@@ -6,12 +6,14 @@ import { complain, platform } from "@/shared/daemon";
 
 export type UiScale = "compact" | "normal" | "roomy";
 export type Frost = "soft" | "glare" | "bright" | "deep";
+export type VeilArea = "window" | "sidebar";
 
 const SCALE = "apex.ui-scale";
 const TRANSLUCENT = "apex.translucent";
 const OPACITY = "apex.veil-opacity";
 const FROST = "apex.frost";
 const LEGACY_BLUR = "apex.blur";
+const AREA = "apex.veil-area";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
@@ -37,6 +39,10 @@ function restoreFrost(): Frost {
   return FROSTS[legacy - 1] ?? "bright";
 }
 
+function restoreArea(): VeilArea {
+  return localStorage.getItem(AREA) === "sidebar" ? "sidebar" : "window";
+}
+
 function restoreScale(): UiScale {
   try {
     const stored = localStorage.getItem(SCALE) as UiScale | null;
@@ -53,6 +59,7 @@ export const uiScale = signal<UiScale>(restoreScale());
 export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) === "on");
 export const veilOpacity = signal<number>(restoreNumber(OPACITY, 72, MIN_OPACITY, 100));
 export const frost = signal<Frost>(restoreFrost());
+export const veilArea = signal<VeilArea>(restoreArea());
 
 export function setUiScale(next: UiScale): void {
   uiScale.value = next;
@@ -69,6 +76,12 @@ export function setTranslucent(on: boolean): void {
 export function setVeilOpacity(percent: number): void {
   veilOpacity.value = clamp(Math.round(percent), MIN_OPACITY, 100);
   localStorage.setItem(OPACITY, String(veilOpacity.value));
+  applyAppearance();
+}
+
+export function setVeilArea(next: VeilArea): void {
+  veilArea.value = next;
+  localStorage.setItem(AREA, next);
   applyAppearance();
 }
 
@@ -90,8 +103,10 @@ export function applyAppearance(): void {
   }
   if (on) {
     root.style.setProperty("--apex-veil-tint", `${veilOpacity.value}%`);
+    root.setAttribute("data-veil-area", veilArea.value);
   } else {
     root.style.removeProperty("--apex-veil-tint");
+    root.removeAttribute("data-veil-area");
   }
   root.style.setProperty("--apex-scale", String(SCALES[uiScale.value]));
 

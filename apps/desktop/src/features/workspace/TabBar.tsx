@@ -75,7 +75,7 @@ export function TabBar({ tabs, sessions }: Props) {
   return (
     <div
       ref={holder}
-      class="relative flex min-h-8.5 shrink-0 items-stretch border-b border-border bg-chrome"
+      class="relative flex min-h-8.5 shrink-0 items-stretch border-b border-border bg-bar"
     >
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId.value;
