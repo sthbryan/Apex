@@ -50,16 +50,8 @@ pub fn discover(root: &Path) -> Vec<Task> {
     tasks
 }
 
-const RISKY_LINES: [&str; 8] = [
-    "rm -rf",
-    "rm -fr",
-    "pkill",
-    "killall",
-    "cargo clean",
-    "git clean",
-    "reset --hard",
-    "prune",
-];
+const RISKY_LINES: [&str; 8] =
+    ["rm -rf", "rm -fr", "pkill", "killall", "cargo clean", "git clean", "reset --hard", "prune"];
 
 const RISKY_WORDS: [&str; 6] = ["clean", "kill", "nuke", "wipe", "destroy", "reset"];
 
@@ -223,7 +215,13 @@ fn from_manual(root: &Path) -> Vec<Task> {
     manual
         .tasks
         .into_iter()
-        .map(|(name, command)| Task { risky: is_risky(&name, &command), name, command, source: Source::Manual, group: None })
+        .map(|(name, command)| Task {
+            risky: is_risky(&name, &command),
+            name,
+            command,
+            source: Source::Manual,
+            group: None,
+        })
         .collect()
 }
 

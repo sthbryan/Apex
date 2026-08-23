@@ -93,7 +93,6 @@ fn a_broken_manifest_is_ignored_instead_of_breaking_the_panel() {
     assert_eq!(discover(dir.path()).len(), 3);
 }
 
-
 #[test]
 fn a_shared_prefix_becomes_a_group() {
     let dir = project();
@@ -104,9 +103,8 @@ fn a_shared_prefix_becomes_a_group() {
     .expect("write");
 
     let found = discover(dir.path());
-    let group = |name: &str| {
-        found.iter().find(|task| task.name == name).expect("task").group.clone()
-    };
+    let group =
+        |name: &str| found.iter().find(|task| task.name == name).expect("task").group.clone();
 
     assert_eq!(group("dev"), Some("dev".to_owned()));
     assert_eq!(group("dev:daemon"), Some("dev".to_owned()));

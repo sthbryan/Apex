@@ -191,6 +191,7 @@ impl AgentProfile {
             supports_resume: self.supports_resume(),
             speaks_acp: self.acp_command.is_some(),
             shares_config: matches!(self.mcp, Some(McpDelivery::Flag { merge_from: Some(_), .. })),
+            tools_off: Vec::new(),
         }
     }
 }

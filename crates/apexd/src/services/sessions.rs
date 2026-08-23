@@ -8,7 +8,7 @@ use anyhow::{Context, Result, bail};
 use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, Store, history};
 use apex_proto::{
     AgentSummary, Event, Isolation, NotifyKind, SessionState, SessionSummary, TerminalSize,
-    WorktreeDisposal, WorktreeInfo,
+    ToolGroup, WorktreeDisposal, WorktreeInfo,
 };
 use apex_pty::{
     OscScanner, PtyProcess, PtySpec, StateDetector, StatePatterns, TerminalNotice, UrlScanner,
@@ -127,8 +127,20 @@ impl SessionRegistry {
     }
 
     pub async fn list_agents(&self) -> Vec<AgentSummary> {
-        let mut resolver = self.resolver.lock().await;
-        self.profiles.summarize(&mut resolver)
+        let mut agents = {
+            let mut resolver = self.resolver.lock().await;
+            self.profiles.summarize(&mut resolver)
+        };
+        let store = self.store.lock().await;
+        for agent in &mut agents {
+            agent.tools_off = store.tools_off(&agent.name).unwrap_or_default();
+        }
+        agents
+    }
+
+    pub async fn set_agent_tools(&self, agent: &str, groups: &[ToolGroup]) -> Result<()> {
+        let store = self.store.lock().await;
+        store.save_tools_off(agent, groups)
     }
 
     pub async fn list_sessions(&self) -> Vec<SessionSummary> {

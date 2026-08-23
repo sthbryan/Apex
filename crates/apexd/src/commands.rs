@@ -80,6 +80,10 @@ async fn execute(
     match command {
         Command::Ping => Ok(Reply::Pong),
         Command::ListAgents => Ok(Reply::Agents { agents: manager.list_agents().await }),
+        Command::SetAgentTools { agent, tools_off } => {
+            manager.set_agent_tools(&agent, &tools_off).await.map_err(internal_error)?;
+            Ok(Reply::Done)
+        }
         Command::ListSessions => Ok(Reply::Sessions { sessions: manager.list_sessions().await }),
         Command::ListProjects => {
             Ok(Reply::Projects { projects: manager.list_projects().await.map_err(internal_error)? })

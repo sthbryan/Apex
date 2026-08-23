@@ -115,6 +115,8 @@ pub struct AgentSummary {
     pub supports_resume: bool,
     pub speaks_acp: bool,
     pub shares_config: bool,
+    #[serde(default)]
+    pub tools_off: Vec<ToolGroup>,
 }
 
 impl AgentSummary {
@@ -566,6 +568,10 @@ pub struct MetricsSnapshot {
 pub enum Command {
     Ping,
     ListAgents,
+    SetAgentTools {
+        agent: String,
+        tools_off: Vec<ToolGroup>,
+    },
     ListSessions,
     ListProjects,
     ProjectOpen {

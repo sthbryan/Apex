@@ -133,6 +133,14 @@ impl SessionManager {
         self.registry.list_agents().await
     }
 
+    pub async fn set_agent_tools(
+        &self,
+        agent: &str,
+        groups: &[apex_proto::ToolGroup],
+    ) -> anyhow::Result<()> {
+        self.registry.set_agent_tools(agent, groups).await
+    }
+
     pub async fn list_sessions(&self) -> Vec<SessionSummary> {
         let mut sessions = self.registry.list_sessions().await;
         sessions.extend(self.acp.list().await);
