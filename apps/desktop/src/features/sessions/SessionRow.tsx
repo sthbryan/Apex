@@ -1,8 +1,9 @@
+import { Dot, ListRow } from "@apex/ui";
 import cn from "cnfast";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
+import { stateOf } from "@/features/sessions/dot";
 import { requestClose } from "@/features/sessions/pending";
-import { SessionStateDot } from "@/features/sessions/SessionStateDot";
 import { sessions } from "@/features/sessions/state";
 import { mutedSessions, setMuted } from "@/features/settings/agentMode";
 import { countdown } from "@/features/usage/format";
@@ -24,67 +25,71 @@ export function SessionRow({ session, depth = 0 }: Props) {
   const tight = report ? Math.max(0, ...report.windows.map((window) => window.used_percent)) : 0;
   const overLimit = tight >= 100;
   const muted = mutedSessions.value.includes(session.id);
+  const open = () => {
+    if (!focusSession(session.id)) {
+      openInNewTab(session);
+    }
+  };
 
   return (
-    <li
-      class={cn(
-        "group relative flex animate-row-in items-center gap-2 rounded px-1 transition-colors hover:bg-raised",
-        depth > 0 && "ml-3 border-l border-border pl-2",
-        activeSessionId.value === session.id ? "bg-raised" : "",
-      )}
-    >
+    <li class={cn("relative flex animate-row-in", depth > 0 && "ml-3 border-l border-border pl-2")}>
       {overLimit && (
         <span
           aria-hidden="true"
           class="pointer-events-none absolute inset-y-0 left-0 w-0.5 rounded-full bg-state-failed"
         />
       )}
-      <button
-        type="button"
+      <ListRow
+        as="div"
+        role="button"
+        tabIndex={0}
+        class={cn("group flex-1", finished && "text-muted", overLimit && "text-state-failed")}
         title={parent ? t("sessions.spawnedBy", { agent: parent.title }) : session.cwd}
-        onClick={() => {
-          if (!focusSession(session.id)) {
-            openInNewTab(session);
+        label={session.title}
+        sub={session.worktree?.branch}
+        selected={activeSessionId.value === session.id}
+        lead={
+          <>
+            <Dot state={stateOf(session)} />
+            <AgentIcon agent={session.agent} size="sm" class="text-faint" />
+          </>
+        }
+        trail={
+          <>
+            {muted && <Icon name="bellOff" size={12} class="text-faint group-hover:hidden" />}
+            <span class="tabular-nums">
+              {finished ? t("sessions.exited", { code: String(session.exit_code) }) : ago}
+            </span>
+          </>
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              title={muted ? t("notify.unmute") : t("notify.mute")}
+              onClick={() => setMuted(session.id, !muted)}
+              class="text-faint transition-colors hover:text-text"
+            >
+              <Icon name={muted ? "bellOff" : "bell"} size={12} />
+            </button>
+            <button
+              type="button"
+              title={finished ? t("sessions.dismiss") : t("sessions.close")}
+              onClick={() => requestClose(session)}
+              class="text-faint transition-colors hover:text-text"
+            >
+              <Icon name="close" size={12} />
+            </button>
+          </>
+        }
+        onClick={open}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            open();
           }
         }}
-        class={cn(
-          "flex min-w-0 flex-1 items-center gap-2 py-1 text-left",
-          finished ? "text-muted" : "",
-        )}
-      >
-        <SessionStateDot session={session} />
-        <AgentIcon agent={session.agent} class="shrink-0 text-faint" />
-        <div class="min-w-0 flex-1">
-          <span class={cn("block truncate", overLimit && "text-state-failed")}>
-            {session.title}
-          </span>
-          {session.worktree && (
-            <span class="block truncate text-micro text-faint">{session.worktree.branch}</span>
-          )}
-        </div>
-        <span class="shrink-0 text-micro text-faint tabular-nums">
-          {finished ? t("sessions.exited", { code: String(session.exit_code) }) : ago}
-        </span>
-      </button>
-      <button
-        type="button"
-        title={muted ? t("notify.unmute") : t("notify.mute")}
-        onClick={() => setMuted(session.id, !muted)}
-        class={cn(
-          "shrink-0 transition-[opacity,color] hover:text-text",
-          muted ? "text-faint" : "text-faint opacity-0 group-hover:opacity-100",
-        )}
-      >
-        <Icon name={muted ? "bellOff" : "bell"} size={12} />
-      </button>
-      <button
-        type="button"
-        title={finished ? t("sessions.dismiss") : t("sessions.close")}
-        onClick={() => requestClose(session)}
-        class="shrink-0 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
-      >
-        <Icon name="close" size={12} />
-      </button>
+      />
     </li>
   );
 }

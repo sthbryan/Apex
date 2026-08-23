@@ -1,3 +1,4 @@
+import { ListRow, SectionLabel } from "@apex/ui";
 import cn from "cnfast";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
@@ -26,38 +27,28 @@ export function SessionsPanel() {
   const hasSessions = live.length > 0 || finished.length > 0;
 
   return (
-    <div class="flex h-full flex-col">
-      <div class="min-h-0 flex-1 overflow-y-auto p-2">
-        {waiting.value.length > 0 && (
-          <WaitingList sessions={waiting.value} projects={projects.value} />
-        )}
+    <div class="dock-view">
+      {waiting.value.length > 0 && (
+        <WaitingList sessions={waiting.value} projects={projects.value} />
+      )}
 
-        {!hasSessions && !activeProject.value && (
-          <p class="px-1 text-faint">{t("sessions.empty")}</p>
-        )}
+      {!hasSessions && !activeProject.value && <p class="px-1 text-faint">{t("sessions.empty")}</p>}
 
-        {live.length > 0 && (
-          <section class="mb-2">
-            <div class="mb-1 flex items-center gap-2 px-1">
-              <span
-                class="size-1.5 shrink-0 animate-pulse rounded-full bg-state-working"
-                aria-hidden="true"
-              />
-              <h2 class="text-micro uppercase tracking-wider text-faint">
-                {t("sessions.running")} · {live.length}
-              </h2>
-            </div>
-            <ul class="flex flex-col">{renderTree(live)}</ul>
-          </section>
-        )}
+      {live.length > 0 && (
+        <Fragment>
+          <SectionLabel flush count={live.length}>
+            {t("sessions.running")}
+          </SectionLabel>
+          <ul class="flex flex-col">{renderTree(live)}</ul>
+        </Fragment>
+      )}
 
-        {finished.length > 0 && (
-          <section>
-            <div class="mb-1 flex items-center gap-2 px-1">
-              <span class="size-1.5 shrink-0 rounded-full bg-state-done" aria-hidden="true" />
-              <h2 class="text-micro uppercase tracking-wider text-faint">
-                {t("sessions.finished")} · {finished.length}
-              </h2>
+      {finished.length > 0 && (
+        <Fragment>
+          <SectionLabel
+            flush={live.length === 0}
+            count={finished.length}
+            action={
               <button
                 type="button"
                 title={t("sessions.clearFinished")}
@@ -66,19 +57,21 @@ export function SessionsPanel() {
                     requestClose(session);
                   }
                 }}
-                class="ml-auto text-faint transition-colors hover:text-text"
+                class="text-faint transition-colors hover:text-text"
               >
                 <Icon name="close" size={12} />
               </button>
-            </div>
-            <ul class="flex flex-col">{renderTree(finished)}</ul>
-          </section>
-        )}
+            }
+          >
+            {t("sessions.finished")}
+          </SectionLabel>
+          <ul class="flex flex-col">{renderTree(finished)}</ul>
+        </Fragment>
+      )}
 
-        <OrphanTrees />
+      <OrphanTrees />
 
-        {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects.value} />}
-      </div>
+      {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects.value} />}
     </div>
   );
 }
@@ -91,35 +84,23 @@ function OrphanTrees() {
   }
 
   return (
-    <section class="mt-2">
-      <div class="mb-1 flex items-center gap-2 px-1">
-        <span class="size-1.5 shrink-0 rounded-full bg-state-idle" aria-hidden="true" />
-        <h2 class="text-micro uppercase tracking-wider text-faint">
-          {t("sessions.looseTrees")} · {orphans.length}
-        </h2>
-      </div>
-      <ul class="flex flex-col">
-        {orphans.map((tree) => (
-          <li key={tree.path}>
-            <button
-              type="button"
-              title={tree.path}
-              onClick={() => {
-                selectTarget({ type: "worktree", path: tree.path });
-                revealPanel("git");
-              }}
-              class="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-muted transition-colors hover:bg-raised hover:text-text"
-            >
-              <Icon name="branch" size={13} class="shrink-0 text-faint" />
-              <span class="min-w-0 flex-1 truncate">{tree.branch}</span>
-              {tree.changed > 0 && (
-                <span class="shrink-0 text-micro tabular-nums text-git-dirty">{tree.changed}</span>
-              )}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <Fragment>
+      <SectionLabel count={orphans.length}>{t("sessions.looseTrees")}</SectionLabel>
+      {orphans.map((tree) => (
+        <ListRow
+          key={tree.path}
+          label={tree.branch}
+          mono
+          title={tree.path}
+          lead={<Icon name="branch" size={13} class="text-faint" />}
+          trail={tree.changed > 0 ? <span class="text-git-dirty">{tree.changed}</span> : undefined}
+          onClick={() => {
+            selectTarget({ type: "worktree", path: tree.path });
+            revealPanel("git");
+          }}
+        />
+      ))}
+    </Fragment>
   );
 }
 

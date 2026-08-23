@@ -1,0 +1,16 @@
+.dock-view {
+  @apply flex h-full min-h-0 flex-col gap-0.5 overflow-y-auto p-2;
+}
+
+.dock-view.dock-fixed {
+  @apply gap-0 overflow-hidden p-0;
+}
+
+.dock-scroll {
+  @apply flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2;
+}
+
+.dock-flush {
+  margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-md));
+  max-width: none;
+}

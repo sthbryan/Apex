@@ -1,4 +1,4 @@
-import { AgentIcon as Brand, type AgentIconSize } from "@apex/ui";
+import { type AgentIconSize, AgentIcon as Brand } from "@apex/ui";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
 const ALIAS: Record<string, string> = {

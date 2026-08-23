@@ -7,5 +7,6 @@
 @import "@apex/ui/ui.css";
 @import "./theme.css";
 @import "./base.css";
+@import "./dock.css";
 @import "./vendor.css";
 @import "./syntax.css";
