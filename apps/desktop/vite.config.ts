@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  cacheDir: "./node_modules/.vite",
   plugins: [preact(), tailwindcss()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
@@ -30,6 +31,9 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    experimental: {
+      fsModuleCache: true,
+    },
     coverage: {
       provider: "v8",
       reportsDirectory: "./coverage",

@@ -8,8 +8,8 @@
     "daemon": "cargo run -p apexd",
     "daemon:kill": "pkill -x apexd",
     "tauri": "tauri",
-    "test": "vitest run",
-    "coverage": "vitest run --coverage",
+    "test": "vitest run --cache",
+    "coverage": "vitest run --coverage --cache",
     "lint": "biome check",
     "format": "biome check --write"
   },
