@@ -1,5 +1,5 @@
-import { render } from "@testing-library/preact";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "@/test/render";
 
 vi.mock("lucide-preact", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
