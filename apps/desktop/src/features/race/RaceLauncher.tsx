@@ -4,8 +4,8 @@ import { useState } from "preact/hooks";
 import { activeProject } from "@/features/projects/state";
 import { openRace } from "@/features/race/state";
 import { raceSession } from "@/features/sessions/state";
-import { runsUnattended } from "@/features/settings/agentMode";
-import { complain, installedAgents } from "@/shared/daemon";
+import { enabledAgents, runsUnattended } from "@/features/settings/agentMode";
+import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 
 export function RaceLauncher({ onDone }: { onDone: () => void }) {
@@ -14,7 +14,7 @@ export function RaceLauncher({ onDone }: { onDone: () => void }) {
   const [starting, setStarting] = useState(false);
   const project = activeProject.value;
 
-  const runnable = installedAgents.value.filter((agent) => agent.agentic);
+  const runnable = enabledAgents.value.filter((agent) => agent.agentic);
   const ready = project !== null && picked.length > 1 && task.trim().length > 0 && !starting;
 
   const toggle = (name: string) => {

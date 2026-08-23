@@ -1,7 +1,7 @@
-import { signal } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 import type { AgentMode } from "@/bindings/AgentMode";
-import { agents, complain } from "@/shared/daemon";
+import { agents, complain, installedAgents } from "@/shared/daemon";
 
 const STORE = "apex.agent-modes";
 
@@ -23,6 +23,33 @@ export function modeOf(agent: string, fallback: AgentMode): AgentMode {
 export function setAgentMode(agent: string, mode: AgentMode): void {
   agentModes.value = { ...agentModes.value, [agent]: mode };
   localStorage.setItem(STORE, JSON.stringify(agentModes.value));
+}
+
+const OFF = "apex.agents-off";
+
+function restoreOff(): string[] {
+  try {
+    const raw = localStorage.getItem(OFF);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export const disabledAgents = signal<string[]>(restoreOff());
+
+export const enabledAgents = computed(() =>
+  installedAgents.value.filter((agent) => !disabledAgents.value.includes(agent.name)),
+);
+
+export function agentEnabled(agent: string): boolean {
+  return !disabledAgents.value.includes(agent);
+}
+
+export function setAgentEnabled(agent: string, on: boolean): void {
+  const rest = disabledAgents.value.filter((name) => name !== agent);
+  disabledAgents.value = on ? rest : [...rest, agent];
+  localStorage.setItem(OFF, JSON.stringify(disabledAgents.value));
 }
 
 const IDLE_GRACE = "apex.idle-grace";

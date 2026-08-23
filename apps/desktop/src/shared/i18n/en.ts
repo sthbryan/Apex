@@ -172,6 +172,7 @@ export const en = {
     agentSplitsSpare: "Panes in the spare tab",
     agentSplitsSpareOption: "{panes} in the spare one",
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",
+    agentEnabled: "Offer {agent} when starting a session",
     idleGrace: "Daemon background time",
     idleGraceHint:
       "How long the daemon keeps running after you close Apex. After this it shuts down and your agents stop. Close and reopen within the window to resume sessions.",

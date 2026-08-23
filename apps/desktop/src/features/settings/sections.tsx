@@ -7,17 +7,20 @@ import {
   Select,
   Slider,
   Switch,
+  ToggleChip,
   Wordmark,
 } from "@apex/ui";
 import { SHORTCUTS } from "@/app/keymap";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import {
+  agentEnabled,
   agentModes,
   applyIdleGrace,
   idleGrace,
   notifyEnabled,
   raceUnattended,
+  setAgentEnabled,
   setAgentMode,
   setAgentUnattended,
   setIdleGrace,
@@ -369,10 +372,11 @@ export function agentsSection(): Section {
         {agents.value
           .filter((agent) => agent.resolved_path !== null)
           .map((agent) => {
-            const unattended = unattendedAgents.value.includes(agent.name);
+            const on = agentEnabled(agent.name);
             return (
               <DataRow
                 key={agent.name}
+                dim={!on}
                 lead={<AgentIcon agent={agent.name} size="sm" />}
                 label={agent.name}
                 sub={t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")}
@@ -382,6 +386,7 @@ export function agentsSection(): Section {
                     label={t("settings.agentMode", { agent: agent.name })}
                     value={agentModes.value[agent.name] ?? agent.mode}
                     onChange={(option) => setAgentMode(agent.name, option)}
+                    disabled={!on}
                     options={(["pty", "acp"] as const).map((option) => ({
                       value: option,
                       label: t(`isolation.${option}`),
@@ -394,12 +399,29 @@ export function agentsSection(): Section {
                   />
                 }
                 actions={
-                  <Switch
-                    label={t("race.yoloAgent", { agent: agent.name })}
-                    checked={unattended}
-                    disabled={!raceUnattended.value}
-                    onChange={(on) => setAgentUnattended(agent.name, on)}
-                  />
+                  <>
+                    {raceUnattended.value && (
+                      <ToggleChip
+                        size="sm"
+                        pressed={unattendedAgents.value.includes(agent.name)}
+                        disabled={!on}
+                        title={t("race.yoloAgent", { agent: agent.name })}
+                        onClick={() =>
+                          setAgentUnattended(
+                            agent.name,
+                            !unattendedAgents.value.includes(agent.name),
+                          )
+                        }
+                      >
+                        {t("race.yoloShort")}
+                      </ToggleChip>
+                    )}
+                    <Switch
+                      label={t("settings.agentEnabled", { agent: agent.name })}
+                      checked={on}
+                      onChange={(next) => setAgentEnabled(agent.name, next)}
+                    />
+                  </>
                 }
               />
             );

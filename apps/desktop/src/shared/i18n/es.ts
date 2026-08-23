@@ -173,6 +173,7 @@ export const es: Messages = {
     agentSplitsSpare: "Paneles en la pestaña aparte",
     agentSplitsSpareOption: "{panes} en la aparte",
     agentNoAcp: "{agent} no habla ACP, así que Apex solo puede manejarlo como terminal.",
+    agentEnabled: "Ofrecer {agent} al abrir una sesión",
     idleGrace: "Tiempo del daemon en fondo",
     idleGraceHint:
       "Cuánto tiempo sigue el daemon después de cerrar Apex. Después de esto se apaga y los agentes paran. Cierra y reabre dentro de la ventana para reanudar las sesiones.",

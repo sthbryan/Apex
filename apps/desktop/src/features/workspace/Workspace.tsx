@@ -6,10 +6,10 @@ import { activeProject } from "@/features/projects/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { requestSession } from "@/features/sessions/pending";
 import { sessions } from "@/features/sessions/state";
+import { enabledAgents } from "@/features/settings/agentMode";
 import { PaneTree } from "@/features/workspace/PaneTree";
 import { activeTabId, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
-import { installedAgents } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 
 const OFFERED_AGENTS = 4;
@@ -60,7 +60,7 @@ function NoProject() {
 
 function EmptySessions() {
   const project = activeProject.value;
-  const installed = installedAgents.value;
+  const installed = enabledAgents.value;
   const offered = useMemo(() => sample(installed, OFFERED_AGENTS), [installed]);
 
   return (

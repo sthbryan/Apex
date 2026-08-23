@@ -19,14 +19,14 @@ import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
-import { adoptAgents, applyIdleGrace } from "@/features/settings/agentMode";
+import { adoptAgents, applyIdleGrace, enabledAgents } from "@/features/settings/agentMode";
 import { applyAppearance } from "@/features/settings/appearance";
 import { Settings } from "@/features/settings/Settings";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
 import { activeSessionId } from "@/features/workspace/state";
-import { agents, connect, platform, status } from "@/shared/daemon";
+import { connect, platform, status } from "@/shared/daemon";
 import { locale } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
@@ -128,7 +128,7 @@ export function App() {
         onClose={() => {
           paletteOpen.value = false;
         }}
-        agents={agents.value}
+        agents={enabledAgents.value}
         sessions={sessions.value}
         history={history.value}
         project={activeProject.value?.id ?? null}
