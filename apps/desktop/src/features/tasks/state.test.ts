@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { arrange, lastLines, suffix } from "./state";
 import type { TaskSummary } from "@/bindings/TaskSummary";
+import { arrange, lastLines, suffix } from "./state";
 
 function task(name: string, group: string | null = null): TaskSummary {
-  return { name, group, command: "echo", description: "" } as TaskSummary;
+  return { name, group, command: "echo", source: "package", risky: false };
 }
 
 describe("lastLines", () => {
@@ -46,7 +46,11 @@ describe("arrange", () => {
   });
 
   it("groups tasks sharing a group", () => {
-    const entries = arrange([task("build", "build"), task("build:check", "build"), task("build:run", "build")]);
+    const entries = arrange([
+      task("build", "build"),
+      task("build:check", "build"),
+      task("build:run", "build"),
+    ]);
     expect(entries).toHaveLength(1);
     expect(entries[0].kind).toBe("group");
     if (entries[0].kind === "group") {
@@ -67,6 +71,10 @@ describe("arrange", () => {
 
   it("preserves order between groups and tasks", () => {
     const entries = arrange([task("a"), task("build:check", "build"), task("b")]);
-    expect(entries.map((e) => (e.kind === "task" ? e.task.name : e.group.name))).toEqual(["a", "build", "b"]);
+    expect(entries.map((e) => (e.kind === "task" ? e.task.name : e.group.name))).toEqual([
+      "a",
+      "build",
+      "b",
+    ]);
   });
 });
