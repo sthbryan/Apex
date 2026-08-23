@@ -1,3 +1,4 @@
+import { Modal } from "@apex/ui";
 import cn from "cnfast";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -6,7 +7,6 @@ import { useOverlay } from "@/features/browser/state";
 import { cancelClose, finishClose, pendingClose } from "@/features/sessions/pending";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
 
 const CHOICES: { value: WorktreeDisposal; icon: IconName }[] = [
   { value: "keep", icon: "branch" },
@@ -15,46 +15,17 @@ const CHOICES: { value: WorktreeDisposal; icon: IconName }[] = [
 
 export function CloseSession() {
   const request = pendingClose.value;
-  const overlay = usePresence<HTMLDivElement>(request !== null);
-  useOverlay(overlay.mounted);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (pendingClose.value && event.key === "Escape") {
-        event.preventDefault();
-        cancelClose();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  if (!overlay.mounted) {
-    return null;
-  }
+  useOverlay(request !== null);
 
   return (
-    <div
-      ref={overlay.holder}
-      class={cn(
-        "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-32",
-        overlay.leaving ? "animate-veil-out" : "animate-veil-in",
-      )}
-      onMouseDown={cancelClose}
+    <Modal
+      open={request !== null}
+      onClose={cancelClose}
+      width="sm"
+      title={t("closing.title", { title: request?.title ?? "" })}
     >
-      <div
-        class={cn(
-          "w-100 max-w-[90vw] overflow-hidden rounded-xl border border-border bg-float shadow-2xl",
-          overlay.leaving ? "animate-pop-out" : "animate-pop-in",
-        )}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <header class="border-b border-border px-3 py-2 text-code text-text">
-          {t("closing.title", { title: request?.title ?? "" })}
-        </header>
-        <Choices key={request?.id ?? 0} />
-      </div>
-    </div>
+      <Choices key={request?.id ?? 0} />
+    </Modal>
   );
 }
 
@@ -100,7 +71,7 @@ function Choices() {
 
   return (
     <>
-      <div ref={list} class="flex flex-col p-1">
+      <div ref={list} class="flex flex-col">
         {CHOICES.map((option, index) => (
           <button
             key={option.value}
@@ -132,7 +103,7 @@ function Choices() {
         ))}
       </div>
 
-      {failure && <p class="px-3 pb-2 text-micro text-state-failed">{failure}</p>}
+      {failure && <p class="pt-2 text-micro text-state-failed">{failure}</p>}
     </>
   );
 }
