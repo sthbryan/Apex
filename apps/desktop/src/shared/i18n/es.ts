@@ -183,6 +183,9 @@ export const es: Messages = {
     about: "Acerca de",
     aboutHint: "Versiones de la app y del daemon.",
     agentsPath: "Archivos de agentes",
+    configPath: "Config",
+    checkUpdates: "Buscar actualizaciones",
+    updatesLater: "Las actualizaciones dentro de la app llegan en una versión próxima.",
   },
   shortcuts: {
     title: "Atajos de teclado",

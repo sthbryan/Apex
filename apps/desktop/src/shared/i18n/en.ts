@@ -182,6 +182,9 @@ export const en = {
     about: "About",
     aboutHint: "Versions of the app and the background daemon.",
     agentsPath: "Agent files",
+    configPath: "Config",
+    checkUpdates: "Check updates",
+    updatesLater: "In app updates land in a later release.",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

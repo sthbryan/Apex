@@ -1,12 +1,13 @@
 import {
+  Button,
   DataRow,
   IdentityCard,
   KbdGroup,
-  Pill,
   SectionLabel,
   Segmented,
   Select,
   Slider,
+  StatePill,
   Switch,
   ToggleChip,
   Wordmark,
@@ -473,24 +474,30 @@ export function aboutSection(appVersion: string): Section {
     panel: (
       <div class="flex flex-col gap-3">
         <IdentityCard
-          icon={<Wordmark size="md">A</Wordmark>}
+          icon={<img src="/brand/apex-icon.svg" alt="" width="44" height="44" />}
           name={<Wordmark size="sm">APEX</Wordmark>}
           sub={t("app.name")}
-          meta={<span class="font-mono">{appVersion || "—"} · Tauri 2</span>}
+          meta={`${appVersion ? `v${appVersion} · ` : ""}Tauri 2`}
           status={
-            <Pill tone={linked ? "done" : "failed"}>
+            <StatePill state={linked ? "done" : "failed"}>
               {t(linked ? "settings.daemonLinked" : "settings.daemonLost")}
-            </Pill>
+            </StatePill>
           }
+          note={t("settings.updatesLater")}
+          action={<Button disabled>{t("settings.checkUpdates")}</Button>}
         />
         <div class="flex flex-col">
           <DataRow
             label="apexd"
-            trail={<span class="font-mono">{daemonVersion.value ?? "—"}</span>}
+            trail={<span class="font-mono">{daemonVersion.value ?? "…"}</span>}
           />
           <DataRow
             label={t("settings.agentsPath")}
             trail={<span class="font-mono">~/.apex/agents</span>}
+          />
+          <DataRow
+            label={t("settings.configPath")}
+            trail={<span class="font-mono">~/.apex/config.toml</span>}
           />
         </div>
       </div>
