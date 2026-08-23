@@ -11,6 +11,7 @@ export interface CommandPaletteProps {
   elRef?: Ref<HTMLInputElement>;
   onInput?: JSX.GenericEventHandler<HTMLInputElement>;
   lead?: ComponentChildren;
+  viewport?: boolean;
   autoFocus?: boolean;
   class?: string;
   children?: ComponentChildren;
@@ -25,6 +26,7 @@ export function CommandPalette({
   elRef,
   onInput,
   lead,
+  viewport,
   autoFocus = true,
   class: className,
   children,
@@ -39,7 +41,11 @@ export function CommandPalette({
   if (!open) return null;
 
   return (
-    <div class="ui-command-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      class="ui-command-backdrop"
+      data-viewport={viewport || undefined}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div class={cn("ui-command-palette", className)} role="dialog" aria-label={label}>
         <div class="ui-command-input">
           {lead}

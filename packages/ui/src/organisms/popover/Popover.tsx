@@ -16,6 +16,7 @@ export interface PopoverProps {
   align?: PopoverAlign;
   width?: number;
   block?: boolean;
+  anchorClass?: string;
   label?: string;
   class?: string;
   children?: ComponentChildren;
@@ -32,6 +33,7 @@ export function Popover({
   align = "start",
   width,
   block,
+  anchorClass,
   label,
   class: className,
   children,
@@ -55,7 +57,7 @@ export function Popover({
   }, [open, onClose]);
 
   return (
-    <span class="ui-popover-anchor" data-block={block || undefined} ref={ref}>
+    <span class={cn("ui-popover-anchor", anchorClass)} data-block={block || undefined} ref={ref}>
       {anchor}
       {open ? (
         <div

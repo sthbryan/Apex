@@ -8,6 +8,10 @@
     animation: apex-fade-in var(--apex-quick) var(--apex-ease) both;
   }
 
+  .ui-command-backdrop[data-viewport="true"] {
+    @apply fixed;
+  }
+
   .ui-command-palette {
     @apply flex w-full max-w-xl flex-col overflow-hidden rounded-xl border border-border;
     height: fit-content;
