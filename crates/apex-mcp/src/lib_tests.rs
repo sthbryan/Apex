@@ -1,5 +1,5 @@
 use super::*;
-use apex_proto::{ContextEntry, SessionState, SessionSummary, TerminalSize};
+use apex_proto::{ContextEntry, SessionState, SessionSummary, TerminalSize, ToolGroup};
 
 struct Fake {
     seen: Vec<Command>,
@@ -41,9 +41,28 @@ fn caller() -> Caller {
 }
 
 async fn exchange(daemon: &mut Fake, request: Value) -> Value {
+    exchange_as(daemon, caller(), request).await
+}
+
+fn caller_without(off: &[ToolGroup]) -> Caller {
+    let mut caller = caller();
+    caller.summary.tools_off = off.to_vec();
+    caller
+}
+
+async fn exchange_as(daemon: &mut Fake, caller: Caller, request: Value) -> Value {
     let line = request.to_string();
-    let answer = answer(daemon, &caller(), &line).await.expect("a response");
+    let answer = answer(daemon, &caller, &line).await.expect("a response");
     serde_json::from_str(&answer).expect("json")
+}
+
+fn listed(answer: &Value) -> Vec<String> {
+    answer["result"]["tools"]
+        .as_array()
+        .expect("tools")
+        .iter()
+        .map(|tool| tool["name"].as_str().expect("name").to_owned())
+        .collect()
 }
 
 fn summary_in(cwd: &str, title: &str) -> SessionSummary {
@@ -265,4 +284,76 @@ async fn a_conversation_over_the_pipe_answers_every_request() {
     assert_eq!(answers.len(), 2, "the notification should not be answered");
     assert!(answers[0].contains("serverInfo"));
     assert!(answers[1].contains("apex_context_read"));
+}
+
+#[tokio::test]
+async fn a_group_that_is_off_leaves_the_tool_list() {
+    let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
+    let answer = exchange_as(
+        &mut daemon,
+        caller_without(&[ToolGroup::Browser]),
+        json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" }),
+    )
+    .await;
+
+    let names = listed(&answer);
+    assert_eq!(names.len(), TOOLS.len() - 3);
+    assert!(!names.iter().any(|name| name.starts_with("apex_browser_")));
+    assert!(names.iter().any(|name| name == "apex_context_read"));
+}
+
+#[tokio::test]
+async fn the_groups_that_cannot_be_turned_off_survive_every_other_one() {
+    let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
+    let answer = exchange_as(
+        &mut daemon,
+        caller_without(ToolGroup::OPTIONAL),
+        json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" }),
+    )
+    .await;
+
+    assert_eq!(
+        listed(&answer),
+        ["apex_context_read", "apex_context_write", "apex_done", "apex_worktree_info"]
+    );
+}
+
+#[tokio::test]
+async fn a_hidden_tool_is_refused_when_a_stale_list_still_calls_it() {
+    let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
+    let answer = exchange_as(
+        &mut daemon,
+        caller_without(&[ToolGroup::Orchestration]),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": { "name": "apex_agents_list", "arguments": {} }
+        }),
+    )
+    .await;
+
+    assert_eq!(answer["result"]["isError"], true);
+    assert!(
+        answer["result"]["content"][0]["text"].as_str().expect("text").contains("unknown tool")
+    );
+    assert!(daemon.seen.is_empty());
+}
+
+#[tokio::test]
+async fn a_group_left_on_still_reaches_the_daemon() {
+    let mut daemon = Fake { seen: Vec::new(), reply: Reply::Done };
+    exchange_as(
+        &mut daemon,
+        caller_without(&[ToolGroup::Browser]),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": { "name": "apex_agents_list", "arguments": {} }
+        }),
+    )
+    .await;
+
+    assert_eq!(daemon.seen, vec![Command::ListAgents]);
 }
