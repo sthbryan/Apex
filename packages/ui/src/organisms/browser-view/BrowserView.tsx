@@ -6,12 +6,14 @@ export type LogLevel = "error" | "warn" | "info";
 export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   url: string;
   onUrlInput?: JSX.GenericEventHandler<HTMLInputElement>;
+  urlProps?: Omit<JSX.IntrinsicElements["input"], "value" | "ref">;
   nav?: ComponentChildren;
   lead?: ComponentChildren;
   actions?: ComponentChildren;
   secure?: ComponentChildren;
   console?: ComponentChildren;
   consoleOpen?: boolean;
+  consoleTitle?: ComponentChildren;
   consoleActions?: ComponentChildren;
   children?: ComponentChildren;
 }
@@ -19,12 +21,14 @@ export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "re
 export function BrowserView({
   url,
   onUrlInput,
+  urlProps,
   nav,
   lead,
   actions,
   secure,
   console: consoleSlot,
   consoleOpen,
+  consoleTitle = "Console",
   consoleActions,
   class: className,
   children,
@@ -41,7 +45,7 @@ export function BrowserView({
         {lead}
         <div class="ui-browser-url">
           {secure}
-          <input value={url} onInput={onUrlInput} aria-label="Address" spellcheck={false} />
+          <input value={url} onInput={onUrlInput} aria-label="Address" spellcheck={false} {...urlProps} />
         </div>
         {actions}
       </div>
@@ -49,7 +53,7 @@ export function BrowserView({
       {consoleSlot ? (
         <div class="ui-browser-console">
           <div class="ui-browser-console-head">
-            Console
+            {consoleTitle}
             <span class="ml-auto">{consoleActions}</span>
           </div>
           <div class="ui-browser-console-list" role="log">{consoleSlot}</div>
