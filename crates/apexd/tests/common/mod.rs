@@ -246,6 +246,33 @@ impl TestClient {
         deadline.expect("no reply in time")
     }
 
+    pub async fn try_request(&mut self, command: Command) -> Result<Reply, String> {
+        self.next += 1;
+        let id = RequestId(self.next);
+        self.connection
+            .send_control(&ClientMessage::Request { id, command })
+            .await
+            .expect("request");
+
+        let deadline = timeout(Duration::from_secs(10), async {
+            loop {
+                let frame = self.connection.recv().await.expect("frame").expect("no error");
+                if matches!(frame, Frame::Control(_))
+                    && let ServerMessage::Response { id: got, outcome } =
+                        frame.parse_control::<ServerMessage>().expect("parse")
+                    && got == id
+                {
+                    return match outcome {
+                        CommandOutcome::Ok { reply } => Ok(*reply),
+                        CommandOutcome::Err { error } => Err(error.to_string()),
+                    };
+                }
+            }
+        })
+        .await;
+        deadline.expect("no reply in time")
+    }
+
     pub async fn create_shell(&mut self, project: Uuid) -> SessionSummary {
         let reply = self
             .request(Command::SessionCreate {
