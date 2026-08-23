@@ -1,6 +1,6 @@
+import { BrowserLog, Button, BrowserView as KitBrowserView, type LogLevel } from "@apex/ui";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import { openWeb, overlays } from "@/features/browser/state";
@@ -144,92 +144,88 @@ export function BrowserView({ id, url, visible }: Props) {
   };
 
   return (
-    <div class="flex h-full w-full flex-col">
-      <div class="flex shrink-0 items-center gap-1 border-b border-border bg-pane px-1 py-0.5">
-        <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("history.back()")} />
-        <Step
-          icon="chevronRight"
-          hint={t("browser.forward")}
-          onPick={() => run("history.forward()")}
-        />
-        <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("location.reload()")} />
-        <input
-          value={draft}
-          spellcheck={false}
-          onFocus={() => {
-            editing.current = true;
-          }}
-          onBlur={() => {
-            editing.current = false;
-            setDraft(here);
-          }}
-          onInput={(event) => setDraft(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.currentTarget.blur();
-              openWeb(draft);
-            }
-            if (event.key === "Escape") {
-              event.currentTarget.blur();
-            }
-          }}
-          class="min-w-0 flex-1 rounded bg-raised px-2 py-0.5 text-muted outline-none focus:text-text"
-        />
-        <Step
-          icon="external"
-          hint={t("browser.external")}
-          onPick={() => {
-            void invoke("open_url", { url: here }).catch(complain);
-          }}
-        />
-        <button
-          type="button"
-          title={t("browser.console")}
-          onClick={() => setDrawer((open) => !open)}
-          class={cn(
-            "flex h-5 shrink-0 items-center gap-1 rounded px-1 transition-colors hover:bg-raised",
-            drawer ? "text-text" : "text-faint hover:text-text",
-          )}
-        >
-          <Icon name="braces" size={12} />
-          {failures > 0 && <span class="text-state-failed">{failures}</span>}
-        </button>
-      </div>
-      <div ref={host} class="min-h-0 flex-1 bg-pane" />
-      {drawer && (
-        <div class="flex h-40 shrink-0 flex-col border-t border-border bg-pane">
-          <div class="flex shrink-0 items-center justify-between px-2 py-0.5 text-faint">
-            <span>{t("browser.console")}</span>
-            <button
-              type="button"
-              onClick={() => setLogs([])}
-              class="transition-colors hover:text-text"
-            >
-              {t("browser.clear")}
-            </button>
-          </div>
-          <ul class="min-h-0 flex-1 overflow-auto px-2 pb-1 font-mono">
-            {logs.length === 0 && <li class="text-faint">{t("browser.quiet")}</li>}
-            {logs.map((entry) => (
-              <li
-                key={`${entry.at}-${entry.text}`}
-                class={cn(
-                  "break-words",
-                  entry.level === "error"
-                    ? "text-state-failed"
-                    : entry.level === "warn"
-                      ? "text-state-working"
-                      : "text-muted",
-                )}
-              >
-                {entry.text}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+    <KitBrowserView
+      class="h-full w-full"
+      url={draft}
+      consoleOpen={drawer}
+      consoleTitle={t("browser.console")}
+      nav={
+        <>
+          <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("history.back()")} />
+          <Step
+            icon="chevronRight"
+            hint={t("browser.forward")}
+            onPick={() => run("history.forward()")}
+          />
+          <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("location.reload()")} />
+        </>
+      }
+      onUrlInput={(event) => setDraft(event.currentTarget.value)}
+      urlProps={{
+        onFocus: () => {
+          editing.current = true;
+        },
+        onBlur: () => {
+          editing.current = false;
+          setDraft(here);
+        },
+        onKeyDown: (event) => {
+          if (event.key === "Enter") {
+            event.currentTarget.blur();
+            openWeb(draft);
+          }
+          if (event.key === "Escape") {
+            event.currentTarget.blur();
+          }
+        },
+      }}
+      actions={
+        <>
+          <Step
+            icon="external"
+            hint={t("browser.external")}
+            onPick={() => {
+              void invoke("open_url", { url: here }).catch(complain);
+            }}
+          />
+          <button
+            type="button"
+            title={t("browser.console")}
+            aria-pressed={drawer}
+            onClick={() => setDrawer((open) => !open)}
+            class="flex h-5 shrink-0 items-center gap-1 rounded px-1 text-faint transition-colors hover:bg-raised hover:text-text aria-pressed:text-text"
+          >
+            <Icon name="braces" size={12} />
+            {failures > 0 && <span class="text-state-failed">{failures}</span>}
+          </button>
+        </>
+      }
+      consoleActions={
+        <Button size="xs" variant="subtle" onClick={() => setLogs([])}>
+          {t("browser.clear")}
+        </Button>
+      }
+      console={
+        <>
+          {logs.length === 0 && <BrowserLog>{t("browser.quiet")}</BrowserLog>}
+          {logs.map((entry) => (
+            <BrowserLog key={`${entry.at}-${entry.text}`} level={levelOf(entry.level)}>
+              {entry.text}
+            </BrowserLog>
+          ))}
+        </>
+      }
+    >
+      <div ref={host} class="size-full" />
+    </KitBrowserView>
   );
+}
+
+function levelOf(level: string): LogLevel {
+  if (level === "error" || level === "warn") {
+    return level;
+  }
+  return "info";
 }
 
 function Step({
