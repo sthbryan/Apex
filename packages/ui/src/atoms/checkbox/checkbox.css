@@ -12,7 +12,7 @@
   }
 
   .ui-checkbox input {
-    @apply absolute inset-0 m-0 cursor-pointer opacity-0;
+    @apply absolute inset-0 m-0 size-full cursor-pointer opacity-0;
   }
 
   .ui-checkbox-mark {
