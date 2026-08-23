@@ -396,6 +396,7 @@ impl SessionRegistry {
             parent,
             run,
             url: None,
+            tools_off: Vec::new(),
         };
 
         let session = Arc::new(LiveSession {

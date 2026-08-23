@@ -376,6 +376,8 @@ pub struct SessionSummary {
     #[ts(type = "string | null")]
     pub run: Option<Uuid>,
     pub url: Option<String>,
+    #[serde(default)]
+    pub tools_off: Vec<ToolGroup>,
 }
 
 impl SessionSummary {

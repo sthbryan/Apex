@@ -597,6 +597,7 @@ impl AcpRegistry {
             parent,
             run,
             url: None,
+            tools_off: Vec::new(),
         }));
 
         let transcript: Arc<Mutex<Transcript>> = Arc::default();
