@@ -1,7 +1,7 @@
 import { Field, SettingsDialog, SettingsHeading } from "@apex/ui";
 import { getVersion } from "@tauri-apps/api/app";
 import { useEffect, useState } from "preact/hooks";
-import { closePage } from "@/app/view";
+import { closePage, page } from "@/app/view";
 import type { Section } from "@/features/settings/constants";
 import {
   aboutSection,
@@ -20,17 +20,6 @@ export function Settings() {
 
   useEffect(() => {
     void getVersion().then(setAppVersion);
-  }, []);
-
-  useEffect(() => {
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closePage();
-      }
-    };
-    window.addEventListener("keydown", onEscape);
-    return () => window.removeEventListener("keydown", onEscape);
   }, []);
 
   const sections: Section[] = [
@@ -56,8 +45,7 @@ export function Settings() {
 
   return (
     <SettingsDialog
-      open
-      modal={false}
+      open={page.value === "settings"}
       onClose={closePage}
       title={t("settings.title")}
       navTitle={t("settings.title")}

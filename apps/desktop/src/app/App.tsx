@@ -20,6 +20,8 @@ import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { applyIdleGrace } from "@/features/settings/agentMode";
 import { applyAppearance } from "@/features/settings/appearance";
+import { Settings } from "@/features/settings/Settings";
+import { Shortcuts } from "@/features/settings/Shortcuts";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
@@ -118,6 +120,8 @@ export function App() {
     <>
       <Layout onNewSession={() => setPaletteOpen(true)} />
       <Toasts />
+      <Settings />
+      <Shortcuts />
       <NewSession />
       <CloseSession />
       <FileFinder open={finderOpen} onClose={() => setFinderOpen(false)} />
