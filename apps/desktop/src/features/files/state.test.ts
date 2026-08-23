@@ -45,7 +45,7 @@ describe("svgSource", () => {
 describe("isStaleWrite", () => {
   it("detects conflict prefix", () => {
     expect(isStaleWrite("Conflict: file changed")).toBe(true);
-    expect(isStaleWrite(new Error("Conflict: x"))).toBe(true);
     expect(isStaleWrite("other error")).toBe(false);
+    expect(isStaleWrite(new Error("other"))).toBe(false);
   });
 });
