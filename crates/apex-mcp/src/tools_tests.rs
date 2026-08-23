@@ -97,3 +97,18 @@ fn the_worktree_answer_says_whether_you_are_isolated() {
     let shared = caller(session("claude", None));
     assert!(describe_worktree(&shared).contains("/tmp/project"));
 }
+
+#[test]
+fn opening_and_closing_a_view_share_the_same_target() {
+    let me = caller(session("claude", None));
+    let args = json!({ "kind": "url", "url": "http://localhost:5173" });
+    assert!(matches!(
+        command_for(&me, "apex_open_view", &args).expect("command"),
+        Command::OpenView { target: ViewTarget::Url { url }, .. } if url == "http://localhost:5173"
+    ));
+    assert!(matches!(
+        command_for(&me, "apex_close_view", &args).expect("command"),
+        Command::CloseView { target: ViewTarget::Url { url }, .. } if url == "http://localhost:5173"
+    ));
+    assert!(command_for(&me, "apex_close_view", &json!({ "kind": "url" })).is_err());
+}

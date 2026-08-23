@@ -197,6 +197,12 @@ pub const TOOLS: &[Tool] = &[
         schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
+        name: "apex_browser_shot",
+        description: "Take a picture of what the browser pane of this project is showing and \
+                      answer with the path of the png file.",
+        schema: || json!({ "type": "object", "properties": {} }),
+    },
+    Tool {
         name: "apex_worktree_info",
         description: "Report which branch and folder this session is working in.",
         schema: || json!({ "type": "object", "properties": {} }),
@@ -214,8 +220,7 @@ fn view_target(caller: &Caller, text: &impl Fn(&str) -> Option<String>) -> Resul
     match text("kind").as_deref() {
         Some("session") => {
             let raw = text("session").context("session is required")?;
-            let id =
-                Uuid::parse_str(&raw).with_context(|| format!("{raw} is not a session id"))?;
+            let id = Uuid::parse_str(&raw).with_context(|| format!("{raw} is not a session id"))?;
             Ok(ViewTarget::Session { id })
         }
         Some("file") => Ok(ViewTarget::File {
@@ -253,6 +258,7 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         }
         "apex_browser_read" => Ok(Command::BrowserRead { project: caller.project }),
         "apex_browser_console" => Ok(Command::BrowserLogs { project: caller.project }),
+        "apex_browser_shot" => Ok(Command::BrowserShot { project: caller.project }),
         "apex_agents_list" => Ok(Command::ListAgents),
         "apex_session_tell" => Ok(Command::SessionTell {
             id: session_id(&text("session"))?,
