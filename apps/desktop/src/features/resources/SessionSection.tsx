@@ -1,3 +1,4 @@
+import { ProcessRow } from "@apex/ui";
 import type { SessionUsage } from "@/bindings/SessionUsage";
 import { focusSession } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -13,7 +14,7 @@ export function SessionSection({ sessions }: Props) {
   const sessionCpu = sessions.reduce((total, session) => total + session.cpu_percent, 0);
 
   return (
-    <section class="border-t border-border px-2.5 py-1">
+    <section class="flex flex-col border-t border-border py-1">
       <header class="mb-0.5 flex items-baseline gap-1">
         <h3 class="text-xs uppercase tracking-wider text-faint">{t("resources.bySession")}</h3>
         {sessions.length > 0 && (
@@ -44,21 +45,21 @@ export function SessionSection({ sessions }: Props) {
                 </span>
               </button>
               {usage.processes.slice(0, 3).map((process) => (
-                <div
+                <ProcessRow
                   key={process.pid}
-                  class="group flex items-center gap-2 rounded px-1 pl-3 text-2xs text-faint transition-colors hover:bg-raised"
-                >
-                  <span class="truncate">{process.name}</span>
-                  <span class="ml-auto shrink-0">{compactBytes(process.memory)}</span>
-                  <button
-                    type="button"
-                    title={t("resources.kill", { pid: String(process.pid) })}
-                    onClick={() => void killProcess(process.pid)}
-                    class="w-8 shrink-0 opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-state-failed"
-                  >
-                    <Icon name="close" size={12} class="ml-auto" />
-                  </button>
-                </div>
+                  command={process.name}
+                  mem={compactBytes(process.memory)}
+                  actions={
+                    <button
+                      type="button"
+                      title={t("resources.kill", { pid: String(process.pid) })}
+                      onClick={() => void killProcess(process.pid)}
+                      class="text-faint transition-colors hover:text-state-failed"
+                    >
+                      <Icon name="close" size={12} />
+                    </button>
+                  }
+                />
               ))}
             </li>
           ))}

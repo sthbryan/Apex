@@ -1,7 +1,9 @@
+import { Meter } from "@apex/ui";
 import type { SystemUsage } from "@/bindings/SystemUsage";
-import { Meter } from "@/features/resources/Meter";
+import { barTone } from "@/features/resources/tone";
 import { t } from "@/shared/i18n";
 import { compactBytes, percentOf } from "@/shared/telemetry";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   system: SystemUsage;
@@ -9,28 +11,40 @@ type Props = {
 
 export function SystemSection({ system }: Props) {
   return (
-    <section class="px-2.5 py-1">
+    <section class="flex flex-col gap-0.5 py-1">
       <header class="mb-0.5 flex items-baseline gap-1">
         <h3 class="text-xs uppercase tracking-wider text-faint">{t("resources.system")}</h3>
         <span class="truncate text-2xs text-faint">
           {t("resources.cores", { count: String(system.cores) })}
         </span>
       </header>
-      <Meter icon="cpu" label={t("resources.cpu")} percent={system.cpu_percent} />
+      <Meter
+        lead={<Icon name="cpu" />}
+        label={t("resources.cpu")}
+        value={system.cpu_percent}
+        tone={barTone(system.cpu_percent)}
+      />
       {system.gpu_percent !== null && (
-        <Meter icon="gpu" label={t("resources.gpu")} percent={system.gpu_percent} />
+        <Meter
+          lead={<Icon name="gpu" />}
+          label={t("resources.gpu")}
+          value={system.gpu_percent}
+          tone={barTone(system.gpu_percent)}
+        />
       )}
       <Meter
-        icon="memory"
+        lead={<Icon name="memory" />}
         label={t("resources.memory")}
-        percent={percentOf(system.memory_used, system.memory_total)}
+        value={percentOf(system.memory_used, system.memory_total)}
+        tone={barTone(percentOf(system.memory_used, system.memory_total))}
         detail={`${compactBytes(system.memory_used)}/${compactBytes(system.memory_total)}`}
       />
       {system.swap_total > 0 && (
         <Meter
-          icon="swap"
+          lead={<Icon name="swap" />}
           label={t("resources.swap")}
-          percent={percentOf(system.swap_used, system.swap_total)}
+          value={percentOf(system.swap_used, system.swap_total)}
+          tone={barTone(percentOf(system.swap_used, system.swap_total))}
           detail={`${compactBytes(system.swap_used)}/${compactBytes(system.swap_total)}`}
         />
       )}

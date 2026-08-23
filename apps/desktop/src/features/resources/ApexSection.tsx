@@ -1,8 +1,10 @@
+import { Meter } from "@apex/ui";
 import type { ApexUsage } from "@/bindings/ApexUsage";
 import type { SystemUsage } from "@/bindings/SystemUsage";
-import { Meter } from "@/features/resources/Meter";
+import { barTone } from "@/features/resources/tone";
 import { t } from "@/shared/i18n";
 import { compactBytes, percentOf } from "@/shared/telemetry";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   apex: ApexUsage;
@@ -11,16 +13,22 @@ type Props = {
 
 export function ApexSection({ apex, system }: Props) {
   return (
-    <section class="px-2.5 py-1">
+    <section class="flex flex-col gap-0.5 py-1">
       <header class="mb-0.5 flex items-baseline gap-1">
         <h3 class="text-xs uppercase tracking-wider text-faint">{t("resources.apex")}</h3>
         <span class="truncate text-2xs text-faint">{t("resources.apexHint")}</span>
       </header>
-      <Meter icon="sparkles" label={t("resources.cpu")} percent={apex.cpu_percent} />
       <Meter
-        icon="memory"
+        lead={<Icon name="sparkles" />}
+        label={t("resources.cpu")}
+        value={apex.cpu_percent}
+        tone={barTone(apex.cpu_percent)}
+      />
+      <Meter
+        lead={<Icon name="memory" />}
         label={t("resources.memory")}
-        percent={percentOf(apex.memory, system.memory_total)}
+        value={percentOf(apex.memory, system.memory_total)}
+        tone={barTone(percentOf(apex.memory, system.memory_total))}
         detail={`${compactBytes(apex.memory)}/${compactBytes(system.memory_total)}`}
       />
     </section>
