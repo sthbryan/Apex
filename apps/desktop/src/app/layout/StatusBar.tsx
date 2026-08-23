@@ -1,3 +1,4 @@
+import { StatusBar as Bar } from "@apex/ui";
 import { GitChip } from "@/features/git/GitChip";
 import { gitStatus } from "@/features/git/state";
 import { NotifyChip } from "@/features/notifications/NotifyChip";
@@ -11,15 +12,18 @@ export function StatusBar() {
   const onUsage = hasUsage.value;
 
   return (
-    <div class="flex h-(--apex-statusbar-h) shrink-0 items-center gap-2.5 border-t border-border bg-bar px-2 text-faint">
+    <Bar
+      right={
+        <>
+          <NotifyChip />
+          <ResourcesSummary />
+        </>
+      }
+    >
       {onGit && <GitChip />}
       {onGit && onUsage && <Divider />}
       {onUsage && <UsageStrip />}
-      <div class="ml-auto flex shrink-0 items-center gap-2">
-        <NotifyChip />
-        <ResourcesSummary />
-      </div>
-    </div>
+    </Bar>
   );
 }
 

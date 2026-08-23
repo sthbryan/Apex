@@ -6,7 +6,6 @@
   --apex-exit: var(--apex-quick);
   --apex-view: var(--apex-swift);
   --apex-dock: var(--apex-swift);
-  --apex-statusbar-h: var(--apex-status-bar-height);
 }
 
 @theme {

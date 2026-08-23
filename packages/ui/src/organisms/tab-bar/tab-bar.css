@@ -3,6 +3,7 @@
 @layer components {
   .ui-tab-bar {
     @apply flex flex-none items-stretch overflow-x-auto;
+    background-color: var(--apex-bar);
     min-height: var(--apex-h-xl);
     border-bottom: 1px solid var(--apex-border);
     scrollbar-width: none;
