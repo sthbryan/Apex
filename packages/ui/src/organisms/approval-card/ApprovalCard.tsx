@@ -36,11 +36,13 @@ export function ApprovalCard({
       </div>
       {command ? <code class="ui-approval-card-command">{command}</code> : null}
       <div class="ui-approval-card-actions">
-        {actions ?? (
+        {actions === undefined ? (
           <>
             <Button variant="primary" size="sm" onClick={onApprove}>{approveLabel}</Button>
             <Button variant="danger" size="sm" onClick={onDeny}>{denyLabel}</Button>
           </>
+        ) : (
+          actions
         )}
       </div>
     </section>
