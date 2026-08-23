@@ -5,44 +5,65 @@ import {
   Dot,
   ListRow,
   SectionLabel,
+  Segmented,
   ToggleChip,
   ToggleChipGroup,
   Welcome,
   Wordmark,
 } from "@apex/ui";
-import { useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import { revealPanel } from "@/app/layout/actions";
 import { pending } from "@/features/git/state";
 import { activeProject, projectSessions } from "@/features/projects/state";
 import { openRace } from "@/features/race/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
-import { requestSession } from "@/features/sessions/pending";
+import { slugify, suggestName } from "@/features/sessions/naming";
+import { startSession } from "@/features/sessions/pending";
 import { raceSession } from "@/features/sessions/state";
-import { enabledAgents, runsUnattended } from "@/features/settings/agentMode";
-import { focusSession } from "@/features/workspace/state";
+import { enabledAgents, lastAgent, runsUnattended } from "@/features/settings/agentMode";
+import { focusSession, homeAsk } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 const SUGGESTIONS = 2;
+const SLUG_LIMIT = 40;
+
+type Mode = "session" | "race";
 
 export function Home() {
   const project = activeProject.value;
   const runnable = enabledAgents.value.filter((agent) => agent.agentic);
-  const [picked, setPicked] = useState<string[]>([]);
+  const [mode, setMode] = useState<Mode>("session");
+  const [picked, setPicked] = useState<string[]>(() => remembered(runnable.map((a) => a.name)));
+  const [isolate, setIsolate] = useState(false);
   const [task, setTask] = useState("");
+  const field = useRef<HTMLTextAreaElement>(null);
 
-  const chosen = picked.length > 0 ? picked : runnable.slice(0, 1).map((agent) => agent.name);
-  const racing = chosen.length > 1;
-  const ready = project !== null && task.trim().length > 0 && (!racing || project.is_git);
+  useEffect(() => {
+    field.current?.focus();
+  }, [homeAsk.value]);
 
-  const toggle = (name: string) => {
+  const racing = mode === "race";
+  const chosen = picked.filter((name) => runnable.some((agent) => agent.name === name));
+  const ready = project !== null && chosen.length >= (racing ? 2 : 1);
+
+  const pick = (name: string) => {
+    if (!racing) {
+      setPicked([name]);
+      return;
+    }
     setPicked((current) =>
-      current.includes(name)
-        ? current.filter((candidate) => candidate !== name)
-        : [...chosen.filter((candidate) => candidate !== name), name],
+      current.includes(name) ? current.filter((other) => other !== name) : [...current, name],
     );
+  };
+
+  const swapMode = (next: string) => {
+    setMode(next as Mode);
+    if (next === "session") {
+      setPicked((current) => current.slice(0, 1));
+    }
   };
 
   const start = (event: Event) => {
@@ -52,6 +73,7 @@ export function Home() {
     }
     const text = task.trim();
     setTask("");
+
     if (racing) {
       void raceSession(project.id, chosen, text, chosen.filter(runsUnattended))
         .then((started) => {
@@ -60,13 +82,14 @@ export function Home() {
         .catch(complain);
       return;
     }
-    requestSession({
-      project: project.id,
-      agent: chosen[0],
-      direction: null,
-      isGit: project.is_git,
-      task: text,
-    });
+
+    const agent = chosen[0];
+    const alone = isolate && project.is_git;
+    void startSession(
+      { id: 0, project: project.id, agent, direction: null, isGit: project.is_git, task: text },
+      alone ? "worktree" : "directory",
+      alone ? (text ? slugify(text).slice(0, SLUG_LIMIT) : suggestName(agent)) : null,
+    ).catch(complain);
   };
 
   return (
@@ -82,32 +105,55 @@ export function Home() {
       foot={<Summary />}
     >
       <Composer
+        elRef={field}
         label={t("home.task")}
-        placeholder={t("home.placeholder")}
+        placeholder={racing ? t("home.racePlaceholder") : t("home.placeholder")}
         value={task}
         onInput={(event) => setTask(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            start(event);
+          }
+        }}
         onSubmit={start}
         lead={
-          <ToggleChipGroup label={t("home.agents")}>
-            {runnable.map((agent) => (
+          <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Segmented
+              size="sm"
+              label={t("home.mode")}
+              value={mode}
+              onChange={swapMode}
+              options={[
+                { value: "session", label: t("home.modeSession") },
+                { value: "race", label: t("home.modeRace") },
+              ]}
+            />
+            <ToggleChipGroup label={t("home.agents")}>
+              {runnable.map((agent) => (
+                <ToggleChip
+                  key={agent.name}
+                  pressed={chosen.includes(agent.name)}
+                  lead={<AgentIcon agent={agent.name} size="sm" />}
+                  onClick={() => pick(agent.name)}
+                >
+                  {agent.name}
+                </ToggleChip>
+              ))}
+            </ToggleChipGroup>
+            {!racing && project?.is_git && (
               <ToggleChip
-                key={agent.name}
-                pressed={chosen.includes(agent.name)}
-                lead={<AgentIcon agent={agent.name} size="sm" />}
-                onClick={() => toggle(agent.name)}
+                pressed={isolate}
+                title={t("isolation.worktreeHint")}
+                lead={<Icon name="branch" size={12} />}
+                onClick={() => setIsolate((on) => !on)}
               >
-                {agent.name}
+                {t("home.isolate")}
               </ToggleChip>
-            ))}
-          </ToggleChipGroup>
+            )}
+          </div>
         }
         actions={
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={!ready}
-            title={racing && project && !project.is_git ? t("git.noRepo") : undefined}
-          >
+          <Button type="submit" variant="primary" disabled={!ready}>
             <Icon name="send" size={13} />
             {racing ? t("home.race") : t("home.start")}
           </Button>
@@ -115,6 +161,11 @@ export function Home() {
       />
     </Welcome>
   );
+}
+
+function remembered(names: string[]): string[] {
+  const last = lastAgent.value;
+  return last && names.includes(last) ? [last] : [];
 }
 
 function recentTasks(): string[] {

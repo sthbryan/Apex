@@ -43,9 +43,11 @@ export type Tab = {
 export const tabs = signal<Tab[]>([]);
 export const activeTabId = signal<string | null>(null);
 export const homeOpen = signal(true);
+export const homeAsk = signal(0);
 
 export function openHome(): void {
   homeOpen.value = true;
+  homeAsk.value += 1;
 }
 
 let lastTabId = activeTabId.peek();
