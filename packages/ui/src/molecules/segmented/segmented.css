@@ -7,7 +7,7 @@
   }
 
   .ui-segmented-option {
-    @apply inline-flex items-center justify-center rounded-xs px-2 text-xs font-medium text-muted whitespace-nowrap;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xs px-2 text-xs font-medium text-muted whitespace-nowrap;
     @apply transition-[background-color,color,box-shadow];
     height: var(--ui-segmented-height, 20px);
   }

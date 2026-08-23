@@ -1,11 +1,13 @@
+import type { ComponentChildren } from "preact";
 import { cn } from "@/lib/cn";
 
 export type SegmentedSize = "sm" | "md" | "lg";
 
 export interface SegmentedOption<T extends string = string> {
   value: T;
-  label: string;
+  label: ComponentChildren;
   disabled?: boolean;
+  title?: string;
 }
 
 export interface SegmentedProps<T extends string = string> {
@@ -37,6 +39,7 @@ export function Segmented<T extends string = string>({
           role="radio"
           aria-checked={option.value === value}
           disabled={disabled || option.disabled}
+          title={option.title}
           onClick={() => onChange(option.value)}
         >
           {option.label}

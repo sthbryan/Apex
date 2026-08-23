@@ -9,6 +9,7 @@ export interface SliderProps {
   max?: number;
   step?: number;
   unit?: string;
+  format?: (value: number) => string;
   disabled?: boolean;
   class?: string;
 }
@@ -21,6 +22,7 @@ export function Slider({
   max = 100,
   step = 1,
   unit = "%",
+  format,
   disabled,
   class: className,
 }: SliderProps) {
@@ -36,7 +38,7 @@ export function Slider({
         aria-label={label}
         onInput={(e: JSX.TargetedEvent<HTMLInputElement>) => onChange(Number(e.currentTarget.value))}
       />
-      <span class="ui-slider-value">{value}{unit}</span>
+      <span class="ui-slider-value">{format ? format(value) : `${value}${unit}`}</span>
     </span>
   );
 }
