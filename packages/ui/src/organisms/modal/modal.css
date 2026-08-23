@@ -15,8 +15,11 @@
   .ui-modal[data-width="lg"] { --ui-modal-width: 760px; }
 
   .ui-modal[data-modal="false"] {
-    @apply static m-0 max-h-full w-full;
+    @apply static m-0 max-h-full w-full rounded-none border-0;
     animation: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    background-color: var(--apex-bg);
   }
 
   .ui-modal::backdrop {

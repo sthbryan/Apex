@@ -30,6 +30,23 @@
     @apply mb-1.5 px-2.5 text-xs font-semibold tracking-caps text-muted uppercase;
   }
 
+  .ui-settings-search {
+    @apply mb-1.5;
+  }
+
+  .ui-settings-search input {
+    @apply w-full rounded-sm border border-border px-2 py-1 text-md text-text outline-none;
+    background-color: var(--apex-overlay);
+  }
+
+  .ui-settings-search input::placeholder {
+    color: var(--apex-faint);
+  }
+
+  .ui-settings-search input:focus {
+    border-color: var(--apex-focus);
+  }
+
   .ui-settings-nav-item {
     @apply flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-left text-md text-muted;
   }

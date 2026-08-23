@@ -16,6 +16,8 @@ export interface SettingsDialogProps {
   onSection: (id: string) => void;
   title?: string;
   navTitle?: string;
+  search?: ComponentChildren;
+  lead?: ComponentChildren;
   modal?: boolean;
   close?: ComponentChildren;
   class?: string;
@@ -30,6 +32,8 @@ export function SettingsDialog({
   onSection,
   title = "Settings",
   navTitle = "Settings",
+  search,
+  lead,
   modal = true,
   close,
   class: className,
@@ -63,7 +67,8 @@ export function SettingsDialog({
     >
       {close ? <span class="ui-settings-close">{close}</span> : null}
       <nav class="ui-settings-nav" aria-label={navTitle}>
-        <span class="ui-settings-nav-title">{navTitle}</span>
+        {lead ?? <span class="ui-settings-nav-title">{navTitle}</span>}
+        {search ? <div class="ui-settings-search">{search}</div> : null}
         {sections.map((s) => (
           <button
             key={s.id}
