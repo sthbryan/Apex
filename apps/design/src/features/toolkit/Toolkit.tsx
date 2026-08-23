@@ -7,7 +7,7 @@ import { themeMode, veil } from "@/shared/theme/mode";
 import type { ThemeMode } from "@/shared/theme/mode";
 import {
   DURATIONS, EASINGS, GIT_ALIASES, SAMPLES, SHADOWS, SIZE_EXTRA, SIZE_GROUPS, TOKEN_GROUPS,
-  TYPE_TOKENS, Z_TOKENS,
+  TYPE_AXES, TYPE_TOKENS, Z_TOKENS,
 } from "@/features/toolkit/tokens";
 import { useTokenValues } from "@/features/toolkit/useTokenValues";
 import type { TokenKind } from "@/features/toolkit/useTokenValues";
@@ -28,9 +28,14 @@ const ALL_TOKENS: Record<string, TokenKind> = {
   ...Object.fromEntries(GIT_ALIASES.map((a) => [a.token, "color"] as const)),
   ...Object.fromEntries(SIZE_EXTRA.flatMap((g) => g.tokens.map((t) => [t, "size"] as const))),
   ...Object.fromEntries([...DURATIONS, ...EASINGS, ...SHADOWS, ...Z_TOKENS].map((t) => [t, "raw"] as const)),
+  ...Object.fromEntries(TYPE_AXES.flatMap((a) => a.tokens.map((t) => [t, "raw"] as const))),
 };
 
 const short = (token: string): string => token.replace("--apex-", "");
+
+function padZero(value?: string): string {
+  return value ? value.replace(/^(-?)\./, "$10.") : "";
+}
 
 function formatMs(value?: string): string {
   if (!value) return "";
@@ -216,7 +221,7 @@ export function Toolkit() {
           </Button>
         </h2>
         <p class="tk-blurb">Durations race at the same distance; curves race at the same duration.</p>
-        <div class="tk-motion-row" data-run={run ? "on" : undefined}>
+        <div class="tk-spec-row" data-run={run ? "on" : undefined}>
           <div class="tk-size-group">
             <div class="tk-token-group-head">
               <h3 class="tk-h3">Durations</h3>
@@ -262,7 +267,7 @@ export function Toolkit() {
         <p class="tk-blurb">
           Shadows lift a surface off the page; the depth scale decides what covers what.
         </p>
-        <div class="tk-motion-row">
+        <div class="tk-spec-row">
           <div class="tk-size-group">
             <div class="tk-token-group-head">
               <h3 class="tk-h3">Shadows</h3>
@@ -324,6 +329,28 @@ export function Toolkit() {
                 <code>{token.replace("--apex-text-", "")}</code>
                 <span class="tk-value">{roundPx(values[token]?.light)}</span>
               </span>
+            </div>
+          ))}
+        </div>
+
+        <div class="tk-spec-row">
+          {TYPE_AXES.map((axis) => (
+            <div class="tk-size-group" key={axis.title}>
+              <div class="tk-token-group-head">
+                <h3 class="tk-h3">{axis.title}</h3>
+                <span class="tk-token-count">{axis.tokens.length}</span>
+              </div>
+              {axis.tokens.map((token) => (
+                <div class="tk-axis" key={token}>
+                  <span class="tk-axis-sample" style={`${axis.property}:${values[token]?.light}`}>
+                    {axis.sample}
+                  </span>
+                  <span class="tk-specimen-meta">
+                    <code>{short(token).replace(/^(weight|tracking|leading)-/, "")}</code>
+                    <span class="tk-value">{padZero(values[token]?.light)}</span>
+                  </span>
+                </div>
+              ))}
             </div>
           ))}
         </div>

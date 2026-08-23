@@ -166,6 +166,48 @@ export const TYPE_TOKENS = [
   "--apex-text-4xl",
 ];
 
+export interface TypeAxis {
+  title: string;
+  property: string;
+  tokens: string[];
+  sample: string;
+}
+
+export const TYPE_AXES: TypeAxis[] = [
+  {
+    title: "Weight",
+    property: "font-weight",
+    sample: "Refactor auth middleware",
+    tokens: [
+      "--apex-weight-normal",
+      "--apex-weight-medium",
+      "--apex-weight-semibold",
+      "--apex-weight-bold",
+    ],
+  },
+  {
+    title: "Tracking",
+    property: "letter-spacing",
+    sample: "STAGED CHANGES",
+    tokens: [
+      "--apex-tracking-tight",
+      "--apex-tracking-normal",
+      "--apex-tracking-wide",
+      "--apex-tracking-caps",
+    ],
+  },
+  {
+    title: "Leading",
+    property: "line-height",
+    sample: "Every contender gets its own worktree, so nothing they do can collide.",
+    tokens: [
+      "--apex-leading-tight",
+      "--apex-leading-snug",
+      "--apex-leading-normal",
+    ],
+  },
+];
+
 export const SAMPLES: Record<string, string> = {
   "--apex-text-4xl": "Run a team of AI agents",
   "--apex-text-3xl": "Race a task",
