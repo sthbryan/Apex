@@ -1,10 +1,9 @@
+import { Field } from "@apex/ui";
 import { getVersion } from "@tauri-apps/api/app";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
-
 import { closePage } from "@/app/view";
 import type { Section } from "@/features/settings/constants";
-import { SettingsRow } from "@/features/settings/SettingsRow";
 import {
   aboutSection,
   agentsSection,
@@ -118,9 +117,9 @@ export function Settings() {
                   </h3>
                 )}
                 {entry.entries.map((row) => (
-                  <SettingsRow key={row.id} label={row.label} hint={row.hint}>
+                  <Field key={row.id} label={row.label} hint={row.hint}>
                     {row.control}
-                  </SettingsRow>
+                  </Field>
                 ))}
               </section>
             ))}

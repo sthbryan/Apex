@@ -4,6 +4,7 @@
 @import "./fonts.css";
 @import "@apex/tokens/tokens.css";
 @import "@apex/tokens/tailwind.css";
+@import "@apex/ui/ui.css";
 @import "./theme.css";
 @import "./base.css";
 @import "./vendor.css";
