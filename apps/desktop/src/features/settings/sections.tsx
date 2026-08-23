@@ -1,4 +1,4 @@
-import { Segmented, Select, Slider } from "@apex/ui";
+import { Segmented, Select, Slider, Switch } from "@apex/ui";
 import cn from "cnfast";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import {
@@ -22,8 +22,11 @@ import {
 } from "@/features/settings/agentMode";
 import {
   frost,
+  glassBlur,
+  MAX_BLUR,
   MIN_OPACITY,
   setFrost,
+  setGlassBlur,
   setTranslucent,
   setUiScale,
   setVeilArea,
@@ -105,14 +108,10 @@ export function lookSection(): Section {
               label: t("settings.translucent"),
               hint: t("settings.translucentHint"),
               control: (
-                <Segmented
+                <Switch
                   label={t("settings.translucent")}
-                  value={translucent.value ? "glass" : "clear"}
-                  onChange={(value) => setTranslucent(value === "glass")}
-                  options={[
-                    { value: "clear", label: t("settings.translucentOff") },
-                    { value: "glass", label: t("settings.translucentOn") },
-                  ]}
+                  checked={translucent.value}
+                  onChange={setTranslucent}
                 />
               ),
             },
@@ -131,6 +130,21 @@ export function lookSection(): Section {
                   min={MIN_OPACITY}
                   max={100}
                   onChange={setVeilOpacity}
+                />
+              ),
+            },
+            {
+              id: "glassBlur",
+              label: t("settings.glassBlur"),
+              hint: t("settings.glassBlurHint"),
+              control: (
+                <Slider
+                  label={t("settings.glassBlur")}
+                  value={glassBlur.value}
+                  min={0}
+                  max={MAX_BLUR}
+                  unit="px"
+                  onChange={setGlassBlur}
                 />
               ),
             },

@@ -14,10 +14,13 @@ const OPACITY = "apex.veil-opacity";
 const FROST = "apex.frost";
 const LEGACY_BLUR = "apex.blur";
 const AREA = "apex.veil-area";
+const GLASS_BLUR = "apex.glass-blur";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
 export const MIN_OPACITY = 50;
+export const MAX_BLUR = 40;
+const DEFAULT_BLUR = 20;
 
 const FROSTS: Frost[] = ["soft", "glare", "bright", "deep"];
 
@@ -60,6 +63,7 @@ export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) ===
 export const veilOpacity = signal<number>(restoreNumber(OPACITY, 72, MIN_OPACITY, 100));
 export const frost = signal<Frost>(restoreFrost());
 export const veilArea = signal<VeilArea>(restoreArea());
+export const glassBlur = signal<number>(restoreNumber(GLASS_BLUR, DEFAULT_BLUR, 0, MAX_BLUR));
 
 export function setUiScale(next: UiScale): void {
   uiScale.value = next;
@@ -82,6 +86,12 @@ export function setVeilOpacity(percent: number): void {
 export function setVeilArea(next: VeilArea): void {
   veilArea.value = next;
   localStorage.setItem(AREA, next);
+  applyAppearance();
+}
+
+export function setGlassBlur(px: number): void {
+  glassBlur.value = clamp(Math.round(px), 0, MAX_BLUR);
+  localStorage.setItem(GLASS_BLUR, String(glassBlur.value));
   applyAppearance();
 }
 
@@ -109,6 +119,7 @@ export function applyAppearance(): void {
     root.removeAttribute("data-veil-area");
   }
   root.style.setProperty("--apex-scale", String(SCALES[uiScale.value]));
+  root.style.setProperty("--apex-glass-blur", `${glassBlur.value}px`);
 
   void invoke("set_window_material", { frost: on ? frost.value : "none" }).catch(complain);
 

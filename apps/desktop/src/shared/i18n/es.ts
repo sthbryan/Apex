@@ -94,6 +94,8 @@ export const es: Messages = {
     kill: "Matar el proceso {pid}",
   },
   settings: {
+    glassBlur: "Desenfoque",
+    glassBlurHint: "Qué tan suaves se ven los popovers y diálogos sobre lo que tapan.",
     title: "Preferencias",
     groupLook: "Aspecto",
     groupSpace: "Espacio de trabajo",
@@ -104,8 +106,6 @@ export const es: Messages = {
     noMatch: "No hay coincidencias.",
     translucent: "Ventana translúcida",
     translucentHint: "El escritorio se ve detrás como un desenfoque suave y el texto sigue nítido.",
-    translucentOn: "Vidrio",
-    translucentOff: "Sólido",
     opacity: "Tinte",
     opacityHint: "Cuánto color de la interfaz se apoya sobre el vidrio.",
     frost: "Vidrio",

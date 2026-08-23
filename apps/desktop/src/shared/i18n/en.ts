@@ -92,6 +92,8 @@ export const en = {
     kill: "Kill process {pid}",
   },
   settings: {
+    glassBlur: "Blur",
+    glassBlurHint: "How soft the popovers and dialogs look over what they cover.",
     title: "Settings",
     groupLook: "Look",
     groupSpace: "Workspace",
@@ -102,8 +104,6 @@ export const en = {
     noMatch: "Nothing matches.",
     translucent: "Window translucency",
     translucentHint: "The desktop shows through as a smooth blur while text stays sharp.",
-    translucentOn: "Glass",
-    translucentOff: "Clear",
     opacity: "Tint",
     opacityHint: "How much of the interface colour sits on the glass.",
     frost: "Frost",
