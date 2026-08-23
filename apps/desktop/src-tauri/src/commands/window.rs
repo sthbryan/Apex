@@ -16,7 +16,9 @@ pub fn host_platform() -> &'static str {
 
 #[cfg(target_os = "macos")]
 fn material_of(frost: &str) -> Option<window_vibrancy::NSVisualEffectMaterial> {
-    use window_vibrancy::NSVisualEffectMaterial::{FullScreenUI, HudWindow, Sidebar, UnderWindowBackground};
+    use window_vibrancy::NSVisualEffectMaterial::{
+        FullScreenUI, HudWindow, Sidebar, UnderWindowBackground,
+    };
     match frost {
         "soft" => Some(Sidebar),
         "glare" => Some(HudWindow),

@@ -7,6 +7,7 @@ mod layout;
 mod metrics;
 mod projects;
 mod sessions;
+pub(crate) mod shot;
 mod subscribe;
 mod tasks;
 mod window;

@@ -14,7 +14,10 @@ pub async fn save_layout(
 }
 
 #[tauri::command]
-pub async fn load_layout(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Option<String>> {
+pub async fn load_layout(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Option<String>> {
     match state.daemon()?.request(Command::LayoutLoad { project }).await.map_err(failed)? {
         Reply::Layout { payload } => Ok(payload),
         other => Err(format!("unexpected reply: {other:?}")),

@@ -147,7 +147,8 @@ fn creates_a_new_file_only_without_a_revision() {
         "fn added() {}\n"
     );
 
-    let error = write_file(dir.path(), "src/added.rs", "fn again() {}\n", None).expect_err("exists");
+    let error =
+        write_file(dir.path(), "src/added.rs", "fn again() {}\n", None).expect_err("exists");
     assert!(error.downcast_ref::<StaleWrite>().is_some());
 }
 

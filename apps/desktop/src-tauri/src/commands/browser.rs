@@ -7,6 +7,7 @@ const HOST: &str = "main";
 const LOADED: &str = "browser-loaded";
 const BLOCKED: &str = "browser-blocked";
 const PROBE: &str = include_str!("probe.js");
+const KEPT_SECONDS: u64 = 3600;
 const LOCAL: [&str; 4] = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
 
 #[derive(Clone, serde::Serialize)]
@@ -161,6 +162,32 @@ async fn ask(webview: tauri::Webview, script: &str) -> Answer<String> {
         })
         .map_err(|error| error.to_string())?;
     receiver.await.map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn browser_shot(app: tauri::AppHandle, label: String) -> Answer<String> {
+    let webview = app.get_webview(&label).ok_or("this pane has no webview")?;
+    let dir = apex_core::ApexPaths::discover().map_err(|error| error.to_string())?.shots_dir();
+    prune(&dir);
+    let at = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|error| error.to_string())?;
+    let path = dir.join(format!("{label}-{}.png", at.as_millis()));
+    crate::commands::shot::take(webview, path.clone()).await?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+fn prune(dir: &std::path::Path) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    let stale = std::time::SystemTime::now() - std::time::Duration::from_secs(KEPT_SECONDS);
+    for entry in entries.flatten() {
+        let taken = entry.metadata().and_then(|meta| meta.modified()).ok();
+        if taken.is_some_and(|when| when < stale) {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
 }
 
 #[tauri::command]

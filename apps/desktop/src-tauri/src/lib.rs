@@ -101,6 +101,7 @@ pub fn run() {
             commands::browser_show,
             commands::browser_run,
             commands::browser_probe,
+            commands::browser_shot,
             commands::browser_report,
             commands::browser_forget,
             commands::acp_choose,

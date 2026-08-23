@@ -36,6 +36,10 @@ impl ApexPaths {
         self.config_dir.join("run").join("mcp")
     }
 
+    pub fn shots_dir(&self) -> PathBuf {
+        self.config_dir.join("run").join("shots")
+    }
+
     pub fn database(&self) -> PathBuf {
         self.data_dir.join("apex.sqlite")
     }

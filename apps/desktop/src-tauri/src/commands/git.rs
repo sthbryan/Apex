@@ -175,11 +175,7 @@ pub async fn git_clear_rejects(
     project: Uuid,
     target: GitTarget,
 ) -> Answer<()> {
-    state
-        .daemon()?
-        .request(Command::GitClearRejects { project, target })
-        .await
-        .map_err(failed)?;
+    state.daemon()?.request(Command::GitClearRejects { project, target }).await.map_err(failed)?;
     Ok(())
 }
 

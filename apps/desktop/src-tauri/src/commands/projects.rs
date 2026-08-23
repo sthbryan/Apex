@@ -12,7 +12,10 @@ pub async fn list_projects(state: tauri::State<'_, AppState>) -> Answer<Vec<Proj
 }
 
 #[tauri::command]
-pub async fn open_project(state: tauri::State<'_, AppState>, root: String) -> Answer<ProjectSummary> {
+pub async fn open_project(
+    state: tauri::State<'_, AppState>,
+    root: String,
+) -> Answer<ProjectSummary> {
     match state.daemon()?.request(Command::ProjectOpen { root }).await.map_err(failed)? {
         Reply::Project { project } => Ok(project),
         other => Err(format!("unexpected reply: {other:?}")),

@@ -1,5 +1,5 @@
 use apex_proto::{
-    AgentSummary, AgentMode, Command, HistoryEntry, Isolation, Reply, SessionSummary, TerminalSize,
+    AgentMode, AgentSummary, Command, HistoryEntry, Isolation, Reply, SessionSummary, TerminalSize,
     WorktreeDisposal,
 };
 use uuid::Uuid;

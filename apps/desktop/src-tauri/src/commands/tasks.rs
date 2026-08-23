@@ -4,7 +4,10 @@ use uuid::Uuid;
 use crate::state::{Answer, AppState, failed};
 
 #[tauri::command]
-pub async fn list_tasks(state: tauri::State<'_, AppState>, project: Uuid) -> Answer<Vec<TaskSummary>> {
+pub async fn list_tasks(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Vec<TaskSummary>> {
     match state.daemon()?.request(Command::ListTasks { project }).await.map_err(failed)? {
         Reply::Tasks { tasks } => Ok(tasks),
         other => Err(format!("unexpected reply: {other:?}")),
