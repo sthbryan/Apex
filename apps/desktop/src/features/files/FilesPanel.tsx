@@ -1,4 +1,5 @@
-import cn from "cnfast";
+import { TreeRow, type TreeStatus } from "@apex/ui";
+import { Fragment } from "preact";
 import { useEffect } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { FileEntry } from "@/bindings/FileEntry";
@@ -17,6 +18,11 @@ import { openFile } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
+type Changes = {
+  files: Map<string, TreeStatus>;
+  dirs: Set<string>;
+};
+
 export function FilesPanel() {
   const project = activeProject.value;
   const projectId = project?.id ?? null;
@@ -33,7 +39,7 @@ export function FilesPanel() {
   }
 
   return (
-    <div class="flex h-full flex-col">
+    <div class="dock-view dock-fixed">
       <PanelActions>
         <button
           type="button"
@@ -44,7 +50,7 @@ export function FilesPanel() {
           <Icon name="refresh" size={12} />
         </button>
       </PanelActions>
-      <div class="min-h-0 flex-1 overflow-auto pb-2">
+      <div class="min-h-0 flex-1 overflow-auto py-2 pr-2">
         {treeFailure.value ? (
           <p class="px-2 text-state-failed">{treeFailure.value}</p>
         ) : (
@@ -52,7 +58,7 @@ export function FilesPanel() {
             project={project.id}
             path=""
             depth={0}
-            statuses={status ? changesMap(status.changes) : null}
+            changes={status ? changesOf(status.changes) : null}
           />
         )}
       </div>
@@ -60,37 +66,36 @@ export function FilesPanel() {
   );
 }
 
-function changesMap(changes: { path: string; kind: string }[]): Map<string, string> {
-  const tones = new Map<string, string>();
+function changesOf(changes: { path: string; kind: string }[]): Changes {
+  const files = new Map<string, TreeStatus>();
+  const dirs = new Set<string>();
   for (const change of changes) {
-    const tone = toneOf(change.kind);
-    if (!tone) {
+    const status = statusOf(change.kind);
+    if (!status) {
       continue;
     }
-    tones.set(change.path, tone);
+    files.set(change.path, status);
     const parts = change.path.split("/");
     for (let i = 1; i < parts.length; i += 1) {
-      const dir = parts.slice(0, i).join("/");
-      if (!tones.has(dir)) {
-        tones.set(dir, "bg-faint");
-      }
+      dirs.add(parts.slice(0, i).join("/"));
     }
   }
-  return tones;
+  return { files, dirs };
 }
 
-function toneOf(kind: string): string | null {
+function statusOf(kind: string): TreeStatus | null {
   switch (kind) {
     case "added":
+      return "added";
     case "untracked":
-      return "bg-git-added";
+      return "untracked";
     case "modified":
     case "renamed":
-      return "bg-git-modified";
+      return "modified";
     case "deleted":
-      return "bg-git-removed";
+      return "removed";
     case "conflicted":
-      return "bg-git-conflict";
+      return "conflicted";
     default:
       return null;
   }
@@ -100,10 +105,10 @@ type BranchProps = {
   project: string;
   path: string;
   depth: number;
-  statuses: Map<string, string> | null;
+  changes: Changes | null;
 };
 
-function Branch({ project, path, depth, statuses }: BranchProps) {
+function Branch({ project, path, depth, changes }: BranchProps) {
   const entries = tree.value[path];
   if (!entries) {
     return null;
@@ -113,16 +118,16 @@ function Branch({ project, path, depth, statuses }: BranchProps) {
   }
 
   return (
-    <ul>
+    <>
       {entries.map((entry) => (
-        <li key={entry.path}>
-          <Row project={project} entry={entry} depth={depth} statuses={statuses} />
+        <Fragment key={entry.path}>
+          <Row project={project} entry={entry} depth={depth} changes={changes} />
           {entry.is_dir && expanded.value.includes(entry.path) && (
-            <Branch project={project} path={entry.path} depth={depth + 1} statuses={statuses} />
+            <Branch project={project} path={entry.path} depth={depth + 1} changes={changes} />
           )}
-        </li>
+        </Fragment>
       ))}
-    </ul>
+    </>
   );
 }
 
@@ -130,20 +135,35 @@ function Row({
   project,
   entry,
   depth,
-  statuses,
+  changes,
 }: {
   project: string;
   entry: FileEntry;
   depth: number;
-  statuses: Map<string, string> | null;
+  changes: Changes | null;
 }) {
   const open = entry.is_dir && expanded.value.includes(entry.path);
-  const tone = statuses?.get(entry.path);
   const unsaved = dirtyKeys.value.has(bufferKey(project, entry.path));
+  const dirty = entry.is_dir && changes?.dirs.has(entry.path);
 
   return (
-    <button
-      type="button"
+    <TreeRow
+      name={entry.name}
+      depth={depth}
+      title={entry.path}
+      expanded={entry.is_dir ? open : undefined}
+      status={entry.is_dir ? undefined : changes?.files.get(entry.path)}
+      class={unsaved ? "text-accent" : undefined}
+      lead={
+        <Icon name={entry.is_dir ? iconForDir(entry.name) : iconForFile(entry.name)} size={12} />
+      }
+      trail={
+        unsaved ? (
+          <Icon name="save" size={10} class="text-accent" />
+        ) : dirty ? (
+          <span aria-hidden="true" class="size-1.5 rounded-full bg-git-dirty" />
+        ) : undefined
+      }
       onClick={() => {
         if (entry.is_dir) {
           void toggleDirectory(project, entry.path);
@@ -151,33 +171,7 @@ function Row({
           openFile(entry.path);
         }
       }}
-      style={{ paddingLeft: `${depth * 0.75 + 0.5}rem` }}
-      class="flex w-full items-center gap-1 py-px pr-2 text-left text-muted transition-colors hover:bg-raised hover:text-text"
-    >
-      <span class="flex size-3.5 shrink-0 items-center justify-center text-faint">
-        {entry.is_dir && (
-          <Icon
-            name="chevron"
-            size={12}
-            class={cn("transition-transform", open ? "" : "-rotate-90")}
-          />
-        )}
-      </span>
-      <Icon
-        name={entry.is_dir ? iconForDir(entry.name) : iconForFile(entry.name)}
-        size={12}
-        class="shrink-0 text-faint"
-      />
-      <span class={cn("truncate", unsaved && "text-accent")}>{entry.name}</span>
-      {unsaved && <Icon name="save" size={10} class="shrink-0 text-accent" />}
-      {tone && (
-        <span
-          aria-hidden="true"
-          title={entry.path}
-          class={cn("ml-auto size-1.5 shrink-0 rounded-full", tone)}
-        />
-      )}
-    </button>
+    />
   );
 }
 
