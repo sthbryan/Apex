@@ -58,6 +58,7 @@ export function TabBar({ tabs, sessions }: Props) {
 
   return (
     <KitTabBar
+      data-tauri-drag-region
       elRef={holder}
       label={t("workspace.tabs")}
       class="relative"
