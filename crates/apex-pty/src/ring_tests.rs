@@ -45,3 +45,12 @@ fn a_buffer_that_never_overflowed_keeps_its_leading_line() {
     ring.push(b"first\nsecond");
     assert_eq!(ring.snapshot(), Bytes::from_static(b"first\nsecond"));
 }
+
+#[test]
+fn the_replay_puts_the_terminal_back_in_mouse_mode() {
+    let mut ring = RingBuffer::new(32);
+    ring.push(b"\x1b[?1049h\x1b[?1006h\n");
+    ring.push(b"a page of output that pushes the modes out of the ring\n");
+    let replayed = ring.snapshot();
+    assert!(replayed.starts_with(b"\x1b[?1049h\x1b[?1006h"));
+}

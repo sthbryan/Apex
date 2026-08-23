@@ -1,3 +1,4 @@
+mod modes;
 mod osc;
 mod process;
 mod ring;

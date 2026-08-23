@@ -1,20 +1,29 @@
 use bytes::Bytes;
 use std::collections::VecDeque;
 
+use crate::modes::ModeWatcher;
+
 pub const DEFAULT_CAPACITY: usize = 512 * 1024;
 
 pub struct RingBuffer {
     capacity: usize,
     data: VecDeque<u8>,
     overflowed: bool,
+    modes: ModeWatcher,
 }
 
 impl RingBuffer {
     pub fn new(capacity: usize) -> Self {
-        Self { capacity: capacity.max(1), data: VecDeque::new(), overflowed: false }
+        Self {
+            capacity: capacity.max(1),
+            data: VecDeque::new(),
+            overflowed: false,
+            modes: ModeWatcher::default(),
+        }
     }
 
     pub fn push(&mut self, chunk: &[u8]) {
+        self.modes.watch(chunk);
         if chunk.len() >= self.capacity {
             self.data.clear();
             self.data.extend(&chunk[chunk.len() - self.capacity..]);
@@ -39,11 +48,17 @@ impl RingBuffer {
     }
 
     pub fn snapshot(&self) -> Bytes {
+        if self.data.is_empty() {
+            return Bytes::new();
+        }
         let (front, back) = self.data.as_slices();
         let mut joined = Vec::with_capacity(front.len() + back.len());
         joined.extend_from_slice(front);
         joined.extend_from_slice(back);
-        Bytes::from(align_to_line(joined, self.overflowed))
+        let body = align_to_line(joined, self.overflowed);
+        let mut out = self.modes.prelude();
+        out.extend_from_slice(&body);
+        Bytes::from(out)
     }
 }
 
