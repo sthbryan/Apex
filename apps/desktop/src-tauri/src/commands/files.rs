@@ -77,8 +77,13 @@ pub async fn browser_report(
     state: tauri::State<'_, AppState>,
     project: Uuid,
     pane: String,
+    name: Option<String>,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::BrowserReport { project, pane }).await.map_err(failed)?;
+    state
+        .daemon()?
+        .request(Command::BrowserReport { project, pane, name })
+        .await
+        .map_err(failed)?;
     Ok(())
 }
 

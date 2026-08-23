@@ -7,6 +7,7 @@ use uuid::Uuid;
 #[derive(Default)]
 struct Pane {
     project: Uuid,
+    name: Option<String>,
     seen: u64,
 }
 
@@ -22,7 +23,7 @@ impl BrowsersService {
         Self::default()
     }
 
-    pub async fn report(&self, project: Uuid, pane: String) {
+    pub async fn report(&self, project: Uuid, pane: String, name: Option<String>) {
         let seen = {
             let mut clock = self.clock.lock().await;
             *clock += 1;
@@ -31,6 +32,7 @@ impl BrowsersService {
         let mut panes = self.panes.lock().await;
         let held = panes.entry(pane).or_default();
         held.project = project;
+        held.name = name;
         held.seen = seen;
     }
 
@@ -38,13 +40,28 @@ impl BrowsersService {
         self.panes.lock().await.remove(pane);
     }
 
-    pub async fn latest(&self, project: Uuid) -> Option<String> {
+    pub async fn resolve(&self, project: Uuid, name: Option<&str>) -> Result<String, String> {
         let panes = self.panes.lock().await;
-        panes
-            .iter()
-            .filter(|(_, pane)| pane.project == project)
-            .max_by_key(|(_, pane)| pane.seen)
-            .map(|(label, _)| label.clone())
+        let mine = panes.iter().filter(|(_, pane)| pane.project == project);
+        let wanted: Vec<(&String, &Pane)> = match name {
+            Some(name) => mine.filter(|(_, pane)| pane.name.as_deref() == Some(name)).collect(),
+            None => mine.collect(),
+        };
+        if let Some((label, _)) = wanted.iter().max_by_key(|(_, pane)| pane.seen) {
+            return Ok((*label).clone());
+        }
+        let Some(name) = name else {
+            return Err("no browser pane is open right now".into());
+        };
+        let named: Vec<&str> = panes
+            .values()
+            .filter(|pane| pane.project == project)
+            .filter_map(|pane| pane.name.as_deref())
+            .collect();
+        if named.is_empty() {
+            return Err(format!("no browser pane is called {name}"));
+        }
+        Err(format!("no browser pane is called {name}, only {}", named.join(", ")))
     }
 
     pub async fn expect(&self, request: Uuid) -> oneshot::Receiver<Result<String, String>> {

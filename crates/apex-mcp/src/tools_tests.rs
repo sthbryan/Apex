@@ -104,11 +104,30 @@ fn opening_and_closing_a_view_share_the_same_target() {
     let args = json!({ "kind": "url", "url": "http://localhost:5173" });
     assert!(matches!(
         command_for(&me, "apex_open_view", &args).expect("command"),
-        Command::OpenView { target: ViewTarget::Url { url }, .. } if url == "http://localhost:5173"
+        Command::OpenView { target: ViewTarget::Url { url, .. }, .. } if url == "http://localhost:5173"
     ));
     assert!(matches!(
         command_for(&me, "apex_close_view", &args).expect("command"),
-        Command::CloseView { target: ViewTarget::Url { url }, .. } if url == "http://localhost:5173"
+        Command::CloseView { target: ViewTarget::Url { url, .. }, .. } if url == "http://localhost:5173"
     ));
     assert!(command_for(&me, "apex_close_view", &json!({ "kind": "url" })).is_err());
+}
+
+#[test]
+fn a_named_pane_travels_with_the_view_and_the_reads() {
+    let me = caller(session("claude", None));
+    let opening = json!({ "kind": "url", "url": "http://localhost:6006", "name": "storybook" });
+    assert!(matches!(
+        command_for(&me, "apex_open_view", &opening).expect("command"),
+        Command::OpenView { target: ViewTarget::Url { name: Some(name), .. }, .. }
+            if name == "storybook"
+    ));
+    assert!(matches!(
+        command_for(&me, "apex_browser_shot", &json!({ "pane": "storybook" })).expect("command"),
+        Command::BrowserShot { pane: Some(pane), .. } if pane == "storybook"
+    ));
+    assert!(matches!(
+        command_for(&me, "apex_browser_read", &json!({})).expect("command"),
+        Command::BrowserRead { pane: None, .. }
+    ));
 }

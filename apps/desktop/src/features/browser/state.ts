@@ -20,9 +20,9 @@ export function isLocal(url: string): boolean {
   }
 }
 
-export function openWeb(url: string): void {
+export function openWeb(url: string, name?: string): void {
   if (isLocal(url) && browsing.value === "internal") {
-    openBrowser(url);
+    openBrowser(url, name);
     return;
   }
   void invoke("open_url", { url }).catch(complain);

@@ -162,7 +162,11 @@ pub const TOOLS: &[Tool] = &[
                     "kind": { "type": "string", "enum": ["session", "file", "url"] },
                     "session": { "type": "string", "description": "Session id, for kind session" },
                     "path": { "type": "string", "description": "Path in the project, for kind file" },
-                    "url": { "type": "string", "description": "Address, for kind url" }
+                    "url": { "type": "string", "description": "Address, for kind url" },
+                    "name": {
+                        "type": "string",
+                        "description": "Name this pane so you can read it later, for kind url"
+                    }
                 }
             })
         },
@@ -179,28 +183,32 @@ pub const TOOLS: &[Tool] = &[
                     "kind": { "type": "string", "enum": ["session", "file", "url"] },
                     "session": { "type": "string", "description": "Session id, for kind session" },
                     "path": { "type": "string", "description": "Path in the project, for kind file" },
-                    "url": { "type": "string", "description": "Address, for kind url" }
+                    "url": { "type": "string", "description": "Address, for kind url" },
+                    "name": {
+                        "type": "string",
+                        "description": "Name this pane so you can read it later, for kind url"
+                    }
                 }
             })
         },
     },
     Tool {
         name: "apex_browser_read",
-        description: "Read what the browser pane of this project is showing: address, title \
-                      and visible text.",
-        schema: || json!({ "type": "object", "properties": {} }),
+        description: "Read what a browser pane of this project is showing: address, title \
+                      and visible text. Without a pane it reads the one in use.",
+        schema: || json!({ "type": "object", "properties": { "pane": { "type": "string", "description": "Name of the pane, when you gave it one" } } }),
     },
     Tool {
         name: "apex_browser_console",
-        description: "Read the console output and errors the page in the browser pane has \
-                      produced since it loaded.",
-        schema: || json!({ "type": "object", "properties": {} }),
+        description: "Read the console output and errors a browser pane has produced since \
+                      the page loaded. Without a pane it reads the one in use.",
+        schema: || json!({ "type": "object", "properties": { "pane": { "type": "string", "description": "Name of the pane, when you gave it one" } } }),
     },
     Tool {
         name: "apex_browser_shot",
-        description: "Take a picture of what the browser pane of this project is showing and \
-                      answer with the path of the png file.",
-        schema: || json!({ "type": "object", "properties": {} }),
+        description: "Take a picture of what a browser pane is showing and answer with the \
+                      path of the png file. Without a pane it shoots the one in use.",
+        schema: || json!({ "type": "object", "properties": { "pane": { "type": "string", "description": "Name of the pane, when you gave it one" } } }),
     },
     Tool {
         name: "apex_worktree_info",
@@ -227,7 +235,9 @@ fn view_target(caller: &Caller, text: &impl Fn(&str) -> Option<String>) -> Resul
             project: caller.project,
             path: text("path").context("path is required")?,
         }),
-        Some("url") => Ok(ViewTarget::Url { url: text("url").context("url is required")? }),
+        Some("url") => {
+            Ok(ViewTarget::Url { url: text("url").context("url is required")?, name: text("name") })
+        }
         other => {
             bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing"))
         }
@@ -256,9 +266,15 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
-        "apex_browser_read" => Ok(Command::BrowserRead { project: caller.project }),
-        "apex_browser_console" => Ok(Command::BrowserLogs { project: caller.project }),
-        "apex_browser_shot" => Ok(Command::BrowserShot { project: caller.project }),
+        "apex_browser_read" => {
+            Ok(Command::BrowserRead { project: caller.project, pane: text("pane") })
+        }
+        "apex_browser_console" => {
+            Ok(Command::BrowserLogs { project: caller.project, pane: text("pane") })
+        }
+        "apex_browser_shot" => {
+            Ok(Command::BrowserShot { project: caller.project, pane: text("pane") })
+        }
         "apex_agents_list" => Ok(Command::ListAgents),
         "apex_session_tell" => Ok(Command::SessionTell {
             id: session_id(&text("session"))?,

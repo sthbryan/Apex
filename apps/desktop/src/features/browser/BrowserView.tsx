@@ -13,6 +13,7 @@ import { Icon } from "@/shared/ui/Icon";
 type Props = {
   id: string;
   url: string;
+  name?: string;
   visible: boolean;
   focused: boolean;
 };
@@ -32,12 +33,12 @@ type Snapshot = {
   failures: number;
 };
 
-function report(pane: string): void {
+function report(pane: string, name?: string): void {
   const project = activeProjectId.value;
   if (!project) {
     return;
   }
-  void invoke("browser_report", { project, pane }).catch(complain);
+  void invoke("browser_report", { project, pane, name: name ?? null }).catch(complain);
 }
 
 type Loaded = {
@@ -51,7 +52,7 @@ function boxOf(node: HTMLElement) {
   return { x: box.x, y: box.y, width: box.width, height: box.height };
 }
 
-export function BrowserView({ id, url, visible, focused }: Props) {
+export function BrowserView({ id, url, name, visible, focused }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const label = `browser-${id}`;
   const [here, setHere] = useState(url);
@@ -64,7 +65,6 @@ export function BrowserView({ id, url, visible, focused }: Props) {
       return;
     }
     void invoke("browser_open", { label, url, bounds: boxOf(node) }).catch(complain);
-    report(label);
     return () => {
       void invoke("browser_close", { label }).catch(complain);
       void invoke("browser_forget", { pane: label }).catch(complain);
@@ -72,10 +72,14 @@ export function BrowserView({ id, url, visible, focused }: Props) {
   }, [label, url]);
 
   useEffect(() => {
+    report(label, name);
+  }, [label, name]);
+
+  useEffect(() => {
     if (focused) {
-      report(label);
+      report(label, name);
     }
-  }, [label, focused]);
+  }, [label, name, focused]);
 
   useEffect(() => {
     const node = host.current;
@@ -113,12 +117,12 @@ export function BrowserView({ id, url, visible, focused }: Props) {
       if (!editing.current) {
         setDraft(event.payload.url);
       }
-      report(label);
+      report(label, name);
     });
     return () => {
       void stop.then((off) => off());
     };
-  }, [label]);
+  }, [label, name]);
 
   useEffect(() => {
     return onAskShot((event) => {

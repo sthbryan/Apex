@@ -599,6 +599,8 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
         pane: String,
+        #[serde(default)]
+        name: Option<String>,
     },
     BrowserForget {
         pane: String,
@@ -606,14 +608,20 @@ pub enum Command {
     BrowserRead {
         #[ts(type = "string")]
         project: Uuid,
+        #[serde(default)]
+        pane: Option<String>,
     },
     BrowserLogs {
         #[ts(type = "string")]
         project: Uuid,
+        #[serde(default)]
+        pane: Option<String>,
     },
     BrowserShot {
         #[ts(type = "string")]
         project: Uuid,
+        #[serde(default)]
+        pane: Option<String>,
     },
     ShotDone {
         #[ts(type = "string")]
@@ -979,6 +987,8 @@ pub enum ViewTarget {
     },
     Url {
         url: String,
+        #[serde(default)]
+        name: Option<String>,
     },
 }
 

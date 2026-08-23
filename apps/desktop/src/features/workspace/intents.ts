@@ -22,7 +22,7 @@ export function startViewIntents(): () => void {
         openQuietly({ type: "file", path: target.path }, asSplit());
         break;
       case "url":
-        openWeb(target.url);
+        openWeb(target.url, target.name ?? undefined);
         break;
     }
   });
@@ -36,7 +36,11 @@ export function startViewIntents(): () => void {
         closeViews((view) => view.type === "file" && view.path === target.path);
         break;
       case "url":
-        closeViews((view) => view.type === "browser" && view.url === target.url);
+        closeViews(
+          (view) =>
+            view.type === "browser" &&
+            (target.name ? view.name === target.name : view.url === target.url),
+        );
         break;
     }
   });

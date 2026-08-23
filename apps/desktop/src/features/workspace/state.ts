@@ -115,8 +115,8 @@ export function openRaceView(run: string): void {
   openBeside({ type: "race", run }, (view) => view.type === "race");
 }
 
-export function openBrowser(url: string): void {
-  openBeside({ type: "browser", url }, (view) => view.type === "browser");
+export function openBrowser(url: string, name?: string): void {
+  openBeside({ type: "browser", url, name }, (view) => view.type === "browser");
 }
 
 function openBeside(view: PaneView, replaceable: (view: PaneView) => boolean): void {
@@ -162,7 +162,7 @@ function same(left: PaneView, right: PaneView): boolean {
     return left.panel === right.panel;
   }
   if (left.type === "browser" && right.type === "browser") {
-    return left.url === right.url;
+    return left.name || right.name ? left.name === right.name : left.url === right.url;
   }
   if (left.type === "race" && right.type === "race") {
     return left.run === right.run;

@@ -7,7 +7,7 @@ export type PaneView =
   | { type: "file"; path: string }
   | { type: "diff"; target: GitTarget; path: string; commit: string | null }
   | { type: "panel"; panel: string }
-  | { type: "browser"; url: string }
+  | { type: "browser"; url: string; name?: string }
   | { type: "race"; run: string };
 
 export type Leaf = {

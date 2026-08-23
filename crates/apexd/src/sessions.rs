@@ -613,48 +613,50 @@ impl SessionManager {
         self.rejects.sweep().await;
     }
 
-    pub async fn browser_report(&self, project: Uuid, pane: String) {
-        self.browsers.report(project, pane).await;
+    pub async fn browser_report(&self, project: Uuid, pane: String, name: Option<String>) {
+        self.browsers.report(project, pane, name).await;
     }
 
     pub async fn browser_forget(&self, pane: &str) {
         self.browsers.forget(pane).await;
     }
 
-    pub async fn browser_read(&self, project: Uuid) -> Result<String> {
-        let taken = self.ask_page(project, true).await?;
+    pub async fn browser_read(&self, project: Uuid, pane: Option<&str>) -> Result<String> {
+        let taken = self.ask_page(project, pane, true).await?;
         Ok(crate::services::browsers::describe_page(&taken))
     }
 
-    pub async fn browser_logs(&self, project: Uuid) -> Result<String> {
-        let taken = self.ask_page(project, false).await?;
+    pub async fn browser_logs(&self, project: Uuid, pane: Option<&str>) -> Result<String> {
+        let taken = self.ask_page(project, pane, false).await?;
         Ok(crate::services::browsers::describe_logs(&taken))
     }
 
     async fn ask_page(
         &self,
         project: Uuid,
+        wanted: Option<&str>,
         text: bool,
     ) -> Result<crate::services::browsers::Snapshot> {
-        let raw =
-            self.ask_pane(project, |pane, request| Event::AskPage { pane, request, text }).await?;
+        let raw = self
+            .ask_pane(project, wanted, |pane, request| Event::AskPage { pane, request, text })
+            .await?;
         serde_json::from_str(&raw).context("the pane answered with something unreadable")
     }
 
-    pub async fn browser_shot(&self, project: Uuid) -> Result<String> {
-        self.ask_pane(project, |pane, request| Event::AskShot { pane, request }).await
+    pub async fn browser_shot(&self, project: Uuid, pane: Option<&str>) -> Result<String> {
+        self.ask_pane(project, pane, |pane, request| Event::AskShot { pane, request }).await
     }
 
     async fn ask_pane(
         &self,
         project: Uuid,
-        wanted: impl Fn(String, Uuid) -> Event,
+        wanted: Option<&str>,
+        shape: impl Fn(String, Uuid) -> Event,
     ) -> Result<String> {
-        let pane =
-            self.browsers.latest(project).await.context("no browser pane is open right now")?;
+        let pane = self.browsers.resolve(project, wanted).await.map_err(anyhow::Error::msg)?;
         let request = Uuid::new_v4();
         let waiting = self.browsers.expect(request).await;
-        self.registry.announce(wanted(pane, request));
+        self.registry.announce(shape(pane, request));
         let answered = tokio::time::timeout(std::time::Duration::from_secs(5), waiting)
             .await
             .map_err(|_| anyhow::anyhow!("the desktop did not answer in time"));
