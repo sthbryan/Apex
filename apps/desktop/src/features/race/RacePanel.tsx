@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { Button, Dot, ListRow } from "@apex/ui";
 import { useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -10,11 +10,11 @@ import { openRaceView } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-const DOTS: Record<SessionState, string> = {
-  done: "bg-state-done",
-  blocked: "bg-state-blocked",
-  working: "bg-state-working animate-pulse",
-  idle: "bg-state-idle",
+const STATES: Record<SessionState, "done" | "blocked" | "working" | "idle"> = {
+  done: "done",
+  blocked: "blocked",
+  working: "working",
+  idle: "idle",
 };
 
 export function RacePanel() {
@@ -30,7 +30,7 @@ export function RacePanel() {
   }
 
   return (
-    <div class="flex h-full flex-col">
+    <div class="dock-view">
       <PanelActions>
         <button
           type="button"
@@ -44,14 +44,17 @@ export function RacePanel() {
 
       {launching && <RaceLauncher onDone={() => setLaunching(false)} />}
 
-      {all.length === 0 ? (
-        !launching && <p class="px-2 py-1 text-faint">{t("race.empty")}</p>
-      ) : (
-        <ul class="min-h-0 flex-1 overflow-auto pb-1">
-          {all.map((race) => (
-            <Entry key={race.id} race={race} />
-          ))}
-        </ul>
+      {all.map((race) => (
+        <Entry key={race.id} race={race} />
+      ))}
+
+      {all.length === 0 && !launching && (
+        <>
+          <p class="px-1.5 py-1 text-faint">{t("race.empty")}</p>
+          <Button variant="dashed" size="lg" onClick={() => setLaunching(true)}>
+            {t("race.new")}
+          </Button>
+        </>
       )}
     </div>
   );
@@ -61,33 +64,23 @@ function Entry({ race }: { race: Race }) {
   const chosen = openRace.value === race.id;
 
   return (
-    <li>
-      <button
-        type="button"
-        onClick={() => {
-          openRace.value = race.id;
-          openRaceView(race.id);
-        }}
-        class={cn(
-          "flex w-full items-center gap-2 px-2 py-1 text-left transition-colors hover:bg-raised",
-          chosen && "bg-raised",
-        )}
-      >
-        <span class="min-w-0 flex-1 truncate text-text">{race.task || t("race.title")}</span>
-        <span class="flex shrink-0 items-center gap-1">
-          {race.contenders.map((session) => (
-            <span
-              key={session.id}
-              title={session.agent}
-              class={cn(
-                "size-1.5 rounded-full",
-                session.exit_code !== null ? "bg-faint" : DOTS[session.state],
-              )}
-            />
-          ))}
-        </span>
-      </button>
-    </li>
+    <ListRow
+      label={race.task || t("race.title")}
+      selected={chosen}
+      trail={race.contenders.map((session) => (
+        <Dot
+          key={session.id}
+          size="sm"
+          title={session.agent}
+          state={session.exit_code !== null ? "done" : STATES[session.state]}
+          class={session.exit_code !== null ? "opacity-50" : undefined}
+        />
+      ))}
+      onClick={() => {
+        openRace.value = race.id;
+        openRaceView(race.id);
+      }}
+    />
   );
 }
 
