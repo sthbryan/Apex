@@ -6,7 +6,8 @@ import { Play } from "lucide-preact";
 import { themeMode, veil } from "@/shared/theme/mode";
 import type { ThemeMode } from "@/shared/theme/mode";
 import {
-  DURATIONS, EASINGS, GIT_ALIASES, SAMPLES, SIZE_EXTRA, SIZE_GROUPS, TOKEN_GROUPS, TYPE_TOKENS,
+  DURATIONS, EASINGS, GIT_ALIASES, SAMPLES, SHADOWS, SIZE_EXTRA, SIZE_GROUPS, TOKEN_GROUPS,
+  TYPE_TOKENS, Z_TOKENS,
 } from "@/features/toolkit/tokens";
 import { useTokenValues } from "@/features/toolkit/useTokenValues";
 import type { TokenKind } from "@/features/toolkit/useTokenValues";
@@ -26,7 +27,7 @@ const ALL_TOKENS: Record<string, TokenKind> = {
   ...Object.fromEntries(TYPE_TOKENS.map((t) => [t, "size"] as const)),
   ...Object.fromEntries(GIT_ALIASES.map((a) => [a.token, "color"] as const)),
   ...Object.fromEntries(SIZE_EXTRA.flatMap((g) => g.tokens.map((t) => [t, "size"] as const))),
-  ...Object.fromEntries([...DURATIONS, ...EASINGS].map((t) => [t, "raw"] as const)),
+  ...Object.fromEntries([...DURATIONS, ...EASINGS, ...SHADOWS, ...Z_TOKENS].map((t) => [t, "raw"] as const)),
 };
 
 const short = (token: string): string => token.replace("--apex-", "");
@@ -138,7 +139,7 @@ export function Toolkit() {
 
         <div class="tk-token-group">
           <div class="tk-token-group-head">
-            <h3 class="tk-h3">Git</h3>
+            <h3 class="tk-h3">Aliases</h3>
             <span class="tk-token-count">{GIT_ALIASES.length}</span>
             <span class="tk-group-note">Names, not colours. Each one points at a token above.</span>
           </div>
@@ -249,6 +250,63 @@ export function Toolkit() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="tk-section">
+        <h2 class="tk-h2">
+          Elevation
+          <span class="tk-token-count">{SHADOWS.length + Z_TOKENS.length}</span>
+        </h2>
+        <p class="tk-blurb">
+          Shadows lift a surface off the page; the depth scale decides what covers what.
+        </p>
+        <div class="tk-motion-row">
+          <div class="tk-size-group">
+            <div class="tk-token-group-head">
+              <h3 class="tk-h3">Shadows</h3>
+              <span class="tk-token-count">{SHADOWS.length}</span>
+            </div>
+            <table class="tk-table">
+              <thead>
+                <tr>
+                  <th class="tk-size-cell" />
+                  <th>token</th>
+                  <th>value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SHADOWS.map((token) => (
+                  <tr key={token}>
+                    <td>
+                      <span class="tk-shadow-tile" style={`box-shadow:${values[token]?.light}`} />
+                    </td>
+                    <td><code>{short(token)}</code></td>
+                    <td class="tk-value">{values[token]?.light}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="tk-size-group">
+            <div class="tk-token-group-head">
+              <h3 class="tk-h3">Depth</h3>
+              <span class="tk-token-count">{Z_TOKENS.length}</span>
+            </div>
+            <p class="tk-group-note">Painted back to front, so only the z value decides the order.</p>
+            <div class="tk-z-stack">
+              {Z_TOKENS.map((token, i) => ({ token, i })).reverse().map(({ token, i }) => (
+                <span
+                  class="tk-z"
+                  key={token}
+                  style={`z-index:${values[token]?.light};--tk-i:${i}`}
+                >
+                  <code>{short(token).replace("z-", "")}</code>
+                  <span class="tk-value">{values[token]?.light}</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>

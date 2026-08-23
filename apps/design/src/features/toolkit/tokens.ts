@@ -18,6 +18,26 @@ export const GIT_ALIASES: TokenAlias[] = [
   { token: "--apex-git-removed", target: "--apex-state-failed" },
   { token: "--apex-git-modified", target: "--apex-state-working" },
   { token: "--apex-git-dirty", target: "--apex-muted" },
+  { token: "--apex-float", target: "--apex-overlay" },
+];
+
+export const SHADOWS = [
+  "--apex-shadow-sm",
+  "--apex-shadow-md",
+  "--apex-shadow-lg",
+  "--apex-shadow-xl",
+];
+
+export const Z_TOKENS = [
+  "--apex-z-base",
+  "--apex-z-raised",
+  "--apex-z-sticky",
+  "--apex-z-dock",
+  "--apex-z-tooltip",
+  "--apex-z-overlay",
+  "--apex-z-modal",
+  "--apex-z-toast",
+  "--apex-z-palette",
 ];
 
 export const TOKEN_GROUPS: TokenGroup[] = [

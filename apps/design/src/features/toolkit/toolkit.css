@@ -281,3 +281,23 @@
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
+
+.tk-shadow-tile {
+  @apply my-1.5 block size-11 rounded-sm border bg-surface border-border/40;
+}
+
+.tk-z-stack {
+  @apply relative mt-1;
+  height: 208px;
+}
+
+.tk-z {
+  @apply absolute flex w-44 items-center gap-2 rounded-sm border border-border bg-surface px-2.5 py-1.5;
+  left: calc(var(--tk-i) * 24px);
+  top: calc(var(--tk-i) * 20px);
+  box-shadow: var(--apex-shadow-md);
+}
+
+.tk-z code {
+  @apply flex-1 font-mono text-sm text-text;
+}
