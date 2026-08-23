@@ -1,18 +1,17 @@
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, JSX } from "preact";
 import { cn } from "@/lib/cn";
 import { Button } from "@/atoms/button/Button";
 
 export type ToastTone = "accent" | "done" | "failed" | "blocked";
 
-export interface ToastProps {
-  title: string;
-  detail?: string;
+export interface ToastProps extends Omit<JSX.IntrinsicElements["div"], "title" | "ref"> {
+  title: ComponentChildren;
+  detail?: ComponentChildren;
   tone?: ToastTone;
   lead?: ComponentChildren;
   actions?: ComponentChildren;
   duration?: number;
   onDismiss?: () => void;
-  class?: string;
 }
 
 export function Toast({
@@ -24,14 +23,17 @@ export function Toast({
   duration,
   onDismiss,
   class: className,
+  style,
+  ...rest
 }: ToastProps) {
   return (
     <div
-      class={cn("ui-toast", className)}
+      class={cn("ui-toast", className as string)}
       data-tone={tone}
       role="status"
       aria-live="polite"
-      style={duration ? `--ui-toast-duration:${duration}ms` : undefined}
+      style={{ ...(style as object), "--ui-toast-duration": duration ? `${duration}ms` : undefined }}
+      {...rest}
     >
       {lead}
       <div class="ui-toast-text">
@@ -47,11 +49,14 @@ export function Toast({
   );
 }
 
-export interface ToastStackProps {
-  class?: string;
+export interface ToastStackProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   children?: ComponentChildren;
 }
 
-export function ToastStack({ class: className, children }: ToastStackProps) {
-  return <div class={cn("ui-toast-stack", className)}>{children}</div>;
+export function ToastStack({ class: className, children, ...rest }: ToastStackProps) {
+  return (
+    <div class={cn("ui-toast-stack", className as string)} {...rest}>
+      {children}
+    </div>
+  );
 }
