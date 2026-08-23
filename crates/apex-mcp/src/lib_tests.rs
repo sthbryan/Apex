@@ -30,6 +30,7 @@ fn caller() -> Caller {
         parent: None,
         run: None,
         url: None,
+        tools_off: Vec::new(),
     };
     Caller {
         session: summary.id,
@@ -62,6 +63,7 @@ fn summary_in(cwd: &str, title: &str) -> SessionSummary {
         parent: None,
         run: None,
         url: None,
+        tools_off: Vec::new(),
     }
 }
 

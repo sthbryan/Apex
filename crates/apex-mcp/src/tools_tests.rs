@@ -18,6 +18,7 @@ fn session(title: &str, worktree: Option<WorktreeInfo>) -> SessionSummary {
         parent: None,
         run: None,
         url: None,
+        tools_off: Vec::new(),
     }
 }
 

@@ -1,7 +1,7 @@
 mod tools;
 
 use anyhow::{Context, Result};
-use apex_proto::{Command, Reply};
+use apex_proto::{Command, Reply, ToolGroup};
 use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use uuid::Uuid;
@@ -52,7 +52,7 @@ pub async fn answer<D: Daemon>(daemon: &mut D, caller: &Caller, line: &str) -> O
     match method {
         "initialize" => Some(result_body(id, initialize())),
         "ping" => Some(result_body(id, json!({}))),
-        "tools/list" => Some(result_body(id, tool_list())),
+        "tools/list" => Some(result_body(id, tool_list(&caller.summary.tools_off))),
         "tools/call" => match call(daemon, caller, &params).await {
             Ok(text) => Some(result_body(id, content(&text, false))),
             Err(error) => Some(result_body(id, content(&format!("{error:#}"), true))),
@@ -72,10 +72,11 @@ fn initialize() -> Value {
     })
 }
 
-fn tool_list() -> Value {
+fn tool_list(off: &[ToolGroup]) -> Value {
     json!({
         "tools": TOOLS
             .iter()
+            .filter(|tool| !off.contains(&tool.group))
             .map(|tool| json!({
                 "name": tool.name,
                 "description": tool.description,
