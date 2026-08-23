@@ -213,6 +213,7 @@ export function splitActive(view: PaneView, direction: Direction): void {
     openView(view);
     return;
   }
+  homeOpen.value = false;
   const incoming = leaf(view);
   updateTab(tab.id, (current) => ({
     ...current,
@@ -245,6 +246,7 @@ function openView(view: PaneView, focus = true): string {
   tabs.value = [...tabs.value, tab];
   if (focus) {
     activeTabId.value = tab.id;
+    homeOpen.value = false;
   }
   return tab.id;
 }
@@ -252,24 +254,33 @@ function openView(view: PaneView, focus = true): string {
 let spareTabId: string | null = null;
 
 export function openQuietly(view: PaneView, asSplit: boolean): void {
+  const fromHome = homeOpen.peek();
+  const landed = placeQuietly(view, asSplit);
+  if (fromHome) {
+    activeTabId.value = landed;
+    homeOpen.value = false;
+  }
+}
+
+function placeQuietly(view: PaneView, asSplit: boolean): string {
   if (!asSplit) {
-    openView(view, false);
-    return;
+    return openView(view, false);
   }
 
   const yours = activeTab.value;
   if (yours && yours.id !== spareTabId && leaves(yours.root).length < splitCaps.value.yours) {
     splitQuietly(yours, view);
-    return;
+    return yours.id;
   }
 
   const spare = tabs.value.find((tab) => tab.id === spareTabId);
   if (spare && leaves(spare.root).length < splitCaps.value.spare) {
     splitQuietly(spare, view);
-    return;
+    return spare.id;
   }
 
   spareTabId = openView(view, false);
+  return spareTabId;
 }
 
 function parentLeafOf(tab: Tab, view: PaneView): Leaf | null {
@@ -310,6 +321,7 @@ function focusPane(matches: (view: PaneView) => boolean): boolean {
     const match = leaves(tab.root).find((candidate) => matches(candidate.view));
     if (match) {
       activeTabId.value = tab.id;
+      homeOpen.value = false;
       updateTab(tab.id, (current) => ({ ...current, activeLeafId: match.id }));
       return true;
     }
