@@ -91,7 +91,8 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
   return (
     <CommandPalette
       open={open}
-      onClose={onClose}
+      onClose={() => (asking ? setAsking(null) : onClose())}
+      viewport
       elRef={field}
       value={query}
       label={placeholder}

@@ -77,7 +77,7 @@ export function ProjectPicker({ variant = "bar" }: Props) {
   });
 
   return (
-    <div class={cn("relative min-w-0", dock && "px-3")}>
+    <div class={cn("min-w-0", dock && "px-3")}>
       <button
         type="button"
         onClick={() => setOpen(true)}
