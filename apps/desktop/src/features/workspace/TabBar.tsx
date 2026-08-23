@@ -94,7 +94,7 @@ export function TabBar({ tabs, sessions }: Props) {
             }}
             title={titleOf(tab, sessions)}
             selected={active}
-            class={cn("animate-row-in", overflowed && "invisible pointer-events-none absolute")}
+            class={cn("group animate-row-in", overflowed && "invisible pointer-events-none absolute")}
             lead={identity(tab, sessions)}
             onOpen={() => {
               activeTabId.value = tab.id;
@@ -111,7 +111,7 @@ export function TabBar({ tabs, sessions }: Props) {
                     type="button"
                     title={t("dock.popIn")}
                     onClick={() => dockPanelAt(panel)}
-                    class="text-faint opacity-0 transition-[opacity,color] hover:text-text"
+                    class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
                   >
                     <Icon name="panel" size={12} />
                   </button>
@@ -121,7 +121,7 @@ export function TabBar({ tabs, sessions }: Props) {
                     type="button"
                     title={t("workspace.mergeTab")}
                     onClick={() => mergeTabInto(tab.id, mergeTarget)}
-                    class="text-faint opacity-0 transition-[opacity,color] hover:text-text"
+                    class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
                   >
                     <Icon name="combine" size={12} />
                   </button>
@@ -129,7 +129,7 @@ export function TabBar({ tabs, sessions }: Props) {
                 <button
                   type="button"
                   onClick={() => closeTab(tab.id)}
-                  class="text-faint opacity-0 transition-[opacity,color] hover:text-text"
+                  class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
                   aria-label="close"
                 >
                   <Icon name="close" size={12} />

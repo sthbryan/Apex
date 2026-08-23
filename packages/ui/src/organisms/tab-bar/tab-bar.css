@@ -21,10 +21,6 @@
     border-right: 1px solid var(--apex-border);
   }
 
-  .ui-tab:hover button {
-    @apply opacity-100;
-  }
-
   .ui-tab:hover {
     @apply text-text;
     background-color: color-mix(in oklab, var(--apex-raised) 55%, transparent);
