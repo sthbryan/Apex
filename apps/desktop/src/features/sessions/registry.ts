@@ -22,6 +22,8 @@ type Entry = {
 };
 
 const registry = new Map<string, Entry>();
+
+const WHEEL_LINES = 3;
 const scheduled = new Map<string, number>();
 
 export const spoken = signal<ReadonlySet<string>>(new Set());
@@ -78,6 +80,20 @@ export async function mountTerminal(id: string, host: HTMLElement): Promise<Entr
     terminal.write(data);
   });
   const input = terminal.onData((data) => void sendInput(id, data));
+
+  terminal.attachCustomWheelEventHandler((event) => {
+    if (terminal.buffer.active.type !== "alternate") {
+      return true;
+    }
+    if (terminal.modes.mouseTrackingMode !== "none" || event.deltaY === 0) {
+      return true;
+    }
+    const arrow = `\u001b${terminal.modes.applicationCursorKeysMode ? "O" : "["}${
+      event.deltaY < 0 ? "A" : "B"
+    }`;
+    void sendInput(id, arrow.repeat(WHEEL_LINES));
+    return false;
+  });
 
   const entry: Entry = {
     element,
