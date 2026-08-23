@@ -8,7 +8,7 @@ vi.mock("@/features/git/state", () => ({
   gitTarget: { value: { type: "project" } },
   sameTarget: () => false,
   selectTarget: () => {},
-}));
+});
 
 vi.mock("@/features/sessions/state", () => ({
   sessions: { value: [] },
@@ -21,7 +21,7 @@ vi.mock("@/features/settings/agentMode", () => ({
 vi.mock("@/app/layout/state", () => ({
   reconcileDock: () => {},
   returnPanelToDock: () => {},
-}));
+});
 
 import {
   activeTabId,
