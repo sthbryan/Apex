@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  dockMode,
   dockOrder,
   dockPanel,
+  dockWidth,
   isDockPanel,
   moveDockPanel,
   placePanelInDock,
   reconcileDock,
   removePanelFromDock,
+  resetDockWidth,
+  setDockMode,
   setDockPanel,
+  setDockWidth,
+  toggleDock,
 } from "./state";
 
 beforeEach(() => {
@@ -95,5 +101,37 @@ describe("reconcileDock", () => {
     const before = [...dockOrder.value];
     reconcileDock([]);
     expect(dockOrder.value).toEqual(before);
+  });
+});
+
+describe("setDockWidth", () => {
+  it("clamps to min and max", () => {
+    setDockWidth(100);
+    expect(dockWidth.value).toBeGreaterThanOrEqual(192);
+    setDockWidth(1000);
+    expect(dockWidth.value).toBeLessThanOrEqual(480);
+  });
+
+  it("respects window width", () => {
+    Object.defineProperty(window, "innerWidth", { value: 400, configurable: true });
+    setDockWidth(300);
+    expect(dockWidth.value).toBeLessThanOrEqual(120);
+    Object.defineProperty(window, "innerWidth", { value: 1024, configurable: true });
+  });
+
+  it("resets to default", () => {
+    setDockWidth(400);
+    resetDockWidth();
+    expect(dockWidth.value).toBe(224);
+  });
+});
+
+describe("dockMode", () => {
+  it("toggles between expanded and rail", () => {
+    setDockMode("expanded");
+    toggleDock();
+    expect(dockMode.value).toBe("rail");
+    toggleDock();
+    expect(dockMode.value).toBe("expanded");
   });
 });
