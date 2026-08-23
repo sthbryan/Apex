@@ -140,6 +140,8 @@
 
   --apex-veil-tint: 100%;
   --apex-veil-lift: 0%;
+  --apex-veil-contrast: 0%;
+  --apex-veil-ink: light-dark(#000000, #ffffff);
   --apex-shell: var(--apex-bg-solid);
 }
 
@@ -148,10 +150,26 @@
   --apex-veil-lift: 12%;
   --apex-shell: transparent;
 
-  --apex-text-solid: light-dark(#26213a, #eae8fb);
-  --apex-muted-solid: light-dark(#3b3757, #aaa6c0);
-  --apex-faint-solid: light-dark(#4f4a6b, #837e9c);
-  --apex-border-solid: light-dark(#bdb3aa, #4a4763);
+  --apex-text-solid: color-mix(
+    in oklab,
+    var(--apex-veil-ink) var(--apex-veil-contrast),
+    light-dark(#26213a, #eae8fb)
+  );
+  --apex-muted-solid: color-mix(
+    in oklab,
+    var(--apex-veil-ink) var(--apex-veil-contrast),
+    light-dark(#3b3757, #aaa6c0)
+  );
+  --apex-faint-solid: color-mix(
+    in oklab,
+    var(--apex-veil-ink) var(--apex-veil-contrast),
+    light-dark(#4f4a6b, #837e9c)
+  );
+  --apex-border-solid: color-mix(
+    in oklab,
+    var(--apex-veil-ink) var(--apex-veil-contrast),
+    light-dark(#bdb3aa, #4a4763)
+  );
 }
 
 :root {
