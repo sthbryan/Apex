@@ -1,9 +1,8 @@
-import cn from "cnfast";
+import { CommandItem, CommandPalette } from "@apex/ui";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useOverlay } from "@/features/browser/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
 
 export type PickerRemove = {
   label: string;
@@ -37,8 +36,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
   const [asking, setAsking] = useState<string | null>(null);
   const field = useRef<HTMLInputElement>(null);
   const selected = useRef<HTMLButtonElement>(null);
-  const overlay = usePresence<HTMLDivElement>(open);
-  useOverlay(overlay.mounted);
+  useOverlay(open);
 
   useEffect(() => {
     if (!open) {
@@ -90,114 +88,84 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [open, items, cursor, onClose, asking]);
 
-  if (!overlay.mounted) {
-    return null;
-  }
-
   return (
-    <div
-      ref={overlay.holder}
-      class={cn(
-        "fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24",
-        overlay.leaving ? "animate-veil-out" : "animate-veil-in",
-      )}
-      onMouseDown={onClose}
+    <CommandPalette
+      open={open}
+      onClose={onClose}
+      elRef={field}
+      value={query}
+      label={placeholder}
+      placeholder={placeholder}
+      onInput={(event) => onQuery(event.currentTarget.value)}
     >
-      <div
-        class={cn(
-          "w-lg max-w-[90vw] overflow-hidden rounded-lg border border-border bg-float shadow-2xl",
-          overlay.leaving ? "animate-pop-out" : "animate-pop-in",
-        )}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <input
-          ref={field}
-          type="text"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck={false}
-          value={query}
-          placeholder={placeholder}
-          onInput={(event) => onQuery(event.currentTarget.value)}
-          class="w-full border-b border-border bg-transparent px-3 py-2.5 outline-none placeholder:text-faint"
-        />
-        <ul class="max-h-80 overflow-y-auto py-1">
-          {items.length === 0 ? (
-            <li class="px-3 py-2 text-faint">{t("palette.empty")}</li>
+      {items.length === 0 ? (
+        <p class="px-2.5 py-2 text-faint">{t("palette.empty")}</p>
+      ) : (
+        items.map((item, index) =>
+          item.remove && asking === item.id ? (
+            <div key={item.id} class="flex items-center gap-2 rounded-sm bg-raised px-2.5 py-2">
+              <span class="min-w-0 flex-1 truncate text-muted">{item.remove.ask}</span>
+              <button
+                type="button"
+                onClick={item.remove.run}
+                class="shrink-0 text-state-failed transition-colors hover:underline"
+              >
+                {item.remove.yes}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAsking(null)}
+                class="shrink-0 text-faint transition-colors hover:text-text"
+              >
+                {item.remove.no}
+              </button>
+            </div>
           ) : (
-            items.map((item, index) =>
-              item.remove && asking === item.id ? (
-                <li key={item.id} class="flex items-center gap-2 bg-raised px-3 py-1.5">
-                  <span class="min-w-0 flex-1 truncate text-muted">{item.remove.ask}</span>
-                  <button
-                    type="button"
-                    onClick={item.remove.run}
-                    class="shrink-0 text-state-failed transition-colors hover:underline"
-                  >
-                    {item.remove.yes}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAsking(null)}
-                    class="shrink-0 text-faint transition-colors hover:text-text"
-                  >
-                    {item.remove.no}
-                  </button>
-                </li>
-              ) : (
-                <li key={item.id} class="group relative">
-                  <button
-                    type="button"
-                    ref={index === cursor ? selected : undefined}
-                    onMouseEnter={() => setCursor(index)}
-                    onClick={item.run}
-                    title={item.hint ?? item.label}
-                    class={cn(
-                      "relative flex w-full items-baseline gap-2 px-3 py-1.5 text-left transition-colors",
-                      index === cursor ? "bg-raised text-text" : "text-muted",
-                      item.remove && "pr-8",
-                    )}
-                  >
-                    {index === cursor && (
-                      <span
-                        aria-hidden="true"
-                        class="pointer-events-none absolute inset-y-1 left-0 w-0.5 rounded-full bg-accent"
-                      />
-                    )}
-                    <span class="shrink-0 truncate">{item.label}</span>
-                    {item.hint && <span class="truncate text-faint">{item.hint}</span>}
+            <span key={item.id} class="group relative block">
+              <CommandItem
+                elRef={index === cursor ? selected : undefined}
+                name={item.label}
+                desc={item.hint}
+                selected={index === cursor}
+                title={item.hint ?? item.label}
+                class={item.remove ? "pr-8" : undefined}
+                onMouseEnter={() => setCursor(index)}
+                onClick={item.run}
+                trail={
+                  <>
                     {item.badge && (
                       <span
-                        class={cn(
-                          "ml-auto shrink-0 text-micro tabular-nums",
-                          item.badge.alert ? "text-state-blocked" : "text-faint",
-                        )}
+                        class={
+                          item.badge.alert
+                            ? "shrink-0 tabular-nums text-state-blocked"
+                            : "shrink-0 tabular-nums text-faint"
+                        }
                       >
                         {item.badge.text}
                       </span>
                     )}
                     {item.preview && (
-                      <span class="ml-auto shrink-0 whitespace-pre rounded border border-border bg-black/20 px-1 py-0.5 font-mono text-petite leading-tight text-faint">
+                      <span class="shrink-0 whitespace-pre rounded border border-border bg-black/20 px-1 py-0.5 font-mono text-petite leading-tight text-faint">
                         {item.preview.join("\n")}
                       </span>
                     )}
-                  </button>
-                  {item.remove && (
-                    <button
-                      type="button"
-                      title={item.remove.label}
-                      onClick={() => setAsking(item.id)}
-                      class="absolute inset-y-0 right-1 hidden items-center px-1.5 text-faint transition-colors hover:text-text group-hover:flex"
-                    >
-                      <Icon name="close" size={12} />
-                    </button>
-                  )}
-                </li>
-              ),
-            )
-          )}
-        </ul>
-      </div>
-    </div>
+                  </>
+                }
+              />
+              {item.remove && (
+                <button
+                  type="button"
+                  title={item.remove.label}
+                  onClick={() => setAsking(item.id)}
+                  class="absolute inset-y-0 right-1 hidden items-center px-1.5 text-faint transition-colors group-hover:flex hover:text-text"
+                >
+                  <Icon name="close" size={12} />
+                </button>
+              )}
+            </span>
+          ),
+        )
+      )}
+    </CommandPalette>
   );
 }
