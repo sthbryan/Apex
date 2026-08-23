@@ -187,7 +187,7 @@ html[data-theme="light"] .stage-links {
 /* Mobile rail -> hide vertical, show mobile horizontal strip */
 @media (max-width: 768px) {
   .apx {
-    @apply gap-2 px-2.5 pb-[76px] pt-2;
+    @apply gap-2 px-4 pb-[76px] pt-2;
   }
 
   .window {
@@ -206,8 +206,8 @@ html[data-theme="light"] .stage-links {
 
 @media (max-width: 640px) {
   .apx {
-    @apply gap-1.5 p-1.5 pb-[72px];
-    gap: 8px;
+    @apply gap-2 px-4 py-3 pb-[80px];
+    gap: 10px;
   }
 
   .window {
@@ -275,7 +275,7 @@ html[data-theme="light"] .stage-links {
 
 @media (max-width: 480px) {
   .apx {
-    @apply p-1 pb-[68px];
+    @apply px-3 py-2 pb-[72px];
   }
   .window {
     border-radius: 10px;
