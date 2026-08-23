@@ -2,7 +2,7 @@ mod common;
 
 use apex_proto::{
     ClientMessage, Command, CommandOutcome, ErrorCode, Isolation, Reply, RequestId, ServerMessage,
-    SessionState, TerminalSize, WorktreeDisposal,
+    SessionState, TerminalSize, ToolGroup, WorktreeDisposal,
 };
 use apexd::sessions::NewSession;
 use common::{Harness, wait_for_state};
@@ -362,4 +362,56 @@ async fn a_plain_transcript_carries_no_terminal_codes() {
     .expect("the shell never answered");
 
     assert!(!plain.contains('\u{1b}'), "escapes survived: {plain:?}");
+}
+
+#[tokio::test]
+async fn a_new_session_carries_the_groups_its_agent_starts_without() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    client
+        .request(Command::SetAgentTools {
+            agent: "sh".into(),
+            tools_off: vec![ToolGroup::Browser, ToolGroup::Orchestration],
+        })
+        .await;
+
+    let session = client.create_shell(harness.project).await;
+
+    assert_eq!(session.tools_off, vec![ToolGroup::Browser, ToolGroup::Orchestration]);
+}
+
+#[tokio::test]
+async fn a_session_started_earlier_keeps_the_groups_it_was_born_with() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    let session = client.create_shell(harness.project).await;
+    assert!(session.tools_off.is_empty());
+
+    client
+        .request(Command::SetAgentTools { agent: "sh".into(), tools_off: vec![ToolGroup::Browser] })
+        .await;
+
+    let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
+        panic!("expected sessions")
+    };
+    let found = sessions.iter().find(|found| found.id == session.id).expect("the session");
+    assert!(found.tools_off.is_empty());
+}
+
+#[tokio::test]
+async fn the_agent_listing_reports_the_groups_that_are_off() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    client
+        .request(Command::SetAgentTools { agent: "sh".into(), tools_off: vec![ToolGroup::Views] })
+        .await;
+
+    let Reply::Agents { agents } = client.request(Command::ListAgents).await else {
+        panic!("expected agents")
+    };
+    let sh = agents.iter().find(|agent| agent.name == "sh").expect("the sh agent");
+    assert_eq!(sh.tools_off, vec![ToolGroup::Views]);
+    assert!(
+        agents.iter().filter(|agent| agent.name != "sh").all(|agent| agent.tools_off.is_empty())
+    );
 }
