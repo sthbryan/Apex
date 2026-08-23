@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { Badge, StatusPill } from "@apex/ui";
 import { useEffect, useState } from "preact/hooks";
 import { NotifyPanel } from "@/features/notifications/NotifyPanel";
 import { markAllRead, notices, unread } from "@/features/notifications/state";
@@ -24,18 +24,10 @@ export function NotifyChip() {
       open={open}
       onClose={() => setOpen(false)}
       anchor={
-        <button
-          type="button"
-          title={t("notify.title")}
-          onClick={() => setOpen((current) => !current)}
-          class={cn(
-            "flex h-6 items-center gap-1 rounded px-1 transition-colors hover:bg-raised hover:text-muted",
-            unread.value > 0 ? "text-text" : "text-faint",
-          )}
-        >
-          <Icon name={notifyEnabled.value ? "bell" : "bellOff"} size={12} />
-          {unread.value > 0 && <span class="text-xs tabular-nums">{unread.value}</span>}
-        </button>
+        <StatusPill title={t("notify.title")} onClick={() => setOpen((current) => !current)}>
+          <Icon name={notifyEnabled.value ? "bell" : "bellOff"} size={11} />
+          {unread.value > 0 && <Badge tone="accent">{unread.value}</Badge>}
+        </StatusPill>
       }
     />
   );

@@ -1,9 +1,9 @@
-import cn from "cnfast";
+import { Bar, StatusPill } from "@apex/ui";
 import type { QuotaReport } from "@/bindings/QuotaReport";
 import type { QuotaWindow } from "@/bindings/QuotaWindow";
-import { AgentIcon } from "@/features/sessions/AgentIcon";
-import { resetText, tone } from "@/features/usage/format";
+import { resetText } from "@/features/usage/format";
 import { toggleUsagePopover, usageOpen } from "@/features/usage/state";
+import { barTone } from "@/features/usage/tone";
 import { UsagePopover } from "@/features/usage/UsagePopover";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
@@ -15,8 +15,8 @@ type Entry = { agent: string; window: QuotaWindow };
 
 export function UsageStrip() {
   const reports = (metrics.value?.quotas ?? []).filter((report) => report.windows.length > 0);
-
   const failures = metrics.value?.quota_failures ?? [];
+
   if (reports.length === 0 && failures.length === 0) {
     return null;
   }
@@ -24,6 +24,7 @@ export function UsageStrip() {
   const entries = tightest(reports);
   const shown = entries.slice(0, SHOWN);
   const hidden = entries.length - shown.length;
+  const loudest = shown[0]?.window.used_percent ?? 0;
 
   return (
     <UsagePopover
@@ -34,38 +35,24 @@ export function UsageStrip() {
         usageOpen.value = false;
       }}
       anchor={
-        <button
-          type="button"
-          title={t("usage.title")}
-          onClick={toggleUsagePopover}
-          class="flex h-5 items-center gap-2 rounded px-1 transition-colors hover:bg-raised"
-        >
+        <StatusPill title={t("usage.title")} onClick={toggleUsagePopover}>
           {shown.map((entry) => (
-            <Chip key={`${entry.agent}:${entry.window.label ?? ""}`} entry={entry} />
+            <Bar
+              key={`${entry.agent}:${entry.window.label ?? ""}`}
+              class="w-9"
+              size="sm"
+              value={entry.window.used_percent}
+              tone={barTone(entry.window.used_percent)}
+              label={`${entry.agent} ${entry.window.label ?? ""}`.trim()}
+              title={resetText(entry.window)}
+            />
           ))}
-          {hidden > 0 && <span class="shrink-0 text-faint">+{hidden}</span>}
-          {failures.length > 0 && (
-            <Icon size={11} name="activity" class="shrink-0 text-state-failed" />
-          )}
-        </button>
+          <span class="font-mono tabular-nums">{loudest}%</span>
+          {hidden > 0 && <span class="text-faint">+{hidden}</span>}
+          {failures.length > 0 && <Icon size={11} name="activity" class="text-state-failed" />}
+        </StatusPill>
       }
     />
-  );
-}
-
-function Chip({ entry }: { entry: Entry }) {
-  const percent = Math.min(100, Math.max(0, entry.window.used_percent));
-  const level = tone(percent);
-
-  return (
-    <span class="flex shrink-0 items-center gap-1.5" title={resetText(entry.window)}>
-      <AgentIcon agent={entry.agent} class="shrink-0 text-faint" />
-      <span class="h-1 w-6 shrink-0 overflow-hidden rounded-full bg-raised">
-        <span class={cn("block h-full rounded-full", level.bar)} style={{ width: `${percent}%` }} />
-      </span>
-      <span class={cn("tabular-nums", level.text)}>{percent}%</span>
-      {entry.window.label && <span class="text-muted">{entry.window.label}</span>}
-    </span>
   );
 }
 

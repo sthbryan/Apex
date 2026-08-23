@@ -1,4 +1,4 @@
-import { Popover } from "@apex/ui";
+import { Popover, StatusPill } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
@@ -94,27 +94,29 @@ export function TargetChip({ project, placement = "below" }: Props) {
       width={256}
       label={t("git.branches", { count: String(others.length) })}
       anchor={
-        <button
-          type="button"
+        <StatusPill
+          class={cn("min-w-0", onProject ? undefined : "text-accent")}
           title={
             status?.upstream
               ? t("git.chipTracking", { branch: label, upstream: status.upstream })
               : t("git.chip", { branch: label })
           }
           onClick={() => setOpen((shown) => !shown)}
-          class={cn(
-            "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-0.5 leading-none transition-colors hover:border-muted hover:text-text",
-            onProject ? "text-muted" : "text-accent",
-          )}
         >
           <Icon name={onProject ? "files" : "branch"} size={11} class="shrink-0" />
-          <span class="truncate">{label}</span>
+          <span class="truncate font-mono">{label}</span>
+          {status && status.ahead > 0 && (
+            <span class="shrink-0 font-mono tabular-nums text-git-ahead">↑{status.ahead}</span>
+          )}
+          {status && status.behind > 0 && (
+            <span class="shrink-0 font-mono tabular-nums text-git-behind">↓{status.behind}</span>
+          )}
           <Icon
             name="chevron"
             size={11}
             class={cn("shrink-0 text-faint transition-transform", { "rotate-180": !above && open })}
           />
-        </button>
+        </StatusPill>
       }
     >
       <Target

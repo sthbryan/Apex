@@ -1,3 +1,4 @@
+import { StatusPill } from "@apex/ui";
 import { revealPanel } from "@/app/layout/actions";
 import { gitStatus } from "@/features/git/state";
 import { TargetChip } from "@/features/git/TargetChip";
@@ -8,44 +9,20 @@ export function GitChip() {
   const project = activeProject.value;
   const status = gitStatus.value;
   if (!project?.is_git || !status) {
-    return <div />;
+    return null;
   }
 
   const dirty = status.changes.length;
 
   return (
-    <div class="flex min-w-0 items-center gap-2">
+    <>
       <TargetChip project={project} placement="above" />
       {dirty > 0 && (
-        <button
-          type="button"
-          title={t("git.openChanges")}
-          onClick={() => revealPanel("git")}
-          class="shrink-0 tabular-nums text-git-dirty transition-colors hover:text-text"
-        >
-          {t("git.changed", { count: String(dirty) })}
-        </button>
+        <StatusPill title={t("git.openChanges")} onClick={() => revealPanel("git")}>
+          <span class="font-mono tabular-nums text-git-dirty">{dirty}</span>
+          {t("git.changedWord")}
+        </StatusPill>
       )}
-      {status.ahead > 0 && (
-        <button
-          type="button"
-          title={t("git.ahead", { count: String(status.ahead) })}
-          onClick={() => revealPanel("git")}
-          class="shrink-0 tabular-nums text-git-ahead transition-colors hover:text-text"
-        >
-          ↑{status.ahead}
-        </button>
-      )}
-      {status.behind > 0 && (
-        <button
-          type="button"
-          title={t("git.behind", { count: String(status.behind) })}
-          onClick={() => revealPanel("git")}
-          class="shrink-0 tabular-nums text-git-behind transition-colors hover:text-text"
-        >
-          ↓{status.behind}
-        </button>
-      )}
-    </div>
+    </>
   );
 }

@@ -1,16 +1,13 @@
-import { StatusBar as Bar } from "@apex/ui";
+import { StatusBar as Bar, StatusPill } from "@apex/ui";
+import { revealPanel } from "@/app/layout/actions";
 import { GitChip } from "@/features/git/GitChip";
-import { gitStatus } from "@/features/git/state";
 import { NotifyChip } from "@/features/notifications/NotifyChip";
-import { activeProject } from "@/features/projects/state";
+import { races } from "@/features/race/state";
 import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
-import { hasUsage } from "@/features/usage/state";
 import { UsageStrip } from "@/features/usage/UsageStrip";
+import { t } from "@/shared/i18n";
 
 export function StatusBar() {
-  const onGit = Boolean(activeProject.value?.is_git) && gitStatus.value !== null;
-  const onUsage = hasUsage.value;
-
   return (
     <Bar
       right={
@@ -20,13 +17,23 @@ export function StatusBar() {
         </>
       }
     >
-      {onGit && <GitChip />}
-      {onGit && onUsage && <Divider />}
-      {onUsage && <UsageStrip />}
+      <GitChip />
+      <Racing />
+      <UsageStrip />
     </Bar>
   );
 }
 
-function Divider() {
-  return <span aria-hidden="true" class="h-3 w-px shrink-0 bg-border" />;
+function Racing() {
+  const running = races.value.filter((race) =>
+    race.contenders.some((session) => session.exit_code === null && session.state !== "done"),
+  );
+  if (running.length === 0) {
+    return null;
+  }
+  return (
+    <StatusPill live title={t("race.title")} onClick={() => revealPanel("race")}>
+      {t("race.running", { count: String(running.length) })}
+    </StatusPill>
+  );
 }

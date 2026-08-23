@@ -266,6 +266,7 @@ export const en = {
     latest: "Jump to latest",
   },
   race: {
+    running: "{count} racing",
     title: "Races",
     empty: "No races yet.",
     new: "Race a task across agents",
@@ -319,6 +320,7 @@ export const en = {
     commitFirst: "Commit what you approved before merging.",
   },
   git: {
+    changedWord: "changed",
     noRepo: "This project is not a git repository.",
     dropWorktree: "Delete this worktree and {branch}",
     dropWorktreeAsk: "Are you sure?",

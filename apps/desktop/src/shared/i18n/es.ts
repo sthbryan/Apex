@@ -268,6 +268,7 @@ export const es: Messages = {
     latest: "Ir a lo último",
   },
   race: {
+    running: "{count} corriendo",
     title: "Corridas",
     empty: "Todavía no hay corridas.",
     new: "Correr una tarea entre agentes",
@@ -321,6 +322,7 @@ export const es: Messages = {
     commitFirst: "Commiteá lo aprobado antes de mergear.",
   },
   git: {
+    changedWord: "cambiados",
     noRepo: "Este proyecto no es un repositorio git.",
     dropWorktree: "Borrar este worktree y {branch}",
     dropWorktreeAsk: "¿Seguro?",
