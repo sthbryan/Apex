@@ -75,3 +75,24 @@ async fn clearing_a_shelf_leaves_nothing_to_restore() {
 async fn a_target_without_a_branch_is_refused() {
     assert!(super::rejects::require_branch("  ").is_err());
 }
+
+#[tokio::test]
+async fn a_sweep_forgets_the_hunks_nobody_came_back_for() {
+    let data = tempfile::tempdir().expect("data");
+    let shelf = RejectsService::new(data.path());
+    let project = uuid::Uuid::new_v4();
+    let dir = data.path().join("rejected").join(project.to_string()).join("main");
+    std::fs::create_dir_all(&dir).expect("shelf");
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("clock")
+        .as_millis();
+    let old = now - 60 * 24 * 60 * 60 * 1000;
+    std::fs::write(dir.join(format!("{now}.patch")), "recent").expect("recent");
+    std::fs::write(dir.join(format!("{old}.patch")), "ancient").expect("ancient");
+
+    shelf.sweep().await;
+
+    assert!(dir.join(format!("{now}.patch")).is_file());
+    assert!(!dir.join(format!("{old}.patch")).exists());
+}

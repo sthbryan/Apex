@@ -633,6 +633,10 @@ impl SessionManager {
         self.browsers.logs(project).await
     }
 
+    pub async fn sweep_rejects(&self) {
+        self.rejects.sweep().await;
+    }
+
     pub async fn browser_shot(&self, project: Uuid) -> Result<String> {
         let pane =
             self.browsers.latest(project).await.context("no browser pane is open right now")?;

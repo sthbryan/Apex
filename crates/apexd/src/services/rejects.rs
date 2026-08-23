@@ -5,6 +5,7 @@ use apex_proto::RejectedHunk;
 use uuid::Uuid;
 
 const KEEP: usize = 30;
+const TTL_MILLIS: u128 = 30 * 24 * 60 * 60 * 1000;
 
 pub struct RejectsService {
     root: PathBuf,
@@ -38,7 +39,7 @@ impl RejectsService {
                 .as_millis();
             std::fs::write(shelf.join(format!("{stamp}.patch")), &patch)
                 .context("saving the rejected hunk")?;
-            prune(&shelf);
+            prune(&shelf, now_millis());
             Ok(())
         })
         .await?
@@ -60,6 +61,23 @@ impl RejectsService {
             Ok(())
         })
         .await?
+    }
+
+    pub async fn sweep(&self) {
+        let Ok(projects) = std::fs::read_dir(&self.root) else {
+            return;
+        };
+        let now = now_millis();
+        for project in projects.flatten() {
+            let Ok(shelves) = std::fs::read_dir(project.path()) else {
+                continue;
+            };
+            for shelf in shelves.flatten() {
+                prune(&shelf.path(), now);
+                std::fs::remove_dir(shelf.path()).ok();
+            }
+            std::fs::remove_dir(project.path()).ok();
+        }
     }
 
     pub async fn clear(&self, project: Uuid, branch: &str) -> Result<()> {
@@ -110,13 +128,21 @@ fn read_shelf(shelf: &Path) -> Vec<RejectedHunk> {
         .collect()
 }
 
-fn prune(shelf: &Path) {
+fn now_millis() -> u128 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+}
+
+fn prune(shelf: &Path, now: u128) {
     let found = stems(shelf);
-    let Some(extra) = found.len().checked_sub(KEEP) else {
-        return;
-    };
-    for id in found.into_iter().take(extra) {
-        std::fs::remove_file(shelf.join(format!("{id}.patch"))).ok();
+    let extra = found.len().saturating_sub(KEEP);
+    for (index, id) in found.iter().enumerate() {
+        let aged = id.parse::<u128>().is_ok_and(|at| now.saturating_sub(at) > TTL_MILLIS);
+        if index < extra || aged {
+            std::fs::remove_file(shelf.join(format!("{id}.patch"))).ok();
+        }
     }
 }
 

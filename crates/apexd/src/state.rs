@@ -29,10 +29,13 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
         "PATH resolved"
     );
 
-    Ok(SessionManager::new(
+    let manager = SessionManager::new(
         paths.clone(),
         profiles,
         BinaryResolver::with_environment(environment),
         store,
-    ))
+    );
+    let housekeeping = Arc::clone(&manager);
+    tokio::spawn(async move { housekeeping.sweep_rejects().await });
+    Ok(manager)
 }
