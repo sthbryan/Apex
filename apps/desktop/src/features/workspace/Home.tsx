@@ -5,7 +5,6 @@ import {
   Dot,
   ListRow,
   SectionLabel,
-  Segmented,
   ToggleChip,
   ToggleChipGroup,
   Welcome,
@@ -117,40 +116,44 @@ export function Home() {
         }}
         onSubmit={start}
         lead={
-          <div class="flex min-w-0 flex-wrap items-center gap-1.5">
-            <Segmented
-              size="sm"
-              label={t("home.mode")}
-              value={mode}
-              onChange={swapMode}
-              options={[
-                { value: "session", label: t("home.modeSession") },
-                { value: "race", label: t("home.modeRace") },
-              ]}
-            />
+          <>
             <ToggleChipGroup label={t("home.agents")}>
-              {runnable.map((agent) => (
-                <ToggleChip
-                  key={agent.name}
-                  pressed={chosen.includes(agent.name)}
-                  lead={<AgentIcon agent={agent.name} size="sm" />}
-                  onClick={() => pick(agent.name)}
-                >
-                  {agent.name}
-                </ToggleChip>
-              ))}
+              {runnable.map((agent) => {
+                const on = chosen.includes(agent.name);
+                return (
+                  <ToggleChip
+                    key={agent.name}
+                    pressed={on}
+                    iconOnly={!on}
+                    title={agent.name}
+                    lead={<AgentIcon agent={agent.name} size="sm" />}
+                    onClick={() => pick(agent.name)}
+                  >
+                    {on ? agent.name : null}
+                  </ToggleChip>
+                );
+              })}
             </ToggleChipGroup>
+            <span class="mx-0.5 h-5 w-px flex-none bg-border" />
+            <ToggleChip
+              pressed={racing}
+              title={t("home.modeRaceHint")}
+              lead={<Icon name="swap" size={13} />}
+              onClick={() => swapMode(racing ? "session" : "race")}
+            >
+              {t("home.modeRace")}
+            </ToggleChip>
             {!racing && project?.is_git && (
               <ToggleChip
                 pressed={isolate}
                 title={t("isolation.worktreeHint")}
-                lead={<Icon name="branch" size={12} />}
+                lead={<Icon name="branch" size={13} />}
                 onClick={() => setIsolate((on) => !on)}
               >
                 {t("home.isolate")}
               </ToggleChip>
             )}
-          </div>
+          </>
         }
         actions={
           <Button type="submit" variant="primary" disabled={!ready}>

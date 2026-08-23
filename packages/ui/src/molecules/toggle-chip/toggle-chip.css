@@ -16,6 +16,15 @@
     border-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
   }
 
+  .ui-toggle-chip[data-icon-only] {
+    @apply justify-center px-0;
+    width: var(--apex-h-lg);
+  }
+
+  .ui-toggle-chip[data-icon-only][data-size="sm"] {
+    width: var(--apex-h-md);
+  }
+
   .ui-toggle-chip[data-size="sm"] {
     @apply px-2.5 text-sm;
     height: var(--apex-h-md);

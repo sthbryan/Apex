@@ -104,7 +104,17 @@ function HomeSummary() {
   );
 }
 
+const HOME_AGENTS = ["antigravity", "claude", "codex", "githubcopilot", "grok", "opencode", "pi"];
+
 function Home() {
+  const [picked, setPicked] = useState<string[]>(["claude"]);
+  const [racing, setRacing] = useState(false);
+  const [isolate, setIsolate] = useState(false);
+  const pick = (name: string) => setPicked((current) =>
+    racing
+      ? current.includes(name) ? current.filter((n) => n !== name) : [...current, name]
+      : [name]);
+
   return (
     <Welcome
       mark={<Wordmark size="xl">APEX</Wordmark>}
@@ -113,17 +123,54 @@ function Home() {
       foot={<HomeSummary />}
     >
       <Composer
-          label="Task"
-          placeholder="Ask, delegate, or start a task…"
-          onSubmit={(e) => { e.preventDefault(); activeTab.value = "tab-auth"; }}
-          lead={
+        label="Task"
+        placeholder="Ask, delegate, or start a task…"
+        onSubmit={(e) => { e.preventDefault(); activeTab.value = "tab-auth"; }}
+        lead={
+          <>
             <ToggleChipGroup label="Agents">
-              <ToggleChip pressed lead={<AgentIcon agent="claude" size="sm" />}>claude</ToggleChip>
-              <ToggleChip pressed={false} lead={<AgentIcon agent="codex" size="sm" />}>codex</ToggleChip>
-              <ToggleChip pressed={false} lead={<AgentIcon agent="grok" size="sm" />}>grok</ToggleChip>
+              {HOME_AGENTS.map((name) => {
+                const on = picked.includes(name);
+                return (
+                  <ToggleChip
+                    key={name}
+                    pressed={on}
+                    iconOnly={!on}
+                    title={name}
+                    lead={<AgentIcon agent={name} size="sm" />}
+                    onClick={() => pick(name)}
+                  >
+                    {on ? name : null}
+                  </ToggleChip>
+                );
+              })}
             </ToggleChipGroup>
-          }
-        actions={<Button type="submit" variant="primary"><Send size={13} />Start</Button>}
+            <span class="mx-0.5 h-5 w-px flex-none" style="background:var(--apex-border)" />
+            <ToggleChip
+              pressed={racing}
+              title="Run the task across every agent you pick"
+              lead={<ArrowLeftRight size={13} />}
+              onClick={() => { setRacing(!racing); if (racing) setPicked((c) => c.slice(0, 1)); }}
+            >
+              Race
+            </ToggleChip>
+            {!racing && (
+              <ToggleChip
+                pressed={isolate}
+                title="Its own branch and folder, so agents never collide"
+                lead={<GitBranch size={13} />}
+                onClick={() => setIsolate(!isolate)}
+              >
+                Worktree
+              </ToggleChip>
+            )}
+          </>
+        }
+        actions={
+          <Button type="submit" variant="primary">
+            <Send size={13} />{racing ? "Race" : "Start"}
+          </Button>
+        }
       />
     </Welcome>
   );

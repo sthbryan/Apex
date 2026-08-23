@@ -4,17 +4,19 @@ import { cn } from "@/lib/cn";
 export interface ToggleChipProps extends Omit<JSX.IntrinsicElements["button"], "size" | "ref"> {
   pressed: boolean;
   size?: "sm" | "md";
+  iconOnly?: boolean;
   lead?: ComponentChildren;
   trail?: ComponentChildren;
   children?: ComponentChildren;
 }
 
-export function ToggleChip({ pressed, size = "md", lead, trail, class: className, children, ...rest }: ToggleChipProps) {
+export function ToggleChip({ pressed, size = "md", iconOnly, lead, trail, class: className, children, ...rest }: ToggleChipProps) {
   return (
     <button
       type="button"
       class={cn("ui-toggle-chip", className as string)}
       data-size={size}
+      data-icon-only={iconOnly || undefined}
       aria-pressed={pressed}
       {...rest}
     >
