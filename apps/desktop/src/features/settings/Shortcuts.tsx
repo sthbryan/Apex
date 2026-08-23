@@ -1,4 +1,4 @@
-import { Field, SettingsDialog, SettingsHeading } from "@apex/ui";
+import { Field, KbdGroup, SettingsDialog, SettingsHeading } from "@apex/ui";
 import { useState } from "preact/hooks";
 import { SHORTCUTS, type Shortcut } from "@/app/keymap";
 import { closePage, page } from "@/app/view";
@@ -6,24 +6,6 @@ import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 const GROUPS: Shortcut["group"][] = ["navigation", "panes"];
-
-function Keycap({ value }: { value: string }) {
-  return (
-    <kbd class="inline-flex min-h-5 min-w-5 items-center justify-center rounded border border-border bg-raised px-1.5 font-mono text-xs font-medium leading-none text-text shadow-[0_1px_0_0_var(--color-border)]">
-      {value}
-    </kbd>
-  );
-}
-
-function KeycapRow({ keys }: { keys: string }) {
-  return (
-    <span class="flex shrink-0 items-center gap-1">
-      {keys.split(" + ").map((part) => (
-        <Keycap key={part} value={part} />
-      ))}
-    </span>
-  );
-}
 
 export function Shortcuts() {
   const [group, setGroup] = useState<Shortcut["group"]>("navigation");
@@ -83,7 +65,7 @@ export function Shortcuts() {
             {needle && <SettingsHeading title={t(`shortcuts.groups.${option}` as const)} />}
             {rows.map((shortcut) => (
               <Field key={shortcut.id} label={t(shortcut.label)}>
-                <KeycapRow keys={shortcut.keys} />
+                <KbdGroup keys={shortcut.keys.split(" + ")} />
               </Field>
             ))}
           </section>
