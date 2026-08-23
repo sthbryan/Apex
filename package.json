@@ -16,7 +16,7 @@
     "build": "bun run build:desktop && bun run build:rust",
     "bundle:desktop": "bun run --cwd apps/desktop tauri build",
     "test": "bun run test:desktop && bun run test:rust",
-    "test:desktop": "bun run --cwd apps/desktop build",
+    "test:desktop": "bun run --cwd apps/desktop test",
     "test:rust": "cargo test --workspace",
     "lint": "bun run lint:desktop && bun run lint:rust",
     "lint:desktop": "bun run --cwd apps/desktop lint",
