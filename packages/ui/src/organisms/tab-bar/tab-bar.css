@@ -27,7 +27,8 @@
   }
 
   .ui-tab[aria-selected="true"] {
-    @apply bg-bg font-medium text-text;
+    @apply font-medium text-text;
+    background-color: var(--apex-tab-active);
   }
 
   .ui-tab[aria-selected="true"]::before {

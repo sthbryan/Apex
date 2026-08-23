@@ -187,6 +187,7 @@
   );
   --apex-float: var(--apex-overlay);
   --apex-bar: var(--apex-surface);
+  --apex-tab-active: color-mix(in oklab, var(--apex-bg-solid) var(--apex-veil-tint), transparent);
   --apex-tty: var(--apex-tty-solid);
   --apex-border: var(--apex-border-solid);
   --apex-text: var(--apex-text-solid);
@@ -196,6 +197,7 @@
 
 [data-veil-area="sidebar"] {
   --apex-bar: var(--apex-surface-solid);
+  --apex-tab-active: var(--apex-bg-solid);
 }
 
 :root[data-theme="light"] { color-scheme: light; }
