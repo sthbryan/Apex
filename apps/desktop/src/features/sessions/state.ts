@@ -105,10 +105,26 @@ export function onOpenView(
   };
 }
 
+const closeHandlers = new Set<(event: Extract<Event, { type: "close_view" }>) => void>();
+
+export function onCloseView(
+  handler: (event: Extract<Event, { type: "close_view" }>) => void,
+): () => void {
+  closeHandlers.add(handler);
+  return () => {
+    closeHandlers.delete(handler);
+  };
+}
+
 function applyEvent(event: Event): void {
   switch (event.type) {
     case "open_view":
       for (const handler of viewHandlers) {
+        handler(event);
+      }
+      break;
+    case "close_view":
+      for (const handler of closeHandlers) {
         handler(event);
       }
       break;

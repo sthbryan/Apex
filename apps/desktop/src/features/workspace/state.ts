@@ -178,10 +178,14 @@ export function openPanel(panel: string): void {
 }
 
 export function closePanelViews(panel: string): void {
+  closeViews((view) => view.type === "panel" && view.panel === panel);
+}
+
+export function closeViews(matches: (view: PaneView) => boolean): void {
   const hits: { tabId: string; pane: Leaf }[] = [];
   for (const tab of tabs.value) {
     for (const pane of leaves(tab.root)) {
-      if (pane.view.type === "panel" && pane.view.panel === panel) {
+      if (matches(pane.view)) {
         hits.push({ tabId: tab.id, pane });
       }
     }

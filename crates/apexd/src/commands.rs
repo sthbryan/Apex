@@ -292,6 +292,10 @@ async fn execute(
             manager.open_view(asked_by, target).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
+        Command::CloseView { asked_by, target } => {
+            manager.close_view(asked_by, target).await.map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::SessionTell { id, text } => {
             manager.tell(id, text).await.map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -477,6 +481,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::WorktreeRemove { .. }
             | Command::SessionCreate { .. }
             | Command::OpenView { .. }
+            | Command::CloseView { .. }
             | Command::SessionTell { .. }
             | Command::SessionDone { .. }
             | Command::SessionDismiss { .. }

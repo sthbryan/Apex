@@ -168,6 +168,23 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_close_view",
+        description: "Ask Apex to close something it opened for the person watching: a session \
+                      pane, a file of this project, or a url.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["kind"],
+                "properties": {
+                    "kind": { "type": "string", "enum": ["session", "file", "url"] },
+                    "session": { "type": "string", "description": "Session id, for kind session" },
+                    "path": { "type": "string", "description": "Path in the project, for kind file" },
+                    "url": { "type": "string", "description": "Address, for kind url" }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_browser_read",
         description: "Read what the browser pane of this project is showing: address, title \
                       and visible text.",
@@ -193,6 +210,25 @@ pub struct Caller {
     pub summary: SessionSummary,
 }
 
+fn view_target(caller: &Caller, text: &impl Fn(&str) -> Option<String>) -> Result<ViewTarget> {
+    match text("kind").as_deref() {
+        Some("session") => {
+            let raw = text("session").context("session is required")?;
+            let id =
+                Uuid::parse_str(&raw).with_context(|| format!("{raw} is not a session id"))?;
+            Ok(ViewTarget::Session { id })
+        }
+        Some("file") => Ok(ViewTarget::File {
+            project: caller.project,
+            path: text("path").context("path is required")?,
+        }),
+        Some("url") => Ok(ViewTarget::Url { url: text("url").context("url is required")? }),
+        other => {
+            bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing"))
+        }
+    }
+}
+
 pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Command> {
     let text = |key: &str| -> Option<String> {
         arguments.get(key).and_then(Value::as_str).map(str::to_owned)
@@ -209,25 +245,12 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
             contents: text("content").context("content is required")?,
         }),
         "apex_sessions_list" => Ok(Command::ListSessions),
-        "apex_open_view" => Ok(Command::OpenView {
-            asked_by: caller.session,
-            target: match text("kind").as_deref() {
-                Some("session") => {
-                    let raw = text("session").context("session is required")?;
-                    let id = Uuid::parse_str(&raw)
-                        .with_context(|| format!("{raw} is not a session id"))?;
-                    ViewTarget::Session { id }
-                }
-                Some("file") => ViewTarget::File {
-                    project: caller.project,
-                    path: text("path").context("path is required")?,
-                },
-                Some("url") => ViewTarget::Url { url: text("url").context("url is required")? },
-                other => {
-                    bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing"))
-                }
-            },
-        }),
+        "apex_open_view" => {
+            Ok(Command::OpenView { asked_by: caller.session, target: view_target(caller, &text)? })
+        }
+        "apex_close_view" => {
+            Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
+        }
         "apex_browser_read" => Ok(Command::BrowserRead { project: caller.project }),
         "apex_browser_console" => Ok(Command::BrowserLogs { project: caller.project }),
         "apex_agents_list" => Ok(Command::ListAgents),

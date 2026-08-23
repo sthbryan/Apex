@@ -334,6 +334,16 @@ impl SessionManager {
         Ok(())
     }
 
+    pub async fn close_view(&self, asked_by: Uuid, target: apex_proto::ViewTarget) -> Result<()> {
+        self.list_sessions()
+            .await
+            .iter()
+            .find(|session| session.id == asked_by)
+            .with_context(|| format!("session {asked_by} does not exist"))?;
+        self.registry.announce(Event::CloseView { target, asked_by });
+        Ok(())
+    }
+
     pub async fn spawn(
         &self,
         parent: Uuid,

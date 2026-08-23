@@ -656,6 +656,11 @@ pub enum Command {
         asked_by: Uuid,
         target: ViewTarget,
     },
+    CloseView {
+        #[ts(type = "string")]
+        asked_by: Uuid,
+        target: ViewTarget,
+    },
     SessionTell {
         #[ts(type = "string")]
         id: Uuid,
@@ -977,6 +982,11 @@ pub enum ViewTarget {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
     OpenView {
+        target: ViewTarget,
+        #[ts(type = "string")]
+        asked_by: Uuid,
+    },
+    CloseView {
         target: ViewTarget,
         #[ts(type = "string")]
         asked_by: Uuid,

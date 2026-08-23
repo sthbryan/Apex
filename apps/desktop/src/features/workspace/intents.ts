@@ -1,14 +1,14 @@
 import { openWeb } from "@/features/browser/state";
-import { onOpenView, sessions } from "@/features/sessions/state";
+import { onCloseView, onOpenView, sessions } from "@/features/sessions/state";
 import { viewLanding } from "@/features/settings/agentMode";
-import { openQuietly } from "@/features/workspace/state";
+import { closeViews, openQuietly } from "@/features/workspace/state";
 
 function asSplit(): boolean {
   return viewLanding.value === "split";
 }
 
 export function startViewIntents(): () => void {
-  return onOpenView((event) => {
+  const stopOpening = onOpenView((event) => {
     const target = event.target;
     switch (target.kind) {
       case "session": {
@@ -26,4 +26,22 @@ export function startViewIntents(): () => void {
         break;
     }
   });
+  const stopClosing = onCloseView((event) => {
+    const target = event.target;
+    switch (target.kind) {
+      case "session":
+        closeViews((view) => view.type === "session" && view.sessionId === target.id);
+        break;
+      case "file":
+        closeViews((view) => view.type === "file" && view.path === target.path);
+        break;
+      case "url":
+        closeViews((view) => view.type === "browser" && view.url === target.url);
+        break;
+    }
+  });
+  return () => {
+    stopOpening();
+    stopClosing();
+  };
 }
