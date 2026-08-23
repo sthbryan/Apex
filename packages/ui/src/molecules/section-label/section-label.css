@@ -9,6 +9,10 @@
     @apply px-0;
   }
 
+  .ui-section-label-end {
+    @apply flex shrink-0 items-center gap-1.5;
+  }
+
   .ui-section-label-count {
     @apply font-normal;
   }
