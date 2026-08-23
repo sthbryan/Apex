@@ -84,7 +84,7 @@
   --apex-surface-solid: light-dark(#fffaf3, #1f1d2e);
   --apex-raised-solid: light-dark(#f2e9e1, #26233a);
   --apex-overlay-solid: light-dark(#ffffff, #2f2b43);
-  --apex-tty-solid: #191724;
+  --apex-tty-solid: light-dark(#faf4ed, #191724);
   --apex-border-solid: light-dark(#dfdad9, #403d52);
   --apex-text-solid: light-dark(#575279, #e0def4);
   --apex-muted-solid: light-dark(#797593, #908caa);
@@ -110,9 +110,9 @@
   --apex-git-behind: var(--apex-state-blocked);
   --apex-git-conflict: var(--apex-state-failed);
 
-  --apex-tty-fg: #cbc7dd;
-  --apex-tty-dim: #6e6a86;
-  --apex-tty-bright: #e0def4;
+  --apex-tty-fg: light-dark(#575279, #cbc7dd);
+  --apex-tty-dim: light-dark(#9893a5, #6e6a86);
+  --apex-tty-bright: light-dark(#26213a, #e0def4);
 
   --apex-ansi-black: light-dark(#f2e9e1, #26233a);
   --apex-ansi-red: light-dark(#b4637a, #eb6f92);
