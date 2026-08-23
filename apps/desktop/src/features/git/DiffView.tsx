@@ -1,6 +1,6 @@
-import cn from "cnfast";
+import { Button, DiffView as KitDiffView, SectionLabel } from "@apex/ui";
+import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { RejectedHunk } from "@/bindings/RejectedHunk";
 import { highlight } from "@/features/files/highlight";
@@ -20,6 +20,7 @@ import {
   setDiffLayout,
   stageHunk,
 } from "@/features/git/state";
+import { UnifiedPatch } from "@/features/git/UnifiedPatch";
 import { inReview, reviewFiles, settleReview, stepReview } from "@/features/review/state";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
@@ -223,7 +224,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
 
       {empty && <p class="p-3 text-faint">{t("git.noDiff")}</p>}
 
-      <div class="min-h-0 flex-1 overflow-auto">
+      <KitDiffView class="min-h-0 flex-1 overflow-auto">
         {whole && commit && (
           <Patch painted={whole} path={path} split={split} target={target} commit={commit} />
         )}
@@ -252,7 +253,7 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
             />
           </>
         )}
-      </div>
+      </KitDiffView>
     </div>
   );
 }
@@ -274,39 +275,33 @@ function Group({ label, hunks, action, onApply, onReject, tone, path, split, tar
     return null;
   }
   return (
-    <section>
-      <h2
-        class={cn(
-          "sticky top-0 z-10 border-b border-border bg-surface px-3 py-1 text-micro uppercase tracking-wider",
-          tone ?? "text-faint",
-        )}
-      >
+    <>
+      <SectionLabel flush count={hunks.length} class={tone}>
         {label}
-      </h2>
+      </SectionLabel>
       {hunks.map((hunk) => (
-        <div key={hunk.patch} class="group/hunk relative border-b border-border">
-          <div class="absolute top-1 right-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover/hunk:opacity-100">
-            <button
-              type="button"
-              onClick={() => onApply(hunk.patch)}
-              class="rounded border border-border bg-surface px-1.5 text-faint transition-colors hover:text-text"
-            >
-              {action}
-            </button>
-            {onReject && (
-              <button
-                type="button"
-                onClick={() => onReject(hunk.patch)}
-                class="rounded border border-border bg-surface px-1.5 text-faint transition-colors hover:text-state-failed"
-              >
-                {t("review.reject")}
-              </button>
-            )}
-          </div>
-          <Patch painted={hunk} path={path} split={split} target={target} commit={null} />
-        </div>
+        <Patch
+          key={hunk.patch}
+          painted={hunk}
+          path={path}
+          split={split}
+          target={target}
+          commit={null}
+          actions={
+            <>
+              <Button size="xs" variant="subtle" onClick={() => onApply(hunk.patch)}>
+                {action}
+              </Button>
+              {onReject && (
+                <Button size="xs" variant="danger" onClick={() => onReject(hunk.patch)}>
+                  {t("review.reject")}
+                </Button>
+              )}
+            </>
+          }
+        />
       ))}
-    </section>
+    </>
   );
 }
 
@@ -375,9 +370,10 @@ type PatchProps = {
   split: boolean;
   target: GitTarget;
   commit: string | null;
+  actions?: ComponentChildren;
 };
 
-function Patch({ painted, path, split, target, commit }: PatchProps) {
+function Patch({ painted, path, split, target, commit, actions }: PatchProps) {
   if (split && splittable(painted.patch)) {
     return <SplitPatch path={path} patch={painted.patch} />;
   }
@@ -399,6 +395,9 @@ function Patch({ painted, path, split, target, commit }: PatchProps) {
         {plain}
       </ImageDiff>
     );
+  }
+  if (splittable(painted.patch)) {
+    return <UnifiedPatch path={path} patch={painted.patch} actions={actions} />;
   }
   return plain;
 }
