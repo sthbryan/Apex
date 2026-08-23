@@ -5,17 +5,18 @@ import { retheme } from "@/features/sessions/registry";
 import { complain, platform } from "@/shared/daemon";
 
 export type UiScale = "compact" | "normal" | "roomy";
+export type Frost = "soft" | "glare" | "bright" | "deep";
 
 const SCALE = "apex.ui-scale";
 const TRANSLUCENT = "apex.translucent";
 const OPACITY = "apex.veil-opacity";
-const BLUR = "apex.blur";
+const FROST = "apex.frost";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
 export const MIN_OPACITY = 50;
-export const MIN_BLUR = 1;
-export const MAX_BLUR = 4;
+
+const FROSTS: Frost[] = ["soft", "glare", "bright", "deep"];
 
 function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value));
@@ -24,6 +25,11 @@ function clamp(value: number, low: number, high: number): number {
 function restoreNumber(key: string, fallback: number, low: number, high: number): number {
   const raw = Number.parseInt(localStorage.getItem(key) ?? "", 10);
   return Number.isFinite(raw) ? clamp(raw, low, high) : fallback;
+}
+
+function restoreFrost(): Frost {
+  const stored = localStorage.getItem(FROST) as Frost | null;
+  return stored && FROSTS.includes(stored) ? stored : "bright";
 }
 
 function restoreScale(): UiScale {
@@ -41,7 +47,7 @@ export const translucencySupported = computed(() => platform.value === "macos");
 export const uiScale = signal<UiScale>(restoreScale());
 export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) === "on");
 export const veilOpacity = signal<number>(restoreNumber(OPACITY, 85, MIN_OPACITY, 100));
-export const blur = signal<number>(restoreNumber(BLUR, 2, MIN_BLUR, MAX_BLUR));
+export const frost = signal<Frost>(restoreFrost());
 
 export function setUiScale(next: UiScale): void {
   uiScale.value = next;
@@ -61,9 +67,9 @@ export function setVeilOpacity(percent: number): void {
   applyAppearance();
 }
 
-export function setBlur(level: number): void {
-  blur.value = clamp(Math.round(level), MIN_BLUR, MAX_BLUR);
-  localStorage.setItem(BLUR, String(blur.value));
+export function setFrost(next: Frost): void {
+  frost.value = next;
+  localStorage.setItem(FROST, next);
   applyAppearance();
 }
 
@@ -79,7 +85,7 @@ export function applyAppearance(): void {
   root.style.setProperty("--apex-veil", `${on ? veilOpacity.value : 100}%`);
   root.style.setProperty("--apex-scale", String(SCALES[uiScale.value]));
 
-  void invoke("set_window_material", { blur: on ? blur.value : 0 }).catch(complain);
+  void invoke("set_window_material", { frost: on ? frost.value : "none" }).catch(complain);
 
   retheme();
 }

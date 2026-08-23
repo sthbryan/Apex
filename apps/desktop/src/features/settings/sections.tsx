@@ -21,11 +21,9 @@ import {
   viewLanding,
 } from "@/features/settings/agentMode";
 import {
-  blur,
-  MAX_BLUR,
-  MIN_BLUR,
+  frost,
   MIN_OPACITY,
-  setBlur,
+  setFrost,
   setTranslucent,
   setUiScale,
   setVeilOpacity,
@@ -36,6 +34,8 @@ import {
 } from "@/features/settings/appearance";
 import { browsing, setBrowsing } from "@/features/settings/browsing";
 import {
+  FROST_LABEL,
+  FROSTS,
   IDLE_GRACES,
   LANGUAGES,
   PANE_CAPS,
@@ -135,18 +135,21 @@ export function lookSection(): Section {
               ),
             },
             {
-              id: "blur",
-              label: t("settings.blur"),
-              hint: t("settings.blurHint"),
+              id: "frost",
+              label: t("settings.frost"),
+              hint: t("settings.frostHint"),
               control: (
-                <Slider
-                  label={t("settings.blur")}
-                  value={blur.value}
-                  min={MIN_BLUR}
-                  max={MAX_BLUR}
-                  format={(value) => `${value}/${MAX_BLUR}`}
-                  onChange={setBlur}
-                />
+                <Segmented label={t("settings.frost")}>
+                  {FROSTS.map((option) => (
+                    <Choice
+                      key={option}
+                      selected={frost.value === option}
+                      onSelect={() => setFrost(option)}
+                    >
+                      {t(FROST_LABEL[option])}
+                    </Choice>
+                  ))}
+                </Segmented>
               ),
             },
           ]

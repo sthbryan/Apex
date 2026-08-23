@@ -15,24 +15,24 @@ pub fn host_platform() -> &'static str {
 }
 
 #[cfg(target_os = "macos")]
-fn material_of(level: u8) -> Option<window_vibrancy::NSVisualEffectMaterial> {
+fn material_of(frost: &str) -> Option<window_vibrancy::NSVisualEffectMaterial> {
     use window_vibrancy::NSVisualEffectMaterial::{FullScreenUI, HudWindow, Sidebar, UnderWindowBackground};
-    match level {
-        1 => Some(Sidebar),
-        2 => Some(HudWindow),
-        3 => Some(FullScreenUI),
-        4 => Some(UnderWindowBackground),
+    match frost {
+        "soft" => Some(Sidebar),
+        "glare" => Some(HudWindow),
+        "bright" => Some(FullScreenUI),
+        "deep" => Some(UnderWindowBackground),
         _ => None,
     }
 }
 
 #[tauri::command]
 #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
-pub fn set_window_material(window: tauri::Window, blur: u8) -> Answer<()> {
+pub fn set_window_material(window: tauri::Window, frost: String) -> Answer<()> {
     #[cfg(target_os = "macos")]
     {
         window_vibrancy::clear_vibrancy(&window).map_err(|error| error.to_string())?;
-        if let Some(effect) = material_of(blur) {
+        if let Some(effect) = material_of(&frost) {
             window_vibrancy::apply_vibrancy(
                 &window,
                 effect,
