@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { Button } from "@apex/ui";
 import type { ComponentChildren } from "preact";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
@@ -23,18 +23,16 @@ export function ToolbarButton({
   pressed?: boolean;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="subtle"
+      size="sm"
+      iconOnly
       title={label}
       aria-label={label}
       aria-pressed={pressed}
       onClick={onClick}
-      class={cn(
-        "flex size-6 items-center justify-center rounded transition hover:bg-raised hover:text-text active:scale-90",
-        pressed ? "text-text" : "text-faint",
-      )}
     >
       <Icon name={icon} />
-    </button>
+    </Button>
   );
 }
