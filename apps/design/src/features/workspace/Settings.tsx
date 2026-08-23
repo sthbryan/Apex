@@ -8,12 +8,12 @@ import {
 } from "@apex/ui";
 
 const SECTIONS = [
-  { id: "look", label: "Look", Icon: Sparkles },
-  { id: "workspace", label: "Workspace", Icon: Globe },
-  { id: "agents", label: "Agents", Icon: Bot },
-  { id: "daemon", label: "Daemon", Icon: Server },
-  { id: "shortcuts", label: "Shortcuts", Icon: Keyboard },
-  { id: "about", label: "About", Icon: CircleHelp },
+  { id: "look", label: "Look", Icon: Sparkles, title: "Look", sub: "How Apex feels on this machine." },
+  { id: "workspace", label: "Workspace", Icon: Globe, title: "Workspace", sub: "Where files, previews and agent views go." },
+  { id: "agents", label: "Agents", Icon: Bot, title: "Agents", sub: "Rendering belongs to each agent: native when it speaks ACP, terminal otherwise." },
+  { id: "daemon", label: "Daemon", Icon: Server, title: "Daemon", sub: "The background service keeping sessions alive." },
+  { id: "shortcuts", label: "Shortcuts", Icon: Keyboard, title: "Keyboard shortcuts", sub: "Everything reachable without the mouse." },
+  { id: "about", label: "About", Icon: CircleHelp, title: "About", sub: "What is running on this machine." },
 ] as const;
 
 export function SettingsModal({ inline, open = true, onClose }: { inline?: boolean; open?: boolean; onClose?: () => void } = {}) {
@@ -25,6 +25,10 @@ export function SettingsModal({ inline, open = true, onClose }: { inline?: boole
       sections={SECTIONS.map(({ id, label, Icon }) => ({ id, label, icon: <Icon size={14} strokeWidth={1.75} /> }))}
       section={settingsSection.value}
       onSection={(id) => settingsSection.value = id}
+      head={(() => {
+        const here = SECTIONS.find((s) => s.id === settingsSection.value);
+        return here ? <SettingsHeading title={here.title} sub={here.sub} /> : null;
+      })()}
       close={<Button variant="subtle" size="lg" iconOnly title="Close" onClick={onClose ?? (() => settingsOpen.value = false)}><X size={13} /></Button>}
     >
       {settingsSection.value === "look" && <LookSection />}
@@ -44,7 +48,6 @@ function SetRow({ label, desc, children }: { label: string; desc?: string; child
 function LookSection() {
   return (
     <div>
-      <SettingsHeading title="Look" sub="How Apex feels on this machine." />
       <SetRow label="Theme" desc="Applies instantly, saved for next time.">
         <Segmented
           label="Theme"
@@ -79,7 +82,6 @@ function LookSection() {
 function WorkspaceSection() {
   return (
     <div>
-      <SettingsHeading title="Workspace" sub="Where files, previews and agent views go." />
       <SetRow label="External editor">
         <Select
           label="External editor"
@@ -120,7 +122,6 @@ function AgentsSection() {
   );
   return (
     <div>
-      <SettingsHeading title="Agents" sub="Rendering belongs to each agent: native when it speaks ACP, terminal otherwise." />
       {AGENTS.map((a) => {
         const enabled = !off.includes(a.id);
         return (
@@ -153,7 +154,6 @@ function AgentsSection() {
 function DaemonSection() {
   return (
     <div>
-      <SettingsHeading title="Daemon" sub="The background service keeping sessions alive." />
       <SetRow label="Daemon background time" desc="After you close Apex, agents keep running for this long.">
         <Segmented
           label="Daemon background time"
@@ -192,7 +192,6 @@ const SHORTCUTS: { group: string; rows: [string, string[]][] }[] = [
 function ShortcutsSection() {
   return (
     <div>
-      <SettingsHeading title="Keyboard shortcuts" sub="Everything reachable without the mouse." />
       {SHORTCUTS.map(({ group, rows }) => (
         <div key={group}>
           <SectionLabel flush>{group}</SectionLabel>
@@ -215,7 +214,6 @@ function AboutSection() {
   const checking = updateState.value === "Checking…";
   return (
     <div>
-      <SettingsHeading title="About" sub="What is running on this machine." />
 
       <IdentityCard
         icon={<img src="/brand/apex-icon.svg" alt="" width="44" height="44" />}

@@ -71,6 +71,11 @@ export function Settings() {
           onInput={(event) => setQuery(event.currentTarget.value)}
         />
       }
+      head={
+        found.length === 1 && !needle ? (
+          <SettingsHeading title={found[0].label} sub={found[0].sub} />
+        ) : undefined
+      }
       close={
         <button
           type="button"
@@ -85,7 +90,7 @@ export function Settings() {
       {found.length === 0 && <p class="text-faint">{t("settings.noMatch")}</p>}
       {found.map((entry) => (
         <section key={entry.id}>
-          <SettingsHeading title={entry.label} sub={needle ? undefined : entry.sub} />
+          {(found.length > 1 || needle) && <SettingsHeading title={entry.label} />}
           {entry.panel}
           {entry.entries.map((row) => (
             <Field key={row.id} label={row.label} hint={row.hint}>
