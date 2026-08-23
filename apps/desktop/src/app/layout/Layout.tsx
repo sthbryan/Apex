@@ -1,4 +1,4 @@
-import { AppBody, Rail, RailButton, SidePanel, TitleBar } from "@apex/ui";
+import { AppBody, Rail, RailButton, SidePanel, TitleBar, Wordmark } from "@apex/ui";
 import { Dock } from "@/app/layout/Dock";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { StatusBar } from "@/app/layout/StatusBar";
@@ -15,6 +15,7 @@ import { Views } from "@/app/Views";
 import { page, togglePage } from "@/app/view";
 import { gitStatus } from "@/features/git/state";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
+import { activeProject } from "@/features/projects/state";
 import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -40,8 +41,19 @@ export function Layout({ onNewSession }: Props) {
         data-tauri-drag-region
         lights={false}
         style={{ paddingLeft: "max(var(--apex-controls-start, 0px), 12px)" }}
+        title={
+          <>
+            <Wordmark size="sm">APEX</Wordmark>
+            {activeProject.value ? ` · ${activeProject.value.name}` : ""}
+          </>
+        }
         actions={
           <Toolbar status={status.value === "ready" ? "" : t("status.connecting")}>
+            <ToolbarButton
+              label={t(NEXT[mode].label)}
+              icon={NEXT[mode].icon}
+              onClick={toggleDock}
+            />
             {status.value === "ready" && gitStatus.value && (
               <span
                 title={
@@ -67,9 +79,7 @@ export function Layout({ onNewSession }: Props) {
             />
           </Toolbar>
         }
-      >
-        <ToolbarButton label={t(NEXT[mode].label)} icon={NEXT[mode].icon} onClick={toggleDock} />
-      </TitleBar>
+      />
 
       <AppBody>
         <Rail aria-label={t("dock.panels")}>
