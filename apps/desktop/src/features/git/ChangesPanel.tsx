@@ -1,3 +1,4 @@
+import { BranchBar, Checkbox, DiffStat, ListRow, SectionLabel } from "@apex/ui";
 import cn from "cnfast";
 import { useState } from "preact/hooks";
 
@@ -7,7 +8,7 @@ import type { GitStatus } from "@/bindings/GitStatus";
 import type { GitTarget } from "@/bindings/GitTarget";
 import type { MergeReport } from "@/bindings/MergeReport";
 import { CommitBox } from "@/features/git/CommitBox";
-import { SyncBar } from "@/features/git/SyncBar";
+import { SyncActions } from "@/features/git/SyncActions";
 import {
   gitFailure,
   gitStatus,
@@ -30,6 +31,15 @@ const MARKS: Record<string, string> = {
   conflicted: "!",
 };
 
+const TONES: Record<string, string> = {
+  added: "text-git-added",
+  deleted: "text-git-removed",
+  conflicted: "text-git-conflict",
+  modified: "text-git-modified",
+  renamed: "text-git-modified",
+  untracked: "text-faint",
+};
+
 export function ChangesPanel() {
   const project = activeProject.value;
   const status = gitStatus.value;
@@ -44,7 +54,7 @@ export function ChangesPanel() {
   }
 
   return (
-    <div class="flex h-full flex-col">
+    <div class="dock-view dock-fixed">
       <PanelActions>
         <button
           type="button"
@@ -56,11 +66,21 @@ export function ChangesPanel() {
         </button>
       </PanelActions>
 
-      {gitFailure.value && <p class="px-2 py-1 text-state-failed">{gitFailure.value}</p>}
+      <div class="dock-scroll">
+        {gitFailure.value && <p class="px-1.5 text-state-failed">{gitFailure.value}</p>}
 
-      <Changes status={status} target={target} />
+        {status && (
+          <BranchBar
+            branch={status.branch}
+            ahead={status.ahead}
+            behind={status.behind}
+            lead={<Icon name="branch" size={12} />}
+            actions={<SyncActions status={status} />}
+          />
+        )}
 
-      {status && <SyncBar status={status} />}
+        <Changes status={status} target={target} />
+      </div>
 
       {status && <CommitBox status={status} />}
 
@@ -99,10 +119,10 @@ export function ChangesPanel() {
 
 function Changes({ status, target }: { status: GitStatus | null; target: GitTarget }) {
   if (status && status.changes.length === 0) {
-    return <p class="px-2 py-1 text-faint">{t("git.clean")}</p>;
+    return <p class="px-1.5 py-1 text-faint">{t("git.clean")}</p>;
   }
   return (
-    <div class="min-h-0 flex-1 overflow-auto py-1">
+    <>
       <Section
         label={t("git.staged")}
         changes={status?.changes.filter((change) => change.staged) ?? []}
@@ -123,7 +143,7 @@ function Changes({ status, target }: { status: GitStatus | null; target: GitTarg
         target={target}
         staged={false}
       />
-    </div>
+    </>
   );
 }
 
@@ -145,8 +165,8 @@ function Section({
   const removed = changes.reduce((total, change) => total + change.removed, 0);
 
   return (
-    <section class="mb-1">
-      <h3 class="flex items-center gap-2 px-2 text-micro uppercase tracking-wider text-faint">
+    <>
+      <SectionLabel count={changes.length} action={<DiffStat added={added} removed={removed} />}>
         <button
           type="button"
           title={staged ? t("git.unstageAll") : t("git.stageAll")}
@@ -158,66 +178,62 @@ function Section({
               gitFailure.value = String(error);
             })
           }
-          class="transition-colors hover:text-text"
+          class="uppercase transition-colors hover:text-text"
         >
           {label}
         </button>
-        <span class="ml-auto shrink-0 tabular-nums">
-          <span class="text-git-added">+{added}</span>{" "}
-          <span class="text-git-removed">−{removed}</span>
-        </span>
-      </h3>
-      <ul>
-        {changes.map((change) => (
-          <Row key={change.path} change={change} target={target} />
-        ))}
-      </ul>
-    </section>
+      </SectionLabel>
+      {changes.map((change) => (
+        <Row key={change.path} change={change} target={target} />
+      ))}
+    </>
   );
 }
 
 function Row({ change, target }: { change: GitChange; target: GitTarget }) {
   return (
-    <li class="group flex items-center gap-1 px-2 transition-colors hover:bg-raised">
-      <button
-        type="button"
-        title={change.staged ? t("git.unstage") : t("git.stage")}
-        onClick={() =>
-          void setStaged([change.path], !change.staged).catch((error: unknown) => {
-            gitFailure.value = String(error);
-          })
+    <ListRow
+      as="div"
+      role="button"
+      tabIndex={0}
+      mono
+      label={change.path}
+      title={change.path}
+      lead={
+        <>
+          <span
+            class="flex"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <Checkbox
+              checked={change.staged}
+              label={change.staged ? t("git.unstage") : t("git.stage")}
+              onChange={() =>
+                void setStaged([change.path], !change.staged).catch((error: unknown) => {
+                  gitFailure.value = String(error);
+                })
+              }
+            />
+          </span>
+          <span class={cn("w-3 shrink-0 text-center", TONES[change.kind])}>
+            {MARKS[change.kind] ?? "•"}
+          </span>
+        </>
+      }
+      trail={
+        <DiffStat
+          added={change.added > 0 ? change.added : undefined}
+          removed={change.removed > 0 ? change.removed : undefined}
+        />
+      }
+      onClick={() => openDiff(target, change.path)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openDiff(target, change.path);
         }
-        class={cn(
-          "flex size-3.5 shrink-0 items-center justify-center rounded-xs border transition-colors",
-          change.staged
-            ? "border-accent bg-accent text-bg"
-            : "border-border text-transparent hover:border-muted",
-        )}
-      >
-        <Icon name="check" size={10} />
-      </button>
-      <button
-        type="button"
-        onClick={() => openDiff(target, change.path)}
-        class="flex min-w-0 flex-1 items-center gap-2 py-px text-left text-muted transition-colors group-hover:text-text"
-      >
-        <span
-          class={cn("w-3 shrink-0 text-center", {
-            "text-git-added": change.kind === "added",
-            "text-git-removed": change.kind === "deleted",
-            "text-git-conflict": change.kind === "conflicted",
-            "text-git-modified": change.kind === "modified" || change.kind === "renamed",
-            "text-faint": change.kind === "untracked",
-          })}
-        >
-          {MARKS[change.kind] ?? "•"}
-        </span>
-        <span class="truncate">{change.path}</span>
-        <span class="ml-auto shrink-0 tabular-nums text-faint">
-          {change.added > 0 && <span class="text-git-added">+{change.added}</span>}
-          {change.removed > 0 && <span class="text-git-removed"> −{change.removed}</span>}
-        </span>
-      </button>
-    </li>
+      }}
+    />
   );
 }
