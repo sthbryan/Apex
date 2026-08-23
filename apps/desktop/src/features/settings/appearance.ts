@@ -51,7 +51,7 @@ export const translucencySupported = computed(() => platform.value === "macos");
 
 export const uiScale = signal<UiScale>(restoreScale());
 export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) === "on");
-export const veilOpacity = signal<number>(restoreNumber(OPACITY, 85, MIN_OPACITY, 100));
+export const veilOpacity = signal<number>(restoreNumber(OPACITY, 72, MIN_OPACITY, 100));
 export const frost = signal<Frost>(restoreFrost());
 
 export function setUiScale(next: UiScale): void {
@@ -88,7 +88,11 @@ export function applyAppearance(): void {
   } else {
     root.removeAttribute("data-veil");
   }
-  root.style.setProperty("--apex-veil", `${on ? veilOpacity.value : 100}%`);
+  if (on) {
+    root.style.setProperty("--apex-veil-tint", `${veilOpacity.value}%`);
+  } else {
+    root.style.removeProperty("--apex-veil-tint");
+  }
   root.style.setProperty("--apex-scale", String(SCALES[uiScale.value]));
 
   void invoke("set_window_material", { frost: on ? frost.value : "none" }).catch(complain);

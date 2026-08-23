@@ -1,5 +1,14 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+:root {
+  --apex-chrome: var(--apex-surface);
+  --apex-pane: var(--apex-bg);
+  --apex-exit: var(--apex-quick);
+  --apex-view: var(--apex-swift);
+  --apex-dock: var(--apex-swift);
+  --apex-statusbar-h: var(--apex-status-bar-height);
+}
+
 @theme {
   --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;

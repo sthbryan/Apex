@@ -12,6 +12,8 @@
     "format": "biome check --write"
   },
   "dependencies": {
+    "@apex/tokens": "workspace:*",
+    "@apex/ui": "workspace:*",
     "@fontsource/inter": "^5.3.0",
     "@preact/signals": "^2.11.1",
     "@tauri-apps/plugin-dialog": "^2.7.2",

@@ -2,7 +2,8 @@
 @import "@xterm/xterm/css/xterm.css";
 
 @import "./fonts.css";
-@import "./tokens.css";
+@import "@apex/tokens/tokens.css";
+@import "@apex/tokens/tailwind.css";
 @import "./theme.css";
 @import "./base.css";
 @import "./vendor.css";
