@@ -5,7 +5,7 @@ export const commitBoxMeta: ComponentMeta = {
   name: "CommitBox",
   layer: "organism",
   description: "Sticky commit composer for the bottom of a changes panel.",
-  rule: "It never scrolls with the file list, and the hint carries the warning.",
+  rule: "It never scrolls with the file list, the hint carries the warning, and cmd enter commits.",
   component: CommitBox,
   variants: [
     { name: "empty", props: { hint: "Nothing staged", submitDisabled: true } },

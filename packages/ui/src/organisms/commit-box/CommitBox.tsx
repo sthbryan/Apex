@@ -33,11 +33,15 @@ export function CommitBox({
   onInput,
   onSubmit,
 }: CommitBoxProps) {
+  const submit = (event: Event) => {
+    event.preventDefault();
+    if (!submitDisabled) {
+      onSubmit?.(event);
+    }
+  };
+
   return (
-    <form
-      class={cn("ui-commit-box", className)}
-      onSubmit={(event) => { event.preventDefault(); onSubmit?.(event); }}
-    >
+    <form class={cn("ui-commit-box", className)} onSubmit={submit}>
       <textarea
         class="ui-commit-box-input"
         aria-label={label}
@@ -45,6 +49,11 @@ export function CommitBox({
         rows={rows}
         value={value}
         onInput={onInput}
+        onKeyDown={(event: JSX.TargetedKeyboardEvent<HTMLTextAreaElement>) => {
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            submit(event);
+          }
+        }}
       />
       <div class="ui-commit-box-foot">
         {hint ? <span class="ui-commit-box-hint" data-tone={hintTone}>{hint}</span> : null}
