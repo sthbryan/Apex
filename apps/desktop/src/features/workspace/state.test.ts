@@ -23,7 +23,6 @@ vi.mock("@/app/layout/state", () => ({
   returnPanelToDock: () => {},
 }));
 
-import { leaf } from "./tree";
 import {
   activeTabId,
   clearWorkspace,
@@ -35,6 +34,7 @@ import {
   serializeLayout,
   tabs,
 } from "./state";
+import { leaf } from "./tree";
 
 beforeEach(() => {
   tabs.value = [];

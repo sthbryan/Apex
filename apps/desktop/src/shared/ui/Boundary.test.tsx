@@ -1,11 +1,15 @@
-import { h } from "preact";
-import { describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/preact";
+import { h } from "preact";
+import { describe, expect, it } from "vitest";
 import { Boundary } from "./Boundary";
 
 describe("Boundary", () => {
   it("renders children", () => {
-    const { container } = render(<Boundary><div data-testid="child">ok</div></Boundary>);
+    const { container } = render(
+      <Boundary>
+        <div data-testid="child">ok</div>
+      </Boundary>,
+    );
     expect(container.textContent).toContain("ok");
   });
 

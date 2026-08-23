@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signal } from "@preact/signals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.fn();
 
@@ -56,6 +56,10 @@ describe("readEntry and writeEntry", () => {
     (activeProjectId as unknown as { value: string | null }).value = "p1";
     invoke.mockResolvedValue([]);
     await writeEntry("k", "v");
-    expect(invoke).toHaveBeenCalledWith("context_write", { project: "p1", key: "k", contents: "v" });
+    expect(invoke).toHaveBeenCalledWith("context_write", {
+      project: "p1",
+      key: "k",
+      contents: "v",
+    });
   });
 });

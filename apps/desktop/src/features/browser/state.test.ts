@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signal } from "@preact/signals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.fn();
 const openBrowser = vi.fn();

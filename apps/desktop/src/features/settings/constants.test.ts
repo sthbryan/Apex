@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { FROSTS, IDLE_GRACES, LANGUAGES, PANE_CAPS, THEMES, UI_SCALES, VEIL_AREAS } from "./constants";
+import {
+  FROSTS,
+  IDLE_GRACES,
+  LANGUAGES,
+  PANE_CAPS,
+  THEMES,
+  UI_SCALES,
+  VEIL_AREAS,
+} from "./constants";
 
 describe("constants", () => {
   it("exposes themes", () => {

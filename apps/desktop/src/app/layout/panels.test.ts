@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DOCK_PANELS, DOCK_PANEL_ORDER } from "./panels";
+import { DOCK_PANEL_ORDER, DOCK_PANELS } from "./panels";
 
 describe("DOCK_PANELS", () => {
   it("contains eight panels", () => {

@@ -13,8 +13,12 @@ describe("sameTarget", () => {
   });
 
   it("matches worktree paths", () => {
-    expect(sameTarget({ type: "worktree", path: "/a" }, { type: "worktree", path: "/a" })).toBe(true);
-    expect(sameTarget({ type: "worktree", path: "/a" }, { type: "worktree", path: "/b" })).toBe(false);
+    expect(sameTarget({ type: "worktree", path: "/a" }, { type: "worktree", path: "/a" })).toBe(
+      true,
+    );
+    expect(sameTarget({ type: "worktree", path: "/a" }, { type: "worktree", path: "/b" })).toBe(
+      false,
+    );
   });
 });
 
