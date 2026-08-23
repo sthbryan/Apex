@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 
-export type TokenKind = "color" | "size";
+export type TokenKind = "color" | "size" | "raw";
 export type TokenValues = Record<string, { light: string; dark: string }>;
 
 function createReader() {
@@ -30,6 +30,8 @@ function probe(theme: "light" | "dark", tokens: Record<string, TokenKind>): Reco
     if (kind === "color") {
       el.style.color = `var(${name})`;
       out[name] = toHex(style.color);
+    } else if (kind === "raw") {
+      out[name] = style.getPropertyValue(name).trim();
     } else {
       el.style.width = `var(${name})`;
       out[name] = style.width;
