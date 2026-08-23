@@ -60,7 +60,19 @@
   }
 
   .ui-settings-main {
-    @apply min-w-0 flex-1 overflow-y-auto px-5 py-4;
+    @apply flex min-w-0 flex-1 flex-col overflow-hidden;
+  }
+
+  .ui-settings-head {
+    @apply flex-none px-5 pt-4;
+  }
+
+  .ui-settings-body {
+    @apply min-h-0 flex-1 overflow-y-auto px-5 py-4;
+  }
+
+  .ui-settings-head + .ui-settings-body {
+    @apply pt-0;
   }
 
   .ui-settings-title {

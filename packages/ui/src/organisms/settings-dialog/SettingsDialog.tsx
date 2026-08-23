@@ -18,6 +18,7 @@ export interface SettingsDialogProps {
   navTitle?: string;
   search?: ComponentChildren;
   lead?: ComponentChildren;
+  head?: ComponentChildren;
   modal?: boolean;
   close?: ComponentChildren;
   class?: string;
@@ -34,6 +35,7 @@ export function SettingsDialog({
   navTitle = "Settings",
   search,
   lead,
+  head,
   modal = true,
   close,
   class: className,
@@ -82,7 +84,10 @@ export function SettingsDialog({
           </button>
         ))}
       </nav>
-      <div class="ui-settings-main">{children}</div>
+      <div class="ui-settings-main">
+        {head ? <div class="ui-settings-head">{head}</div> : null}
+        <div class="ui-settings-body">{children}</div>
+      </div>
     </dialog>
   );
 }
