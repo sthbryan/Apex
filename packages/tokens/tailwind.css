@@ -91,4 +91,30 @@
 
   --default-transition-duration: var(--apex-quick);
   --default-transition-timing-function: var(--apex-ease);
+
+  --animate-pulse: apex-pulse 2s var(--apex-ease) infinite;
+  --animate-spin: apex-spin 1s linear infinite;
+  --animate-breathe: apex-breathe 2s var(--apex-ease) infinite;
+  --animate-shrink: apex-shrink 6s linear forwards;
+
+  --animate-fade-in: apex-fade-in var(--apex-quick) var(--apex-ease) both;
+  --animate-fade-out: apex-fade-out var(--apex-quick) var(--apex-ease-in) both;
+
+  --animate-rise-in: apex-rise-in var(--apex-swift) var(--apex-ease-spring) both;
+  --animate-rise-out: apex-rise-out var(--apex-quick) var(--apex-ease-in) both;
+
+  --animate-pop-in: apex-pop-in var(--apex-swift) var(--apex-ease-spring) both;
+  --animate-pop-out: apex-pop-out var(--apex-quick) var(--apex-ease-in) both;
+
+  --animate-drop-in: apex-drop-in var(--apex-swift) var(--apex-ease-spring) both;
+  --animate-drop-out: apex-drop-out var(--apex-quick) var(--apex-ease-in) both;
+
+  --animate-row-in: apex-row-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-view-in: apex-view-in var(--apex-swift) var(--apex-ease) both;
+
+  --animate-slide-in: apex-slide-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-slide-out: apex-slide-out var(--apex-quick) var(--apex-ease-in) both;
+
+  --animate-push-in: apex-push-in var(--apex-swift) var(--apex-ease-out) both;
+  --animate-push-out: apex-push-out var(--apex-quick) var(--apex-ease-in) both;
 }

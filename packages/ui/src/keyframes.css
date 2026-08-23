@@ -1,6 +1,25 @@
 @keyframes apex-pulse { 50% { opacity: 0.35; } }
 @keyframes apex-spin { to { transform: rotate(360deg); } }
-@keyframes apex-fade-in { from { opacity: 0; } }
-@keyframes apex-rise-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
-@keyframes apex-pop-in { from { opacity: 0; transform: translateY(-14px) scale(0.97); } }
+@keyframes apex-breathe { 50% { opacity: 0.35; transform: scale(0.8); } }
 @keyframes apex-shrink { to { transform: scaleX(0); } }
+
+@keyframes apex-fade-in { from { opacity: 0; } }
+@keyframes apex-fade-out { to { opacity: 0; } }
+
+@keyframes apex-rise-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+@keyframes apex-rise-out { to { opacity: 0; transform: translateY(6px) scale(0.98); } }
+
+@keyframes apex-pop-in { from { opacity: 0; transform: translateY(-14px) scale(0.97); } }
+@keyframes apex-pop-out { to { opacity: 0; transform: translateY(-8px) scale(0.97); } }
+
+@keyframes apex-drop-in { from { opacity: 0; transform: translateY(-10px) scale(0.96); } }
+@keyframes apex-drop-out { to { opacity: 0; transform: translateY(-6px) scale(0.98); } }
+
+@keyframes apex-row-in { from { opacity: 0; transform: translateX(-10px); } }
+@keyframes apex-view-in { from { opacity: 0; transform: translateY(6px); } }
+
+@keyframes apex-slide-in { from { transform: translateX(-100%); } }
+@keyframes apex-slide-out { to { transform: translateX(-100%); } }
+
+@keyframes apex-push-in { from { margin-left: calc(var(--apex-dock-width) * -1); } }
+@keyframes apex-push-out { to { margin-left: calc(var(--apex-dock-width) * -1); } }
