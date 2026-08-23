@@ -29,6 +29,7 @@ type Snapshot = {
   title: string | null;
   logs: Entry[];
   seq: number;
+  born: number;
   failures: number;
 };
 
@@ -101,6 +102,7 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
   const [failures, setFailures] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const cursor = useRef(0);
+  const born = useRef(0);
   const shown = visible && overlays.value === 0;
 
   useEffect(() => {
@@ -159,6 +161,13 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
         .then((raw) => {
           const taken = raw ? (JSON.parse(raw) as Snapshot | null) : null;
           if (!taken) {
+            return;
+          }
+          if (taken.born !== born.current) {
+            born.current = taken.born;
+            cursor.current = 0;
+            setLogs([]);
+            read();
             return;
           }
           cursor.current = taken.seq;

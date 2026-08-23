@@ -6,6 +6,7 @@
   const seen = [];
   let stamped = 0;
   let failures = 0;
+  const born = Date.now();
   const show = (value) => {
     if (typeof value === "string") {
       return value;
@@ -43,6 +44,7 @@
         title: document.title || null,
         logs: seen.filter((entry) => entry.seq > since),
         seq: stamped,
+        born: born,
         failures: failures,
       };
     },
