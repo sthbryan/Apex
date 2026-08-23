@@ -237,6 +237,7 @@ export const en = {
     enabledHint: "Only when the session is out of sight.",
   },
   context: {
+    pinned: "Pinned",
     empty: "Nothing shared yet. Agents write here through MCP.",
     add: "New entry",
     refresh: "Reload the context",
@@ -258,6 +259,7 @@ export const en = {
     quiet: "Nothing logged yet.",
   },
   tasks: {
+    active: "Active",
     empty: "No tasks found in this project.",
     refresh: "Look for tasks again",
     start: "Run it",
@@ -284,6 +286,7 @@ export const en = {
   },
   race: {
     running: "{count} racing",
+    live: "Running",
     title: "Races",
     empty: "No races yet.",
     new: "Race a task across agents",
@@ -337,6 +340,7 @@ export const en = {
     commitFirst: "Commit what you approved before merging.",
   },
   git: {
+    recent: "Recent · {branch}",
     whereRuns: "Where git commands run",
     worktrees: "Worktrees",
     orphanTreesLabel: "Loose trees",
@@ -418,7 +422,9 @@ export const en = {
     running: "Running",
     finished: "Finished",
     empty: "No sessions yet.",
-    looseTrees: "Loose worktrees",
+    worktrees: "Worktrees",
+    treeChanged: "{count} changed",
+    treeClean: "clean",
     spawned: "{count} agents",
     quiet: "Waiting for the first output…",
     exited: "exited {code}",

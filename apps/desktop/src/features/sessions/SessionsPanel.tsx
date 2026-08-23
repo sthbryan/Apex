@@ -3,15 +3,11 @@ import cn from "cnfast";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
 import { revealPanel } from "@/app/layout/actions";
+import { PanelActions } from "@/app/layout/PanelActions";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import { selectTarget, sessionOfWorktree, worktrees } from "@/features/git/state";
 import { waiting } from "@/features/notifications/state";
-import {
-  activeProject,
-  foreignSessions,
-  projectSessions,
-  projects,
-} from "@/features/projects/state";
+import { foreignSessions, projectSessions, projects } from "@/features/projects/state";
 import { ElsewhereList } from "@/features/sessions/ElsewhereList";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
@@ -32,11 +28,17 @@ export function SessionsPanel() {
         <WaitingList sessions={waiting.value} projects={projects.value} />
       )}
 
-      {!hasSessions && !activeProject.value && <p class="px-1 text-faint">{t("sessions.empty")}</p>}
+      {live.length === 0 && (
+        <SectionLabel flush action={<PanelActions panel="sessions" />}>
+          {t("sessions.running")}
+        </SectionLabel>
+      )}
+
+      {!hasSessions && <p class="px-1 text-faint">{t("sessions.empty")}</p>}
 
       {live.length > 0 && (
         <Fragment>
-          <SectionLabel flush count={live.length}>
+          <SectionLabel flush count={live.length} action={<PanelActions panel="sessions" />}>
             {t("sessions.running")}
           </SectionLabel>
           <ul class="flex flex-col">{renderTree(live)}</ul>
@@ -85,7 +87,7 @@ function OrphanTrees() {
 
   return (
     <Fragment>
-      <SectionLabel count={orphans.length}>{t("sessions.looseTrees")}</SectionLabel>
+      <SectionLabel count={orphans.length}>{t("sessions.worktrees")}</SectionLabel>
       {orphans.map((tree) => (
         <ListRow
           key={tree.path}
@@ -93,7 +95,13 @@ function OrphanTrees() {
           mono
           title={tree.path}
           lead={<Icon name="branch" size={13} class="text-faint" />}
-          trail={tree.changed > 0 ? <span class="text-git-dirty">{tree.changed}</span> : undefined}
+          trail={
+            <span class={tree.changed > 0 ? "text-git-dirty" : undefined}>
+              {tree.changed > 0
+                ? t("sessions.treeChanged", { count: String(tree.changed) })
+                : t("sessions.treeClean")}
+            </span>
+          }
           onClick={() => {
             selectTarget({ type: "worktree", path: tree.path });
             revealPanel("git");

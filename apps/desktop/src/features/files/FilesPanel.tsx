@@ -1,4 +1,4 @@
-import { TreeRow, type TreeStatus } from "@apex/ui";
+import { SectionLabel, TreeRow, type TreeStatus } from "@apex/ui";
 import { Fragment } from "preact";
 import { useEffect } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -40,17 +40,25 @@ export function FilesPanel() {
 
   return (
     <div class="dock-view dock-fixed">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("files.refresh")}
-          onClick={() => void refreshTree(project.id)}
-          class="text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </PanelActions>
-      <div class="min-h-0 flex-1 overflow-auto py-2 pr-2">
+      <SectionLabel
+        flush
+        class="px-2 pt-2"
+        action={
+          <PanelActions panel="files">
+            <button
+              type="button"
+              title={t("files.refresh")}
+              onClick={() => void refreshTree(project.id)}
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name="refresh" size={12} />
+            </button>
+          </PanelActions>
+        }
+      >
+        {t("dock.files")}
+      </SectionLabel>
+      <div class="min-h-0 flex-1 overflow-auto pr-2 pb-2">
         {treeFailure.value ? (
           <p class="px-2 text-state-failed">{treeFailure.value}</p>
         ) : (

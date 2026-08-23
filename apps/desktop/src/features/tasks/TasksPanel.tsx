@@ -1,4 +1,4 @@
-import { Chip, Dot, ListRow } from "@apex/ui";
+import { Chip, Dot, ListRow, SectionLabel } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -37,16 +37,24 @@ export function TasksPanel() {
 
   return (
     <div class="dock-view">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("tasks.refresh")}
-          onClick={() => void loadTasks()}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </PanelActions>
+      <SectionLabel
+        flush
+        count={tasks.value.length || undefined}
+        action={
+          <PanelActions panel="tasks">
+            <button
+              type="button"
+              title={t("tasks.refresh")}
+              onClick={() => void loadTasks()}
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name="refresh" size={12} />
+            </button>
+          </PanelActions>
+        }
+      >
+        {t("tasks.active")}
+      </SectionLabel>
 
       {failure.value && <p class="px-1.5 text-state-failed">{failure.value}</p>}
 

@@ -55,17 +55,6 @@ export function ChangesPanel() {
 
   return (
     <div class="dock-view dock-fixed">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("git.refresh")}
-          onClick={() => void refreshGit()}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </PanelActions>
-
       <div class="dock-scroll">
         {gitFailure.value && <p class="px-1.5 text-state-failed">{gitFailure.value}</p>}
 
@@ -75,7 +64,21 @@ export function ChangesPanel() {
             ahead={status.ahead}
             behind={status.behind}
             lead={<Icon name="branch" size={12} />}
-            actions={<SyncActions status={status} />}
+            actions={
+              <>
+                <SyncActions status={status} />
+                <PanelActions panel="git">
+                  <button
+                    type="button"
+                    title={t("git.refresh")}
+                    onClick={() => void refreshGit()}
+                    class="shrink-0 text-faint transition-colors hover:text-text"
+                  >
+                    <Icon name="refresh" size={12} />
+                  </button>
+                </PanelActions>
+              </>
+            }
           />
         )}
 

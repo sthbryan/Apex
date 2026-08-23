@@ -238,6 +238,7 @@ export const es: Messages = {
     enabledHint: "Solo cuando la sesión no está a la vista.",
   },
   context: {
+    pinned: "Fijados",
     empty: "Todavía no hay nada compartido. Los agentes escriben aquí por MCP.",
     add: "Nueva entrada",
     refresh: "Recargar el contexto",
@@ -259,6 +260,7 @@ export const es: Messages = {
     quiet: "Todavía no hay nada.",
   },
   tasks: {
+    active: "Activas",
     empty: "No hay tareas en este proyecto.",
     refresh: "Buscar tareas otra vez",
     start: "Arrancarla",
@@ -284,6 +286,7 @@ export const es: Messages = {
     latest: "Ir a lo último",
   },
   race: {
+    live: "Corriendo",
     running: "{count} corriendo",
     title: "Corridas",
     empty: "Todavía no hay corridas.",
@@ -338,6 +341,7 @@ export const es: Messages = {
     commitFirst: "Commiteá lo aprobado antes de mergear.",
   },
   git: {
+    recent: "Reciente · {branch}",
     whereRuns: "Dónde corren los comandos de git",
     worktrees: "Worktrees",
     orphanTreesLabel: "Árboles sueltos",
@@ -419,7 +423,9 @@ export const es: Messages = {
     running: "Corriendo",
     finished: "Terminadas",
     empty: "Todavía no hay sesiones.",
-    looseTrees: "Worktrees sueltos",
+    worktrees: "Worktrees",
+    treeChanged: "{count} cambios",
+    treeClean: "limpio",
     spawned: "{count} agentes",
     quiet: "Esperando la primera salida…",
     exited: "salió {code}",

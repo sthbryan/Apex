@@ -1,10 +1,10 @@
-import { ListRow } from "@apex/ui";
+import { ListRow, SectionLabel } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { GitTarget } from "@/bindings/GitTarget";
-import { commits, gitFailure, gitTarget, readLog, since } from "@/features/git/state";
+import { commits, gitFailure, gitStatus, gitTarget, readLog, since } from "@/features/git/state";
 import { activeProject } from "@/features/projects/state";
 import { activeCommit, openDiff } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
@@ -27,16 +27,23 @@ export function HistoryPanel() {
 
   return (
     <div class="dock-view">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("git.refresh")}
-          onClick={() => void readLog()}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </PanelActions>
+      <SectionLabel
+        flush
+        action={
+          <PanelActions panel="history">
+            <button
+              type="button"
+              title={t("git.refresh")}
+              onClick={() => void readLog()}
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name="refresh" size={12} />
+            </button>
+          </PanelActions>
+        }
+      >
+        {t("git.recent", { branch: gitStatus.value?.branch ?? "" })}
+      </SectionLabel>
 
       {gitFailure.value && <p class="px-1.5 text-state-failed">{gitFailure.value}</p>}
 

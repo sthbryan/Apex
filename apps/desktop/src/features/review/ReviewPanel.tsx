@@ -43,29 +43,29 @@ export function ReviewPanel() {
 
   return (
     <div class="dock-view dock-fixed">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("review.refresh")}
-          onClick={() => void refreshPending()}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </PanelActions>
-
       <div class="dock-scroll">
+        <SectionLabel
+          flush
+          count={waiting.length || undefined}
+          action={
+            <PanelActions panel="review">
+              <button
+                type="button"
+                title={t("review.refresh")}
+                onClick={() => void refreshPending()}
+                class="shrink-0 text-faint transition-colors hover:text-text"
+              >
+                <Icon name="refresh" size={12} />
+              </button>
+            </PanelActions>
+          }
+        >
+          {t("review.waiting")}
+        </SectionLabel>
         {waiting.length === 0 ? (
           <p class="px-1.5 py-1 text-faint">{t("review.empty")}</p>
         ) : (
-          <>
-            <SectionLabel flush count={waiting.length}>
-              {t("review.waiting")}
-            </SectionLabel>
-            {waiting.map((review) => (
-              <Row key={review.branch} review={review} />
-            ))}
-          </>
+          waiting.map((review) => <Row key={review.branch} review={review} />)
         )}
       </div>
 

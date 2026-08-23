@@ -1,19 +1,27 @@
 import type { ComponentChildren } from "preact";
-import { createPortal } from "preact/compat";
-import { useContext } from "preact/hooks";
 
-import { DockChrome } from "@/app/layout/DockChrome";
+import { popPanelToTab } from "@/app/layout/actions";
+import type { DockPanel } from "@/app/layout/state";
+import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
-  children: ComponentChildren;
+  panel: DockPanel;
+  children?: ComponentChildren;
 };
 
-export function PanelActions({ children }: Props) {
-  const slot = useContext(DockChrome);
-
-  if (slot) {
-    return createPortal(children, slot);
-  }
-
-  return <div class="flex shrink-0 items-center justify-end gap-2 px-2 py-1">{children}</div>;
+export function PanelActions({ panel, children }: Props) {
+  return (
+    <>
+      {children}
+      <button
+        type="button"
+        title={t("dock.popOut")}
+        onClick={() => popPanelToTab(panel)}
+        class="shrink-0 text-faint transition-colors hover:text-text"
+      >
+        <Icon name="external" size={12} />
+      </button>
+    </>
+  );
 }

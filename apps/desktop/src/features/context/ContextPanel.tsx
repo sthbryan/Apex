@@ -1,4 +1,4 @@
-import { ListRow } from "@apex/ui";
+import { ListRow, SectionLabel } from "@apex/ui";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -27,26 +27,35 @@ export function ContextPanel() {
 
   return (
     <div class="dock-view dock-fixed">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("context.add")}
-          onClick={() => setOpen("")}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="plus" size={12} />
-        </button>
-        <button
-          type="button"
-          title={t("context.refresh")}
-          onClick={() => void loadContext()}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="refresh" size={12} />
-        </button>
-      </PanelActions>
+      <SectionLabel
+        flush
+        class="px-2 pt-2"
+        count={entries.value.length || undefined}
+        action={
+          <PanelActions panel="context">
+            <button
+              type="button"
+              title={t("context.add")}
+              onClick={() => setOpen("")}
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name="plus" size={12} />
+            </button>
+            <button
+              type="button"
+              title={t("context.refresh")}
+              onClick={() => void loadContext()}
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name="refresh" size={12} />
+            </button>
+          </PanelActions>
+        }
+      >
+        {t("context.pinned")}
+      </SectionLabel>
 
-      <div class="flex shrink-0 flex-col gap-0.5 p-2">
+      <div class="flex shrink-0 flex-col gap-0.5 px-2 pb-2">
         {failure.value && <p class="px-1.5 text-state-failed">{failure.value}</p>}
 
         {entries.value.length === 0 && !failure.value && (

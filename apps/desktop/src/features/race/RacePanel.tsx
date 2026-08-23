@@ -1,4 +1,4 @@
-import { Button, Dot, ListRow } from "@apex/ui";
+import { Button, Dot, ListRow, SectionLabel } from "@apex/ui";
 import { useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -31,16 +31,24 @@ export function RacePanel() {
 
   return (
     <div class="dock-view">
-      <PanelActions>
-        <button
-          type="button"
-          title={t("race.new")}
-          onClick={() => setLaunching((open) => !open)}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name={launching ? "close" : "plus"} size={12} />
-        </button>
-      </PanelActions>
+      <SectionLabel
+        flush
+        count={all.length || undefined}
+        action={
+          <PanelActions panel="race">
+            <button
+              type="button"
+              title={t("race.new")}
+              onClick={() => setLaunching((open) => !open)}
+              class="shrink-0 text-faint transition-colors hover:text-text"
+            >
+              <Icon name={launching ? "close" : "plus"} size={12} />
+            </button>
+          </PanelActions>
+        }
+      >
+        {t("race.live")}
+      </SectionLabel>
 
       {launching && <RaceLauncher onDone={() => setLaunching(false)} />}
 
@@ -48,13 +56,12 @@ export function RacePanel() {
         <Entry key={race.id} race={race} />
       ))}
 
-      {all.length === 0 && !launching && (
-        <>
-          <p class="px-1.5 py-1 text-faint">{t("race.empty")}</p>
-          <Button variant="dashed" size="lg" onClick={() => setLaunching(true)}>
-            {t("race.new")}
-          </Button>
-        </>
+      {all.length === 0 && !launching && <p class="px-1.5 py-1 text-faint">{t("race.empty")}</p>}
+
+      {!launching && (
+        <Button variant="dashed" size="lg" class="mt-2" onClick={() => setLaunching(true)}>
+          {t("race.new")}
+        </Button>
       )}
     </div>
   );
