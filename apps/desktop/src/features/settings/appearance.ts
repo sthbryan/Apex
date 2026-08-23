@@ -11,6 +11,7 @@ const SCALE = "apex.ui-scale";
 const TRANSLUCENT = "apex.translucent";
 const OPACITY = "apex.veil-opacity";
 const FROST = "apex.frost";
+const LEGACY_BLUR = "apex.blur";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
@@ -29,7 +30,11 @@ function restoreNumber(key: string, fallback: number, low: number, high: number)
 
 function restoreFrost(): Frost {
   const stored = localStorage.getItem(FROST) as Frost | null;
-  return stored && FROSTS.includes(stored) ? stored : "bright";
+  if (stored && FROSTS.includes(stored)) {
+    return stored;
+  }
+  const legacy = Number.parseInt(localStorage.getItem(LEGACY_BLUR) ?? "", 10);
+  return FROSTS[legacy - 1] ?? "bright";
 }
 
 function restoreScale(): UiScale {
@@ -70,6 +75,7 @@ export function setVeilOpacity(percent: number): void {
 export function setFrost(next: Frost): void {
   frost.value = next;
   localStorage.setItem(FROST, next);
+  localStorage.removeItem(LEGACY_BLUR);
   applyAppearance();
 }
 
