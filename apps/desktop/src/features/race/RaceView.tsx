@@ -1,26 +1,27 @@
-import cn from "cnfast";
+import {
+  AgentIcon,
+  Button,
+  DiffStat,
+  Dot,
+  RaceView as KitRaceView,
+  RaceColumn,
+  RaceDecision,
+} from "@apex/ui";
 import { useState } from "preact/hooks";
 
-import type { SessionState } from "@/bindings/SessionState";
 import {
   type Contender,
   contendersOf,
   contenderTarget,
-  type Race,
   races,
   settleRace,
 } from "@/features/race/state";
 import { openReview } from "@/features/review/state";
+import { stateOf } from "@/features/sessions/dot";
 import { t } from "@/shared/i18n";
 
-const DOTS: Record<SessionState, string> = {
-  done: "bg-state-done",
-  blocked: "bg-state-blocked",
-  working: "bg-state-working animate-pulse",
-  idle: "bg-state-idle",
-};
-
 export function RaceView({ run }: { run: string }) {
+  const [asking, setAsking] = useState<string | null>(null);
   const race = races.value.find((candidate) => candidate.id === run);
 
   if (!race) {
@@ -28,84 +29,73 @@ export function RaceView({ run }: { run: string }) {
   }
 
   const contenders = contendersOf(race);
+  const chosen = contenders.find((contender) => contender.session.id === asking);
 
   return (
-    <div class="flex h-full flex-col">
-      <p class="shrink-0 truncate border-b border-border px-2 py-1.5 text-muted">{race.task}</p>
-      <div class="grid min-h-0 flex-1 auto-cols-[minmax(9rem,1fr)] grid-flow-col divide-x divide-border overflow-x-auto">
-        {contenders.map((contender) => (
-          <Column key={contender.session.id} contender={contender} race={race} />
-        ))}
-      </div>
-    </div>
+    <KitRaceView
+      class="h-full"
+      task={race.task}
+      foot={
+        chosen && (
+          <RaceDecision
+            info={t("race.keepAsk", { count: String(race.contenders.length - 1) })}
+            actions={
+              <>
+                <Button size="sm" onClick={() => setAsking(null)}>
+                  {t("race.keepNo")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => void settleRace(race, chosen.session.id)}
+                >
+                  {t("race.keepYes")}
+                </Button>
+              </>
+            }
+          />
+        )
+      }
+    >
+      {contenders.map((contender) => (
+        <Column
+          key={contender.session.id}
+          contender={contender}
+          onKeep={() => setAsking(contender.session.id)}
+        />
+      ))}
+    </KitRaceView>
   );
 }
 
-function Column({ contender, race }: { contender: Contender; race: Race }) {
-  const [asking, setAsking] = useState(false);
+function Column({ contender, onKeep }: { contender: Contender; onKeep: () => void }) {
   const { session, changed } = contender;
   const target = contenderTarget(session);
   const dead = session.exit_code !== null;
 
   return (
-    <div class="flex min-w-0 flex-col">
-      <div class="flex shrink-0 items-center gap-1.5 border-b border-border px-2 py-1.5">
-        <span
-          class={cn("size-1.5 shrink-0 rounded-full", dead ? "bg-faint" : DOTS[session.state])}
-        />
-        <span class="min-w-0 flex-1 truncate text-text">{session.agent}</span>
-      </div>
-
+    <RaceColumn
+      name={session.agent}
+      state={dead ? "dropped" : "running"}
+      lead={<AgentIcon agent={session.agent} size="sm" />}
+      trail={<Dot state={stateOf(session)} size="sm" />}
+    >
       {changed === null ? (
-        <p class="px-2 py-1 text-faint">{dead ? t("race.leftNothing") : t("race.stillWorking")}</p>
+        <p class="text-faint">{dead ? t("race.leftNothing") : t("race.stillWorking")}</p>
       ) : (
-        <>
-          <p class="px-2 py-1 tabular-nums text-faint">
+        <div class="flex flex-col items-start gap-1.5">
+          <p class="flex items-center gap-1.5 tabular-nums text-faint">
             {t("review.files", { count: String(changed.files) })}
-            <span class="ml-1.5 text-git-added">+{changed.added}</span>
-            <span class="ml-1 text-git-removed">−{changed.removed}</span>
+            <DiffStat added={changed.added} removed={changed.removed} />
           </p>
-          <button
-            type="button"
-            onClick={() => void openReview(target)}
-            class="mx-2 mb-1 shrink-0 rounded border border-border px-2 py-0.5 text-muted transition-colors hover:bg-raised hover:text-text"
-          >
+          <Button size="xs" variant="subtle" onClick={() => void openReview(target)}>
             {t("race.inspect")}
-          </button>
-        </>
-      )}
-
-      <div class="mt-auto shrink-0 border-t border-border px-2 py-1.5">
-        {asking ? (
-          <div class="flex items-center gap-1.5">
-            <span class="min-w-0 flex-1 truncate text-faint">
-              {t("race.keepAsk", { count: String(race.contenders.length - 1) })}
-            </span>
-            <button
-              type="button"
-              onClick={() => setAsking(false)}
-              class="shrink-0 text-muted transition-colors hover:text-text"
-            >
-              {t("race.keepNo")}
-            </button>
-            <button
-              type="button"
-              onClick={() => void settleRace(race, session.id)}
-              class="shrink-0 text-git-removed transition-colors hover:brightness-125"
-            >
-              {t("race.keepYes")}
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setAsking(true)}
-            class="w-full rounded border border-border px-2 py-0.5 text-muted transition-colors hover:bg-raised hover:text-text"
-          >
+          </Button>
+          <Button size="xs" variant="primary" onClick={onKeep}>
             {t("race.keep")}
-          </button>
-        )}
-      </div>
-    </div>
+          </Button>
+        </div>
+      )}
+    </RaceColumn>
   );
 }
