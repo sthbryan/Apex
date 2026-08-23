@@ -92,6 +92,8 @@ export const en = {
     kill: "Kill process {pid}",
   },
   settings: {
+    veilContrast: "Contrast",
+    veilContrastHint: "Pushes the text darker so it holds up over a busy wallpaper.",
     groupLookSub: "How Apex feels on this machine.",
     groupSpaceSub: "Where files, previews and agent views go.",
     groupAgentsSub:

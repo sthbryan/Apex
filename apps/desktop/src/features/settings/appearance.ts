@@ -15,11 +15,13 @@ const FROST = "apex.frost";
 const LEGACY_BLUR = "apex.blur";
 const AREA = "apex.veil-area";
 const GLASS_BLUR = "apex.glass-blur";
+const CONTRAST = "apex.veil-contrast";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
 export const MIN_OPACITY = 50;
 export const MAX_BLUR = 40;
+export const MAX_CONTRAST = 40;
 const DEFAULT_BLUR = 20;
 
 const FROSTS: Frost[] = ["soft", "glare", "bright", "deep"];
@@ -64,6 +66,7 @@ export const veilOpacity = signal<number>(restoreNumber(OPACITY, 72, MIN_OPACITY
 export const frost = signal<Frost>(restoreFrost());
 export const veilArea = signal<VeilArea>(restoreArea());
 export const glassBlur = signal<number>(restoreNumber(GLASS_BLUR, DEFAULT_BLUR, 0, MAX_BLUR));
+export const veilContrast = signal<number>(restoreNumber(CONTRAST, 0, 0, MAX_CONTRAST));
 
 export function setUiScale(next: UiScale): void {
   uiScale.value = next;
@@ -95,6 +98,12 @@ export function setGlassBlur(px: number): void {
   applyAppearance();
 }
 
+export function setVeilContrast(percent: number): void {
+  veilContrast.value = clamp(Math.round(percent), 0, MAX_CONTRAST);
+  localStorage.setItem(CONTRAST, String(veilContrast.value));
+  applyAppearance();
+}
+
 export function setFrost(next: Frost): void {
   frost.value = next;
   localStorage.setItem(FROST, next);
@@ -113,9 +122,11 @@ export function applyAppearance(): void {
   }
   if (on) {
     root.style.setProperty("--apex-veil-tint", `${veilOpacity.value}%`);
+    root.style.setProperty("--apex-veil-contrast", `${veilContrast.value}%`);
     root.setAttribute("data-veil-area", veilArea.value);
   } else {
     root.style.removeProperty("--apex-veil-tint");
+    root.style.removeProperty("--apex-veil-contrast");
     root.removeAttribute("data-veil-area");
   }
   root.style.setProperty("--apex-scale", String(SCALES[uiScale.value]));

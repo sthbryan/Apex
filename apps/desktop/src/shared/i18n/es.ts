@@ -94,6 +94,8 @@ export const es: Messages = {
     kill: "Matar el proceso {pid}",
   },
   settings: {
+    veilContrast: "Contraste",
+    veilContrastHint: "Oscurece el texto para que aguante sobre un fondo cargado.",
     groupLookSub: "Cómo se siente Apex en esta máquina.",
     groupSpaceSub: "Dónde van los archivos, las vistas previas y los agentes.",
     groupAgentsSub: "El dibujo es de cada agente: nativo si habla ACP, terminal si no.",

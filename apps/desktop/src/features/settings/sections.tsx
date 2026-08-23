@@ -33,17 +33,20 @@ import {
   frost,
   glassBlur,
   MAX_BLUR,
+  MAX_CONTRAST,
   MIN_OPACITY,
   setFrost,
   setGlassBlur,
   setTranslucent,
   setUiScale,
   setVeilArea,
+  setVeilContrast,
   setVeilOpacity,
   translucencySupported,
   translucent,
   uiScale,
   veilArea,
+  veilContrast,
   veilOpacity,
 } from "@/features/settings/appearance";
 import { browsing, setBrowsing } from "@/features/settings/browsing";
@@ -155,6 +158,20 @@ export function lookSection(): Section {
                   max={MAX_BLUR}
                   unit="px"
                   onChange={setGlassBlur}
+                />
+              ),
+            },
+            {
+              id: "veilContrast",
+              label: t("settings.veilContrast"),
+              hint: t("settings.veilContrastHint"),
+              control: (
+                <Slider
+                  label={t("settings.veilContrast")}
+                  value={veilContrast.value}
+                  min={0}
+                  max={MAX_CONTRAST}
+                  onChange={setVeilContrast}
                 />
               ),
             },
