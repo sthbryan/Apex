@@ -204,6 +204,7 @@ export const en = {
     newSession: "New session",
   },
   notify: {
+    allow: "Allow",
     blocked: "An agent is waiting for you",
     done: "An agent finished",
     terminal: "An agent rang",
@@ -323,6 +324,7 @@ export const en = {
     commitFirst: "Commit what you approved before merging.",
   },
   git: {
+    whereRuns: "Where git commands run",
     worktrees: "Worktrees",
     orphanTreesLabel: "Loose trees",
     branchesLabel: "Branches",

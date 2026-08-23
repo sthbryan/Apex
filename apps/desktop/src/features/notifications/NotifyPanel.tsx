@@ -1,4 +1,4 @@
-import { ListRow, Popover } from "@apex/ui";
+import { type AgentState, Notice as Banner, Button, Dot, ListRow, Popover } from "@apex/ui";
 import type { ComponentChildren } from "preact";
 import type { Notice } from "@/features/notifications/state";
 import {
@@ -7,7 +7,6 @@ import {
   notices,
   permitted,
 } from "@/features/notifications/state";
-import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { sessions } from "@/features/sessions/state";
 import { roughly } from "@/features/usage/format";
 import { focusSession, openInNewTab } from "@/features/workspace/state";
@@ -32,32 +31,32 @@ export function NotifyPanel({ open, anchor, onClose }: Props) {
       align="end"
       width={320}
       label={t("notify.title")}
-      title={
-        <>
-          <Icon name="bell" size={12} class="text-faint" />
-          {t("notify.title")}
-        </>
-      }
+      title={t("notify.title")}
       actions={
-        <button
-          type="button"
+        <Button
+          variant="subtle"
+          size="xs"
+          iconOnly
           title={t("notify.clear")}
+          aria-label={t("notify.clear")}
           onClick={forgetNotices}
-          class="text-faint transition-colors hover:text-text"
         >
-          <Icon name="stop" size={12} />
-        </button>
+          <Icon name="stop" size={11} />
+        </Button>
       }
     >
       {!permitted.value && (
-        <button
-          type="button"
-          onClick={() => void askForPermission()}
-          class="flex items-center gap-1.5 rounded-sm px-1 py-1 text-left text-xs text-state-blocked transition-colors hover:bg-raised"
+        <Banner
+          tone="blocked"
+          lead={<Icon name="bellOff" size={12} />}
+          actions={
+            <Button variant="subtle" size="xs" onClick={() => void askForPermission()}>
+              {t("notify.allow")}
+            </Button>
+          }
         >
-          <Icon name="bellOff" size={12} class="shrink-0" />
           {t("notify.denied")}
-        </button>
+        </Banner>
       )}
 
       {latest.length === 0 ? (
@@ -79,13 +78,7 @@ function NoticeRow({ notice }: { notice: Notice }) {
       sub={notice.body ?? undefined}
       class={notice.read ? "text-muted" : undefined}
       disabled={!session}
-      lead={
-        session ? (
-          <AgentIcon agent={session.agent} class="text-faint" />
-        ) : (
-          <Icon name={glyph(notice)} size={12} class="text-faint" />
-        )
-      }
+      lead={<Dot state={stateOf(notice)} />}
       trail={<span class="tabular-nums">{ago}</span>}
       onClick={() => {
         if (session && !focusSession(session.id)) {
@@ -96,6 +89,17 @@ function NoticeRow({ notice }: { notice: Notice }) {
   );
 }
 
-function glyph(notice: Notice) {
-  return notice.kind === "quota" ? "activity" : "bell";
+function stateOf(notice: Notice): AgentState {
+  switch (notice.kind) {
+    case "blocked":
+      return "blocked";
+    case "done":
+      return "done";
+    case "error":
+      return "failed";
+    case "quota":
+      return "blocked";
+    default:
+      return "idle";
+  }
 }

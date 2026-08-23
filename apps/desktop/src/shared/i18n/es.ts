@@ -206,6 +206,7 @@ export const es: Messages = {
     newSession: "Nueva sesión",
   },
   notify: {
+    allow: "Permitir",
     blocked: "Un agente te está esperando",
     done: "Un agente terminó",
     terminal: "Un agente te avisa",
@@ -325,6 +326,7 @@ export const es: Messages = {
     commitFirst: "Commiteá lo aprobado antes de mergear.",
   },
   git: {
+    whereRuns: "Dónde corren los comandos de git",
     worktrees: "Worktrees",
     orphanTreesLabel: "Árboles sueltos",
     branchesLabel: "Ramas",
