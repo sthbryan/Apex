@@ -18,3 +18,10 @@
 .acp-notice .ui-message-body {
   color: var(--apex-state-failed);
 }
+
+.ui-code-view pre,
+.ui-code-view code,
+.ui-code-view textarea {
+  font: inherit;
+  line-height: inherit;
+}

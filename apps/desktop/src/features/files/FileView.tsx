@@ -1,3 +1,4 @@
+import { ImageView } from "@apex/ui";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { FileContents } from "@/bindings/FileContents";
@@ -213,25 +214,23 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
       {contents?.image && (
-        <div class="min-h-0 flex-1 overflow-auto p-4">
-          <img
-            src={contents.image}
-            alt={fileName(path)}
-            class="checkers mx-auto max-h-full animate-veil-in object-contain"
-          />
-        </div>
+        <ImageView
+          class="animate-veil-in"
+          src={contents.image}
+          alt={fileName(path)}
+          meta={formatSize(contents.size)}
+        />
       )}
 
       {contents?.binary && !contents.image && <p class="p-3 text-faint">{t("files.binary")}</p>}
 
       {drawn && text !== null && (
-        <div class="min-h-0 flex-1 overflow-auto p-4">
-          <img
-            src={svgSource(text)}
-            alt={fileName(path)}
-            class="checkers mx-auto max-h-full animate-veil-in object-contain"
-          />
-        </div>
+        <ImageView
+          class="animate-veil-in"
+          src={svgSource(text)}
+          alt={fileName(path)}
+          meta={contents ? formatSize(contents.size) : undefined}
+        />
       )}
 
       {conflict && (
