@@ -37,4 +37,30 @@
   .ui-title-bar-actions {
     @apply flex flex-none items-center gap-1;
   }
+
+  @media (max-width: 640px) {
+    .ui-title-bar {
+      @apply gap-2 px-2.5;
+      height: 44px;
+    }
+    .ui-title-bar-lights {
+      @apply gap-1.5;
+    }
+    .ui-title-bar-lights i {
+      @apply size-2.5;
+    }
+    .ui-title-bar-title {
+      @apply text-sm;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .ui-title-bar {
+      @apply px-2;
+    }
+    .ui-title-bar-title {
+      font-size: 13px;
+    }
+  }
 }

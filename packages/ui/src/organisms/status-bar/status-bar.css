@@ -7,7 +7,10 @@
     height: var(--apex-h-lg);
     z-index: var(--apex-z-dock);
     border-top: 1px solid var(--apex-border);
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .ui-status-bar::-webkit-scrollbar { display: none; }
 
   .ui-status-bar-right {
     @apply ml-auto flex items-center gap-1;
@@ -31,5 +34,16 @@
     @apply block size-1.5 rounded-full;
     background-color: currentcolor;
     animation: apex-pulse 1.6s ease-in-out infinite;
+  }
+
+  @media (max-width: 640px) {
+    .ui-status-bar {
+      @apply gap-1 px-2 text-xs;
+      height: 36px;
+    }
+    .ui-status-pill {
+      @apply px-2 gap-1;
+      font-size: 11px;
+    }
   }
 }

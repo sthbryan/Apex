@@ -43,4 +43,19 @@
   .ui-modal-foot {
     @apply flex items-center justify-end gap-2 border-t border-border px-4 py-3;
   }
+
+  @media (max-width: 640px) {
+    .ui-modal {
+      @apply w-[96vw] max-h-[86vh];
+      --ui-modal-width: 96vw;
+    }
+    .ui-modal-head,
+    .ui-modal-body,
+    .ui-modal-foot {
+      @apply px-3;
+    }
+    .ui-modal-title {
+      @apply text-base;
+    }
+  }
 }

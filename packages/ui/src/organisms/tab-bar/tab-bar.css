@@ -45,6 +45,18 @@
     @apply min-w-0 max-w-40 truncate text-left text-md;
   }
 
+  @media (max-width: 640px) {
+    .ui-tab {
+      @apply max-w-40;
+    }
+    .ui-tab-title {
+      @apply max-w-24 text-sm;
+    }
+    .ui-tab-open {
+      @apply pl-2.5 gap-1.5;
+    }
+  }
+
   .ui-tab-add {
     @apply grid flex-none place-items-center text-muted;
     width: var(--apex-h-xl);

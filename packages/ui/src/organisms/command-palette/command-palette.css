@@ -60,4 +60,20 @@
   .ui-command-item-desc {
     @apply mt-px block truncate text-xs text-muted;
   }
+
+  @media (max-width: 640px) {
+    .ui-command-backdrop {
+      @apply px-3 pt-12;
+    }
+    .ui-command-palette {
+      @apply max-w-full;
+      max-height: 68vh;
+    }
+    .ui-command-input {
+      @apply px-3 py-2.5;
+    }
+    .ui-command-input input {
+      font-size: var(--apex-text-md);
+    }
+  }
 }
