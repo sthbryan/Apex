@@ -162,8 +162,8 @@ describe("unread", () => {
 
 describe("waiting", () => {
   it("filters blocked sessions", () => {
-    const base = session("s2", "p1") as { id: string; state: string };
-    const done = session("s3", "p1") as { id: string; state: string };
+    const base = session("s2", "p1");
+    const done = session("s3", "p1");
     mocks.sessions.value = [
       session("s1", "p1"),
       { ...base, state: "blocked" },
