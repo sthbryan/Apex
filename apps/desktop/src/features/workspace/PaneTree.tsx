@@ -156,7 +156,7 @@ function PaneLeaf({
             {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
             {node.view.type === "race" && <RaceView run={node.view.run} />}
             {node.view.type === "browser" && (
-              <BrowserView id={node.id} url={node.view.url} visible={visible} />
+              <BrowserView id={node.id} url={node.view.url} visible={visible} focused={focused} />
             )}
           </Suspense>
         </Boundary>

@@ -14,6 +14,7 @@ type Props = {
   id: string;
   url: string;
   visible: boolean;
+  focused: boolean;
 };
 
 type Entry = {
@@ -50,7 +51,7 @@ function boxOf(node: HTMLElement) {
   return { x: box.x, y: box.y, width: box.width, height: box.height };
 }
 
-export function BrowserView({ id, url, visible }: Props) {
+export function BrowserView({ id, url, visible, focused }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const label = `browser-${id}`;
   const [here, setHere] = useState(url);
@@ -69,6 +70,12 @@ export function BrowserView({ id, url, visible }: Props) {
       void invoke("browser_forget", { pane: label }).catch(complain);
     };
   }, [label, url]);
+
+  useEffect(() => {
+    if (focused) {
+      report(label);
+    }
+  }, [label, focused]);
 
   useEffect(() => {
     const node = host.current;
