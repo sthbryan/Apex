@@ -8,5 +8,6 @@
 @import "./theme.css";
 @import "./base.css";
 @import "./dock.css";
+@import "./views.css";
 @import "./vendor.css";
 @import "./syntax.css";

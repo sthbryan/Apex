@@ -1,3 +1,13 @@
+import {
+  ApprovalCard,
+  Button,
+  Composer as KitComposer,
+  Message,
+  Select,
+  ToolCall,
+  type ToolStatus,
+  Transcript,
+} from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useRef, useState } from "preact/hooks";
 
@@ -22,7 +32,14 @@ import {
 import { SplitPatch } from "@/features/git/SplitPatch";
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
-import { Icon, type IconName } from "@/shared/ui/Icon";
+import { Icon } from "@/shared/ui/Icon";
+
+const TOOL_STATUS: Record<AcpToolStatus, ToolStatus> = {
+  pending: "pending",
+  running: "running",
+  completed: "ok",
+  failed: "failed",
+};
 
 export function AcpView({ id }: { id: string }) {
   const entries = transcripts.value[id] ?? entriesOf(id);
@@ -58,14 +75,14 @@ export function AcpView({ id }: { id: string }) {
 
   return (
     <div class="flex h-full flex-col bg-pane">
-      <div class="relative min-h-0 flex-1">
-        <div ref={scroll} class="absolute inset-0 overflow-auto px-3 py-2">
+      <div class="relative flex min-h-0 flex-1 flex-col">
+        <Transcript elRef={scroll}>
           {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
           {entries.map((entry) =>
             entry ? <Entry key={entry.index} id={id} entry={entry} /> : null,
           )}
           <div ref={foot} />
-        </div>
+        </Transcript>
 
         {stale && (
           <button
@@ -86,7 +103,7 @@ export function AcpView({ id }: { id: string }) {
 
       <Working since={session?.state} on={working} />
 
-      <Composer id={id} working={working} />
+      <Reply id={id} working={working} />
     </div>
   );
 }
@@ -96,20 +113,31 @@ function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
   switch (body.type) {
     case "user":
       return (
-        <div class="mt-2 rounded-md border border-border bg-raised/60 px-2 py-1">
-          <p class="text-micro font-medium text-accent">{t("acp.you")}</p>
-          <p class="mt-0.5 whitespace-pre-wrap text-text">{body.text}</p>
-        </div>
+        <Message from="user" meta={t("acp.you")}>
+          <span class="whitespace-pre-wrap">{body.text}</span>
+        </Message>
       );
     case "agent":
-      return <p class="mt-2 whitespace-pre-wrap text-text">{body.text}</p>;
+      return (
+        <Message>
+          <span class="whitespace-pre-wrap">{body.text}</span>
+        </Message>
+      );
     case "thought":
-      return <p class="mt-2 whitespace-pre-wrap text-faint italic">{body.text}</p>;
+      return (
+        <Message class="acp-thought">
+          <span class="whitespace-pre-wrap">{body.text}</span>
+        </Message>
+      );
     case "notice":
-      return <p class="mt-2 whitespace-pre-wrap text-state-failed">{body.text}</p>;
+      return (
+        <Message class="acp-notice">
+          <span class="whitespace-pre-wrap">{body.text}</span>
+        </Message>
+      );
     case "plan":
       return (
-        <ul class="mt-2 border-l border-border pl-2">
+        <ul class="border-l border-border pl-2">
           {body.entries.map((step) => (
             <li
               key={step.content}
@@ -132,35 +160,18 @@ function Tool({ call }: { call: AcpToolCall }) {
   const details = call.text.length > 0 || call.diffs.length > 0;
 
   return (
-    <div class="mt-2 border border-border">
-      <button
-        type="button"
-        disabled={!details}
-        onClick={() => setOpen((shown) => !shown)}
-        class="flex w-full items-center gap-2 px-2 py-0.5 text-left enabled:hover:bg-raised"
-      >
-        <Icon
-          name={markOf(call.status)}
-          size={12}
-          class={cn("shrink-0", toneOf(call.status), call.status === "running" && "animate-spin")}
-        />
-        <span class="min-w-0 truncate text-text">{call.title}</span>
-        <span class="ml-auto shrink-0 text-faint">{call.kind}</span>
-      </button>
-
-      {open && details && (
-        <div class="border-t border-border">
-          {call.text && (
-            <pre class="overflow-x-auto px-2 py-1 text-muted leading-5">
-              <code>{call.text}</code>
-            </pre>
-          )}
-          {call.diffs.map((diff) => (
-            <Diff key={diff.path} diff={diff} />
-          ))}
-        </div>
-      )}
-    </div>
+    <ToolCall
+      name={call.kind}
+      command={call.title}
+      status={TOOL_STATUS[call.status]}
+      open={open}
+      onToggle={details ? () => setOpen((shown) => !shown) : undefined}
+    >
+      {call.text && <pre class="overflow-x-auto leading-5">{call.text}</pre>}
+      {call.diffs.map((diff) => (
+        <Diff key={diff.path} diff={diff} />
+      ))}
+    </ToolCall>
   );
 }
 
@@ -178,48 +189,46 @@ function Diff({ diff }: { diff: AcpDiff }) {
 
   return (
     <div class="border-t border-border first:border-t-0">
-      <p class="truncate px-2 py-0.5 text-faint">{diff.path}</p>
-      <div class="px-1 pb-1">
-        <SplitPatch path={diff.path} patch={patch} />
-      </div>
+      <p class="truncate py-0.5 text-faint">{diff.path}</p>
+      <SplitPatch path={diff.path} patch={patch} />
     </div>
   );
 }
 
 function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
-  return (
-    <div
-      class={cn("mt-2 border px-2 py-1", ask.decided ? "border-border" : "border-state-blocked")}
-    >
-      <p class="flex items-center gap-2">
-        <Icon name="keyboard" size={12} class="shrink-0 text-state-blocked" />
-        <span class="min-w-0 truncate text-text">{ask.title}</span>
-      </p>
+  if (ask.decided) {
+    return (
+      <ApprovalCard
+        question={ask.title}
+        meta={t("acp.decided", { option: labelOf(ask, ask.decided) })}
+        lead={<Icon name="keyboard" size={14} />}
+        actions={null}
+      />
+    );
+  }
 
-      {ask.decided ? (
-        <p class="text-faint">{t("acp.decided", { option: labelOf(ask, ask.decided) })}</p>
-      ) : (
-        <div class="mt-1 flex flex-wrap items-center gap-1">
+  return (
+    <ApprovalCard
+      question={ask.title}
+      lead={<Icon name="keyboard" size={14} />}
+      actions={
+        <>
           {ask.options.map((option) => (
-            <button
+            <Button
               key={option.id}
-              type="button"
+              size="sm"
+              variant="primary"
               onClick={() => void decide(id, ask.request, option.id)}
-              class="border border-border px-2 text-muted transition-colors hover:bg-raised hover:text-text"
             >
               {option.name || option.id}
-            </button>
+            </Button>
           ))}
-          <button
-            type="button"
-            onClick={() => void decide(id, ask.request, null)}
-            class="px-2 text-faint transition-colors hover:text-text"
-          >
+          <Button size="sm" variant="danger" onClick={() => void decide(id, ask.request, null)}>
             {t("acp.reject")}
-          </button>
-        </div>
-      )}
-    </div>
+          </Button>
+        </>
+      }
+    />
   );
 }
 
@@ -248,7 +257,7 @@ function Working({ since, on }: { since: string | undefined; on: boolean }) {
   );
 }
 
-function Composer({ id, working }: { id: string; working: boolean }) {
+function Reply({ id, working }: { id: string; working: boolean }) {
   const [text, setText] = useState("");
   const [cursor, setCursor] = useState(0);
   const field = useRef<HTMLTextAreaElement>(null);
@@ -272,7 +281,7 @@ function Composer({ id, working }: { id: string; working: boolean }) {
   };
 
   return (
-    <div class="relative flex shrink-0 flex-col border-t border-border">
+    <div class="relative shrink-0 border-t border-border">
       {matches.length > 0 && (
         <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-float">
           {matches.map((command, index) => (
@@ -294,12 +303,17 @@ function Composer({ id, working }: { id: string; working: boolean }) {
         </ul>
       )}
 
-      <textarea
-        ref={field}
+      <KitComposer
+        class="reply"
+        elRef={field}
         value={text}
         rows={3}
+        label={t("acp.send")}
         placeholder={t("acp.placeholder")}
-        spellcheck={false}
+        onSubmit={(event) => {
+          event.preventDefault();
+          send();
+        }}
         onInput={(event) => {
           setText(event.currentTarget.value);
           setCursor(0);
@@ -332,86 +346,50 @@ function Composer({ id, working }: { id: string; working: boolean }) {
             send();
           }
         }}
-        class="w-full resize-none bg-transparent px-3 py-1.5 text-text outline-none placeholder:text-faint"
+        lead={
+          <>
+            <Choices id={id} kind="model" />
+            <Choices id={id} kind="mode" />
+            <span class="min-w-0 truncate text-faint">
+              {offered.length > 0 ? t("acp.hintCommands") : t("acp.hint")}
+            </span>
+          </>
+        }
+        actions={
+          <>
+            {working && (
+              <Button size="sm" variant="danger" onClick={() => void cancel(id)}>
+                {t("acp.stop")}
+              </Button>
+            )}
+            <Button type="submit" size="sm" variant="primary" disabled={!text.trim()}>
+              {t("acp.send")}
+            </Button>
+          </>
+        }
       />
-      <div class="flex items-center gap-2 px-3 pb-1.5">
-        <Picker id={id} kind="model" />
-        <Picker id={id} kind="mode" />
-        <span class="min-w-0 flex-1 truncate text-faint">
-          {offered.length > 0 ? t("acp.hintCommands") : t("acp.hint")}
-        </span>
-        {working && (
-          <button
-            type="button"
-            onClick={() => void cancel(id)}
-            class="shrink-0 rounded border border-state-failed/40 px-2 text-state-failed transition-colors hover:bg-state-failed/10 hover:text-state-failed"
-          >
-            {t("acp.stop")}
-          </button>
-        )}
-        <button
-          type="button"
-          disabled={!text.trim()}
-          onClick={send}
-          class="shrink-0 border border-border px-2 text-muted transition-colors enabled:hover:bg-raised enabled:hover:text-text disabled:opacity-40"
-        >
-          {t("acp.send")}
-        </button>
-      </div>
     </div>
   );
 }
 
-function Picker({ id, kind }: { id: string; kind: "model" | "mode" }) {
+function Choices({ id, kind }: { id: string; kind: "model" | "mode" }) {
   const picker = (kind === "model" ? models.value : modes.value)[id];
   if (!picker || picker.choices.length === 0) {
     return null;
   }
   return (
-    <select
-      value={picker.chosen ?? ""}
-      title={t(kind === "model" ? "acp.model" : "acp.mode")}
-      onChange={(event) => {
-        const wanted = event.currentTarget.value;
-        void choose(id, kind === "model" ? wanted : null, kind === "mode" ? wanted : null);
-      }}
-      class="max-w-40 shrink-0 truncate rounded border border-border bg-surface px-1 text-muted outline-none transition-colors hover:border-accent/40 hover:text-text"
-    >
-      {picker.choices.map((choice) => (
-        <option key={choice.id} value={choice.id}>
-          {choice.name}
-        </option>
-      ))}
-    </select>
+    <Select
+      class="max-w-40"
+      label={t(kind === "model" ? "acp.model" : "acp.mode")}
+      value={picker.chosen ?? undefined}
+      options={picker.choices.map((choice) => ({ value: choice.id, label: choice.name }))}
+      onChange={(wanted) =>
+        void choose(id, kind === "model" ? wanted : null, kind === "mode" ? wanted : null)
+      }
+    />
   );
 }
 
 function labelOf(ask: AcpPermission, decided: string): string {
   return ask.options.find((option) => option.id === decided)?.name ?? decided;
-}
-
-function markOf(status: AcpToolStatus): IconName {
-  switch (status) {
-    case "pending":
-      return "circle";
-    case "running":
-      return "refresh";
-    case "completed":
-      return "check";
-    case "failed":
-      return "close";
-  }
-}
-
-function toneOf(status: AcpToolStatus): string {
-  switch (status) {
-    case "pending":
-      return "text-faint";
-    case "running":
-      return "text-state-working";
-    case "completed":
-      return "text-state-done";
-    case "failed":
-      return "text-state-failed";
-  }
 }
