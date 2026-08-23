@@ -1,10 +1,12 @@
 import { REGISTRY } from "@apex/ui";
 import type { ComponentLayer, ComponentMeta } from "@apex/ui";
-import { Chip, Pill, Segmented, Switch, Wordmark } from "@apex/ui";
+import { Button, Chip, Pill, Segmented, Switch, Wordmark } from "@apex/ui";
+import { useState } from "preact/hooks";
+import { Play } from "lucide-preact";
 import { themeMode, veil } from "@/shared/theme/mode";
 import type { ThemeMode } from "@/shared/theme/mode";
 import {
-  GIT_ALIASES, SAMPLES, SIZE_EXTRA, SIZE_GROUPS, TOKEN_GROUPS, TYPE_TOKENS,
+  DURATIONS, EASINGS, GIT_ALIASES, SAMPLES, SIZE_EXTRA, SIZE_GROUPS, TOKEN_GROUPS, TYPE_TOKENS,
 } from "@/features/toolkit/tokens";
 import { useTokenValues } from "@/features/toolkit/useTokenValues";
 import type { TokenKind } from "@/features/toolkit/useTokenValues";
@@ -24,9 +26,25 @@ const ALL_TOKENS: Record<string, TokenKind> = {
   ...Object.fromEntries(TYPE_TOKENS.map((t) => [t, "size"] as const)),
   ...Object.fromEntries(GIT_ALIASES.map((a) => [a.token, "color"] as const)),
   ...Object.fromEntries(SIZE_EXTRA.flatMap((g) => g.tokens.map((t) => [t, "size"] as const))),
+  ...Object.fromEntries([...DURATIONS, ...EASINGS].map((t) => [t, "raw"] as const)),
 };
 
 const short = (token: string): string => token.replace("--apex-", "");
+
+function formatMs(value?: string): string {
+  if (!value) return "";
+  const n = Number.parseFloat(value);
+  if (Number.isNaN(n)) return value;
+  return `${value.trim().endsWith("ms") ? n : n * 1000}ms`;
+}
+
+function curvePath(value?: string): string {
+  const nums = value?.match(/-?\d*\.?\d+/g)?.map(Number);
+  if (!nums || nums.length < 4) return "";
+  const [x1, y1, x2, y2] = nums;
+  const p = (x: number, y: number) => `${(x * 44).toFixed(1)},${((1 - y) * 44).toFixed(1)}`;
+  return `M0,44 C${p(x1, y1)} ${p(x2, y2)} 44,0`;
+}
 
 function roundPx(value?: string): string {
   if (!value?.endsWith("px")) return value ?? "";
@@ -57,6 +75,7 @@ function flashCopied(el: EventTarget | null): void {
 }
 
 export function Toolkit() {
+  const [run, setRun] = useState(false);
   const revision = `${themeMode.value}:${veil.value}`;
   const values = useTokenValues(ALL_TOKENS, revision);
 
@@ -184,6 +203,53 @@ export function Toolkit() {
               </table>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section class="tk-section">
+        <h2 class="tk-h2">
+          Motion
+          <span class="tk-token-count">{DURATIONS.length + EASINGS.length}</span>
+          <Button variant="subtle" size="sm" class="ml-auto" onClick={() => setRun(!run)}>
+            <Play size={12} />Play
+          </Button>
+        </h2>
+        <p class="tk-blurb">Durations race at the same distance; curves race at the same duration.</p>
+        <div class="tk-motion-row" data-run={run ? "on" : undefined}>
+          <div class="tk-size-group">
+            <div class="tk-token-group-head">
+              <h3 class="tk-h3">Durations</h3>
+              <span class="tk-token-count">{DURATIONS.length}</span>
+            </div>
+            {DURATIONS.map((token) => (
+              <div class="tk-motion" key={token} title={`${token}: ${values[token]?.light}`}>
+                <code>{short(token)}</code>
+                <span class="tk-track">
+                  <span class="tk-dot" style={`--tk-dur:${values[token]?.light}`} />
+                </span>
+                <span class="tk-value">{formatMs(values[token]?.light)}</span>
+              </div>
+            ))}
+          </div>
+          <div class="tk-size-group">
+            <div class="tk-token-group-head">
+              <h3 class="tk-h3">Curves</h3>
+              <span class="tk-token-count">{EASINGS.length}</span>
+            </div>
+            {EASINGS.map((token) => (
+              <div class="tk-motion" key={token} title={`${token}: ${values[token]?.light}`}>
+                <svg class="tk-curve" width="30" height="42" viewBox="-4 -24 52 72" aria-hidden="true">
+                  <line x1="0" y1="44" x2="44" y2="44" />
+                  <line x1="0" y1="0" x2="44" y2="0" />
+                  <path d={curvePath(values[token]?.light)} />
+                </svg>
+                <code>{short(token)}</code>
+                <span class="tk-track">
+                  <span class="tk-dot" style={`--tk-ease:${values[token]?.light}`} />
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

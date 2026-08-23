@@ -237,3 +237,47 @@
 .tk-alias-target {
   @apply truncate text-muted;
 }
+
+.tk-motion-row {
+  @apply grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] items-start gap-x-10 gap-y-6;
+}
+
+.tk-motion {
+  @apply flex items-center gap-3 border-t py-1.5 border-border/60;
+}
+
+.tk-motion code {
+  @apply w-24 flex-none font-mono text-sm text-text;
+}
+
+.tk-track {
+  @apply relative h-1.5 flex-1 rounded-full bg-raised;
+  container-type: inline-size;
+}
+
+.tk-dot {
+  @apply absolute -top-1 left-0 block size-3.5 rounded-full bg-accent;
+  transition-property: transform;
+  transition-duration: var(--tk-dur, var(--apex-swift));
+  transition-timing-function: var(--tk-ease, var(--apex-ease));
+}
+
+.tk-motion-row[data-run="on"] .tk-dot {
+  transform: translateX(calc(100cqw - 100%));
+}
+
+.tk-curve {
+  @apply flex-none;
+}
+
+.tk-curve path {
+  @apply fill-none stroke-accent;
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.tk-curve line {
+  @apply stroke-border;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}

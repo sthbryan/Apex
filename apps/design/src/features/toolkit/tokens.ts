@@ -120,6 +120,20 @@ export const SIZE_GROUPS: TokenGroup[] = [
   ...SIZE_EXTRA,
 ];
 
+export const DURATIONS = [
+  "--apex-instant",
+  "--apex-quick",
+  "--apex-swift",
+  "--apex-slow",
+];
+
+export const EASINGS = [
+  "--apex-ease",
+  "--apex-ease-out",
+  "--apex-ease-in",
+  "--apex-ease-spring",
+];
+
 export const TYPE_TOKENS = [
   "--apex-text-2xs",
   "--apex-text-xs",
