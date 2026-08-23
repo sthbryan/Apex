@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import { openWeb, overlays } from "@/features/browser/state";
 import { activeProjectId } from "@/features/projects/state";
-import { onAskShot } from "@/features/sessions/state";
+import { onAskPage, onAskShot } from "@/features/sessions/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -27,21 +27,16 @@ type Snapshot = {
   title: string | null;
   text: string | null;
   logs: Entry[];
+  seq: number;
+  failures: number;
 };
 
-function report(pane: string, taken: Snapshot): void {
+function report(pane: string): void {
   const project = activeProjectId.value;
   if (!project) {
     return;
   }
-  void invoke("browser_report", {
-    project,
-    pane,
-    url: taken.url,
-    title: taken.title,
-    text: taken.text,
-    logs: taken.logs.map((entry) => ({ level: entry.level, text: entry.text })),
-  }).catch(complain);
+  void invoke("browser_report", { project, pane }).catch(complain);
 }
 
 type Loaded = {
@@ -68,6 +63,7 @@ export function BrowserView({ id, url, visible }: Props) {
       return;
     }
     void invoke("browser_open", { label, url, bounds: boxOf(node) }).catch(complain);
+    report(label);
     return () => {
       void invoke("browser_close", { label }).catch(complain);
       void invoke("browser_forget", { pane: label }).catch(complain);
@@ -92,7 +88,9 @@ export function BrowserView({ id, url, visible }: Props) {
   }, [label]);
 
   const [logs, setLogs] = useState<Entry[]>([]);
+  const [failures, setFailures] = useState(0);
   const [drawer, setDrawer] = useState(false);
+  const cursor = useRef(0);
   const shown = visible && overlays.value === 0;
 
   useEffect(() => {
@@ -108,6 +106,7 @@ export function BrowserView({ id, url, visible }: Props) {
       if (!editing.current) {
         setDraft(event.payload.url);
       }
+      report(label);
     });
     return () => {
       void stop.then((off) => off());
@@ -129,30 +128,42 @@ export function BrowserView({ id, url, visible }: Props) {
   }, [label]);
 
   useEffect(() => {
-    const tick = () => {
-      void invoke<string>("browser_probe", { label })
+    return onAskPage((event) => {
+      if (event.pane !== label) {
+        return;
+      }
+      void invoke<string>("browser_probe", { label, since: 0, text: event.text })
+        .then((page) => invoke("page_done", { request: event.request, page, error: null }))
+        .catch((cause) =>
+          invoke("page_done", { request: event.request, page: null, error: String(cause) }),
+        )
+        .catch(complain);
+    });
+  }, [label]);
+
+  useEffect(() => {
+    if (!shown) {
+      return;
+    }
+    const read = () => {
+      void invoke<string>("browser_probe", { label, since: cursor.current, text: false })
         .then((raw) => {
           const taken = raw ? (JSON.parse(raw) as Snapshot | null) : null;
           if (!taken) {
             return;
           }
-          setHere(taken.url);
-          if (!editing.current) {
-            setDraft(taken.url);
-          }
+          cursor.current = taken.seq;
+          setFailures(taken.failures);
           if (taken.logs.length > 0) {
             setLogs((current) => [...current, ...taken.logs].slice(-500));
           }
-          report(label, taken);
         })
         .catch(() => {});
     };
-    tick();
-    const timer = setInterval(tick, 1500);
+    read();
+    const timer = setInterval(read, drawer ? 1500 : 5000);
     return () => clearInterval(timer);
-  }, [label]);
-
-  const failures = logs.filter((entry) => entry.level === "error").length;
+  }, [label, shown, drawer]);
 
   const run = (script: string) => {
     void invoke("browser_run", { label, script }).catch(complain);

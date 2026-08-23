@@ -291,13 +291,6 @@ pub struct TaskSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
-pub struct BrowserLog {
-    pub level: String,
-    pub text: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct ContextEntry {
     pub key: String,
     #[ts(type = "number")]
@@ -606,10 +599,6 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
         pane: String,
-        url: String,
-        title: Option<String>,
-        text: Option<String>,
-        logs: Vec<BrowserLog>,
     },
     BrowserForget {
         pane: String,
@@ -630,6 +619,12 @@ pub enum Command {
         #[ts(type = "string")]
         request: Uuid,
         path: Option<String>,
+        error: Option<String>,
+    },
+    PageDone {
+        #[ts(type = "string")]
+        request: Uuid,
+        page: Option<String>,
         error: Option<String>,
     },
     SessionResume {
@@ -1005,6 +1000,12 @@ pub enum Event {
         pane: String,
         #[ts(type = "string")]
         request: Uuid,
+    },
+    AskPage {
+        pane: String,
+        #[ts(type = "string")]
+        request: Uuid,
+        text: bool,
     },
     DaemonShutdown,
     SessionOpened {

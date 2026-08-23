@@ -4,6 +4,8 @@
   }
   const cap = 500;
   const seen = [];
+  let stamped = 0;
+  let failures = 0;
   const show = (value) => {
     if (typeof value === "string") {
       return value;
@@ -15,7 +17,11 @@
     }
   };
   const push = (level, text) => {
-    seen.push({ level: level, text: text, at: Date.now() });
+    stamped += 1;
+    if (level === "error") {
+      failures += 1;
+    }
+    seen.push({ level: level, text: text, at: Date.now(), seq: stamped });
     if (seen.length > cap) {
       seen.shift();
     }
@@ -31,14 +37,14 @@
   window.addEventListener("error", (event) => push("error", event.message));
   window.addEventListener("unhandledrejection", (event) => push("error", show(event.reason)));
   window.__apex = {
-    snapshot: function () {
-      const out = seen.slice();
-      seen.length = 0;
+    read: function (since, wantText) {
       return {
         url: location.href,
         title: document.title || null,
-        text: document.body ? document.body.innerText.slice(0, 20000) : null,
-        logs: out,
+        text: wantText && document.body ? document.body.innerText.slice(0, 20000) : null,
+        logs: seen.filter((entry) => entry.seq > since),
+        seq: stamped,
+        failures: failures,
       };
     },
   };

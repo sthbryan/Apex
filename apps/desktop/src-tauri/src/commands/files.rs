@@ -77,16 +77,19 @@ pub async fn browser_report(
     state: tauri::State<'_, AppState>,
     project: Uuid,
     pane: String,
-    url: String,
-    title: Option<String>,
-    text: Option<String>,
-    logs: Vec<apex_proto::BrowserLog>,
 ) -> Answer<()> {
-    state
-        .daemon()?
-        .request(Command::BrowserReport { project, pane, url, title, text, logs })
-        .await
-        .map_err(failed)?;
+    state.daemon()?.request(Command::BrowserReport { project, pane }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn page_done(
+    state: tauri::State<'_, AppState>,
+    request: Uuid,
+    page: Option<String>,
+    error: Option<String>,
+) -> Answer<()> {
+    state.daemon()?.request(Command::PageDone { request, page, error }).await.map_err(failed)?;
     Ok(())
 }
 

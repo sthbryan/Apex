@@ -192,8 +192,8 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_browser_console",
-        description: "Read the console output and errors the page in the browser pane produced \
-                      since the last read.",
+        description: "Read the console output and errors the page in the browser pane has \
+                      produced since it loaded.",
         schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {

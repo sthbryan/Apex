@@ -222,8 +222,8 @@ async fn execute(
             text: manager.transcript(id, tail as usize, plain).await.map_err(not_found_error)?,
         }),
         Command::ListEditors => Ok(Reply::Editors { editors: manager.list_editors().await }),
-        Command::BrowserReport { project, pane, url, title, text, logs } => {
-            manager.browser_report(project, pane, url, title, text, logs).await;
+        Command::BrowserReport { project, pane } => {
+            manager.browser_report(project, pane).await;
             Ok(Reply::Done)
         }
         Command::BrowserForget { pane } => {
@@ -231,10 +231,10 @@ async fn execute(
             Ok(Reply::Done)
         }
         Command::BrowserRead { project } => {
-            Ok(Reply::Text { text: manager.browser_read(project).await })
+            Ok(Reply::Text { text: manager.browser_read(project).await.map_err(internal_error)? })
         }
         Command::BrowserLogs { project } => {
-            Ok(Reply::Text { text: manager.browser_logs(project).await })
+            Ok(Reply::Text { text: manager.browser_logs(project).await.map_err(internal_error)? })
         }
         Command::UrlOpen { url } => {
             manager.open_url(&url).map_err(not_found_error)?;
@@ -296,7 +296,11 @@ async fn execute(
             Ok(Reply::Text { text: manager.browser_shot(project).await.map_err(internal_error)? })
         }
         Command::ShotDone { request, path, error } => {
-            manager.shot_done(request, path, error).await;
+            manager.pane_answered(request, path, error).await;
+            Ok(Reply::Done)
+        }
+        Command::PageDone { request, page, error } => {
+            manager.pane_answered(request, page, error).await;
             Ok(Reply::Done)
         }
         Command::CloseView { asked_by, target } => {

@@ -107,6 +107,17 @@ export function onOpenView(
 
 const shotHandlers = new Set<(event: Extract<Event, { type: "ask_shot" }>) => void>();
 
+const pageHandlers = new Set<(event: Extract<Event, { type: "ask_page" }>) => void>();
+
+export function onAskPage(
+  handler: (event: Extract<Event, { type: "ask_page" }>) => void,
+): () => void {
+  pageHandlers.add(handler);
+  return () => {
+    pageHandlers.delete(handler);
+  };
+}
+
 export function onAskShot(
   handler: (event: Extract<Event, { type: "ask_shot" }>) => void,
 ): () => void {
@@ -141,6 +152,11 @@ function applyEvent(event: Event): void {
       break;
     case "ask_shot":
       for (const handler of shotHandlers) {
+        handler(event);
+      }
+      break;
+    case "ask_page":
+      for (const handler of pageHandlers) {
         handler(event);
       }
       break;
