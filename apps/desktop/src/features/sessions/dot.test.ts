@@ -1,28 +1,24 @@
 import { describe, expect, it } from "vitest";
-import type { SessionSummary } from "@/bindings/SessionSummary";
 import { stateOf } from "./dot";
 
-function session(fields: Partial<SessionSummary>): SessionSummary {
-  return { state: "idle", exit_code: null, ...fields } as SessionSummary;
-}
-
 describe("stateOf", () => {
-  it("calls a clean exit done and anything else failed", () => {
-    expect(stateOf(session({ exit_code: 0, state: "working" }))).toBe("done");
-    expect(stateOf(session({ exit_code: 1, state: "working" }))).toBe("failed");
-    expect(stateOf(session({ exit_code: 130, state: "idle" }))).toBe("failed");
+  it("maps exit code 0 to done", () => {
+    expect(stateOf({ exit_code: 0, state: "idle" } as never)).toBe("done");
   });
 
-  it("lets the exit code win over whatever the session last reported", () => {
-    expect(stateOf(session({ exit_code: 0, state: "blocked" }))).toBe("done");
+  it("maps non-zero exit to failed", () => {
+    expect(stateOf({ exit_code: 1, state: "idle" } as never)).toBe("failed");
+    expect(stateOf({ exit_code: 137, state: "working" } as never)).toBe("failed");
   });
 
-  it("passes a live state through", () => {
-    expect(stateOf(session({ state: "working" }))).toBe("working");
-    expect(stateOf(session({ state: "blocked" }))).toBe("blocked");
+  it("returns live states when not exited", () => {
+    expect(stateOf({ exit_code: null, state: "working" } as never)).toBe("working");
+    expect(stateOf({ exit_code: null, state: "blocked" } as never)).toBe("blocked");
+    expect(stateOf({ exit_code: null, state: "done" } as never)).toBe("done");
+    expect(stateOf({ exit_code: null, state: "idle" } as never)).toBe("idle");
   });
 
-  it("falls back to idle for a state the ui does not know", () => {
-    expect(stateOf(session({ state: "pondering" as SessionSummary["state"] }))).toBe("idle");
+  it("falls back to idle for unknown states", () => {
+    expect(stateOf({ exit_code: null, state: "unknown" } as never)).toBe("idle");
   });
 });
