@@ -8,7 +8,7 @@ import { prompt } from "@/features/acp/state";
 import { clearRejects } from "@/features/git/state";
 import { activeProjectId } from "@/features/projects/state";
 import { closeSession, createSession, sendInput, sessions } from "@/features/sessions/state";
-import { modeOf } from "@/features/settings/agentMode";
+import { modeOf, rememberAgent } from "@/features/settings/agentMode";
 import {
   buildLayout,
   countPanes,
@@ -78,6 +78,7 @@ export async function startSession(
   mode: AgentMode | null = null,
 ): Promise<void> {
   pendingSession.value = null;
+  rememberAgent(request.agent);
   const created = await createSession(
     request.project,
     request.agent,

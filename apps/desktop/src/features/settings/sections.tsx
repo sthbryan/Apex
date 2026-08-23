@@ -373,6 +373,7 @@ export function agentsSection(): Section {
       <div class="flex flex-col">
         {agents.value
           .filter((agent) => agent.resolved_path !== null)
+          .sort((left, right) => left.name.localeCompare(right.name))
           .map((agent) => {
             const on = agentEnabled(agent.name);
             return (

@@ -39,8 +39,19 @@ function restoreOff(): string[] {
 export const disabledAgents = signal<string[]>(restoreOff());
 
 export const enabledAgents = computed(() =>
-  installedAgents.value.filter((agent) => !disabledAgents.value.includes(agent.name)),
+  installedAgents.value
+    .filter((agent) => !disabledAgents.value.includes(agent.name))
+    .sort((left, right) => left.name.localeCompare(right.name)),
 );
+
+const LAST = "apex.last-agent";
+
+export const lastAgent = signal<string | null>(localStorage.getItem(LAST));
+
+export function rememberAgent(agent: string): void {
+  lastAgent.value = agent;
+  localStorage.setItem(LAST, agent);
+}
 
 export function agentEnabled(agent: string): boolean {
   return !disabledAgents.value.includes(agent);
