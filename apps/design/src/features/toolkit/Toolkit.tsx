@@ -85,6 +85,7 @@ export function Toolkit() {
   const revision = `${themeMode.value}:${veil.value}`;
   const values = useTokenValues(ALL_TOKENS, revision);
   const other = themeMode.value === "dark" ? "light" : "dark";
+  const val = (token: string): string | undefined => values[token]?.[themeMode.value];
 
   return (
     <div class="tk">
@@ -195,16 +196,16 @@ export function Toolkit() {
                       {group.swatch === "none" ? null : (
                         <td>
                           {group.swatch === "height" ? (
-                            <span class="tk-height" style={`height:${values[token]?.light}`} />
+                            <span class="tk-height" style={`height:${val(token)}`} />
                           ) : group.swatch === "bar" ? (
-                            <span class="tk-bar" style={`width:${values[token]?.light}`} />
+                            <span class="tk-bar" style={`width:${val(token)}`} />
                           ) : (
-                            <span class="tk-radius" style={`border-radius:${values[token]?.light}`} />
+                            <span class="tk-radius" style={`border-radius:${val(token)}`} />
                           )}
                         </td>
                       )}
                       <td><code>{short(token)}</code></td>
-                      <td class="tk-value">{roundPx(values[token]?.light)}</td>
+                      <td class="tk-value">{roundPx(val(token))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -230,12 +231,12 @@ export function Toolkit() {
               <span class="tk-token-count">{DURATIONS.length}</span>
             </div>
             {DURATIONS.map((token) => (
-              <div class="tk-motion" key={token} title={`${token}: ${values[token]?.light}`}>
+              <div class="tk-motion" key={token} title={`${token}: ${val(token)}`}>
                 <code>{short(token)}</code>
                 <span class="tk-track">
-                  <span class="tk-dot" style={`--tk-dur:${values[token]?.light}`} />
+                  <span class="tk-dot" style={`--tk-dur:${val(token)}`} />
                 </span>
-                <span class="tk-value">{formatMs(values[token]?.light)}</span>
+                <span class="tk-value">{formatMs(val(token))}</span>
               </div>
             ))}
           </div>
@@ -245,15 +246,15 @@ export function Toolkit() {
               <span class="tk-token-count">{EASINGS.length}</span>
             </div>
             {EASINGS.map((token) => (
-              <div class="tk-motion" key={token} title={`${token}: ${values[token]?.light}`}>
+              <div class="tk-motion" key={token} title={`${token}: ${val(token)}`}>
                 <svg class="tk-curve" width="30" height="42" viewBox="-4 -24 52 72" aria-hidden="true">
                   <line x1="0" y1="44" x2="44" y2="44" />
                   <line x1="0" y1="0" x2="44" y2="0" />
-                  <path d={curvePath(values[token]?.light)} />
+                  <path d={curvePath(val(token))} />
                 </svg>
                 <code>{short(token)}</code>
                 <span class="tk-track">
-                  <span class="tk-dot" style={`--tk-ease:${values[token]?.light}`} />
+                  <span class="tk-dot" style={`--tk-ease:${val(token)}`} />
                 </span>
               </div>
             ))}
@@ -287,10 +288,10 @@ export function Toolkit() {
                 {SHADOWS.map((token) => (
                   <tr key={token}>
                     <td>
-                      <span class="tk-shadow-tile" style={`box-shadow:${values[token]?.light}`} />
+                      <span class="tk-shadow-tile" style={`box-shadow:${val(token)}`} />
                     </td>
                     <td><code>{short(token)}</code></td>
-                    <td class="tk-value">{values[token]?.light}</td>
+                    <td class="tk-value">{val(token)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -307,10 +308,10 @@ export function Toolkit() {
                 <span
                   class="tk-z"
                   key={token}
-                  style={`z-index:${values[token]?.light};--tk-i:${i}`}
+                  style={`z-index:${val(token)};--tk-i:${i}`}
                 >
                   <code>{short(token).replace("z-", "")}</code>
-                  <span class="tk-value">{values[token]?.light}</span>
+                  <span class="tk-value">{val(token)}</span>
                 </span>
               ))}
             </div>
@@ -324,12 +325,12 @@ export function Toolkit() {
         <div class="tk-specimen-card">
           {[...TYPE_TOKENS].reverse().map((token) => (
             <div class="tk-specimen" key={token}>
-              <span class="tk-specimen-sample" style={`font-size:${values[token]?.light}`}>
+              <span class="tk-specimen-sample" style={`font-size:${val(token)}`}>
                 {SAMPLES[token]}
               </span>
               <span class="tk-specimen-meta">
                 <code>{token.replace("--apex-text-", "")}</code>
-                <span class="tk-value">{roundPx(values[token]?.light)}</span>
+                <span class="tk-value">{roundPx(val(token))}</span>
               </span>
             </div>
           ))}
@@ -344,12 +345,12 @@ export function Toolkit() {
               </div>
               {axis.tokens.map((token) => (
                 <div class="tk-axis" key={token}>
-                  <span class="tk-axis-sample" style={`${axis.property}:${values[token]?.light}`}>
+                  <span class="tk-axis-sample" style={`${axis.property}:${val(token)}`}>
                     {axis.sample}
                   </span>
                   <span class="tk-specimen-meta">
                     <code>{short(token).replace(/^(weight|tracking|leading)-/, "")}</code>
-                    <span class="tk-value">{padZero(values[token]?.light)}</span>
+                    <span class="tk-value">{padZero(val(token))}</span>
                   </span>
                 </div>
               ))}
