@@ -43,6 +43,7 @@ pub fn run() {
             commands::subscribe_output,
             commands::subscribe_events,
             commands::list_agents,
+            commands::set_agent_tools,
             commands::list_sessions,
             commands::list_projects,
             commands::open_project,

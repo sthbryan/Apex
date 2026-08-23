@@ -1,6 +1,6 @@
 use apex_proto::{
     AgentMode, AgentSummary, Command, HistoryEntry, Isolation, Reply, SessionSummary, TerminalSize,
-    WorktreeDisposal,
+    ToolGroup, WorktreeDisposal,
 };
 use uuid::Uuid;
 
@@ -12,6 +12,16 @@ pub async fn list_agents(state: tauri::State<'_, AppState>) -> Answer<Vec<AgentS
         Reply::Agents { agents } => Ok(agents),
         other => Err(format!("unexpected reply: {other:?}")),
     }
+}
+
+#[tauri::command]
+pub async fn set_agent_tools(
+    state: tauri::State<'_, AppState>,
+    agent: String,
+    tools_off: Vec<ToolGroup>,
+) -> Answer<()> {
+    state.daemon()?.request(Command::SetAgentTools { agent, tools_off }).await.map_err(failed)?;
+    Ok(())
 }
 
 #[tauri::command]
