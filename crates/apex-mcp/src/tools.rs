@@ -193,16 +193,10 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
-        name: "apex_browser_read",
-        description: "Read what a browser pane of this project is showing: address, title \
-                      and visible text. Without a pane it reads the one in use, and says \
-                      which other panes are open.",
-        schema: || {
-            json!({ "type": "object", "properties": { "pane": {
-                        "type": "string",
-                        "description": "Name or address of the pane, when the project has several"
-                    } } })
-        },
+        name: "apex_browser_list",
+        description: "List the browser panes open on this project: address, the name each one \
+                      was given, and which one the person is using.",
+        schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_browser_console",
@@ -282,11 +276,7 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
-        "apex_browser_read" => Ok(Command::BrowserRead {
-            project: caller.project,
-            pane: text("pane"),
-            text: arguments.get("text").and_then(Value::as_bool).unwrap_or(true),
-        }),
+        "apex_browser_list" => Ok(Command::BrowserList { project: caller.project }),
         "apex_browser_console" => {
             Ok(Command::BrowserLogs { project: caller.project, pane: text("pane") })
         }

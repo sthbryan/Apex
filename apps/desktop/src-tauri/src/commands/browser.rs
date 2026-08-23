@@ -177,15 +177,10 @@ pub async fn browser_shot(app: tauri::AppHandle, label: String) -> Answer<String
 }
 
 #[tauri::command]
-pub async fn browser_probe(
-    app: tauri::AppHandle,
-    label: String,
-    since: u64,
-    text: bool,
-) -> Answer<String> {
+pub async fn browser_probe(app: tauri::AppHandle, label: String, since: u64) -> Answer<String> {
     let Some(webview) = app.get_webview(&label) else {
         return Ok(String::new());
     };
-    let script = format!("window.__apex ? window.__apex.read({since}, {text}) : null");
+    let script = format!("window.__apex ? window.__apex.read({since}) : null");
     ask(webview, &script).await
 }

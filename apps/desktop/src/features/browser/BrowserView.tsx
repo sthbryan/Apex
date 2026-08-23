@@ -27,7 +27,6 @@ type Entry = {
 type Snapshot = {
   url: string;
   title: string | null;
-  text: string | null;
   logs: Entry[];
   seq: number;
   failures: number;
@@ -142,7 +141,7 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
       if (event.pane !== label) {
         return;
       }
-      void invoke<string>("browser_probe", { label, since: 0, text: event.text })
+      void invoke<string>("browser_probe", { label, since: 0 })
         .then((page) => invoke("page_done", { request: event.request, page, error: null }))
         .catch((cause) =>
           invoke("page_done", { request: event.request, page: null, error: String(cause) }),
@@ -156,7 +155,7 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
       return;
     }
     const read = () => {
-      void invoke<string>("browser_probe", { label, since: cursor.current, text: false })
+      void invoke<string>("browser_probe", { label, since: cursor.current })
         .then((raw) => {
           const taken = raw ? (JSON.parse(raw) as Snapshot | null) : null;
           if (!taken) {

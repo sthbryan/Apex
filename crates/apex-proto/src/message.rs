@@ -606,13 +606,9 @@ pub enum Command {
     BrowserForget {
         pane: String,
     },
-    BrowserRead {
+    BrowserList {
         #[ts(type = "string")]
         project: Uuid,
-        #[serde(default)]
-        pane: Option<String>,
-        #[serde(default)]
-        text: bool,
     },
     BrowserLogs {
         #[ts(type = "string")]
@@ -1018,7 +1014,6 @@ pub enum Event {
         pane: String,
         #[ts(type = "string")]
         request: Uuid,
-        text: bool,
     },
     DaemonShutdown,
     SessionOpened {

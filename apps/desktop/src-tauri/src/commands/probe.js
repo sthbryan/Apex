@@ -37,11 +37,10 @@
   window.addEventListener("error", (event) => push("error", event.message));
   window.addEventListener("unhandledrejection", (event) => push("error", show(event.reason)));
   window.__apex = {
-    read: function (since, wantText) {
+    read: function (since) {
       return {
         url: location.href,
         title: document.title || null,
-        text: wantText && document.body ? document.body.innerText.slice(0, 20000) : null,
         logs: seen.filter((entry) => entry.seq > since),
         seq: stamped,
         failures: failures,

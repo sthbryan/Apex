@@ -627,22 +627,12 @@ impl SessionManager {
         self.browsers.forget(pane).await;
     }
 
-    pub async fn browser_read(
-        &self,
-        project: Uuid,
-        pane: Option<&str>,
-        text: bool,
-    ) -> Result<String> {
-        let taken = self.ask_page(project, pane, text).await?;
-        let page = crate::services::browsers::describe_page(&taken);
-        Ok(match self.browsers.describe(project).await {
-            Some(others) => format!("{others}\n\n{page}"),
-            None => page,
-        })
+    pub async fn browser_list(&self, project: Uuid) -> String {
+        self.browsers.list(project).await
     }
 
     pub async fn browser_logs(&self, project: Uuid, pane: Option<&str>) -> Result<String> {
-        let taken = self.ask_page(project, pane, false).await?;
+        let taken = self.ask_page(project, pane).await?;
         Ok(crate::services::browsers::describe_logs(&taken))
     }
 
@@ -650,10 +640,9 @@ impl SessionManager {
         &self,
         project: Uuid,
         wanted: Option<&str>,
-        text: bool,
     ) -> Result<crate::services::browsers::Snapshot> {
         let raw = self
-            .ask_pane(project, wanted, |pane, request| Event::AskPage { pane, request, text })
+            .ask_pane(project, wanted, |pane, request| Event::AskPage { pane, request })
             .await?;
         serde_json::from_str(&raw).context("the pane answered with something unreadable")
     }

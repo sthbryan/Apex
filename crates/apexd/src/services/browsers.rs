@@ -66,15 +66,14 @@ impl BrowsersService {
         Err(format!("no browser pane is called {name}, only {}", known.join(", ")))
     }
 
-    pub async fn describe(&self, project: Uuid) -> Option<String> {
+    pub async fn list(&self, project: Uuid) -> String {
         let panes = self.panes.lock().await;
         let mut mine: Vec<&Pane> = panes.values().filter(|pane| pane.project == project).collect();
-        if mine.len() < 2 {
-            return None;
+        if mine.is_empty() {
+            return "No browser pane is open on this project.".into();
         }
         mine.sort_by_key(|pane| std::cmp::Reverse(pane.seen));
-        let lines = mine
-            .iter()
+        mine.iter()
             .enumerate()
             .map(|(index, pane)| {
                 let name = pane.name.as_deref().unwrap_or("no name");
@@ -82,8 +81,7 @@ impl BrowsersService {
                 format!("- {} ({name}{mark})", pane.url)
             })
             .collect::<Vec<_>>()
-            .join("\n");
-        Some(format!("This project has {} browser panes:\n{lines}", mine.len()))
+            .join("\n")
     }
 
     pub async fn expect(&self, request: Uuid) -> oneshot::Receiver<Result<String, String>> {
@@ -111,8 +109,6 @@ fn answers_to(pane: &Pane, name: &str) -> bool {
 #[derive(serde::Deserialize)]
 pub struct Snapshot {
     pub url: String,
-    pub title: Option<String>,
-    pub text: Option<String>,
     #[serde(default)]
     pub logs: Vec<Entry>,
 }
@@ -121,19 +117,6 @@ pub struct Snapshot {
 pub struct Entry {
     pub level: String,
     pub text: String,
-}
-
-pub fn describe_page(taken: &Snapshot) -> String {
-    let mut out = taken.url.clone();
-    if let Some(title) = &taken.title {
-        out.push_str(" - ");
-        out.push_str(title);
-    }
-    if let Some(text) = &taken.text {
-        out.push('\n');
-        out.push_str(text);
-    }
-    out
 }
 
 pub fn describe_logs(taken: &Snapshot) -> String {
@@ -188,12 +171,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_lone_pane_is_not_worth_describing() {
+    async fn the_listing_puts_the_pane_in_use_on_top() {
         let (browsers, project) = panes().await;
-        let listing = browsers.describe(project).await.expect("two panes");
-        assert!(listing.contains("in use"));
+        let listing = browsers.list(project).await;
+        let lines: Vec<&str> = listing.lines().collect();
+        assert!(lines[0].contains("http://localhost:5173"));
+        assert!(lines[0].contains("in use"));
+        assert!(lines[1].contains("book"));
 
         browsers.forget("browser-1").await;
-        assert!(browsers.describe(project).await.is_none());
+        browsers.forget("browser-2").await;
+        assert_eq!(browsers.list(project).await, "No browser pane is open on this project.");
     }
 }

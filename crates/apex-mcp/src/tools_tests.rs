@@ -127,7 +127,7 @@ fn a_named_pane_travels_with_the_view_and_the_reads() {
         Command::BrowserShot { pane: Some(pane), .. } if pane == "storybook"
     ));
     assert!(matches!(
-        command_for(&me, "apex_browser_read", &json!({})).expect("command"),
-        Command::BrowserRead { pane: None, .. }
+        command_for(&me, "apex_browser_console", &json!({})).expect("command"),
+        Command::BrowserLogs { pane: None, .. }
     ));
 }

@@ -230,12 +230,9 @@ async fn execute(
             manager.browser_forget(&pane).await;
             Ok(Reply::Done)
         }
-        Command::BrowserRead { project, pane, text } => Ok(Reply::Text {
-            text: manager
-                .browser_read(project, pane.as_deref(), text)
-                .await
-                .map_err(internal_error)?,
-        }),
+        Command::BrowserList { project } => {
+            Ok(Reply::Text { text: manager.browser_list(project).await })
+        }
         Command::BrowserLogs { project, pane } => Ok(Reply::Text {
             text: manager.browser_logs(project, pane.as_deref()).await.map_err(internal_error)?,
         }),
@@ -466,7 +463,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::UrlOpen { .. }
             | Command::BrowserReport { .. }
             | Command::BrowserForget { .. }
-            | Command::BrowserRead { .. }
+            | Command::BrowserList { .. }
             | Command::BrowserLogs { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
