@@ -23,6 +23,10 @@
     @apply rotate-90;
   }
 
+  .ui-tree-row-lead {
+    @apply flex shrink-0 items-center text-faint;
+  }
+
   .ui-tree-row-name {
     @apply min-w-0 flex-1 truncate;
   }
@@ -35,6 +39,7 @@
   .ui-tree-row-status[data-status="modified"] { color: var(--apex-git-modified); }
   .ui-tree-row-status[data-status="removed"] { color: var(--apex-git-removed); }
   .ui-tree-row-status[data-status="untracked"] { color: var(--apex-git-dirty); }
+  .ui-tree-row-status[data-status="conflicted"] { color: var(--apex-git-conflict); }
 
   .ui-tree-row-trail {
     @apply shrink-0 text-2xs text-muted;

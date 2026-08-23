@@ -13,6 +13,7 @@ export const treeRowMeta: ComponentMeta = {
     { name: "nested", props: { name: "src/shared/theme", depth: 1, expanded: true } },
     { name: "modified leaf", props: { name: "tokens.css", depth: 2, status: "modified" } },
     { name: "added leaf", props: { name: "tree-row.css", depth: 2, status: "added" } },
+    { name: "conflicted leaf", props: { name: "index.css", depth: 2, status: "conflicted" } },
     { name: "selected", props: { name: "theme.css", depth: 2, status: "modified", selected: true } },
   ],
 };

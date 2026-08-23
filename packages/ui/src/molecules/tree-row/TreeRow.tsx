@@ -1,7 +1,7 @@
 import type { ComponentChildren, JSX } from "preact";
 import { cn } from "@/lib/cn";
 
-export type TreeStatus = "added" | "modified" | "removed" | "untracked";
+export type TreeStatus = "added" | "modified" | "removed" | "untracked" | "conflicted";
 
 export interface TreeRowProps extends Omit<JSX.IntrinsicElements["button"], "ref"> {
   name: string;
@@ -9,6 +9,7 @@ export interface TreeRowProps extends Omit<JSX.IntrinsicElements["button"], "ref
   expanded?: boolean;
   status?: TreeStatus;
   selected?: boolean;
+  lead?: ComponentChildren;
   trail?: ComponentChildren;
 }
 
@@ -17,6 +18,7 @@ const LETTER: Record<TreeStatus, string> = {
   modified: "M",
   removed: "D",
   untracked: "U",
+  conflicted: "C",
 };
 
 export function TreeRow({
@@ -25,6 +27,7 @@ export function TreeRow({
   expanded,
   status,
   selected,
+  lead,
   trail,
   class: className,
   ...rest
@@ -45,6 +48,7 @@ export function TreeRow({
           </svg>
         )}
       </span>
+      {lead ? <span class="ui-tree-row-lead">{lead}</span> : null}
       <span class="ui-tree-row-name">{name}</span>
       {status ? <span class="ui-tree-row-status" data-status={status}>{LETTER[status]}</span> : null}
       {trail ? <span class="ui-tree-row-trail">{trail}</span> : null}
