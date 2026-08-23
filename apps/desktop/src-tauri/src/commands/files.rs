@@ -91,6 +91,17 @@ pub async fn browser_report(
 }
 
 #[tauri::command]
+pub async fn shot_done(
+    state: tauri::State<'_, AppState>,
+    request: Uuid,
+    path: Option<String>,
+    error: Option<String>,
+) -> Answer<()> {
+    state.daemon()?.request(Command::ShotDone { request, path, error }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn browser_forget(state: tauri::State<'_, AppState>, pane: String) -> Answer<()> {
     state.daemon()?.request(Command::BrowserForget { pane }).await.map_err(failed)?;
     Ok(())

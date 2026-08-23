@@ -105,6 +105,17 @@ export function onOpenView(
   };
 }
 
+const shotHandlers = new Set<(event: Extract<Event, { type: "ask_shot" }>) => void>();
+
+export function onAskShot(
+  handler: (event: Extract<Event, { type: "ask_shot" }>) => void,
+): () => void {
+  shotHandlers.add(handler);
+  return () => {
+    shotHandlers.delete(handler);
+  };
+}
+
 const closeHandlers = new Set<(event: Extract<Event, { type: "close_view" }>) => void>();
 
 export function onCloseView(
@@ -125,6 +136,11 @@ function applyEvent(event: Event): void {
       break;
     case "close_view":
       for (const handler of closeHandlers) {
+        handler(event);
+      }
+      break;
+    case "ask_shot":
+      for (const handler of shotHandlers) {
         handler(event);
       }
       break;

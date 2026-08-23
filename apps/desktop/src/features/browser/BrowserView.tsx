@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import { openWeb, overlays } from "@/features/browser/state";
 import { activeProjectId } from "@/features/projects/state";
+import { onAskShot } from "@/features/sessions/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -111,6 +112,20 @@ export function BrowserView({ id, url, visible }: Props) {
     return () => {
       void stop.then((off) => off());
     };
+  }, [label]);
+
+  useEffect(() => {
+    return onAskShot((event) => {
+      if (event.pane !== label) {
+        return;
+      }
+      void invoke<string>("browser_shot", { label })
+        .then((path) => invoke("shot_done", { request: event.request, path, error: null }))
+        .catch((cause) =>
+          invoke("shot_done", { request: event.request, path: null, error: String(cause) }),
+        )
+        .catch(complain);
+    });
   }, [label]);
 
   useEffect(() => {
