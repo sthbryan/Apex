@@ -48,6 +48,9 @@ export const en = {
     discard: "Reload and discard",
   },
   projects: {
+    title: "Projects",
+    blocked: "{count} waiting",
+    waitingElsewhere: "{count} waiting in another project",
     none: "No project",
     open: "Open project…",
     search: "Find a project…",

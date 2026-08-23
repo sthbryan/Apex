@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { Button, Glyph, ListRow, Pill, Popover, ProjectButton } from "@apex/ui";
 import { useState } from "preact/hooks";
 import {
   activeProject,
@@ -10,114 +10,131 @@ import {
 import { sessions } from "@/features/sessions/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import { Picker, type PickerItem } from "@/shared/ui/Picker";
 
-type Props = {
-  variant?: "bar" | "dock" | "rail";
-};
-
-export function ProjectPicker({ variant = "bar" }: Props) {
+export function ProjectPicker() {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [asking, setAsking] = useState<string | null>(null);
   const current = activeProject.value;
-  const dock = variant === "dock";
-  const rail = variant === "rail";
 
   const close = () => {
     setOpen(false);
-    setQuery("");
+    setAsking(null);
   };
 
-  const needle = query.trim().toLowerCase();
-  const items: PickerItem[] = projects.value
-    .filter(
-      (project) =>
-        !needle ||
-        project.name.toLowerCase().includes(needle) ||
-        project.root.toLowerCase().includes(needle),
-    )
-    .map((project) => {
-      const live = countLive(project.id);
-      const blocked = countBlocked(project.id);
-      return {
-        id: project.id,
-        label: project.name,
-        hint: prettyRoot(project.root),
-        badge:
-          live > 0
-            ? { text: t("projects.live", { count: String(live) }), alert: blocked > 0 }
-            : undefined,
-        remove:
-          live === 0
-            ? {
-                label: t("projects.remove"),
-                ask: t("projects.removeAsk"),
-                yes: t("projects.remove"),
-                no: t("projects.removeCancel"),
-                run: () => {
-                  close();
-                  void removeProject(project.id);
-                },
-              }
-            : undefined,
-        run: () => {
-          close();
-          void switchTo(project.id);
-        },
-      };
-    });
-
-  items.push({
-    id: "open-folder",
-    label: t("projects.open"),
-    run: () => {
-      close();
-      void pickProject();
-    },
-  });
+  const waiting = waitingElsewhere();
 
   return (
-    <div class={cn("min-w-0", dock && "px-3")}>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        title={current?.root ?? t("projects.none")}
-        class={cn(
-          "flex min-w-0 items-center gap-1.5 rounded transition-colors",
-          rail && "size-7 justify-center hover:bg-raised hover:text-text",
-          !dock && !rail && "max-w-56 px-1.5 py-0.5 hover:bg-raised",
-          dock && "w-full text-left hover:text-text",
-        )}
-      >
-        {rail ? (
-          <span class="text-xs font-semibold text-text">{current?.name.charAt(0) ?? "·"}</span>
-        ) : (
-          <>
-            <span class="min-w-0 flex-1">
-              <span class={cn("block truncate", dock && "font-medium text-text")}>
-                {current?.name ?? t("projects.none")}
-              </span>
-              {dock && current && (
-                <span class="block truncate text-2xs text-faint">{prettyRoot(current.root)}</span>
-              )}
-            </span>
-            {waitingElsewhere() > 0 && (
-              <span class="size-1.5 shrink-0 animate-breathe rounded-full bg-state-blocked" />
-            )}
-            <Icon name="chevron" size={12} class="shrink-0 text-faint" />
-          </>
-        )}
-      </button>
+    <Popover
+      open={open}
+      onClose={close}
+      block
+      side="bottom"
+      align="start"
+      width={300}
+      title={t("projects.title")}
+      anchor={
+        <ProjectButton
+          name={current?.name ?? t("projects.none")}
+          path={current ? prettyRoot(current.root) : undefined}
+          icon={<Icon name="files" size={13} />}
+          alert={
+            waiting > 0 ? t("projects.waitingElsewhere", { count: String(waiting) }) : undefined
+          }
+          title={current?.root ?? t("projects.none")}
+          trail={<Icon name="chevron" size={12} class="shrink-0 text-faint" />}
+          onClick={() => setOpen((shown) => !shown)}
+        />
+      }
+    >
+      {projects.value.map((project) => {
+        const live = countLive(project.id);
+        const blocked = countBlocked(project.id);
+        const mine = project.id === current?.id;
 
-      <Picker
-        open={open}
-        onClose={close}
-        query={query}
-        onQuery={setQuery}
-        placeholder={t("projects.search")}
-        items={items}
+        if (asking === project.id) {
+          return (
+            <ListRow
+              key={project.id}
+              as="div"
+              label={t("projects.removeAsk")}
+              class="text-state-failed"
+              actions={
+                <>
+                  <Button variant="subtle" size="xs" onClick={() => setAsking(null)}>
+                    {t("projects.removeCancel")}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="xs"
+                    onClick={() => {
+                      close();
+                      void removeProject(project.id);
+                    }}
+                  >
+                    {t("projects.remove")}
+                  </Button>
+                </>
+              }
+            />
+          );
+        }
+
+        return (
+          <ListRow
+            key={project.id}
+            label={project.name}
+            sub={<span class="font-mono">{prettyRoot(project.root)}</span>}
+            selected={mine}
+            lead={
+              <Glyph size="sm">
+                <Icon name={mine ? "check" : "fileText"} size={11} />
+              </Glyph>
+            }
+            trail={
+              blocked > 0 ? (
+                <Pill tone="blocked">{t("projects.blocked", { count: String(blocked) })}</Pill>
+              ) : live > 0 ? (
+                <Pill tone="accent">{t("projects.live", { count: String(live) })}</Pill>
+              ) : undefined
+            }
+            actions={
+              live === 0 ? (
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  iconOnly
+                  title={t("projects.remove")}
+                  aria-label={t("projects.remove")}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setAsking(project.id);
+                  }}
+                >
+                  <Icon name="close" size={11} />
+                </Button>
+              ) : undefined
+            }
+            onClick={() => {
+              close();
+              void switchTo(project.id);
+            }}
+          />
+        );
+      })}
+
+      <ListRow
+        label={t("projects.open")}
+        lead={
+          <Glyph size="sm">
+            <Icon name="plus" size={11} />
+          </Glyph>
+        }
+        onClick={() => {
+          close();
+          void pickProject();
+        }}
       />
-    </div>
+    </Popover>
   );
 }
 

@@ -99,7 +99,7 @@ export function Layout({ onNewSession }: Props) {
           ))}
         </Rail>
 
-        <SidePanel flush collapsed={rail} head={<ProjectPicker variant="dock" />}>
+        <SidePanel flush collapsed={rail} head={<ProjectPicker />}>
           <Dock />
         </SidePanel>
 

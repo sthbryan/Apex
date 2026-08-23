@@ -50,6 +50,9 @@ export const es: Messages = {
     discard: "Recargar y descartar",
   },
   projects: {
+    title: "Proyectos",
+    blocked: "{count} esperando",
+    waitingElsewhere: "{count} esperando en otro proyecto",
     none: "Sin proyecto",
     open: "Abrir proyecto…",
     search: "Busca un proyecto…",
