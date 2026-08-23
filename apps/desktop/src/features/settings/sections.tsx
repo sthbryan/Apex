@@ -1,4 +1,4 @@
-import { Segmented, Slider } from "@apex/ui";
+import { Segmented, Select, Slider } from "@apex/ui";
 import cn from "cnfast";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import {
@@ -51,7 +51,6 @@ import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
 import { Icon } from "@/shared/ui/Icon";
-import { Select } from "@/shared/ui/Select";
 
 export function lookSection(): Section {
   return {
@@ -180,7 +179,7 @@ export function spaceSection(): Section {
           <Select
             label={t("settings.editor")}
             value={preferredEditor.value ?? ""}
-            onSelect={(value) => setPreferredEditor(value === "" ? null : value)}
+            onChange={(value) => setPreferredEditor(value === "" ? null : value)}
             options={[
               { value: "", label: t("settings.editorSystem") },
               ...installedEditors().map((editor) => ({
@@ -234,7 +233,7 @@ export function spaceSection(): Section {
                   <Select
                     label={t("settings.agentSplitsYours")}
                     value={String(splitCaps.value.yours)}
-                    onSelect={(value) => setSplitCap("yours", Number(value))}
+                    onChange={(value) => setSplitCap("yours", Number(value))}
                     options={PANE_CAPS.map((panes) => ({
                       value: String(panes),
                       label: t("settings.agentSplitsYoursOption", { panes: String(panes) }),
@@ -243,7 +242,7 @@ export function spaceSection(): Section {
                   <Select
                     label={t("settings.agentSplitsSpare")}
                     value={String(splitCaps.value.spare)}
-                    onSelect={(value) => setSplitCap("spare", Number(value))}
+                    onChange={(value) => setSplitCap("spare", Number(value))}
                     options={PANE_CAPS.map((panes) => ({
                       value: String(panes),
                       label: t("settings.agentSplitsSpareOption", { panes: String(panes) }),
