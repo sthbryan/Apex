@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mocks } = vi.hoisted(() => {
   const openDiff = vi.fn();
-  const gitStatus = { value: { changes: [] } as never };
+  const gitStatus = { value: { changes: [] as Array<{ path: string }> } };
   return {
     mocks: {
       openDiff,
@@ -22,7 +22,7 @@ vi.mock("@/features/workspace/state", () => ({
   openDiff: mocks.openDiff,
 }));
 
-import { stepReview, settleReview } from "./state";
+import { settleReview, stepReview } from "./state";
 
 beforeEach(() => {
   mocks.openDiff.mockReset();
@@ -31,11 +31,7 @@ beforeEach(() => {
 
 describe("stepReview", () => {
   it("moves cursor forward when path is found", () => {
-    mocks.gitStatus.value.changes = [
-      { path: "a.ts" },
-      { path: "b.ts" },
-      { path: "c.ts" },
-    ];
+    mocks.gitStatus.value.changes = [{ path: "a.ts" }, { path: "b.ts" }, { path: "c.ts" }];
     stepReview({ type: "project" } as never, "b.ts", 1);
     expect(mocks.openDiff).toHaveBeenCalledWith({ type: "project" }, "c.ts");
   });

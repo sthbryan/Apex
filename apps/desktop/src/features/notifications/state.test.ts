@@ -99,11 +99,11 @@ vi.mock("@/shared/i18n", () => ({
 let mod: typeof StateModule;
 
 function session(id: string, projectId: string, title = "s", task: string | null = null) {
-  return { id, project_id: projectId, title, task } as never;
+  return { id, project_id: projectId, title, task, state: "idle" };
 }
 
 function project(id: string, name: string) {
-  return { id, name } as never;
+  return { id, name };
 }
 
 beforeEach(async () => {
