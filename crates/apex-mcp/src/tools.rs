@@ -273,6 +273,14 @@ fn view_target(caller: &Caller, text: &impl Fn(&str) -> Option<String>) -> Resul
 }
 
 pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Command> {
+    if TOOLS
+        .iter()
+        .find(|known| known.name == tool)
+        .is_some_and(|known| caller.summary.tools_off.contains(&known.group))
+    {
+        bail!("unknown tool {tool}")
+    }
+
     let text = |key: &str| -> Option<String> {
         arguments.get(key).and_then(Value::as_str).map(str::to_owned)
     };
