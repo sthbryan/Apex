@@ -107,11 +107,11 @@ export function lookSection(): Section {
               control: (
                 <Segmented
                   label={t("settings.translucent")}
-                  value={translucent.value ? "on" : "off"}
-                  onChange={(value) => setTranslucent(value === "on")}
+                  value={translucent.value ? "glass" : "clear"}
+                  onChange={(value) => setTranslucent(value === "glass")}
                   options={[
-                    { value: "on", label: t("settings.translucentOn") },
-                    { value: "off", label: t("settings.translucentOff") },
+                    { value: "clear", label: t("settings.translucentOff") },
+                    { value: "glass", label: t("settings.translucentOn") },
                   ]}
                 />
               ),
@@ -127,11 +127,10 @@ export function lookSection(): Section {
               control: (
                 <Slider
                   label={t("settings.opacity")}
-                  value={100 - veilOpacity.value}
-                  min={0}
-                  max={100 - MIN_OPACITY}
-                  format={(value) => `${value}%`}
-                  onChange={(value) => setVeilOpacity(100 - value)}
+                  value={veilOpacity.value}
+                  min={MIN_OPACITY}
+                  max={100}
+                  onChange={setVeilOpacity}
                 />
               ),
             },
