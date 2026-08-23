@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { ListRow } from "@apex/ui";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -26,7 +26,7 @@ export function ContextPanel() {
   }
 
   return (
-    <div class="flex h-full flex-col">
+    <div class="dock-view dock-fixed">
       <PanelActions>
         <button
           type="button"
@@ -46,30 +46,25 @@ export function ContextPanel() {
         </button>
       </PanelActions>
 
-      {failure.value && <p class="px-2 text-state-failed">{failure.value}</p>}
+      <div class="flex shrink-0 flex-col gap-0.5 p-2">
+        {failure.value && <p class="px-1.5 text-state-failed">{failure.value}</p>}
 
-      {entries.value.length === 0 && !failure.value && (
-        <p class="px-2 pb-1 text-faint">{t("context.empty")}</p>
-      )}
+        {entries.value.length === 0 && !failure.value && (
+          <p class="px-1.5 text-faint">{t("context.empty")}</p>
+        )}
 
-      <ul class="shrink-0">
         {entries.value.map((entry) => (
-          <li key={entry.key}>
-            <button
-              type="button"
-              onClick={() => setOpen(entry.key)}
-              class={cn(
-                "flex w-full items-center gap-2 px-2 py-px text-left transition-colors hover:bg-raised",
-                open === entry.key ? "bg-raised text-text" : "text-muted",
-              )}
-            >
-              <Icon name="context" size={12} class="shrink-0 text-faint" />
-              <span class="truncate">{entry.key}</span>
-              <span class="ml-auto shrink-0 tabular-nums text-faint">{entry.bytes}</span>
-            </button>
-          </li>
+          <ListRow
+            key={entry.key}
+            label={entry.key}
+            mono
+            selected={open === entry.key}
+            lead={<Icon name="context" size={12} class="text-faint" />}
+            trail={<span class="tabular-nums">{entry.bytes}</span>}
+            onClick={() => setOpen(entry.key)}
+          />
         ))}
-      </ul>
+      </div>
 
       {open !== null && <Editor key={open} entryKey={open} onDone={() => setOpen(null)} />}
     </div>
