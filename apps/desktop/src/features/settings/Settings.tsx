@@ -92,11 +92,12 @@ export function Settings() {
         <section key={entry.id}>
           {(found.length > 1 || needle) && <SettingsHeading title={entry.label} />}
           {entry.panel}
-          {entry.entries.map((row) => (
-            <Field key={row.id} label={row.label} hint={row.hint}>
-              {row.control}
-            </Field>
-          ))}
+          {!entry.panel &&
+            entry.entries.map((row) => (
+              <Field key={row.id} label={row.label} hint={row.hint}>
+                {row.control}
+              </Field>
+            ))}
         </section>
       ))}
     </SettingsDialog>

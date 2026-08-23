@@ -80,27 +80,27 @@ const BINDINGS: Record<string, (event: KeyboardEvent) => void> = {
 
 export type Shortcut = {
   id: string;
-  keys: string;
+  keys: string[];
   label: MessageKey;
   group: "navigation" | "panes";
 };
 
 export const SHORTCUTS: Shortcut[] = [
-  { id: "palette", keys: "⌘K", label: "shortcuts.palette", group: "navigation" },
-  { id: "finder", keys: "⌘P", label: "shortcuts.finder", group: "navigation" },
-  { id: "shortcuts", keys: "⌘H", label: "shortcuts.shortcuts", group: "navigation" },
-  { id: "settings", keys: "⌘,", label: "shortcuts.settings", group: "navigation" },
-  { id: "usage", keys: "⌘U", label: "shortcuts.usage", group: "navigation" },
-  { id: "dock", keys: "⌘B", label: "shortcuts.dock", group: "navigation" },
-  { id: "split-right", keys: "⌘D", label: "shortcuts.splitRight", group: "panes" },
+  { id: "palette", keys: ["⌘", "K"], label: "shortcuts.palette", group: "navigation" },
+  { id: "finder", keys: ["⌘", "P"], label: "shortcuts.finder", group: "navigation" },
+  { id: "shortcuts", keys: ["⌘", "H"], label: "shortcuts.shortcuts", group: "navigation" },
+  { id: "settings", keys: ["⌘", ","], label: "shortcuts.settings", group: "navigation" },
+  { id: "usage", keys: ["⌘", "U"], label: "shortcuts.usage", group: "navigation" },
+  { id: "dock", keys: ["⌘", "B"], label: "shortcuts.dock", group: "navigation" },
+  { id: "tab-1-9", keys: ["⌘", "1…9"], label: "shortcuts.tabs", group: "navigation" },
+  { id: "split-right", keys: ["⌘", "D"], label: "shortcuts.splitRight", group: "panes" },
   {
     id: "split-direction",
-    keys: "⌘ + ←/→/↑/↓ + D",
+    keys: ["⌘", "← → ↑ ↓", "D"],
     label: "shortcuts.splitDirection",
     group: "panes",
   },
-  { id: "split-down", keys: "⌘⇧D", label: "shortcuts.splitDown", group: "panes" },
-  { id: "cycle-layout", keys: "⌘⇧L", label: "shortcuts.cycleLayout", group: "panes" },
-  { id: "close-pane", keys: "⌘W", label: "shortcuts.closePane", group: "panes" },
-  { id: "tab-1-9", keys: "⌘1–⌘9", label: "shortcuts.tabs", group: "navigation" },
+  { id: "split-down", keys: ["⌘", "⇧", "D"], label: "shortcuts.splitDown", group: "panes" },
+  { id: "cycle-layout", keys: ["⌘", "⇧", "L"], label: "shortcuts.cycleLayout", group: "panes" },
+  { id: "close-pane", keys: ["⌘", "W"], label: "shortcuts.closePane", group: "panes" },
 ];

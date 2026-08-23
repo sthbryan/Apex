@@ -3,6 +3,7 @@ import {
   IdentityCard,
   KbdGroup,
   Pill,
+  SectionLabel,
   Segmented,
   Select,
   Slider,
@@ -497,6 +498,8 @@ export function aboutSection(appVersion: string): Section {
   };
 }
 
+const SHORTCUT_GROUPS = ["navigation", "panes"] as const;
+
 export function shortcutsSection(): Section {
   return {
     id: "shortcuts",
@@ -506,8 +509,24 @@ export function shortcutsSection(): Section {
     entries: SHORTCUTS.map((shortcut) => ({
       id: shortcut.id,
       label: t(shortcut.label),
-      hint: t(`shortcuts.groups.${shortcut.group}` as const),
-      control: <KbdGroup keys={shortcut.keys.split(" + ")} />,
+      hint: t(`shortcuts.groups.${shortcut.group}`),
+      control: <KbdGroup keys={shortcut.keys} />,
     })),
+    panel: (
+      <div class="flex flex-col">
+        {SHORTCUT_GROUPS.map((group) => (
+          <div key={group}>
+            <SectionLabel flush>{t(`shortcuts.groups.${group}`)}</SectionLabel>
+            {SHORTCUTS.filter((shortcut) => shortcut.group === group).map((shortcut) => (
+              <DataRow
+                key={shortcut.id}
+                label={t(shortcut.label)}
+                trail={<KbdGroup keys={shortcut.keys} />}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    ),
   };
 }
