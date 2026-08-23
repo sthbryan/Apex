@@ -1,4 +1,13 @@
-import { AppBody, Rail, RailButton, SidePanel, TitleBar, Wordmark } from "@apex/ui";
+import {
+  AppBody,
+  Button,
+  Rail,
+  RailButton,
+  RailDivider,
+  SidePanel,
+  TitleBar,
+  Wordmark,
+} from "@apex/ui";
 import { Dock } from "@/app/layout/Dock";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { StatusBar } from "@/app/layout/StatusBar";
@@ -15,6 +24,7 @@ import { Views } from "@/app/Views";
 import { page, toggleSettings } from "@/app/view";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
+import { homeOpen, openHome } from "@/features/workspace/state";
 import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -66,6 +76,10 @@ export function Layout({ onNewSession }: Props) {
 
       <AppBody>
         <Rail aria-label={t("dock.panels")}>
+          <RailButton label={t("home.title")} current={homeOpen.value} onClick={openHome}>
+            <Icon name="home" size={16} />
+          </RailButton>
+          <RailDivider />
           {order.map((id) => (
             <RailButton
               key={id}
@@ -82,7 +96,17 @@ export function Layout({ onNewSession }: Props) {
           ))}
         </Rail>
 
-        <SidePanel flush collapsed={rail} head={<ProjectPicker />}>
+        <SidePanel
+          flush
+          collapsed={rail}
+          head={<ProjectPicker />}
+          foot={
+            <Button variant="primary" size="lg" class="w-full" onClick={openHome}>
+              <Icon name="plus" size={14} />
+              {t("toolbar.newSession")}
+            </Button>
+          }
+        >
           <Dock />
         </SidePanel>
 

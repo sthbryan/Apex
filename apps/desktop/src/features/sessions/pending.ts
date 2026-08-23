@@ -4,9 +4,10 @@ import type { AgentMode } from "@/bindings/AgentMode";
 import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
+import { prompt } from "@/features/acp/state";
 import { clearRejects } from "@/features/git/state";
 import { activeProjectId } from "@/features/projects/state";
-import { closeSession, createSession, sessions } from "@/features/sessions/state";
+import { closeSession, createSession, sendInput, sessions } from "@/features/sessions/state";
 import { modeOf } from "@/features/settings/agentMode";
 import {
   buildLayout,
@@ -41,6 +42,7 @@ export type PendingSession = {
   agent: string;
   direction: Direction | null;
   isGit: boolean;
+  task?: string;
 };
 
 const SHELL = "shell";
@@ -90,6 +92,17 @@ export async function startSession(
   } else {
     openInNewTab(created);
   }
+  if (request.task) {
+    await handOver(created, request.task, mode ?? chosenMode(request.agent));
+  }
+}
+
+async function handOver(session: SessionSummary, task: string, mode: AgentMode): Promise<void> {
+  if (mode === "acp") {
+    await prompt(session.id, task).catch(complain);
+    return;
+  }
+  await sendInput(session.id, `${task}\r`).catch(complain);
 }
 
 export type PendingClose = {

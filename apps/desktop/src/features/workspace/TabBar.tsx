@@ -7,9 +7,15 @@ import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { togglePalette } from "@/features/palette/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
-import { activeTabId, closeTab, mergeTabInto, type Tab } from "@/features/workspace/state";
+import {
+  activeTabId,
+  closeTab,
+  homeOpen,
+  mergeTabInto,
+  openHome,
+  type Tab,
+} from "@/features/workspace/state";
 import { paneIcon, paneTitle } from "@/features/workspace/title";
 import { type Leaf, leaves } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
@@ -64,10 +70,10 @@ export function TabBar({ tabs, sessions }: Props) {
       class="relative"
       addLabel={t("toolbar.newSession")}
       addIcon={<Icon name="plus" size={14} />}
-      onAdd={togglePalette}
+      onAdd={openHome}
     >
       {tabs.map((tab, index) => {
-        const active = tab.id === activeTabId.value;
+        const active = tab.id === activeTabId.value && !homeOpen.value;
         const overflowed = index >= tabs.length - hidden;
         const panel = panelOf(tab);
         const mergeTarget = (() => {
@@ -91,6 +97,7 @@ export function TabBar({ tabs, sessions }: Props) {
             )}
             lead={identity(tab, sessions)}
             onOpen={() => {
+              homeOpen.value = false;
               activeTabId.value = tab.id;
             }}
             trail={

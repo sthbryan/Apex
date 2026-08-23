@@ -1,18 +1,13 @@
-import { Kbd, Welcome, Wordmark } from "@apex/ui";
+import { Welcome, Wordmark } from "@apex/ui";
 import type { ComponentChildren } from "preact";
-import { useMemo } from "preact/hooks";
 
 import { activeProject } from "@/features/projects/state";
-import { AgentIcon } from "@/features/sessions/AgentIcon";
-import { requestSession } from "@/features/sessions/pending";
 import { sessions } from "@/features/sessions/state";
-import { enabledAgents } from "@/features/settings/agentMode";
+import { Home } from "@/features/workspace/Home";
 import { PaneTree } from "@/features/workspace/PaneTree";
-import { activeTabId, tabs } from "@/features/workspace/state";
+import { activeTabId, homeOpen, tabs } from "@/features/workspace/state";
 import { TabBar } from "@/features/workspace/TabBar";
 import { t } from "@/shared/i18n";
-
-const OFFERED_AGENTS = 4;
 
 export function Workspace() {
   return (
@@ -20,9 +15,9 @@ export function Workspace() {
       <TabBar tabs={tabs.value} sessions={sessions.value} />
 
       <div class="relative min-h-0 flex-1 m-px">
-        {tabs.value.length === 0 ? (
+        {homeOpen.value || tabs.value.length === 0 ? (
           activeProject.value ? (
-            <EmptySessions />
+            <Home />
           ) : (
             <NoProject />
           )
@@ -56,53 +51,6 @@ function NoProject() {
       <p class="text-pretty text-muted">{t("projects.empty")}</p>
     </Splash>
   );
-}
-
-function EmptySessions() {
-  const project = activeProject.value;
-  const installed = enabledAgents.value;
-  const offered = useMemo(() => sample(installed, OFFERED_AGENTS), [installed]);
-
-  return (
-    <Splash>
-      <p class="max-w-md text-balance text-muted">{t("workspace.emptyTitle")}</p>
-      {project && offered.length > 0 && (
-        <ul class="flex flex-wrap items-center justify-center gap-2">
-          {offered.map((agent) => (
-            <li key={agent.name}>
-              <button
-                type="button"
-                onClick={() =>
-                  requestSession({
-                    project: project.id,
-                    agent: agent.name,
-                    direction: null,
-                    isGit: project.is_git,
-                  })
-                }
-                class="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-muted transition-colors hover:border-muted hover:text-text"
-              >
-                <AgentIcon agent={agent.name} class="shrink-0" />
-                {agent.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <p class="text-xs text-faint">
-        {t("workspace.emptyHintBefore")} <Kbd>⌘K</Kbd> {t("workspace.emptyHintAfter")}
-      </p>
-    </Splash>
-  );
-}
-
-function sample<T>(pool: readonly T[], count: number): T[] {
-  const drawn = [...pool];
-  for (let index = drawn.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [drawn[index], drawn[swap]] = [drawn[swap], drawn[index]];
-  }
-  return drawn.slice(0, count);
 }
 
 function Splash({ children }: { children: ComponentChildren }) {

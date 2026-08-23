@@ -1,4 +1,4 @@
-import { computed, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 
 import { reconcileDock, returnPanelToDock } from "@/app/layout/state";
 import type { GitTarget } from "@/bindings/GitTarget";
@@ -42,6 +42,21 @@ export type Tab = {
 
 export const tabs = signal<Tab[]>([]);
 export const activeTabId = signal<string | null>(null);
+export const homeOpen = signal(true);
+
+export function openHome(): void {
+  homeOpen.value = true;
+}
+
+let lastTabId = activeTabId.peek();
+
+effect(() => {
+  const id = activeTabId.value;
+  if (id !== lastTabId) {
+    lastTabId = id;
+    homeOpen.value = false;
+  }
+});
 
 export const activeTab = computed(
   () => tabs.value.find((tab) => tab.id === activeTabId.value) ?? null,
