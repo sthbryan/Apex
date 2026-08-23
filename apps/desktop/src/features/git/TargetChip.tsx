@@ -88,12 +88,11 @@ export function TargetChip({ project, placement = "below" }: Props) {
     <Popover
       open={open}
       onClose={() => setOpen(false)}
-      block
+      anchorClass="min-w-0 shrink"
       side={above ? "top" : "bottom"}
       align={above ? "start" : "end"}
       width={256}
       label={t("git.branches", { count: String(others.length) })}
-      class="min-w-0"
       anchor={
         <button
           type="button"
