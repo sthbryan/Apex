@@ -59,7 +59,7 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
       <div class="max-h-80 overflow-y-auto py-1">
         {failures.map((agent) => (
           <section key={agent} class="flex items-center gap-1.5 px-2.5 py-1">
-            <AgentIcon agent={agent} size={12} class="shrink-0 text-faint" />
+            <AgentIcon agent={agent} class="shrink-0 text-faint" />
             <h3 class="text-micro uppercase tracking-wider text-faint">{agent}</h3>
             <span class="ml-auto shrink-0 text-micro text-state-failed">
               {t("usage.unavailable")}
@@ -85,7 +85,7 @@ export function UsagePopover({ reports, failures, onClose }: Props) {
             return (
               <section key={report.agent} class="px-2.5 py-1">
                 <div class="mb-0.5 flex items-center gap-1.5">
-                  <AgentIcon agent={report.agent} size={12} class="shrink-0 text-faint" />
+                  <AgentIcon agent={report.agent} class="shrink-0 text-faint" />
                   <h3 class="text-micro uppercase tracking-wider text-faint">{report.agent}</h3>
                   <span class={cn("ml-auto shrink-0 text-micro font-medium", level.text)}>
                     {tight}%

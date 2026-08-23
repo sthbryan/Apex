@@ -95,7 +95,7 @@ function Toast({ notice, depth, expanded }: { notice: Notice; depth: number; exp
       }}
     >
       {session ? (
-        <AgentIcon agent={session.agent} size={13} class="mt-0.5 shrink-0 text-faint" />
+        <AgentIcon agent={session.agent} class="mt-0.5 shrink-0 text-faint" />
       ) : (
         <Icon name={GLYPH[notice.kind] ?? "bell"} size={13} class="mt-0.5 shrink-0 text-faint" />
       )}

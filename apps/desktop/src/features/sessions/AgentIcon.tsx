@@ -1,43 +1,31 @@
-import cn from "cnfast";
-import antigravity from "@/features/sessions/agent-icons/antigravity.svg?raw";
-import claude from "@/features/sessions/agent-icons/claude.svg?raw";
-import codex from "@/features/sessions/agent-icons/codex.svg?raw";
-import githubcopilot from "@/features/sessions/agent-icons/githubcopilot.svg?raw";
-import grok from "@/features/sessions/agent-icons/grok.svg?raw";
-import opencode from "@/features/sessions/agent-icons/opencode.svg?raw";
-import pi from "@/features/sessions/agent-icons/pi.svg?raw";
+import { AgentIcon as Brand, type AgentIconSize } from "@apex/ui";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
-const BRAND_SVGS: Record<string, string> = {
-  antigravity,
-  claude,
-  codex,
-  copilot: githubcopilot,
-  grok,
-  opencode,
-  pi,
+const ALIAS: Record<string, string> = {
+  copilot: "githubcopilot",
 };
 
 const FALLBACK_ICONS: Record<string, IconName> = {
   shell: "sessions",
 };
 
+const FALLBACK_SIZES: Record<AgentIconSize, number> = {
+  xs: 12,
+  sm: 16,
+  md: 22,
+  lg: 28,
+};
+
 type Props = {
   agent: string;
-  size?: number;
+  size?: AgentIconSize;
   class?: string;
 };
 
-export function AgentIcon({ agent, size = 14, class: className }: Props) {
-  const svg = BRAND_SVGS[agent];
-  if (!svg) {
-    return <Icon name={FALLBACK_ICONS[agent] ?? "bot"} size={size} class={className} />;
+export function AgentIcon({ agent, size = "xs", class: className }: Props) {
+  const fallback = FALLBACK_ICONS[agent];
+  if (fallback) {
+    return <Icon name={fallback} size={FALLBACK_SIZES[size]} class={className} />;
   }
-  return (
-    <span
-      class={cn("inline-flex shrink-0", className)}
-      style={{ fontSize: size, lineHeight: 1 }}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
+  return <Brand agent={ALIAS[agent] ?? agent} size={size} class={className} />;
 }

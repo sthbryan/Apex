@@ -84,7 +84,7 @@ function NoticeRow({ notice }: { notice: Notice }) {
       )}
     >
       {session ? (
-        <AgentIcon agent={session.agent} size={12} class="mt-0.5 shrink-0 text-faint" />
+        <AgentIcon agent={session.agent} class="mt-0.5 shrink-0 text-faint" />
       ) : (
         <Icon name={glyph(notice)} size={12} class="mt-0.5 shrink-0 text-faint" />
       )}

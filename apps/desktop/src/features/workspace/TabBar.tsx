@@ -198,7 +198,7 @@ function identity(tab: Tab, sessions: SessionSummary[]): VNode {
   const view = frontPane(tab).view;
   if (view.type === "session") {
     const session = sessions.find((candidate) => candidate.id === view.sessionId);
-    return <AgentIcon agent={session?.agent ?? ""} size={12} />;
+    return <AgentIcon agent={session?.agent ?? ""} />;
   }
   return <Icon name={paneIcon(view)} size={12} />;
 }

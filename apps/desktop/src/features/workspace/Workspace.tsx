@@ -81,7 +81,7 @@ function EmptySessions() {
                 }
                 class="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-muted transition-colors hover:border-muted hover:text-text"
               >
-                <AgentIcon agent={agent.name} size={13} class="shrink-0" />
+                <AgentIcon agent={agent.name} class="shrink-0" />
                 {agent.name}
               </button>
             </li>
