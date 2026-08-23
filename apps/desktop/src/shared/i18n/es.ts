@@ -287,6 +287,8 @@ export const es: Messages = {
   },
   race: {
     live: "Corriendo",
+    contenders: "{count} competidores",
+    changed: "{files} archivos +{added} -{removed}",
     running: "{count} corriendo",
     title: "Corridas",
     empty: "Todavía no hay corridas.",

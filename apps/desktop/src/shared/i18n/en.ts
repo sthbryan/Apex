@@ -287,6 +287,8 @@ export const en = {
   race: {
     running: "{count} racing",
     live: "Running",
+    contenders: "{count} contenders",
+    changed: "{files} files +{added} -{removed}",
     title: "Races",
     empty: "No races yet.",
     new: "Race a task across agents",

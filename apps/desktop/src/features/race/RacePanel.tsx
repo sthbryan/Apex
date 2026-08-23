@@ -1,11 +1,13 @@
-import { Button, Dot, ListRow, SectionLabel } from "@apex/ui";
+import { Button, Card, Dot, ListRow, SectionLabel } from "@apex/ui";
 import { useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { SessionState } from "@/bindings/SessionState";
 import { activeProject } from "@/features/projects/state";
 import { RaceLauncher } from "@/features/race/RaceLauncher";
-import { openRace, type Race, raceSettled, races } from "@/features/race/state";
+import { contendersOf, openRace, type Race, raceSettled, races } from "@/features/race/state";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
+import { countdown } from "@/features/usage/format";
 import { openRaceView } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -69,25 +71,51 @@ export function RacePanel() {
 
 function Entry({ race }: { race: Race }) {
   const chosen = openRace.value === race.id;
+  const open = () => {
+    openRace.value = race.id;
+    openRaceView(race.id);
+  };
 
   return (
-    <ListRow
-      label={race.task || t("race.title")}
-      selected={chosen}
-      trail={race.contenders.map((session) => (
-        <Dot
+    <>
+      <Card
+        elevation="raised"
+        title={race.task || t("race.title")}
+        class={chosen ? "border-accent" : undefined}
+        onClick={open}
+      >
+        <span class="text-xs text-muted">
+          {t("race.contenders", { count: String(race.contenders.length) })} ·{" "}
+          {countdown(Date.now() / 1000 - race.startedAt) ?? t("sessions.justNow")}
+        </span>
+      </Card>
+      {contendersOf(race).map(({ session, changed }) => (
+        <ListRow
+          as="div"
           key={session.id}
-          size="sm"
-          title={session.agent}
-          state={session.exit_code !== null ? "done" : STATES[session.state]}
-          class={session.exit_code !== null ? "opacity-50" : undefined}
+          label={session.agent}
+          sub={
+            changed
+              ? t("race.changed", {
+                  files: String(changed.files),
+                  added: String(changed.added),
+                  removed: String(changed.removed),
+                })
+              : undefined
+          }
+          lead={<AgentIcon agent={session.agent} size="sm" />}
+          trail={
+            <Dot
+              size="sm"
+              title={session.agent}
+              state={session.exit_code !== null ? "done" : STATES[session.state]}
+              class={session.exit_code !== null ? "opacity-50" : undefined}
+            />
+          }
+          onClick={open}
         />
       ))}
-      onClick={() => {
-        openRace.value = race.id;
-        openRaceView(race.id);
-      }}
-    />
+    </>
   );
 }
 
