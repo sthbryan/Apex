@@ -62,6 +62,8 @@ export const en = {
     removeCancel: "Cancel",
   },
   usage: {
+    onPace: "on pace",
+    word: "usage",
     used: "used",
     window: "Usage window",
     agentUnavailable: "{agent} quota unavailable",

@@ -28,7 +28,7 @@ export function pacing(window: QuotaWindow): { text: string; tone: string } | nu
     return null;
   }
   if (window.lasts_to_reset) {
-    return null;
+    return { text: t("usage.onPace"), tone: "text-state-done" };
   }
   const away = window.eta_seconds !== null ? countdown(window.eta_seconds) : null;
   return { text: away ?? t("usage.overPace"), tone: "text-state-blocked" };

@@ -64,6 +64,8 @@ export const es: Messages = {
     removeCancel: "Cancelar",
   },
   usage: {
+    onPace: "al ritmo",
+    word: "uso",
     used: "usado",
     window: "Ventana de uso",
     agentUnavailable: "sin datos de {agent}",

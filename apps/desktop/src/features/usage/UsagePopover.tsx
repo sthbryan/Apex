@@ -18,10 +18,6 @@ type Props = {
   onClose: () => void;
 };
 
-function tightest(report: QuotaReport): number {
-  return Math.max(0, ...report.windows.map((window) => window.used_percent));
-}
-
 function nameOf(window: QuotaWindow, index: number): string {
   return window.label ?? `#${index + 1}`;
 }
@@ -34,8 +30,7 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
   const [refreshing, setRefreshing] = useState(false);
   const [chosen, setChosen] = useState<string | null>(null);
 
-  const ranked = [...reports].sort((left, right) => tightest(right) - tightest(left));
-  const [lead, ...rest] = ranked;
+  const [lead, ...rest] = reports;
   const windows = lead?.windows ?? [];
   const picked = windows.find((window, index) => nameOf(window, index) === chosen) ?? windows[0];
   const others = windows.filter((window) => window !== picked);
@@ -62,7 +57,7 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
       align="start"
       width={308}
       label={t("usage.title")}
-      title={lead ? `${lead.agent} · ${t("usage.title")}` : t("usage.title")}
+      title={lead ? `${lead.agent} · ${t("usage.word")}` : t("usage.title")}
       meta={updatedAgo ? t("usage.updatedAgo", { away: updatedAgo }) : undefined}
       actions={
         <Button
@@ -116,23 +111,25 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
         />
       ))}
 
-      {rest.map((report) => (
-        <div key={report.agent}>
-          <SectionLabel flush count={pacing(report.windows[0])?.text}>
-            {report.agent}
-          </SectionLabel>
-          {report.windows.map((window, index) => (
+      {rest.map((report) => {
+        const worst = report.windows.reduce((tight, window) =>
+          window.used_percent > tight.used_percent ? window : tight,
+        );
+        return (
+          <div key={report.agent}>
+            <SectionLabel flush count={pacing(worst)?.text}>
+              {report.agent}
+            </SectionLabel>
             <Meter
-              key={nameOf(window, index)}
-              label={nameOf(window, index)}
-              value={window.used_percent}
-              tone={barTone(window.used_percent)}
-              tick={window.expected_percent ?? undefined}
-              detail={detailOf(window)}
+              label={nameOf(worst, report.windows.indexOf(worst))}
+              value={worst.used_percent}
+              tone={barTone(worst.used_percent)}
+              tick={worst.expected_percent ?? undefined}
+              detail={detailOf(worst)}
             />
-          ))}
-        </div>
-      ))}
+          </div>
+        );
+      })}
 
       {failures.map((agent) => (
         <Notice
