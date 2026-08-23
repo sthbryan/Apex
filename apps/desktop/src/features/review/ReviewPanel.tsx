@@ -18,8 +18,9 @@ import {
   refreshPending,
   sameTarget,
 } from "@/features/git/state";
-import { activeProject } from "@/features/projects/state";
+import { activeProject, projectSessions } from "@/features/projects/state";
 import { openReview, rejectTarget, reviewing } from "@/features/review/state";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -172,6 +173,11 @@ function Closing() {
 function Row({ review }: { review: PendingReview }) {
   const here = sameTarget(gitTarget.value, review.target);
   const [asking, setAsking] = useState(false);
+  const target = review.target;
+  const agent =
+    target.type === "session"
+      ? (projectSessions.value.find((session) => session.id === target.id)?.agent ?? null)
+      : null;
 
   if (asking) {
     return (
@@ -206,13 +212,20 @@ function Row({ review }: { review: PendingReview }) {
       label={review.title ?? review.branch}
       title={review.branch}
       selected={here}
-      lead={<Dot state={review.state ? STATES[review.state] : "idle"} />}
-      trail={
+      lead={
+        agent ? (
+          <AgentIcon agent={agent} size="sm" />
+        ) : (
+          <Dot state={review.state ? STATES[review.state] : "idle"} />
+        )
+      }
+      sub={
         <>
-          <span>{t("review.files", { count: String(review.files) })}</span>
+          {review.branch} · {t("review.files", { count: String(review.files) })}
           <DiffStat added={review.added} removed={review.removed} />
         </>
       }
+      trail={<Dot state={review.state ? STATES[review.state] : "idle"} />}
       actions={
         <button
           type="button"
