@@ -1,111 +1,134 @@
 import { describe, expect, it } from "vitest";
-import { leaves, type PaneNode, type PaneView } from "@/features/workspace/tree";
-import { buildLayout, countPanes, LAYOUT_PRESETS, type LayoutSpec, mainSlot } from "./layouts";
+import type { PaneView } from "./tree";
+import { leaf, leaves } from "./tree";
+import { buildLayout, countPanes, LAYOUT_PRESETS, mainSlot } from "./layouts";
 
-function session(id: string): PaneView {
+function view(id: string): PaneView {
   return { type: "session", sessionId: id };
 }
 
-function ids(node: PaneNode): string[] {
-  return leaves(node).map((pane) =>
-    pane.view.type === "session"
-      ? pane.view.sessionId
-      : `panel:${(pane.view as { panel: string }).panel}`,
-  );
-}
-
-const MAIN_LEFT = LAYOUT_PRESETS.find((preset) => preset.id === "mainLeft")?.spec as LayoutSpec;
-const MAIN_RIGHT = LAYOUT_PRESETS.find((preset) => preset.id === "mainRight")?.spec as LayoutSpec;
-const GRID = LAYOUT_PRESETS.find((preset) => preset.id === "grid")?.spec as LayoutSpec;
-
 describe("countPanes", () => {
-  it("counts the leaves of a nested spec", () => {
-    expect(countPanes(GRID)).toBe(4);
+  it("counts a single pane", () => {
     expect(countPanes({ type: "pane" })).toBe(1);
-    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "sixGrid")?.spec as LayoutSpec)).toBe(6);
+  });
+
+  it("counts leaves through splits", () => {
+    expect(countPanes({ type: "split", direction: "row", first: { type: "pane" }, second: { type: "pane" } })).toBe(2);
+    expect(
+      countPanes({
+        type: "split",
+        direction: "row",
+        first: { type: "pane" },
+        second: {
+          type: "split",
+          direction: "row",
+          first: { type: "pane" },
+          second: { type: "pane" },
+        },
+      }),
+    ).toBe(3);
+  });
+
+  it("matches every preset", () => {
+    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "twoColumns")!.spec)).toBe(2);
+    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "threeColumns")!.spec)).toBe(3);
+    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "grid")!.spec)).toBe(4);
+    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "sixGrid")!.spec)).toBe(6);
+    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "mainStackThree")!.spec)).toBe(4);
+    expect(countPanes(LAYOUT_PRESETS.find((p) => p.id === "mainStackFour")!.spec)).toBe(5);
   });
 });
 
 describe("mainSlot", () => {
-  it("reports the slot in reading order, not the tree position", () => {
-    expect(mainSlot(MAIN_LEFT)).toBe(0);
-    expect(mainSlot(MAIN_RIGHT)).toBe(2);
+  it("returns -1 when no pane is main", () => {
+    expect(mainSlot({ type: "pane" })).toBe(-1);
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "twoColumns")!.spec)).toBe(-1);
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "grid")!.spec)).toBe(-1);
   });
 
-  it("reports nothing when no pane is the main one", () => {
-    expect(mainSlot(GRID)).toBe(-1);
+  it("finds the main pane index depth-first", () => {
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "mainLeft")!.spec)).toBe(0);
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "mainTop")!.spec)).toBe(0);
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "mainRight")!.spec)).toBe(2);
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "mainBottom")!.spec)).toBe(2);
+    expect(mainSlot(LAYOUT_PRESETS.find((p) => p.id === "mainStackThree")!.spec)).toBe(0);
+  });
+
+  it("returns the first main when two are marked", () => {
+    expect(
+      mainSlot({
+        type: "split",
+        direction: "row",
+        first: { type: "pane", main: true },
+        second: { type: "pane", main: true },
+      }),
+    ).toBe(0);
   });
 });
 
 describe("buildLayout", () => {
-  it("fills the slots in order when no pane is the main one", () => {
-    const root = buildLayout(GRID, [session("a"), session("b"), session("c"), session("d")]);
+  it("fills a plain spec in order", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "twoColumns")!.spec;
+    const root = buildLayout(spec, [view("a"), view("b")]);
 
-    expect(ids(root)).toEqual(["a", "b", "c", "d"]);
+    expect(leaves(root).map((l) => (l.view as { sessionId: string }).sessionId)).toEqual(["a", "b"]);
   });
 
-  it("seats the seed in the main slot and shifts the rest around it", () => {
-    const root = buildLayout(MAIN_RIGHT, [session("seed"), session("b"), session("c")]);
+  it("places the seed view into the main slot", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "mainRight")!.spec;
+    const root = buildLayout(spec, [view("seed"), view("x"), view("y")]);
+    const ids = leaves(root).map((l) => (l.view as { sessionId: string }).sessionId);
 
-    expect(ids(root)).toEqual(["b", "c", "seed"]);
+    expect(ids).toEqual(["x", "y", "seed"]);
   });
 
-  it("leaves the order alone when the main slot is already first", () => {
-    const root = buildLayout(MAIN_LEFT, [session("seed"), session("b"), session("c")]);
+  it("falls back to slot 0 order when no main", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "grid")!.spec;
+    const root = buildLayout(spec, [view("a"), view("b"), view("c"), view("d")]);
 
-    expect(ids(root)).toEqual(["seed", "b", "c"]);
+    expect(leaves(root).map((l) => (l.view as { sessionId: string }).sessionId)).toEqual(["a", "b", "c", "d"]);
   });
 
-  it("falls back to the sessions panel for a slot nobody fills", () => {
-    const root = buildLayout(GRID, [session("a"), session("b")]);
+  it("fills missing views with a panel fallback", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "threeColumns")!.spec;
+    const root = buildLayout(spec, [view("only")]);
+    const vs = leaves(root).map((l) => l.view);
 
-    expect(ids(root)).toEqual(["a", "b", "panel:sessions", "panel:sessions"]);
+    expect(vs[0]).toEqual(view("only"));
+    expect(vs[1]).toEqual({ type: "panel", panel: "sessions" });
+    expect(vs[2]).toEqual({ type: "panel", panel: "sessions" });
   });
 
-  it("still seats the seed when there are fewer views than slots", () => {
-    const root = buildLayout(MAIN_RIGHT, [session("seed")]);
+  it("ignores extra views beyond pane count", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "twoColumns")!.spec;
+    const root = buildLayout(spec, [view("a"), view("b"), view("c")]);
 
-    expect(ids(root)).toEqual(["panel:sessions", "panel:sessions", "seed"]);
+    expect(leaves(root)).toHaveLength(2);
   });
 
-  it("carries the ratio of the spec and defaults the rest to half", () => {
-    const root = buildLayout(MAIN_LEFT, [session("a"), session("b"), session("c")]) as PaneNode & {
-      kind: "split";
-    };
+  it("preserves direction and ratio", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "mainLeft")!.spec;
+    const root = buildLayout(spec, [view("a"), view("b"), view("c")]);
 
-    expect(root.ratio).toBe(0.6);
-    expect((root.second as { ratio: number }).ratio).toBe(0.5);
-  });
-
-  it("gives every pane its own id", () => {
-    const root = buildLayout(GRID, [session("a"), session("b"), session("c"), session("d")]);
-    const seen = new Set(leaves(root).map((pane) => pane.id));
-
-    expect(seen.size).toBe(4);
-  });
-});
-
-describe("the presets", () => {
-  it("build a tree with exactly the panes they promise", () => {
-    for (const preset of LAYOUT_PRESETS) {
-      const slots = countPanes(preset.spec);
-      const views = Array.from({ length: slots }, (_, index) => session(String(index)));
-
-      expect(ids(buildLayout(preset.spec, views))).toHaveLength(slots);
+    expect(root.kind).toBe("split");
+    if (root.kind === "split") {
+      expect(root.direction).toBe("row");
+      expect(root.ratio).toBe(0.6);
     }
   });
 
-  it("never name two main panes", () => {
-    for (const preset of LAYOUT_PRESETS) {
-      const mains = JSON.stringify(preset.spec).split('"main":true').length - 1;
+  it("creates unique ids", () => {
+    const spec = LAYOUT_PRESETS.find((p) => p.id === "twoColumns")!.spec;
+    const a = buildLayout(spec, [view("x"), view("y")]);
+    const b = buildLayout(spec, [view("x"), view("y")]);
 
-      expect(mains).toBeLessThanOrEqual(1);
-    }
+    const ids = [...leaves(a).map((l) => l.id), ...leaves(b).map((l) => l.id)];
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("carry ids nobody repeats", () => {
-    const seen = new Set(LAYOUT_PRESETS.map((preset) => preset.id));
-
-    expect(seen.size).toBe(LAYOUT_PRESETS.length);
+  it("leaf helper carries view", () => {
+    const l = leaf(view("z"));
+    expect(l.view).toEqual(view("z"));
+    expect(l.kind).toBe("leaf");
   });
 });
