@@ -1,4 +1,4 @@
-import cn from "cnfast";
+import { DiffStat, Dot, ListRow, SectionLabel } from "@apex/ui";
 import { useEffect, useState } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -23,11 +23,11 @@ import { openReview, rejectTarget, reviewing } from "@/features/review/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-const DOTS: Record<SessionState, string> = {
-  done: "bg-state-done",
-  blocked: "bg-state-blocked",
-  working: "bg-state-working animate-pulse",
-  idle: "bg-state-idle",
+const STATES: Record<SessionState, "done" | "blocked" | "working" | "idle"> = {
+  done: "done",
+  blocked: "blocked",
+  working: "working",
+  idle: "idle",
 };
 
 export function ReviewPanel() {
@@ -42,7 +42,7 @@ export function ReviewPanel() {
   }
 
   return (
-    <div class="flex h-full flex-col">
+    <div class="dock-view dock-fixed">
       <PanelActions>
         <button
           type="button"
@@ -54,20 +54,20 @@ export function ReviewPanel() {
         </button>
       </PanelActions>
 
-      {waiting.length === 0 ? (
-        <p class="px-2 py-1 text-faint">{t("review.empty")}</p>
-      ) : (
-        <>
-          <p class="px-2 py-1 text-faint">
-            {t("review.waiting", { count: String(waiting.length) })}
-          </p>
-          <ul class="min-h-0 flex-1 overflow-auto pb-1">
+      <div class="dock-scroll">
+        {waiting.length === 0 ? (
+          <p class="px-1.5 py-1 text-faint">{t("review.empty")}</p>
+        ) : (
+          <>
+            <SectionLabel flush count={waiting.length}>
+              {t("review.waiting")}
+            </SectionLabel>
             {waiting.map((review) => (
               <Row key={review.branch} review={review} />
             ))}
-          </ul>
-        </>
-      )}
+          </>
+        )}
+      </div>
 
       <Closing />
     </div>
@@ -175,7 +175,7 @@ function Row({ review }: { review: PendingReview }) {
 
   if (asking) {
     return (
-      <li class="flex items-center gap-2 px-2 py-1">
+      <div class="flex items-center gap-2 px-1.5 py-1">
         <span class="min-w-0 flex-1 truncate text-state-failed">{t("review.rejectAllAsk")}</span>
         <button
           type="button"
@@ -194,42 +194,42 @@ function Row({ review }: { review: PendingReview }) {
         >
           {t("review.rejectAllNo")}
         </button>
-      </li>
+      </div>
     );
   }
 
   return (
-    <li class="group/row relative">
-      <button
-        type="button"
-        onClick={() => void openReview(review.target)}
-        class={cn(
-          "flex w-full items-center gap-1.5 px-2 py-1 text-left transition-colors hover:bg-raised group-hover/row:pr-7",
-          here ? "bg-raised text-text" : "text-muted",
-        )}
-      >
-        <span
-          class={cn(
-            "size-1.5 shrink-0 rounded-full",
-            review.state ? DOTS[review.state] : "bg-faint",
-          )}
-          aria-hidden="true"
-        />
-        <span class="min-w-0 flex-1 truncate">{review.title ?? review.branch}</span>
-        <span class="shrink-0 text-faint">
-          {t("review.files", { count: String(review.files) })}
-        </span>
-        <span class="shrink-0 text-git-added">+{review.added}</span>
-        <span class="shrink-0 text-git-removed">−{review.removed}</span>
-      </button>
-      <button
-        type="button"
-        title={t("review.rejectAll")}
-        onClick={() => setAsking(true)}
-        class="-translate-y-1/2 absolute top-1/2 right-1 hidden size-5 items-center justify-center rounded text-faint transition-colors group-hover/row:flex hover:bg-surface hover:text-state-failed"
-      >
-        <Icon name="close" size={12} />
-      </button>
-    </li>
+    <ListRow
+      as="div"
+      role="button"
+      tabIndex={0}
+      label={review.title ?? review.branch}
+      title={review.branch}
+      selected={here}
+      lead={<Dot state={review.state ? STATES[review.state] : "idle"} />}
+      trail={
+        <>
+          <span>{t("review.files", { count: String(review.files) })}</span>
+          <DiffStat added={review.added} removed={review.removed} />
+        </>
+      }
+      actions={
+        <button
+          type="button"
+          title={t("review.rejectAll")}
+          onClick={() => setAsking(true)}
+          class="text-faint transition-colors hover:text-state-failed"
+        >
+          <Icon name="close" size={12} />
+        </button>
+      }
+      onClick={() => void openReview(review.target)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          void openReview(review.target);
+        }
+      }}
+    />
   );
 }

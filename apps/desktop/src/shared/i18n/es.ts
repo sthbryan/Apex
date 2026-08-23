@@ -292,7 +292,7 @@ export const es: Messages = {
   review: {
     title: "Revisión",
     empty: "No hay nada esperándote.",
-    waiting: "{count} esperando",
+    waiting: "Te esperan",
     files: "{count}a",
     refresh: "Volver a escanear los worktrees",
     previous: "Archivo anterior",

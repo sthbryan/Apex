@@ -290,7 +290,7 @@ export const en = {
   review: {
     title: "Review",
     empty: "Nothing is waiting for you.",
-    waiting: "{count} waiting",
+    waiting: "Waiting on you",
     files: "{count}f",
     refresh: "Rescan every worktree",
     previous: "Previous file",
