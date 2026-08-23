@@ -1,4 +1,6 @@
 :root {
+  --apex-scale: 1;
+
   --apex-r-xs: 8px;
   --apex-r-sm: 10px;
   --apex-r-md: 14px;
@@ -26,15 +28,15 @@
   --apex-title-bar-height: 46px;
   --apex-status-bar-height: 28px;
 
-  --apex-text-2xs: 9.5px;
-  --apex-text-xs: 10.5px;
-  --apex-text-sm: 11.5px;
-  --apex-text-md: 12.5px;
-  --apex-text-lg: 14px;
-  --apex-text-xl: 17px;
-  --apex-text-2xl: 20px;
-  --apex-text-3xl: 26px;
-  --apex-text-4xl: 32px;
+  --apex-text-2xs: calc(9.5px * var(--apex-scale));
+  --apex-text-xs: calc(10.5px * var(--apex-scale));
+  --apex-text-sm: calc(11.5px * var(--apex-scale));
+  --apex-text-md: calc(12.5px * var(--apex-scale));
+  --apex-text-lg: calc(14px * var(--apex-scale));
+  --apex-text-xl: calc(17px * var(--apex-scale));
+  --apex-text-2xl: calc(20px * var(--apex-scale));
+  --apex-text-3xl: calc(26px * var(--apex-scale));
+  --apex-text-4xl: calc(32px * var(--apex-scale));
 
   --apex-font-serif: "Rozha One", "Iowan Old Style", Palatino, Charter, Georgia, serif;
 
