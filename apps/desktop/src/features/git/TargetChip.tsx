@@ -1,5 +1,6 @@
+import { Popover } from "@apex/ui";
 import cn from "cnfast";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 
 import type { GitBranch } from "@/bindings/GitBranch";
 import type { GitTarget } from "@/bindings/GitTarget";
@@ -19,7 +20,6 @@ import {
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
 
 type Props = {
   project: ProjectSummary;
@@ -29,34 +29,15 @@ type Props = {
 export function TargetChip({ project, placement = "below" }: Props) {
   const [open, setOpen] = useState(false);
   const [asking, setAsking] = useState<string | null>(null);
-  const holder = useRef<HTMLDivElement>(null);
-  const menu = usePresence<HTMLDivElement>(open);
   const target = gitTarget.value;
   const status = gitStatus.value;
 
   useEffect(() => {
-    if (!open) {
-      return;
+    if (open) {
+      void readBranches();
+    } else {
+      setAsking(null);
     }
-    const dismiss = (event: MouseEvent) => {
-      if (!holder.current?.contains(event.target as Node)) {
-        setOpen(false);
-        setAsking(null);
-      }
-    };
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        setAsking(null);
-      }
-    };
-    void readBranches();
-    window.addEventListener("mousedown", dismiss);
-    window.addEventListener("keydown", onEscape);
-    return () => {
-      window.removeEventListener("mousedown", dismiss);
-      window.removeEventListener("keydown", onEscape);
-    };
   }, [open]);
 
   const onProject = target.type === "project";
@@ -104,85 +85,76 @@ export function TargetChip({ project, placement = "below" }: Props) {
   );
 
   return (
-    <div ref={holder} class="relative min-w-0">
-      <button
-        type="button"
-        title={
-          status?.upstream
-            ? t("git.chipTracking", { branch: label, upstream: status.upstream })
-            : t("git.chip", { branch: label })
-        }
-        onClick={() => setOpen((shown) => !shown)}
-        class={cn(
-          "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-0.5 leading-none transition-colors hover:border-muted hover:text-text",
-          onProject ? "text-muted" : "text-accent",
-        )}
-      >
-        <Icon name={onProject ? "files" : "branch"} size={11} class="shrink-0" />
-        <span class="truncate">{label}</span>
-        <Icon
-          name="chevron"
-          size={11}
-          class={cn("shrink-0 text-faint transition-transform", { "rotate-180": !above && open })}
-        />
-      </button>
-
-      {menu.mounted && (
-        <div
-          ref={menu.holder}
+    <Popover
+      open={open}
+      onClose={() => setOpen(false)}
+      block
+      side={above ? "top" : "bottom"}
+      align={above ? "start" : "end"}
+      width={256}
+      label={t("git.branches", { count: String(others.length) })}
+      class="min-w-0"
+      anchor={
+        <button
+          type="button"
+          title={
+            status?.upstream
+              ? t("git.chipTracking", { branch: label, upstream: status.upstream })
+              : t("git.chip", { branch: label })
+          }
+          onClick={() => setOpen((shown) => !shown)}
           class={cn(
-            "absolute z-50 w-64 overflow-hidden rounded-lg border border-border bg-float shadow-2xl",
-            above ? "bottom-full left-0 mb-1" : "top-full right-0 mt-1",
-            above
-              ? menu.leaving
-                ? "animate-rise-out"
-                : "animate-rise-in"
-              : menu.leaving
-                ? "animate-drop-out"
-                : "animate-drop-in",
+            "flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-raised px-2 py-0.5 leading-none transition-colors hover:border-muted hover:text-text",
+            onProject ? "text-muted" : "text-accent",
           )}
         >
-          <ul class="max-h-72 overflow-y-auto py-1">
-            <Target
-              target={{ type: "project" }}
-              label={project.name}
-              branch={onProject ? (status?.branch ?? "") : ""}
-              selected={onProject}
-              onPick={() => setOpen(false)}
-            />
-            {attached.map(row)}
-            {orphans.length > 0 && (
-              <li class="px-2 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
-                {t("git.orphanTrees", { count: String(orphans.length) })}
-              </li>
-            )}
-            {orphans.map(row)}
-            <li class="px-2 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
-              {t("git.branches", { count: String(others.length) })}
-            </li>
-            {others.length === 0 && <li class="px-2 py-1 text-faint">{t("git.branchesEmpty")}</li>}
-            {others.map((branch) => {
-              const holder = holderOf(branch);
-              return (
-                <Branch
-                  key={branch.name}
-                  branch={branch}
-                  holder={holder ? shortName(branch.worktree ?? "") : null}
-                  onPick={() => {
-                    setOpen(false);
-                    if (holder) {
-                      selectTarget(holder);
-                      return;
-                    }
-                    void checkoutBranch(branch.name).catch(complain);
-                  }}
-                />
-              );
-            })}
-          </ul>
-        </div>
+          <Icon name={onProject ? "files" : "branch"} size={11} class="shrink-0" />
+          <span class="truncate">{label}</span>
+          <Icon
+            name="chevron"
+            size={11}
+            class={cn("shrink-0 text-faint transition-transform", { "rotate-180": !above && open })}
+          />
+        </button>
+      }
+    >
+      <Target
+        target={{ type: "project" }}
+        label={project.name}
+        branch={onProject ? (status?.branch ?? "") : ""}
+        selected={onProject}
+        onPick={() => setOpen(false)}
+      />
+      {attached.map(row)}
+      {orphans.length > 0 && (
+        <p class="px-1 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
+          {t("git.orphanTrees", { count: String(orphans.length) })}
+        </p>
       )}
-    </div>
+      {orphans.map(row)}
+      <p class="px-1 pt-2 pb-0.5 text-tiny uppercase tracking-wider text-faint">
+        {t("git.branches", { count: String(others.length) })}
+      </p>
+      {others.length === 0 && <p class="px-1 py-1 text-faint">{t("git.branchesEmpty")}</p>}
+      {others.map((branch) => {
+        const holder = holderOf(branch);
+        return (
+          <Branch
+            key={branch.name}
+            branch={branch}
+            holder={holder ? shortName(branch.worktree ?? "") : null}
+            onPick={() => {
+              setOpen(false);
+              if (holder) {
+                selectTarget(holder);
+                return;
+              }
+              void checkoutBranch(branch.name).catch(complain);
+            }}
+          />
+        );
+      })}
+    </Popover>
   );
 }
 
@@ -213,7 +185,7 @@ function Target({
 }: TargetProps) {
   if (asking && onDrop) {
     return (
-      <li class="flex items-center gap-2 bg-raised px-2 py-1">
+      <div class="flex items-center gap-2 rounded-sm bg-raised px-1 py-1">
         <span class="min-w-0 flex-1 truncate text-muted">{t("git.dropWorktreeAsk")}</span>
         <button
           type="button"
@@ -229,12 +201,12 @@ function Target({
         >
           {t("git.dropWorktreeNo")}
         </button>
-      </li>
+      </div>
     );
   }
 
   return (
-    <li class="group relative flex items-center">
+    <div class="group relative flex items-center">
       {selected && (
         <span
           aria-hidden="true"
@@ -248,7 +220,7 @@ function Target({
           selectTarget(target);
         }}
         class={cn(
-          "flex min-w-0 flex-1 items-center gap-2 px-2 py-1 text-left transition-colors group-hover:bg-raised",
+          "flex min-w-0 flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors group-hover:bg-raised",
           selected ? "bg-raised text-text" : "text-muted",
         )}
       >
@@ -278,7 +250,7 @@ function Target({
           <Icon name="close" size={12} />
         </button>
       )}
-    </li>
+    </div>
   );
 }
 
@@ -290,7 +262,7 @@ type BranchProps = {
 
 function Branch({ branch, holder, onPick }: BranchProps) {
   return (
-    <li class="flex items-center">
+    <div class="flex items-center">
       <button
         type="button"
         title={
@@ -300,7 +272,7 @@ function Branch({ branch, holder, onPick }: BranchProps) {
         }
         onClick={onPick}
         class={cn(
-          "flex min-w-0 flex-1 items-center gap-2 px-2 py-1 text-left transition-colors hover:bg-raised hover:text-text",
+          "flex min-w-0 flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors hover:bg-raised hover:text-text",
           holder ? "text-faint" : "text-muted",
         )}
       >
@@ -308,7 +280,7 @@ function Branch({ branch, holder, onPick }: BranchProps) {
         <span class="truncate">{branch.name}</span>
         {holder && <span class="ml-auto shrink-0 truncate text-faint">{holder}</span>}
       </button>
-    </li>
+    </div>
   );
 }
 
