@@ -4,10 +4,9 @@ import type { AgentMode } from "@/bindings/AgentMode";
 import type { Isolation } from "@/bindings/Isolation";
 import type { SessionSummary } from "@/bindings/SessionSummary";
 import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
-import { prompt } from "@/features/acp/state";
 import { clearRejects } from "@/features/git/state";
 import { activeProjectId } from "@/features/projects/state";
-import { closeSession, createSession, sendInput, sessions } from "@/features/sessions/state";
+import { closeSession, createSession, sessions, tellSession } from "@/features/sessions/state";
 import { modeOf, rememberAgent } from "@/features/settings/agentMode";
 import {
   buildLayout,
@@ -94,16 +93,8 @@ export async function startSession(
     openInNewTab(created);
   }
   if (request.task) {
-    await handOver(created, request.task, mode ?? chosenMode(request.agent));
+    void tellSession(created.id, request.task).catch(complain);
   }
-}
-
-async function handOver(session: SessionSummary, task: string, mode: AgentMode): Promise<void> {
-  if (mode === "acp") {
-    await prompt(session.id, task).catch(complain);
-    return;
-  }
-  await sendInput(session.id, `${task}\r`).catch(complain);
 }
 
 export type PendingClose = {

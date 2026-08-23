@@ -462,6 +462,8 @@ impl SessionManager {
         if self.acp.get(id).await.is_some() {
             return self.acp_prompt(id, text).await;
         }
+        self.await_first_paint(id).await;
+        self.await_unblocked(id).await;
         self.type_into(id, &text).await
     }
 
@@ -469,9 +471,7 @@ impl SessionManager {
         if session.mode == apex_proto::AgentMode::Acp {
             return self.acp_prompt(session.id, task).await;
         }
-        self.await_first_paint(session.id).await;
-        self.await_unblocked(session.id).await;
-        self.type_into(session.id, &task).await
+        self.tell(session.id, task).await
     }
 
     async fn await_first_paint(&self, id: Uuid) {

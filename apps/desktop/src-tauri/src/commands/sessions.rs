@@ -107,6 +107,12 @@ pub async fn send_input(state: tauri::State<'_, AppState>, id: Uuid, data: Strin
 }
 
 #[tauri::command]
+pub async fn tell_session(state: tauri::State<'_, AppState>, id: Uuid, text: String) -> Answer<()> {
+    state.daemon()?.request(Command::SessionTell { id, text }).await.map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn resize_session(
     state: tauri::State<'_, AppState>,
     id: Uuid,

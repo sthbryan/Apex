@@ -65,6 +65,7 @@ pub fn run() {
             commands::race_session,
             commands::attach_session,
             commands::send_input,
+            commands::tell_session,
             commands::resize_session,
             commands::close_session,
             commands::session_transcript,

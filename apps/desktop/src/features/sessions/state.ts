@@ -239,6 +239,10 @@ export async function sendInput(id: string, data: string): Promise<void> {
   await invoke("send_input", { id, data });
 }
 
+export async function tellSession(id: string, text: string): Promise<void> {
+  await invoke("tell_session", { id, text });
+}
+
 export async function resizeSession(id: string, size: TerminalSize): Promise<void> {
   await invoke("resize_session", { id, size });
 }
