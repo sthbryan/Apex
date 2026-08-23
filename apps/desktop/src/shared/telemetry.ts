@@ -7,6 +7,9 @@ import type { MetricsSnapshot } from "@/bindings/MetricsSnapshot";
 const POLL_MS = 2000;
 
 export const metrics = signal<MetricsSnapshot | null>(null);
+export const cpuHistory = signal<number[]>([]);
+
+const HISTORY = 60;
 
 export async function startMetrics(): Promise<() => void> {
   let focused = true;
@@ -21,6 +24,7 @@ export async function startMetrics(): Promise<() => void> {
       try {
         const snapshot = await invoke<MetricsSnapshot>("read_metrics", { refreshQuota });
         metrics.value = snapshot;
+        cpuHistory.value = [...cpuHistory.value, snapshot.system.cpu_percent].slice(-HISTORY);
       } catch {}
     }
     timer = setTimeout(() => void tick(false), POLL_MS);
