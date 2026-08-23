@@ -85,7 +85,7 @@
 }
 
 .tk-size-row {
-  @apply grid grid-cols-2 gap-10 pt-2;
+  @apply grid grid-cols-[repeat(auto-fill,minmax(268px,1fr))] items-start gap-x-10 gap-y-6 pt-2;
 }
 
 .tk-size-group {
@@ -131,6 +131,10 @@
 
 .tk-radius {
   @apply block size-11 rounded-xs border-[1.5px] border-accent bg-accent-soft;
+}
+
+.tk-bar {
+  @apply inline-block h-4 min-w-px align-middle rounded-xs bg-accent;
 }
 
 .tk-specimen-card {

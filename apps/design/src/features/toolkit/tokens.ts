@@ -1,8 +1,11 @@
+export type TokenSwatch = "radius" | "height" | "bar" | "none";
+
 export interface TokenGroup {
   title: string;
   kind: "color" | "size";
   tokens: string[];
   note?: string;
+  swatch?: TokenSwatch;
 }
 
 export interface TokenAlias {
@@ -56,6 +59,7 @@ export const TOKEN_GROUPS: TokenGroup[] = [
   {
     title: "Radii",
     kind: "size",
+    swatch: "radius",
     note: "Corner rounding. The swatch shows the actual curve at real size.",
     tokens: [
       "--apex-r-xs",
@@ -69,6 +73,7 @@ export const TOKEN_GROUPS: TokenGroup[] = [
   {
     title: "Control heights",
     kind: "size",
+    swatch: "height",
     note: "Height of buttons, inputs and other interactive controls.",
     tokens: [
       "--apex-h-xs",
@@ -78,6 +83,41 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       "--apex-h-xl",
     ],
   },
+];
+
+export const SIZE_EXTRA: TokenGroup[] = [
+  {
+    title: "Spacing",
+    kind: "size",
+    swatch: "bar",
+    note: "Gaps and padding. The bar is the real width.",
+    tokens: [
+      "--apex-space-2xs",
+      "--apex-space-xs",
+      "--apex-space-sm",
+      "--apex-space-md",
+      "--apex-space-lg",
+      "--apex-space-xl",
+      "--apex-space-2xl",
+      "--apex-space-3xl",
+    ],
+  },
+  {
+    title: "Layout",
+    kind: "size",
+    swatch: "none",
+    note: "Fixed chrome dimensions the shell depends on.",
+    tokens: [
+      "--apex-rail-width",
+      "--apex-dock-width",
+      "--apex-title-bar-height",
+    ],
+  },
+];
+
+export const SIZE_GROUPS: TokenGroup[] = [
+  ...TOKEN_GROUPS.filter((g) => g.kind === "size"),
+  ...SIZE_EXTRA,
 ];
 
 export const TYPE_TOKENS = [

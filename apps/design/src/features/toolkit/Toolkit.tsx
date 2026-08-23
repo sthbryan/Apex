@@ -3,7 +3,9 @@ import type { ComponentLayer, ComponentMeta } from "@apex/ui";
 import { Chip, Pill, Segmented, Switch, Wordmark } from "@apex/ui";
 import { themeMode, veil } from "@/shared/theme/mode";
 import type { ThemeMode } from "@/shared/theme/mode";
-import { GIT_ALIASES, SAMPLES, TOKEN_GROUPS, TYPE_TOKENS } from "@/features/toolkit/tokens";
+import {
+  GIT_ALIASES, SAMPLES, SIZE_EXTRA, SIZE_GROUPS, TOKEN_GROUPS, TYPE_TOKENS,
+} from "@/features/toolkit/tokens";
 import { useTokenValues } from "@/features/toolkit/useTokenValues";
 import type { TokenKind } from "@/features/toolkit/useTokenValues";
 import { renderVariant } from "@/features/toolkit/harness";
@@ -21,6 +23,7 @@ const ALL_TOKENS: Record<string, TokenKind> = {
   ),
   ...Object.fromEntries(TYPE_TOKENS.map((t) => [t, "size"] as const)),
   ...Object.fromEntries(GIT_ALIASES.map((a) => [a.token, "color"] as const)),
+  ...Object.fromEntries(SIZE_EXTRA.flatMap((g) => g.tokens.map((t) => [t, "size"] as const))),
 };
 
 const short = (token: string): string => token.replace("--apex-", "");
@@ -144,7 +147,7 @@ export function Toolkit() {
         </div>
 
         <div class="tk-size-row">
-          {TOKEN_GROUPS.filter((g) => g.kind === "size").map((group) => (
+          {SIZE_GROUPS.map((group) => (
             <div class="tk-size-group" key={group.title}>
               <div class="tk-token-group-head">
                 <h3 class="tk-h3">{group.title}</h3>
@@ -154,7 +157,7 @@ export function Toolkit() {
               <table class="tk-table">
                 <thead>
                   <tr>
-                    <th class="tk-size-cell" />
+                    {group.swatch === "none" ? null : <th class="tk-size-cell" />}
                     <th>token</th>
                     <th>value</th>
                   </tr>
@@ -162,17 +165,17 @@ export function Toolkit() {
                 <tbody>
                   {group.tokens.map((token) => (
                     <tr key={token}>
-                      <td>
-                        {token.includes("-h-") ? (
-                          <span
-                            class="tk-height"
-                            style={`height:${values[token]?.light}`}
-                            title={values[token]?.light}
-                          />
-                        ) : (
-                          <span class="tk-radius" style={`border-radius:${values[token]?.light}`} />
-                        )}
-                      </td>
+                      {group.swatch === "none" ? null : (
+                        <td>
+                          {group.swatch === "height" ? (
+                            <span class="tk-height" style={`height:${values[token]?.light}`} />
+                          ) : group.swatch === "bar" ? (
+                            <span class="tk-bar" style={`width:${values[token]?.light}`} />
+                          ) : (
+                            <span class="tk-radius" style={`border-radius:${values[token]?.light}`} />
+                          )}
+                        </td>
+                      )}
                       <td><code>{short(token)}</code></td>
                       <td class="tk-value">{roundPx(values[token]?.light)}</td>
                     </tr>
