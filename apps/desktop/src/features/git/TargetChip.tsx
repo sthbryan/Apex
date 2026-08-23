@@ -1,4 +1,4 @@
-import { Popover, StatusPill } from "@apex/ui";
+import { Button, Chip, ListRow, Notice, Popover, SectionLabel, StatusPill } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
@@ -126,17 +126,22 @@ export function TargetChip({ project, placement = "below" }: Props) {
         selected={onProject}
         onPick={() => setOpen(false)}
       />
+      {attached.length > 0 && (
+        <SectionLabel flush count={attached.length}>
+          {t("git.worktrees")}
+        </SectionLabel>
+      )}
       {attached.map(row)}
       {orphans.length > 0 && (
-        <p class="px-1 pt-2 pb-0.5 text-2xs uppercase tracking-wider text-faint">
-          {t("git.orphanTrees", { count: String(orphans.length) })}
-        </p>
+        <SectionLabel flush count={orphans.length}>
+          {t("git.orphanTreesLabel")}
+        </SectionLabel>
       )}
       {orphans.map(row)}
-      <p class="px-1 pt-2 pb-0.5 text-2xs uppercase tracking-wider text-faint">
-        {t("git.branches", { count: String(others.length) })}
-      </p>
-      {others.length === 0 && <p class="px-1 py-1 text-faint">{t("git.branchesEmpty")}</p>}
+      <SectionLabel flush count={others.length}>
+        {t("git.branchesLabel")}
+      </SectionLabel>
+      {others.length === 0 && <p class="px-1.5 py-1 text-faint">{t("git.branchesEmpty")}</p>}
       {others.map((branch) => {
         const holder = holderOf(branch);
         return (
@@ -186,72 +191,71 @@ function Target({
 }: TargetProps) {
   if (asking && onDrop) {
     return (
-      <div class="flex items-center gap-2 rounded-sm bg-raised px-1 py-1">
-        <span class="min-w-0 flex-1 truncate text-muted">{t("git.dropWorktreeAsk")}</span>
-        <button
-          type="button"
-          onClick={onDrop}
-          class="shrink-0 text-state-failed transition-colors hover:underline"
-        >
-          {t("git.dropWorktreeYes")}
-        </button>
-        <button
-          type="button"
-          onClick={onAsk}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          {t("git.dropWorktreeNo")}
-        </button>
-      </div>
+      <Notice
+        tone="failed"
+        actions={
+          <>
+            <Button variant="subtle" size="xs" onClick={onAsk}>
+              {t("git.dropWorktreeNo")}
+            </Button>
+            <Button variant="danger" size="xs" onClick={onDrop}>
+              {t("git.dropWorktreeYes")}
+            </Button>
+          </>
+        }
+      >
+        {t("git.dropWorktreeAsk")}
+      </Notice>
     );
   }
 
   return (
-    <div class="group relative flex items-center">
-      {selected && (
-        <span
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-y-1 left-0 w-0.5 rounded-full bg-accent"
-        />
-      )}
-      <button
-        type="button"
-        onClick={() => {
-          onPick();
-          selectTarget(target);
-        }}
-        class={cn(
-          "flex min-w-0 flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors group-hover:bg-raised",
-          selected ? "bg-raised text-text" : "text-muted",
-        )}
-      >
+    <ListRow
+      label={label}
+      sub={branch ? <span class="font-mono">{branch}</span> : undefined}
+      selected={selected}
+      lead={
         <Icon
           name={target.type === "project" ? "files" : "branch"}
           size={12}
-          class={cn("shrink-0", live ? "text-state-working" : "text-faint")}
+          class={live ? "text-state-working" : "text-faint"}
         />
-        <span class="truncate">{label}</span>
-        {branch && <span class="ml-auto shrink-0 truncate text-faint">{branch}</span>}
-        {changed > 0 && (
-          <span
-            title={t("git.changed", { count: String(changed) })}
-            class="shrink-0 tabular-nums text-git-dirty"
+      }
+      trail={
+        <>
+          {changed > 0 && (
+            <span
+              title={t("git.changed", { count: String(changed) })}
+              class="tabular-nums text-git-dirty"
+            >
+              {changed}
+            </span>
+          )}
+          {target.type === "project" && <Chip>{t("git.projectTarget")}</Chip>}
+        </>
+      }
+      actions={
+        onAsk ? (
+          <Button
+            variant="subtle"
+            size="xs"
+            iconOnly
+            title={t("git.dropWorktree", { branch })}
+            aria-label={t("git.dropWorktree", { branch })}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAsk();
+            }}
           >
-            {changed}
-          </span>
-        )}
-      </button>
-      {onAsk && (
-        <button
-          type="button"
-          title={t("git.dropWorktree", { branch })}
-          onClick={onAsk}
-          class="shrink-0 px-1.5 py-1 text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-state-failed"
-        >
-          <Icon name="close" size={12} />
-        </button>
-      )}
-    </div>
+            <Icon name="close" size={11} />
+          </Button>
+        ) : undefined
+      }
+      onClick={() => {
+        onPick();
+        selectTarget(target);
+      }}
+    />
   );
 }
 
@@ -263,25 +267,19 @@ type BranchProps = {
 
 function Branch({ branch, holder, onPick }: BranchProps) {
   return (
-    <div class="flex items-center">
-      <button
-        type="button"
-        title={
-          holder
-            ? t("git.branchHeld", { branch: branch.name, worktree: holder })
-            : t("git.branchSwitch", { branch: branch.name })
-        }
-        onClick={onPick}
-        class={cn(
-          "flex min-w-0 flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors hover:bg-raised hover:text-text",
-          holder ? "text-faint" : "text-muted",
-        )}
-      >
-        <Icon name="branch" size={12} class="shrink-0 text-faint" />
-        <span class="truncate">{branch.name}</span>
-        {holder && <span class="ml-auto shrink-0 truncate text-faint">{holder}</span>}
-      </button>
-    </div>
+    <ListRow
+      label={branch.name}
+      mono
+      class={holder ? "text-faint" : undefined}
+      title={
+        holder
+          ? t("git.branchHeld", { branch: branch.name, worktree: holder })
+          : t("git.branchSwitch", { branch: branch.name })
+      }
+      lead={<Icon name="branch" size={12} class="text-faint" />}
+      trail={holder ? <span class="truncate">{holder}</span> : undefined}
+      onClick={onPick}
+    />
   );
 }
 

@@ -320,6 +320,10 @@ export const en = {
     commitFirst: "Commit what you approved before merging.",
   },
   git: {
+    worktrees: "Worktrees",
+    orphanTreesLabel: "Loose trees",
+    branchesLabel: "Branches",
+    projectTarget: "project",
     changedWord: "changed",
     noRepo: "This project is not a git repository.",
     dropWorktree: "Delete this worktree and {branch}",

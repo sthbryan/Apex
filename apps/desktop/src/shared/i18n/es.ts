@@ -322,6 +322,10 @@ export const es: Messages = {
     commitFirst: "Commiteá lo aprobado antes de mergear.",
   },
   git: {
+    worktrees: "Worktrees",
+    orphanTreesLabel: "Árboles sueltos",
+    branchesLabel: "Ramas",
+    projectTarget: "proyecto",
     changedWord: "cambiados",
     noRepo: "Este proyecto no es un repositorio git.",
     dropWorktree: "Borrar este worktree y {branch}",
