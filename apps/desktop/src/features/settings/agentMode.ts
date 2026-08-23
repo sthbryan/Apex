@@ -1,7 +1,7 @@
 import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
-
 import type { AgentMode } from "@/bindings/AgentMode";
+import { agents, complain } from "@/shared/daemon";
 
 const STORE = "apex.agent-modes";
 
@@ -64,6 +64,15 @@ export async function setSharedContext(agent: string, enabled: boolean): Promise
   await invoke("mcp_adopt", { agent, enabled });
   sharedContext.value = { ...sharedContext.value, [agent]: enabled };
   localStorage.setItem(SHARED, JSON.stringify(sharedContext.value));
+}
+
+export async function adoptAgents(): Promise<void> {
+  const fresh = agents.value.filter(
+    (agent) => agent.shares_config && sharedContext.value[agent.name] === undefined,
+  );
+  for (const agent of fresh) {
+    await setSharedContext(agent.name, true).catch(complain);
+  }
 }
 
 const LANDING = "apex.agent-views";
