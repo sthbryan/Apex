@@ -106,7 +106,7 @@ dependencies = [
  "webkit2gtk",
  "webview2-com",
  "window-vibrancy",
- "windows 0.62.2",
+ "windows 0.61.3",
 ]
 
 [[package]]
