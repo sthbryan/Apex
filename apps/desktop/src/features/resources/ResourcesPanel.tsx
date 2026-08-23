@@ -1,3 +1,5 @@
+import { Popover } from "@apex/ui";
+import type { ComponentChildren } from "preact";
 import type { MetricsSnapshot } from "@/bindings/MetricsSnapshot";
 import { ApexSection } from "@/features/resources/ApexSection";
 import { SessionSection } from "@/features/resources/SessionSection";
@@ -6,34 +8,38 @@ import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
+  open: boolean;
   snapshot: MetricsSnapshot | null;
+  anchor: ComponentChildren;
   onClose: () => void;
 };
 
-export function ResourcesPanel({ snapshot, onClose }: Props) {
+export function ResourcesPanel({ open, snapshot, anchor, onClose }: Props) {
   return (
-    <div class="flex max-h-96 flex-col">
-      <header class="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
-        <Icon name="activity" size={12} class="text-faint" />
-        <span class="truncate text-small font-medium text-text">{t("resources.title")}</span>
-        <button
-          type="button"
-          onClick={onClose}
-          class="ml-auto text-faint transition-colors hover:text-text"
-        >
-          <Icon name="close" size={12} />
-        </button>
-      </header>
-
-      {!snapshot ? (
-        <p class="px-2.5 py-1.5 text-faint">{t("resources.sampling")}</p>
-      ) : (
-        <div class="overflow-y-auto">
+    <Popover
+      open={open}
+      onClose={onClose}
+      anchor={anchor}
+      side="top"
+      align="end"
+      width={320}
+      label={t("resources.title")}
+      title={
+        <>
+          <Icon name="activity" size={12} class="text-faint" />
+          {t("resources.title")}
+        </>
+      }
+    >
+      {snapshot ? (
+        <>
           <ApexSection apex={snapshot.apex} system={snapshot.system} />
           <SystemSection system={snapshot.system} />
           <SessionSection sessions={snapshot.sessions} />
-        </div>
+        </>
+      ) : (
+        <p class="px-1 py-1 text-faint">{t("resources.sampling")}</p>
       )}
-    </div>
+    </Popover>
   );
 }
