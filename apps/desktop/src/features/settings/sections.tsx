@@ -1,5 +1,5 @@
+import { Segmented, Slider } from "@apex/ui";
 import cn from "cnfast";
-
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import {
   agentModes,
@@ -50,11 +50,8 @@ import { Fact } from "@/features/settings/Fact";
 import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
-import { Choice } from "@/shared/ui/Choice";
 import { Icon } from "@/shared/ui/Icon";
-import { Segmented } from "@/shared/ui/Segmented";
 import { Select } from "@/shared/ui/Select";
-import { Slider } from "@/shared/ui/Slider";
 
 export function lookSection(): Section {
   return {
@@ -66,18 +63,20 @@ export function lookSection(): Section {
         label: t("settings.theme"),
         hint: t(THEME_HINT[themeMode.value]),
         control: (
-          <Segmented label={t("settings.theme")}>
-            {THEMES.map((option) => (
-              <Choice
-                key={option.value}
-                selected={themeMode.value === option.value}
-                onSelect={() => setThemeMode(option.value)}
-              >
-                <Icon name={option.icon} />
-                {t(`theme.${option.value}`)}
-              </Choice>
-            ))}
-          </Segmented>
+          <Segmented
+            label={t("settings.theme")}
+            value={themeMode.value}
+            onChange={setThemeMode}
+            options={THEMES.map((option) => ({
+              value: option.value,
+              label: (
+                <>
+                  <Icon name={option.icon} />
+                  {t(`theme.${option.value}`)}
+                </>
+              ),
+            }))}
+          />
         ),
       },
       {
@@ -85,17 +84,15 @@ export function lookSection(): Section {
         label: t("settings.uiScale"),
         hint: t("settings.uiScaleHint"),
         control: (
-          <Segmented label={t("settings.uiScale")}>
-            {UI_SCALES.map((option) => (
-              <Choice
-                key={option}
-                selected={uiScale.value === option}
-                onSelect={() => setUiScale(option)}
-              >
-                {t(UI_SCALE_LABEL[option])}
-              </Choice>
-            ))}
-          </Segmented>
+          <Segmented
+            label={t("settings.uiScale")}
+            value={uiScale.value}
+            onChange={setUiScale}
+            options={UI_SCALES.map((option) => ({
+              value: option,
+              label: t(UI_SCALE_LABEL[option]),
+            }))}
+          />
         ),
       },
       ...(translucencySupported.value
@@ -105,14 +102,15 @@ export function lookSection(): Section {
               label: t("settings.translucent"),
               hint: t("settings.translucentHint"),
               control: (
-                <Segmented label={t("settings.translucent")}>
-                  <Choice selected={translucent.value} onSelect={() => setTranslucent(true)}>
-                    {t("settings.translucentOn")}
-                  </Choice>
-                  <Choice selected={!translucent.value} onSelect={() => setTranslucent(false)}>
-                    {t("settings.translucentOff")}
-                  </Choice>
-                </Segmented>
+                <Segmented
+                  label={t("settings.translucent")}
+                  value={translucent.value ? "on" : "off"}
+                  onChange={(value) => setTranslucent(value === "on")}
+                  options={[
+                    { value: "on", label: t("settings.translucentOn") },
+                    { value: "off", label: t("settings.translucentOff") },
+                  ]}
+                />
               ),
             },
           ]
@@ -139,17 +137,15 @@ export function lookSection(): Section {
               label: t("settings.frost"),
               hint: t("settings.frostHint"),
               control: (
-                <Segmented label={t("settings.frost")}>
-                  {FROSTS.map((option) => (
-                    <Choice
-                      key={option}
-                      selected={frost.value === option}
-                      onSelect={() => setFrost(option)}
-                    >
-                      {t(FROST_LABEL[option])}
-                    </Choice>
-                  ))}
-                </Segmented>
+                <Segmented
+                  label={t("settings.frost")}
+                  value={frost.value}
+                  onChange={setFrost}
+                  options={FROSTS.map((option) => ({
+                    value: option,
+                    label: t(FROST_LABEL[option]),
+                  }))}
+                />
               ),
             },
           ]
@@ -159,17 +155,12 @@ export function lookSection(): Section {
         label: t("settings.language"),
         hint: t("settings.languageHint"),
         control: (
-          <Segmented label={t("settings.language")}>
-            {LANGUAGES.map((option) => (
-              <Choice
-                key={option.value}
-                selected={locale.value === option.value}
-                onSelect={() => setLocale(option.value)}
-              >
-                {option.label}
-              </Choice>
-            ))}
-          </Segmented>
+          <Segmented
+            label={t("settings.language")}
+            value={locale.value}
+            onChange={setLocale}
+            options={LANGUAGES.map((option) => ({ value: option.value, label: option.label }))}
+          />
         ),
       },
     ],
@@ -205,17 +196,15 @@ export function spaceSection(): Section {
         label: t("settings.browsing"),
         hint: t("settings.browsingHint"),
         control: (
-          <Segmented label={t("settings.browsing")}>
-            <Choice
-              selected={browsing.value === "internal"}
-              onSelect={() => setBrowsing("internal")}
-            >
-              {t("settings.browsingInternal")}
-            </Choice>
-            <Choice selected={browsing.value === "system"} onSelect={() => setBrowsing("system")}>
-              {t("settings.browsingSystem")}
-            </Choice>
-          </Segmented>
+          <Segmented
+            label={t("settings.browsing")}
+            value={browsing.value}
+            onChange={setBrowsing}
+            options={[
+              { value: "internal", label: t("settings.browsingInternal") },
+              { value: "system", label: t("settings.browsingSystem") },
+            ]}
+          />
         ),
       },
       {
@@ -223,17 +212,15 @@ export function spaceSection(): Section {
         label: t("settings.agentViews"),
         hint: t("settings.agentViewsHint"),
         control: (
-          <Segmented label={t("settings.agentViews")}>
-            <Choice selected={viewLanding.value === "tab"} onSelect={() => setViewLanding("tab")}>
-              {t("settings.agentViewsTab")}
-            </Choice>
-            <Choice
-              selected={viewLanding.value === "split"}
-              onSelect={() => setViewLanding("split")}
-            >
-              {t("settings.agentViewsSplit")}
-            </Choice>
-          </Segmented>
+          <Segmented
+            label={t("settings.agentViews")}
+            value={viewLanding.value}
+            onChange={setViewLanding}
+            options={[
+              { value: "tab", label: t("settings.agentViewsTab") },
+              { value: "split", label: t("settings.agentViewsSplit") },
+            ]}
+          />
         ),
       },
       ...(viewLanding.value === "split"
@@ -272,14 +259,15 @@ export function spaceSection(): Section {
         label: t("race.yolo"),
         hint: t("race.yoloHint"),
         control: (
-          <Segmented label={t("race.yolo")}>
-            <Choice selected={raceUnattended.value} onSelect={() => setRaceUnattended(true)}>
-              {t("notify.on")}
-            </Choice>
-            <Choice selected={!raceUnattended.value} onSelect={() => setRaceUnattended(false)}>
-              {t("notify.off")}
-            </Choice>
-          </Segmented>
+          <Segmented
+            label={t("race.yolo")}
+            value={raceUnattended.value ? "on" : "off"}
+            onChange={(value) => setRaceUnattended(value === "on")}
+            options={[
+              { value: "on", label: t("notify.on") },
+              { value: "off", label: t("notify.off") },
+            ]}
+          />
         ),
       },
       {
@@ -287,14 +275,15 @@ export function spaceSection(): Section {
         label: t("notify.enabled"),
         hint: t("notify.enabledHint"),
         control: (
-          <Segmented label={t("notify.enabled")}>
-            <Choice selected={notifyEnabled.value} onSelect={() => setNotifyEnabled(true)}>
-              {t("notify.on")}
-            </Choice>
-            <Choice selected={!notifyEnabled.value} onSelect={() => setNotifyEnabled(false)}>
-              {t("notify.off")}
-            </Choice>
-          </Segmented>
+          <Segmented
+            label={t("notify.enabled")}
+            value={notifyEnabled.value ? "on" : "off"}
+            onChange={(value) => setNotifyEnabled(value === "on")}
+            options={[
+              { value: "on", label: t("notify.on") },
+              { value: "off", label: t("notify.off") },
+            ]}
+          />
         ),
       },
       {
@@ -372,23 +361,20 @@ export function agentsSection(): Section {
                       <Icon name="swap" size={12} />
                       {t("race.yoloShort")}
                     </button>
-                    <Segmented label={t("settings.agentMode", { agent: agent.name })}>
-                      {(["pty", "acp"] as const).map((option) => (
-                        <Choice
-                          key={option}
-                          selected={(agentModes.value[agent.name] ?? agent.mode) === option}
-                          disabled={option === "acp" && !agent.speaks_acp}
-                          title={
-                            option === "acp" && !agent.speaks_acp
-                              ? t("settings.agentNoAcp", { agent: agent.name })
-                              : undefined
-                          }
-                          onSelect={() => setAgentMode(agent.name, option)}
-                        >
-                          {t(`isolation.${option}`)}
-                        </Choice>
-                      ))}
-                    </Segmented>
+                    <Segmented
+                      label={t("settings.agentMode", { agent: agent.name })}
+                      value={agentModes.value[agent.name] ?? agent.mode}
+                      onChange={(option) => setAgentMode(agent.name, option)}
+                      options={(["pty", "acp"] as const).map((option) => ({
+                        value: option,
+                        label: t(`isolation.${option}`),
+                        disabled: option === "acp" && !agent.speaks_acp,
+                        title:
+                          option === "acp" && !agent.speaks_acp
+                            ? t("settings.agentNoAcp", { agent: agent.name })
+                            : undefined,
+                      }))}
+                    />
                   </div>
                 );
               })}
@@ -409,20 +395,18 @@ export function daemonSection(): Section {
         label: t("settings.idleGrace"),
         hint: t("settings.idleGraceHint"),
         control: (
-          <Segmented label={t("settings.idleGrace")}>
-            {IDLE_GRACES.map((option) => (
-              <Choice
-                key={option.value}
-                selected={idleGrace.value === option.value}
-                onSelect={() => {
-                  setIdleGrace(option.value);
-                  applyIdleGrace();
-                }}
-              >
-                {t(option.key)}
-              </Choice>
-            ))}
-          </Segmented>
+          <Segmented
+            label={t("settings.idleGrace")}
+            value={String(idleGrace.value)}
+            onChange={(value) => {
+              setIdleGrace(Number(value));
+              applyIdleGrace();
+            }}
+            options={IDLE_GRACES.map((option) => ({
+              value: String(option.value),
+              label: t(option.key),
+            }))}
+          />
         ),
       },
     ],
