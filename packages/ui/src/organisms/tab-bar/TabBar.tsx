@@ -1,9 +1,10 @@
-import type { ComponentChildren, JSX } from "preact";
+import type { ComponentChildren, JSX, Ref } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { cn } from "@/lib/cn";
 
 export interface TabBarProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   label: string;
+  elRef?: Ref<HTMLDivElement>;
   onAdd?: () => void;
   addLabel?: string;
   addIcon?: ComponentChildren;
@@ -12,7 +13,7 @@ export interface TabBarProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
 
 const STEP: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
 
-export function TabBar({ label, onAdd, addLabel = "New tab", addIcon, class: className, children, ...rest }: TabBarProps) {
+export function TabBar({ label, elRef, onAdd, addLabel = "New tab", addIcon, class: className, children, ...rest }: TabBarProps) {
   const list = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -38,7 +39,7 @@ export function TabBar({ label, onAdd, addLabel = "New tab", addIcon, class: cla
   };
 
   return (
-    <div class={cn("ui-tab-bar ui-chrome", className as string)} {...rest}>
+    <div class={cn("ui-tab-bar ui-chrome", className as string)} ref={elRef} {...rest}>
       <div class="ui-tab-bar-tabs" role="tablist" aria-label={label} onKeyDown={onKeyDown} ref={list}>
         {children}
       </div>
@@ -57,14 +58,16 @@ export interface TabProps extends Omit<JSX.IntrinsicElements["div"], "ref" | "ti
   lead?: ComponentChildren;
   trail?: ComponentChildren;
   onOpen?: () => void;
+  elRef?: Ref<HTMLDivElement>;
 }
 
 export function Tab({
-  title, selected, lead, trail, onOpen, class: className, ...rest
+  title, selected, lead, trail, onOpen, elRef, class: className, ...rest
 }: TabProps) {
   return (
     <div
       class={cn("ui-tab", className as string)}
+      ref={elRef}
       role="tab"
       aria-selected={selected ?? false}
       tabIndex={selected ? 0 : -1}

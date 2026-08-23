@@ -410,6 +410,7 @@ export const en = {
     toTab: "Open as its own tab",
     toSplit: "Split into this tab",
     mergeTab: "Merge this tab into another",
+    tabs: "Tabs",
     swapPane: "Swap with the sibling pane",
     splitRight: "Split right",
     splitDown: "Split down",

@@ -1,3 +1,4 @@
+import { Tab as KitTab, TabBar as KitTabBar } from "@apex/ui";
 import cn from "cnfast";
 import type { VNode } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -73,10 +74,7 @@ export function TabBar({ tabs, sessions }: Props) {
   const overflowTabs = hidden > 0 ? tabs.slice(tabs.length - hidden) : [];
 
   return (
-    <div
-      ref={holder}
-      class="relative flex min-h-8.5 shrink-0 items-stretch border-b border-border bg-bar"
-    >
+    <KitTabBar elRef={holder} label={t("workspace.tabs")} class="relative">
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId.value;
         const overflowed = index >= tabs.length - hidden;
@@ -89,67 +87,56 @@ export function TabBar({ tabs, sessions }: Props) {
           return tabs[i + 1]?.id ?? tabs[i - 1]?.id ?? null;
         })();
         return (
-          <div
+          <KitTab
             key={tab.id}
-            ref={(el) => {
+            elRef={(el: HTMLDivElement | null) => {
               tabEls.current[index] = el;
             }}
-            class={cn(
-              "group relative flex shrink-0 animate-row-in items-center gap-2 border-r border-border px-3 transition-colors hover:bg-surface hover:text-text",
-              overflowed && "invisible pointer-events-none absolute",
-              active ? "bg-surface text-text" : "text-muted hover:text-text",
-            )}
-          >
-            {active && (
-              <span
-                aria-hidden="true"
-                class="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-accent"
-              />
-            )}
-            <span class="flex shrink-0 items-center">{identity(tab, sessions)}</span>
-            <button
-              type="button"
-              onClick={() => {
-                activeTabId.value = tab.id;
-              }}
-              class="max-w-36 truncate"
-            >
-              {titleOf(tab, sessions)}
-            </button>
-            {leaves(tab.root).length > 1 && (
-              <span class="shrink-0 text-micro text-faint tabular-nums">
-                +{leaves(tab.root).length - 1}
-              </span>
-            )}
-            {panel && (
-              <button
-                type="button"
-                title={t("dock.popIn")}
-                onClick={() => dockPanelAt(panel)}
-                class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
-              >
-                <Icon name="panel" size={12} />
-              </button>
-            )}
-            {mergeTarget && tabs.length > 1 && (
-              <button
-                type="button"
-                title={t("workspace.mergeTab")}
-                onClick={() => mergeTabInto(tab.id, mergeTarget)}
-                class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
-              >
-                <Icon name="combine" size={12} />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => closeTab(tab.id)}
-              class="text-faint opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-text"
-              aria-label="close"
-            >
-              <Icon name="close" size={12} />
-            </button>
-          </div>
+            title={titleOf(tab, sessions)}
+            selected={active}
+            class={cn("animate-row-in", overflowed && "invisible pointer-events-none absolute")}
+            lead={identity(tab, sessions)}
+            onOpen={() => {
+              activeTabId.value = tab.id;
+            }}
+            trail={
+              <>
+                {leaves(tab.root).length > 1 && (
+                  <span class="shrink-0 text-micro text-faint tabular-nums">
+                    +{leaves(tab.root).length - 1}
+                  </span>
+                )}
+                {panel && (
+                  <button
+                    type="button"
+                    title={t("dock.popIn")}
+                    onClick={() => dockPanelAt(panel)}
+                    class="text-faint opacity-0 transition-[opacity,color] hover:text-text"
+                  >
+                    <Icon name="panel" size={12} />
+                  </button>
+                )}
+                {mergeTarget && tabs.length > 1 && (
+                  <button
+                    type="button"
+                    title={t("workspace.mergeTab")}
+                    onClick={() => mergeTabInto(tab.id, mergeTarget)}
+                    class="text-faint opacity-0 transition-[opacity,color] hover:text-text"
+                  >
+                    <Icon name="combine" size={12} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => closeTab(tab.id)}
+                  class="text-faint opacity-0 transition-[opacity,color] hover:text-text"
+                  aria-label="close"
+                >
+                  <Icon name="close" size={12} />
+                </button>
+              </>
+            }
+          />
         );
       })}
 
@@ -203,7 +190,7 @@ export function TabBar({ tabs, sessions }: Props) {
           )}
         </div>
       )}
-    </div>
+    </KitTabBar>
   );
 }
 
