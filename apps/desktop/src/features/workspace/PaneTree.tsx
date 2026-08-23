@@ -1,3 +1,4 @@
+import { Pane } from "@apex/ui";
 import cn from "cnfast";
 import { lazy, Suspense } from "preact/compat";
 import { useState } from "preact/hooks";
@@ -6,11 +7,12 @@ import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
 import { openExternally } from "@/features/files/editors";
 import { activeProject } from "@/features/projects/state";
-import { sessions } from "@/features/sessions/state";
+import { sessions as allSessions } from "@/features/sessions/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
-import { PaneBar } from "@/features/workspace/PaneBar";
+import { PaneActions } from "@/features/workspace/PaneActions";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
 import { focusLeaf } from "@/features/workspace/state";
+import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
 import type { Leaf, PaneNode } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Boundary } from "@/shared/ui/Boundary";
@@ -86,40 +88,53 @@ function PaneLeaf({
 }) {
   const [reload, setReload] = useState(0);
   const projectId = activeProject.value?.id ?? null;
+  const sub = paneSubtitle(node.view);
 
   return (
-    <div
-      class={cn(
-        "group flex h-full w-full flex-col overflow-hidden border transition-colors",
-        focused ? "border-border" : "border-transparent",
-      )}
+    <Pane
+      scroll={false}
       tabIndex={-1}
+      class={cn(
+        "group h-full w-full overflow-hidden border transition-colors",
+        focused ? "pane-focused border-border" : "border-transparent",
+      )}
       onFocusCapture={() => focusLeaf(tabId, node.id)}
       onMouseDown={() => focusLeaf(tabId, node.id)}
+      lead={
+        <Icon
+          name={paneIcon(node.view)}
+          size={12}
+          class={cn("shrink-0", focused ? "text-accent" : "text-faint")}
+        />
+      }
+      title={paneTitle(node.view, allSessions.value)}
+      sub={sub}
+      actions={
+        <PaneActions
+          tabId={tabId}
+          leaf={node}
+          focused={focused}
+          extra={
+            node.view.type === "file" ? (
+              <FileExtras
+                path={node.view.path}
+                projectId={projectId}
+                onReload={() => setReload((tick) => tick + 1)}
+              />
+            ) : node.view.type === "diff" ? (
+              <button
+                type="button"
+                title={t("git.reload")}
+                onClick={() => setReload((tick) => tick + 1)}
+                class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
+              >
+                <Icon name="refresh" size={12} />
+              </button>
+            ) : null
+          }
+        />
+      }
     >
-      <PaneBar
-        tabId={tabId}
-        leaf={node}
-        focused={focused}
-        extra={
-          node.view.type === "file" ? (
-            <FileExtras
-              path={node.view.path}
-              projectId={projectId}
-              onReload={() => setReload((tick) => tick + 1)}
-            />
-          ) : node.view.type === "diff" ? (
-            <button
-              type="button"
-              title={t("git.reload")}
-              onClick={() => setReload((tick) => tick + 1)}
-              class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
-            >
-              <Icon name="refresh" size={12} />
-            </button>
-          ) : null
-        }
-      />
       <div class="min-h-0 flex-1">
         <Boundary key={node.id}>
           <Suspense fallback={<PanePlaceholder />}>
@@ -146,12 +161,12 @@ function PaneLeaf({
           </Suspense>
         </Boundary>
       </div>
-    </div>
+    </Pane>
   );
 }
 
 function SessionView({ id, focused }: { id: string; focused: boolean }) {
-  const session = sessions.value.find((candidate) => candidate.id === id);
+  const session = allSessions.value.find((candidate) => candidate.id === id);
   if (session?.mode === "acp") {
     return <AcpView id={id} />;
   }

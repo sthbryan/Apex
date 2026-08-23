@@ -14,3 +14,7 @@
   margin: var(--apex-space-md) calc(-1 * var(--apex-space-md)) calc(-1 * var(--apex-space-md));
   max-width: none;
 }
+
+.pane-focused > .ui-pane-head {
+  background-color: var(--apex-raised);
+}
