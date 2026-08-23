@@ -10,6 +10,28 @@ pub const PROTOCOL_VERSION: u32 = 17;
 #[ts(export)]
 pub struct RequestId(pub u64);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum ToolGroup {
+    Context,
+    Observation,
+    Orchestration,
+    Lifecycle,
+    Views,
+    Browser,
+    Worktree,
+}
+
+impl ToolGroup {
+    pub const OPTIONAL: &'static [Self] =
+        &[Self::Observation, Self::Orchestration, Self::Views, Self::Browser];
+
+    pub fn is_optional(self) -> bool {
+        Self::OPTIONAL.contains(&self)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 #[serde(rename_all = "snake_case")]

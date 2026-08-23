@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use apex_proto::{Command, Isolation, SessionSummary, ViewTarget};
+use apex_proto::{Command, Isolation, SessionSummary, ToolGroup, ViewTarget};
 use serde_json::{Value, json};
 use uuid::Uuid;
 
@@ -7,6 +7,7 @@ const TRANSCRIPT_TAIL: u32 = 8 * 1024;
 
 pub struct Tool {
     pub name: &'static str,
+    pub group: ToolGroup,
     pub description: &'static str,
     pub schema: fn() -> Value,
 }
@@ -14,6 +15,7 @@ pub struct Tool {
 pub const TOOLS: &[Tool] = &[
     Tool {
         name: "apex_context_read",
+        group: ToolGroup::Context,
         description: "Read the shared context every agent on this project can see. \
                       Without a key it lists what is there.",
         schema: || {
@@ -25,6 +27,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_context_write",
+        group: ToolGroup::Context,
         description: "Write an entry of shared context, replacing it. \
                       Use it for findings the other agents should have.",
         schema: || {
@@ -40,11 +43,13 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_sessions_list",
+        group: ToolGroup::Observation,
         description: "List the other agents running on this project, with their state and branch.",
         schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_session_transcript",
+        group: ToolGroup::Observation,
         description: "Read the recent output of another agent, to see what it is doing.",
         schema: || {
             json!({
@@ -58,6 +63,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_note",
+        group: ToolGroup::Observation,
         description: "Leave a note for the next agent, or for one in particular.",
         schema: || {
             json!({
@@ -72,6 +78,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_spawn_agent",
+        group: ToolGroup::Orchestration,
         description: "Start another agent on this project and hand it a task. \
                       Read what it does afterwards with apex_session_transcript.",
         schema: || {
@@ -92,12 +99,14 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_agents_list",
+        group: ToolGroup::Orchestration,
         description: "List the agents you can start here, and whether each one can take a \
                       written task on its own or only works as an interactive terminal.",
         schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_session_tell",
+        group: ToolGroup::Orchestration,
         description: "Send more instructions to a session that is already running.",
         schema: || {
             json!({
@@ -112,6 +121,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_done",
+        group: ToolGroup::Lifecycle,
         description: "Say your task is finished. Your session stays alive so whoever \
                       started you can still read it, but it stops showing as running.",
         schema: || {
@@ -125,6 +135,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_close_session",
+        group: ToolGroup::Orchestration,
         description: "Close a session you started yourself. Its worktree, if any, stays on disk.",
         schema: || {
             json!({
@@ -136,6 +147,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_broadcast",
+        group: ToolGroup::Orchestration,
         description: "Hand the same task to several agents at once, each in its own session. \
                       Read what each one did with apex_session_transcript.",
         schema: || {
@@ -152,6 +164,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_open_view",
+        group: ToolGroup::Views,
         description: "Ask Apex to open something for the person watching: another session, \
                       a file of this project, or a url. They decide where it lands.",
         schema: || {
@@ -173,6 +186,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_close_view",
+        group: ToolGroup::Views,
         description: "Ask Apex to close something it opened for the person watching: a session \
                       pane, a file of this project, or a url.",
         schema: || {
@@ -194,12 +208,14 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_browser_list",
+        group: ToolGroup::Browser,
         description: "List the browser panes open on this project: address, the name each one \
                       was given, and which one the person is using.",
         schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_browser_console",
+        group: ToolGroup::Browser,
         description: "Read the console output and errors a browser pane has produced since \
                       the page loaded. Without a pane it reads the one in use.",
         schema: || {
@@ -211,6 +227,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_browser_shot",
+        group: ToolGroup::Browser,
         description: "Take a picture of what a browser pane is showing and answer with the \
                       path of the png file. Without a pane it shoots the one in use.",
         schema: || {
@@ -222,6 +239,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "apex_worktree_info",
+        group: ToolGroup::Worktree,
         description: "Report which branch and folder this session is working in.",
         schema: || json!({ "type": "object", "properties": {} }),
     },
