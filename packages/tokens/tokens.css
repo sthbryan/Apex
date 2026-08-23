@@ -24,6 +24,7 @@
   --apex-rail-width: 52px;
   --apex-dock-width: 268px;
   --apex-title-bar-height: 46px;
+  --apex-status-bar-height: 28px;
 
   --apex-text-2xs: 9.5px;
   --apex-text-xs: 10.5px;
@@ -103,10 +104,30 @@
   --apex-git-removed: var(--apex-state-failed);
   --apex-git-modified: var(--apex-state-working);
   --apex-git-dirty: var(--apex-muted);
+  --apex-git-ahead: var(--apex-state-done);
+  --apex-git-behind: var(--apex-state-blocked);
+  --apex-git-conflict: var(--apex-state-failed);
 
   --apex-tty-fg: #cbc7dd;
   --apex-tty-dim: #6e6a86;
   --apex-tty-bright: #e0def4;
+
+  --apex-ansi-black: light-dark(#f2e9e1, #26233a);
+  --apex-ansi-red: light-dark(#b4637a, #eb6f92);
+  --apex-ansi-green: light-dark(#286983, #31748f);
+  --apex-ansi-yellow: light-dark(#ea9d34, #f6c177);
+  --apex-ansi-blue: light-dark(#56949f, #9ccfd8);
+  --apex-ansi-magenta: light-dark(#907aa9, #c4a7e7);
+  --apex-ansi-cyan: light-dark(#d7827e, #ebbcba);
+  --apex-ansi-white: light-dark(#575279, #e0def4);
+  --apex-ansi-bright-black: light-dark(#9893a5, #6e6a86);
+  --apex-ansi-bright-red: light-dark(#c4788e, #f183a3);
+  --apex-ansi-bright-green: light-dark(#31859f, #3e8fab);
+  --apex-ansi-bright-yellow: light-dark(#f0ae4b, #f8cf8d);
+  --apex-ansi-bright-blue: light-dark(#6aa9b3, #b3dce3);
+  --apex-ansi-bright-magenta: light-dark(#a48cbb, #d3bced);
+  --apex-ansi-bright-cyan: light-dark(#e09894, #f0cdcb);
+  --apex-ansi-bright-white: light-dark(#403d52, #f2f0fb);
 
   color-scheme: light dark;
 }

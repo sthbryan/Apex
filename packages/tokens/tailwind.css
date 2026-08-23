@@ -71,6 +71,9 @@
   --color-git-removed: var(--apex-git-removed);
   --color-git-modified: var(--apex-git-modified);
   --color-git-dirty: var(--apex-git-dirty);
+  --color-git-ahead: var(--apex-git-ahead);
+  --color-git-behind: var(--apex-git-behind);
+  --color-git-conflict: var(--apex-git-conflict);
 
   --color-tty-fg: var(--apex-tty-fg);
   --color-tty-dim: var(--apex-tty-dim);
