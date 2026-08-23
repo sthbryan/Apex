@@ -17,6 +17,7 @@ const SECTIONS = [
 ] as const;
 
 export function SettingsModal({ inline, open = true, onClose }: { inline?: boolean; open?: boolean; onClose?: () => void } = {}) {
+  const here = SECTIONS.find((s) => s.id === settingsSection.value);
   return (
     <SettingsDialog
       open={open}
@@ -25,10 +26,7 @@ export function SettingsModal({ inline, open = true, onClose }: { inline?: boole
       sections={SECTIONS.map(({ id, label, Icon }) => ({ id, label, icon: <Icon size={14} strokeWidth={1.75} /> }))}
       section={settingsSection.value}
       onSection={(id) => settingsSection.value = id}
-      head={(() => {
-        const here = SECTIONS.find((s) => s.id === settingsSection.value);
-        return here ? <SettingsHeading title={here.title} sub={here.sub} /> : null;
-      })()}
+      head={here ? <SettingsHeading title={here.title} sub={here.sub} /> : null}
       close={<Button variant="subtle" size="lg" iconOnly title="Close" onClick={onClose ?? (() => settingsOpen.value = false)}><X size={13} /></Button>}
     >
       {settingsSection.value === "look" && <LookSection />}
