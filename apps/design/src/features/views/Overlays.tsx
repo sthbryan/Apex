@@ -16,7 +16,7 @@ export interface Overlay {
 
 function Toasts() {
   return (
-    <ToastStack class="!absolute">
+    <ToastStack class="absolute!">
       <Toast title="Codex finished" detail="Fix the race settle flow · exit 0" tone="done"
         lead={<AgentIcon agent="codex" size="sm" />} onDismiss={() => {}} />
       <Toast title="Build failed" detail="exit 1" tone="failed"
