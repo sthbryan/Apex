@@ -613,8 +613,14 @@ impl SessionManager {
         self.rejects.sweep().await;
     }
 
-    pub async fn browser_report(&self, project: Uuid, pane: String, name: Option<String>) {
-        self.browsers.report(project, pane, name).await;
+    pub async fn browser_report(
+        &self,
+        project: Uuid,
+        pane: String,
+        url: String,
+        name: Option<String>,
+    ) {
+        self.browsers.report(project, pane, url, name).await;
     }
 
     pub async fn browser_forget(&self, pane: &str) {
@@ -623,7 +629,11 @@ impl SessionManager {
 
     pub async fn browser_read(&self, project: Uuid, pane: Option<&str>) -> Result<String> {
         let taken = self.ask_page(project, pane, true).await?;
-        Ok(crate::services::browsers::describe_page(&taken))
+        let page = crate::services::browsers::describe_page(&taken);
+        Ok(match self.browsers.describe(project).await {
+            Some(others) => format!("{others}\n\n{page}"),
+            None => page,
+        })
     }
 
     pub async fn browser_logs(&self, project: Uuid, pane: Option<&str>) -> Result<String> {

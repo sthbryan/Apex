@@ -222,8 +222,8 @@ async fn execute(
             text: manager.transcript(id, tail as usize, plain).await.map_err(not_found_error)?,
         }),
         Command::ListEditors => Ok(Reply::Editors { editors: manager.list_editors().await }),
-        Command::BrowserReport { project, pane, name } => {
-            manager.browser_report(project, pane, name).await;
+        Command::BrowserReport { project, pane, url, name } => {
+            manager.browser_report(project, pane, url, name).await;
             Ok(Reply::Done)
         }
         Command::BrowserForget { pane } => {

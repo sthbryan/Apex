@@ -599,6 +599,7 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
         pane: String,
+        url: String,
         #[serde(default)]
         name: Option<String>,
     },

@@ -33,12 +33,12 @@ type Snapshot = {
   failures: number;
 };
 
-function report(pane: string, name?: string): void {
+function report(pane: string, url: string, name?: string): void {
   const project = activeProjectId.value;
   if (!project) {
     return;
   }
-  void invoke("browser_report", { project, pane, name: name ?? null }).catch(complain);
+  void invoke("browser_report", { project, pane, url, name: name ?? null }).catch(complain);
 }
 
 type Loaded = {
@@ -72,14 +72,14 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
   }, [label, url]);
 
   useEffect(() => {
-    report(label, name);
-  }, [label, name]);
+    report(label, here, name);
+  }, [label, here, name]);
 
   useEffect(() => {
     if (focused) {
-      report(label, name);
+      report(label, here, name);
     }
-  }, [label, name, focused]);
+  }, [label, here, name, focused]);
 
   useEffect(() => {
     const node = host.current;
@@ -117,7 +117,6 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
       if (!editing.current) {
         setDraft(event.payload.url);
       }
-      report(label, name);
     });
     return () => {
       void stop.then((off) => off());

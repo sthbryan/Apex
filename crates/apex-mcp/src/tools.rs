@@ -195,20 +195,36 @@ pub const TOOLS: &[Tool] = &[
     Tool {
         name: "apex_browser_read",
         description: "Read what a browser pane of this project is showing: address, title \
-                      and visible text. Without a pane it reads the one in use.",
-        schema: || json!({ "type": "object", "properties": { "pane": { "type": "string", "description": "Name of the pane, when you gave it one" } } }),
+                      and visible text. Without a pane it reads the one in use, and says \
+                      which other panes are open.",
+        schema: || {
+            json!({ "type": "object", "properties": { "pane": {
+                        "type": "string",
+                        "description": "Name or address of the pane, when the project has several"
+                    } } })
+        },
     },
     Tool {
         name: "apex_browser_console",
         description: "Read the console output and errors a browser pane has produced since \
                       the page loaded. Without a pane it reads the one in use.",
-        schema: || json!({ "type": "object", "properties": { "pane": { "type": "string", "description": "Name of the pane, when you gave it one" } } }),
+        schema: || {
+            json!({ "type": "object", "properties": { "pane": {
+                        "type": "string",
+                        "description": "Name or address of the pane, when the project has several"
+                    } } })
+        },
     },
     Tool {
         name: "apex_browser_shot",
         description: "Take a picture of what a browser pane is showing and answer with the \
                       path of the png file. Without a pane it shoots the one in use.",
-        schema: || json!({ "type": "object", "properties": { "pane": { "type": "string", "description": "Name of the pane, when you gave it one" } } }),
+        schema: || {
+            json!({ "type": "object", "properties": { "pane": {
+                        "type": "string",
+                        "description": "Name or address of the pane, when the project has several"
+                    } } })
+        },
     },
     Tool {
         name: "apex_worktree_info",
