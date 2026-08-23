@@ -1,3 +1,4 @@
+import { CommitBox as KitCommitBox } from "@apex/ui";
 import { useState } from "preact/hooks";
 
 import type { GitStatus } from "@/bindings/GitStatus";
@@ -12,60 +13,39 @@ export function CommitBox({ status }: { status: GitStatus }) {
   const ready = staged.length > 0 && message.trim().length > 0;
   const [subject] = message.split("\n");
 
-  const commit = () => {
-    if (!ready) {
-      return;
-    }
-    void commitStaged(message.trim())
-      .then((created) => {
-        setMessage("");
-        setLanded(created.short);
-      })
-      .catch((error: unknown) => {
-        gitFailure.value = String(error);
-      });
-  };
-
   return (
-    <div class="mt-auto shrink-0 border-t border-border bg-surface">
-      <textarea
-        rows={5}
-        value={message}
-        placeholder={t("git.messagePlaceholder")}
-        spellcheck={false}
-        onInput={(event) => {
-          setMessage(event.currentTarget.value);
-          setLanded(null);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-            event.preventDefault();
-            commit();
-          }
-        }}
-        class="field-sizing-content max-h-56 min-h-20 w-full resize-none border-0 bg-transparent px-2 py-1.5 text-text outline-none placeholder:text-faint"
-      />
-      <div class="flex items-center gap-2 px-2 pb-1.5">
-        <span class="min-w-0 flex-1 truncate text-faint">
-          {landed
-            ? t("git.committed", { commit: landed })
-            : t("git.onBranch", { count: String(staged.length), branch: status.branch })}
-        </span>
-        {subject.length > 50 && (
+    <KitCommitBox
+      value={message}
+      placeholder={t("git.messagePlaceholder")}
+      submitLabel={t("git.commit")}
+      submitDisabled={!ready}
+      label={t("git.commit")}
+      hint={
+        landed
+          ? t("git.committed", { commit: landed })
+          : t("git.onBranch", { count: String(staged.length), branch: status.branch })
+      }
+      actions={
+        subject.length > 50 ? (
           <span title={t("git.subjectLong")} class="shrink-0 tabular-nums text-git-behind">
             {subject.length}
           </span>
-        )}
-        <button
-          type="button"
-          disabled={!ready}
-          onClick={commit}
-          title={t("git.commitHint")}
-          class="shrink-0 rounded border border-border px-2 py-0.5 text-muted transition-colors enabled:hover:bg-raised enabled:hover:text-text disabled:opacity-40"
-        >
-          {t("git.commit")}
-        </button>
-      </div>
-    </div>
+        ) : undefined
+      }
+      onInput={(event) => {
+        setMessage(event.currentTarget.value);
+        setLanded(null);
+      }}
+      onSubmit={() => {
+        void commitStaged(message.trim())
+          .then((created) => {
+            setMessage("");
+            setLanded(created.short);
+          })
+          .catch((error: unknown) => {
+            gitFailure.value = String(error);
+          });
+      }}
+    />
   );
 }
