@@ -59,6 +59,9 @@ export const en = {
     removeCancel: "Cancel",
   },
   usage: {
+    used: "used",
+    window: "Usage window",
+    agentUnavailable: "{agent} quota unavailable",
     title: "Subscription usage",
     updatedAgo: "updated {away} ago",
     resetsIn: "resets in {away} · {when}",

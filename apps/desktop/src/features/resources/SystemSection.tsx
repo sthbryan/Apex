@@ -1,6 +1,6 @@
 import { Meter } from "@apex/ui";
 import type { SystemUsage } from "@/bindings/SystemUsage";
-import { barTone } from "@/features/resources/tone";
+import { barTone } from "@/features/usage/tone";
 import { t } from "@/shared/i18n";
 import { compactBytes, percentOf } from "@/shared/telemetry";
 import { Icon } from "@/shared/ui/Icon";

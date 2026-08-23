@@ -1,11 +1,11 @@
-import { Popover } from "@apex/ui";
-import cn from "cnfast";
+import { Button, Meter, Notice, Popover, Readout, SectionLabel, Segmented } from "@apex/ui";
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { QuotaReport } from "@/bindings/QuotaReport";
+import type { QuotaWindow } from "@/bindings/QuotaWindow";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
-import { countdown, tone } from "@/features/usage/format";
-import { UsageRow } from "@/features/usage/UsageRow";
+import { countdown, pacing, resetIn, resetText } from "@/features/usage/format";
+import { barTone, readoutTone } from "@/features/usage/tone";
 import { t } from "@/shared/i18n";
 import { refreshQuota } from "@/shared/telemetry";
 import { Icon } from "@/shared/ui/Icon";
@@ -18,17 +18,40 @@ type Props = {
   onClose: () => void;
 };
 
+function tightest(report: QuotaReport): number {
+  return Math.max(0, ...report.windows.map((window) => window.used_percent));
+}
+
+function nameOf(window: QuotaWindow, index: number): string {
+  return window.label ?? `#${index + 1}`;
+}
+
+function detailOf(window: QuotaWindow): string {
+  return pacing(window)?.text ?? resetIn(window) ?? "";
+}
+
 export function UsagePopover({ open, reports, failures, anchor, onClose }: Props) {
   const [refreshing, setRefreshing] = useState(false);
+  const [chosen, setChosen] = useState<string | null>(null);
+
+  const ranked = [...reports].sort((left, right) => tightest(right) - tightest(left));
+  const [lead, ...rest] = ranked;
+  const windows = lead?.windows ?? [];
+  const picked = windows.find((window, index) => nameOf(window, index) === chosen) ?? windows[0];
+  const others = windows.filter((window) => window !== picked);
+
   const updatedAgo = reports.some((report) => report.updated_at)
     ? countdown(
         (Date.now() -
-          new Date(
-            Math.max(...reports.map((report) => new Date(report.updated_at ?? 0).getTime())),
-          ).getTime()) /
+          Math.max(...reports.map((report) => new Date(report.updated_at ?? 0).getTime()))) /
           1000,
       )
     : null;
+
+  const reload = () => {
+    setRefreshing(true);
+    void refreshQuota().finally(() => setRefreshing(false));
+  };
 
   return (
     <Popover
@@ -37,70 +60,119 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
       anchor={anchor}
       side="top"
       align="start"
-      width={288}
+      width={308}
       label={t("usage.title")}
-      title={
-        <>
-          <Icon name="activity" size={12} class="text-faint" />
-          {t("usage.title")}
-        </>
-      }
+      title={lead ? `${lead.agent} · ${t("usage.title")}` : t("usage.title")}
       meta={updatedAgo ? t("usage.updatedAgo", { away: updatedAgo }) : undefined}
       actions={
-        <button
-          type="button"
+        <Button
+          variant="subtle"
+          size="xs"
+          iconOnly
           title={t("resources.refresh")}
-          onClick={() => {
-            setRefreshing(true);
-            void refreshQuota().finally(() => setRefreshing(false));
-          }}
-          class="text-faint transition-colors hover:text-text"
+          aria-label={t("resources.refresh")}
+          onClick={reload}
         >
-          <Icon name="refresh" size={12} class={refreshing ? "animate-spin" : ""} />
-        </button>
+          <Icon name="refresh" size={11} class={refreshing ? "animate-spin" : undefined} />
+        </Button>
       }
     >
-      <div class="-mx-1">
-        {failures.map((agent) => (
-          <section key={agent} class="flex items-center gap-1.5 px-1 py-1">
-            <AgentIcon agent={agent} class="shrink-0 text-faint" />
-            <h3 class="text-xs uppercase tracking-wider text-faint">{agent}</h3>
-            <span class="ml-auto shrink-0 text-xs text-state-failed">{t("usage.unavailable")}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setRefreshing(true);
-                void refreshQuota().finally(() => setRefreshing(false));
-              }}
-              class="shrink-0 text-xs text-faint underline transition-colors hover:text-text"
-            >
+      {!lead && failures.length === 0 && <p class="text-faint">{t("resources.noQuota")}</p>}
+
+      {lead && windows.length > 1 && (
+        <Segments
+          windows={windows}
+          picked={picked ? nameOf(picked, windows.indexOf(picked)) : ""}
+          onPick={setChosen}
+        />
+      )}
+
+      {picked && (
+        <Readout
+          value={`${picked.used_percent}%`}
+          tone={readoutTone(picked.used_percent)}
+          note={resetText(picked)}
+        />
+      )}
+
+      {picked && (
+        <Meter
+          label={t("usage.used")}
+          value={picked.used_percent}
+          tone={barTone(picked.used_percent)}
+          tick={picked.expected_percent ?? undefined}
+          detail={detailOf(picked)}
+        />
+      )}
+
+      {others.map((window, index) => (
+        <Meter
+          key={nameOf(window, index)}
+          label={nameOf(window, index)}
+          value={window.used_percent}
+          tone={barTone(window.used_percent)}
+          tick={window.expected_percent ?? undefined}
+          detail={detailOf(window)}
+        />
+      ))}
+
+      {rest.map((report) => (
+        <div key={report.agent}>
+          <SectionLabel flush count={pacing(report.windows[0])?.text}>
+            {report.agent}
+          </SectionLabel>
+          {report.windows.map((window, index) => (
+            <Meter
+              key={nameOf(window, index)}
+              label={nameOf(window, index)}
+              value={window.used_percent}
+              tone={barTone(window.used_percent)}
+              tick={window.expected_percent ?? undefined}
+              detail={detailOf(window)}
+            />
+          ))}
+        </div>
+      ))}
+
+      {failures.map((agent) => (
+        <Notice
+          key={agent}
+          tone="failed"
+          class="mt-1.5"
+          lead={<AgentIcon agent={agent} size="sm" />}
+          actions={
+            <Button variant="subtle" size="xs" onClick={reload}>
               {t("usage.retry")}
-            </button>
-          </section>
-        ))}
-        {reports.length === 0 && failures.length === 0 ? (
-          <p class="px-1 py-1 text-faint">{t("resources.noQuota")}</p>
-        ) : (
-          reports.map((report) => {
-            const tight = Math.max(...report.windows.map((window) => window.used_percent));
-            const level = tone(tight);
-            return (
-              <section key={report.agent} class="px-1 py-1">
-                <div class="mb-0.5 flex items-center gap-1.5">
-                  <AgentIcon agent={report.agent} class="shrink-0 text-faint" />
-                  <h3 class="text-xs uppercase tracking-wider text-faint">{report.agent}</h3>
-                  <span class={cn("ml-auto shrink-0 text-xs font-medium", level.text)}>
-                    {tight}%
-                  </span>
-                </div>
-                {report.windows.map((window, index) => (
-                  <UsageRow key={window.label ?? index} window={window} />
-                ))}
-              </section>
-            );
-          })
-        )}
-      </div>
+            </Button>
+          }
+        >
+          {t("usage.agentUnavailable", { agent })}
+        </Notice>
+      ))}
     </Popover>
+  );
+}
+
+function Segments({
+  windows,
+  picked,
+  onPick,
+}: {
+  windows: QuotaWindow[];
+  picked: string;
+  onPick: (name: string) => void;
+}) {
+  return (
+    <Segmented
+      class="self-start"
+      size="sm"
+      label={t("usage.window")}
+      value={picked}
+      options={windows.map((window, index) => ({
+        value: nameOf(window, index),
+        label: nameOf(window, index),
+      }))}
+      onChange={onPick}
+    />
   );
 }

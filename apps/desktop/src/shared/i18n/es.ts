@@ -61,6 +61,9 @@ export const es: Messages = {
     removeCancel: "Cancelar",
   },
   usage: {
+    used: "usado",
+    window: "Ventana de uso",
+    agentUnavailable: "sin datos de {agent}",
     title: "Uso de suscripción",
     updatedAgo: "actualizado hace {away}",
     resetsIn: "reinicia en {away} · {when}",
