@@ -74,6 +74,10 @@
     color: var(--apex-state-working);
   }
 
+  .ui-tool-call[data-status="pending"] .ui-tool-call-status {
+    color: var(--apex-faint);
+  }
+
   .ui-tool-call-detail {
     @apply font-mono font-normal text-2xs text-muted tabular-nums;
   }

@@ -1,14 +1,15 @@
-import type { ComponentChildren, JSX } from "preact";
+import type { ComponentChildren, JSX, Ref } from "preact";
 import { cn } from "@/lib/cn";
 import { Spinner } from "@/atoms/spinner/Spinner";
 
 export interface TranscriptProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
+  elRef?: Ref<HTMLDivElement>;
   children?: ComponentChildren;
 }
 
-export function Transcript({ class: className, children, ...rest }: TranscriptProps) {
+export function Transcript({ elRef, class: className, children, ...rest }: TranscriptProps) {
   return (
-    <div class={cn("ui-transcript", className as string)} {...rest}>
+    <div class={cn("ui-transcript", className as string)} ref={elRef} {...rest}>
       {children}
     </div>
   );
@@ -38,7 +39,7 @@ export function Message({ from = "agent", lead, meta, class: className, children
   );
 }
 
-export type ToolStatus = "running" | "ok" | "failed";
+export type ToolStatus = "pending" | "running" | "ok" | "failed";
 
 export interface ToolCallProps {
   command: string;
@@ -51,7 +52,7 @@ export interface ToolCallProps {
   children?: ComponentChildren;
 }
 
-const GLYPH: Record<Exclude<ToolStatus, "running">, string> = { ok: "✓", failed: "✗" };
+const GLYPH: Record<Exclude<ToolStatus, "running">, string> = { pending: "○", ok: "✓", failed: "✗" };
 
 export function ToolCall({
   command,
