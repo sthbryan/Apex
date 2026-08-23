@@ -1,7 +1,7 @@
-import { Tab as KitTab, TabBar as KitTabBar } from "@apex/ui";
+import { Tab as KitTab, TabBar as KitTabBar, Popover } from "@apex/ui";
 import cn from "cnfast";
 import type { VNode } from "preact";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
@@ -13,7 +13,6 @@ import { paneIcon, paneTitle } from "@/features/workspace/title";
 import { type Leaf, leaves } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
-import { usePresence } from "@/shared/ui/presence";
 
 const OVERFLOW_W = 52;
 
@@ -27,7 +26,6 @@ export function TabBar({ tabs, sessions }: Props) {
   const tabEls = useRef<(HTMLDivElement | null)[]>([]);
   const [hidden, setHidden] = useState(0);
   const [open, setOpen] = useState(false);
-  const popover = usePresence<HTMLDivElement>(open);
 
   useLayoutEffect(() => {
     const node = holder.current;
@@ -53,19 +51,6 @@ export function TabBar({ tabs, sessions }: Props) {
     observer.observe(node);
     return () => observer.disconnect();
   }, [tabs]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const dismiss = (event: MouseEvent) => {
-      if (!holder.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("mousedown", dismiss);
-    return () => window.removeEventListener("mousedown", dismiss);
-  }, [open]);
 
   if (tabs.length === 0) {
     return null;
@@ -144,54 +129,46 @@ export function TabBar({ tabs, sessions }: Props) {
       })}
 
       {hidden > 0 && (
-        <div class="relative flex shrink-0 items-stretch">
-          <button
-            type="button"
-            title={t("workspace.moreTabs", { count: String(hidden) })}
-            onClick={() => setOpen((value) => !value)}
-            class={cn(
-              "flex items-center gap-0.5 border-r border-border px-2.5 text-muted transition-colors hover:text-text",
-              open && "bg-pane text-text",
-            )}
-          >
-            <Icon name="plus" size={12} />
-            {hidden}
-          </button>
-          {popover.mounted && (
-            <div
-              ref={popover.holder}
-              class={cn("absolute right-0 top-full z-50 mt-1 origin-top-right", {
-                "animate-drop-out": popover.leaving,
-                "animate-drop-in": !popover.leaving,
-              })}
+        <Popover
+          open={open}
+          onClose={() => setOpen(false)}
+          side="bottom"
+          align="end"
+          width={224}
+          label={t("workspace.moreTabs", { count: String(hidden) })}
+          anchor={
+            <button
+              type="button"
+              title={t("workspace.moreTabs", { count: String(hidden) })}
+              onClick={() => setOpen((value) => !value)}
+              class={cn(
+                "flex h-full items-center gap-0.5 border-r border-border px-2.5 text-muted transition-colors hover:text-text",
+                open && "bg-pane text-text",
+              )}
             >
-              <div class="w-56 overflow-hidden rounded-lg border border-border bg-float py-1 shadow-2xl">
-                {overflowTabs.map((tab) => {
-                  const active = tab.id === activeTabId.value;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => {
-                        activeTabId.value = tab.id;
-                        setOpen(false);
-                      }}
-                      class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition-colors hover:bg-raised"
-                    >
-                      <span class="flex shrink-0 items-center text-faint">
-                        {identity(tab, sessions)}
-                      </span>
-                      <span class="truncate text-small text-text">{titleOf(tab, sessions)}</span>
-                      {active && (
-                        <Icon name="check" size={12} class="ml-auto shrink-0 text-faint" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+              <Icon name="plus" size={12} />
+              {hidden}
+            </button>
+          }
+        >
+          {overflowTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                activeTabId.value = tab.id;
+                setOpen(false);
+              }}
+              class="flex w-full items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors hover:bg-raised"
+            >
+              <span class="flex shrink-0 items-center text-faint">{identity(tab, sessions)}</span>
+              <span class="truncate text-small text-text">{titleOf(tab, sessions)}</span>
+              {tab.id === activeTabId.value && (
+                <Icon name="check" size={12} class="ml-auto shrink-0 text-faint" />
+              )}
+            </button>
+          ))}
+        </Popover>
       )}
     </KitTabBar>
   );
