@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use apex_proto::BrowserLog;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, oneshot};
 use uuid::Uuid;
 
 const KEPT: usize = 200;
@@ -21,6 +21,7 @@ struct Page {
 pub struct BrowsersService {
     panes: Arc<Mutex<HashMap<String, Page>>>,
     clock: Arc<Mutex<u64>>,
+    waiting: Arc<Mutex<HashMap<Uuid, oneshot::Sender<Result<String, String>>>>>,
 }
 
 impl BrowsersService {
@@ -97,6 +98,31 @@ impl BrowsersService {
             }
         })
         .await
+    }
+
+    pub async fn latest(&self, project: Uuid) -> Option<String> {
+        let panes = self.panes.lock().await;
+        panes
+            .iter()
+            .filter(|(_, page)| page.project == project)
+            .max_by_key(|(_, page)| page.seen)
+            .map(|(pane, _)| pane.clone())
+    }
+
+    pub async fn expect_shot(&self, request: Uuid) -> oneshot::Receiver<Result<String, String>> {
+        let (sender, receiver) = oneshot::channel();
+        self.waiting.lock().await.insert(request, sender);
+        receiver
+    }
+
+    pub async fn settle_shot(&self, request: Uuid, answer: Result<String, String>) {
+        if let Some(sender) = self.waiting.lock().await.remove(&request) {
+            let _ = sender.send(answer);
+        }
+    }
+
+    pub async fn drop_shot(&self, request: Uuid) {
+        self.waiting.lock().await.remove(&request);
     }
 
     async fn describe(&self, project: Uuid, shape: impl Fn(&Page) -> String) -> String {

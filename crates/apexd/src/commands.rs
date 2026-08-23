@@ -292,6 +292,13 @@ async fn execute(
             manager.open_view(asked_by, target).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
+        Command::BrowserShot { project } => {
+            Ok(Reply::Text { text: manager.browser_shot(project).await.map_err(internal_error)? })
+        }
+        Command::ShotDone { request, path, error } => {
+            manager.shot_done(request, path, error).await;
+            Ok(Reply::Done)
+        }
         Command::CloseView { asked_by, target } => {
             manager.close_view(asked_by, target).await.map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -482,6 +489,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::SessionCreate { .. }
             | Command::OpenView { .. }
             | Command::CloseView { .. }
+            | Command::BrowserShot { .. }
             | Command::SessionTell { .. }
             | Command::SessionDone { .. }
             | Command::SessionDismiss { .. }

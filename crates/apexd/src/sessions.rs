@@ -8,8 +8,7 @@ use apex_proto::{
     ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitBranch, GitCommit,
     GitStatus, GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport,
     MetricsSnapshot, PendingReview, ProjectSummary, RejectedHunk, SessionState, SessionSummary,
-    TaskSummary,
-    TerminalSize, WorktreeDisposal, WorktreeEntry,
+    TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
@@ -20,8 +19,7 @@ use crate::services::browsers::BrowsersService;
 use crate::services::sessions::SessionRegistry;
 use crate::services::{
     context::ContextService, files::FilesService, git::GitService, metrics::MetricsService,
-    rejects::RejectsService,
-    projects::ProjectsService, tasks::TasksService,
+    projects::ProjectsService, rejects::RejectsService, tasks::TasksService,
 };
 
 const EVENT_CHANNEL_DEPTH: usize = 256;
@@ -172,8 +170,18 @@ impl SessionManager {
     }
 
     pub async fn create(&self, request: NewSession) -> Result<SessionSummary> {
-        let NewSession { project, agent, cwd, size, isolation, slug, mode, parent, run, unattended } =
-            request;
+        let NewSession {
+            project,
+            agent,
+            cwd,
+            size,
+            isolation,
+            slug,
+            mode,
+            parent,
+            run,
+            unattended,
+        } = request;
         let agent = agent.as_str();
         let wanted = match mode {
             Some(chosen) => chosen,
@@ -625,6 +633,34 @@ impl SessionManager {
         self.browsers.logs(project).await
     }
 
+    pub async fn browser_shot(&self, project: Uuid) -> Result<String> {
+        let pane =
+            self.browsers.latest(project).await.context("no browser pane is open right now")?;
+        let request = Uuid::new_v4();
+        let waiting = self.browsers.expect_shot(request).await;
+        self.registry.announce(Event::AskShot { pane, request });
+        let answered = tokio::time::timeout(std::time::Duration::from_secs(5), waiting)
+            .await
+            .map_err(|_| anyhow::anyhow!("the desktop did not hand back a picture in time"));
+        match answered {
+            Ok(Ok(Ok(path))) => Ok(path),
+            Ok(Ok(Err(error))) => bail!(error),
+            Ok(Err(_)) => bail!("the desktop dropped the request"),
+            Err(error) => {
+                self.browsers.drop_shot(request).await;
+                Err(error)
+            }
+        }
+    }
+
+    pub async fn shot_done(&self, request: Uuid, path: Option<String>, error: Option<String>) {
+        let answer = match path {
+            Some(path) => Ok(path),
+            None => Err(error.unwrap_or_else(|| "the picture could not be taken".into())),
+        };
+        self.browsers.settle_shot(request, answer).await;
+    }
+
     pub fn open_url(&self, url: &str) -> anyhow::Result<()> {
         self.files.open_url(url)
     }
@@ -751,11 +787,7 @@ impl SessionManager {
         self.rejects.reject(&dir, project, &branch, patch).await
     }
 
-    pub async fn git_rejects(
-        &self,
-        project: Uuid,
-        target: GitTarget,
-    ) -> Result<Vec<RejectedHunk>> {
+    pub async fn git_rejects(&self, project: Uuid, target: GitTarget) -> Result<Vec<RejectedHunk>> {
         let branch = self.git_branch(project, &target).await?;
         self.rejects.list(project, &branch).await
     }

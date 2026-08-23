@@ -622,6 +622,16 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    BrowserShot {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
+    ShotDone {
+        #[ts(type = "string")]
+        request: Uuid,
+        path: Option<String>,
+        error: Option<String>,
+    },
     SessionResume {
         #[ts(type = "string")]
         project: Uuid,
@@ -990,6 +1000,11 @@ pub enum Event {
         target: ViewTarget,
         #[ts(type = "string")]
         asked_by: Uuid,
+    },
+    AskShot {
+        pane: String,
+        #[ts(type = "string")]
+        request: Uuid,
     },
     DaemonShutdown,
     SessionOpened {

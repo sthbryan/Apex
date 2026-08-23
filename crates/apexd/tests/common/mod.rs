@@ -156,19 +156,11 @@ pub fn make_repo(root: &std::path::Path) {
         vec!["config", "user.email", "test@apex.dev"],
         vec!["config", "user.name", "Apex Test"],
     ] {
-        std::process::Command::new("git")
-            .current_dir(root)
-            .args(&args)
-            .output()
-            .expect("git");
+        std::process::Command::new("git").current_dir(root).args(&args).output().expect("git");
     }
     std::fs::write(root.join("README.md"), "# sample\n").expect("readme");
     for args in [vec!["add", "."], vec!["commit", "-m", "first"]] {
-        std::process::Command::new("git")
-            .current_dir(root)
-            .args(&args)
-            .output()
-            .expect("git");
+        std::process::Command::new("git").current_dir(root).args(&args).output().expect("git");
     }
 }
 

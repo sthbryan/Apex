@@ -389,8 +389,16 @@ async fn a_race_hands_the_same_task_to_every_agent_under_one_run() {
 #[tokio::test]
 async fn a_race_needs_agents_and_a_task() {
     let harness = Harness::start_in_repo().await;
-    assert!(harness.manager.race(harness.project, vec![], "something".into(), vec![]).await.is_err());
-    assert!(harness.manager.race(harness.project, vec!["sh".into()], "   ".into(), vec![]).await.is_err());
+    assert!(
+        harness.manager.race(harness.project, vec![], "something".into(), vec![]).await.is_err()
+    );
+    assert!(
+        harness
+            .manager
+            .race(harness.project, vec!["sh".into()], "   ".into(), vec![])
+            .await
+            .is_err()
+    );
 }
 
 #[tokio::test]
@@ -415,7 +423,12 @@ async fn a_broadcast_groups_its_sessions_like_a_race() {
 
     let started = harness
         .manager
-        .broadcast(parent.id, vec!["sh".into(), "sh".into()], "look around".into(), Isolation::Directory)
+        .broadcast(
+            parent.id,
+            vec!["sh".into(), "sh".into()],
+            "look around".into(),
+            Isolation::Directory,
+        )
         .await
         .expect("broadcast");
 

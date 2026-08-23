@@ -1,11 +1,7 @@
 use super::rejects::RejectsService;
 
 fn git(dir: &std::path::Path, args: &[&str]) {
-    let done = std::process::Command::new("git")
-        .current_dir(dir)
-        .args(args)
-        .output()
-        .expect("git");
+    let done = std::process::Command::new("git").current_dir(dir).args(args).output().expect("git");
     assert!(done.status.success(), "git {args:?}: {}", String::from_utf8_lossy(&done.stderr));
 }
 
@@ -35,10 +31,7 @@ async fn a_rejected_hunk_leaves_the_tree_and_stays_on_the_shelf() {
 
     shelf.reject(repo.path(), project, "main", patch_of(repo.path())).await.expect("reject");
 
-    assert_eq!(
-        std::fs::read_to_string(repo.path().join("README.md")).expect("read"),
-        "# sample\n"
-    );
+    assert_eq!(std::fs::read_to_string(repo.path().join("README.md")).expect("read"), "# sample\n");
     let saved = shelf.list(project, "main").await.expect("list");
     assert_eq!(saved.len(), 1);
     assert_eq!(saved[0].path, "README.md");
