@@ -2,7 +2,7 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
-use apex_proto::SessionState;
+use apex_proto::{SessionState, ToolGroup};
 use rusqlite::{Connection, OptionalExtension, params};
 use uuid::Uuid;
 
@@ -10,6 +10,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0001_initial.sql"),
     include_str!("migrations/0002_projects.sql"),
     include_str!("migrations/0003_worktrees.sql"),
+    include_str!("migrations/0004_agent_tools.sql"),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -159,6 +160,30 @@ impl Store {
                 |row| row.get(0),
             )
             .optional()?)
+    }
+
+    pub fn save_tools_off(&self, agent: &str, groups: &[ToolGroup]) -> Result<()> {
+        let payload = serde_json::to_string(groups)?;
+        self.connection.execute(
+            "INSERT INTO agent_tools (agent, tools_off, updated_at)
+             VALUES (?1, ?2, unixepoch())
+             ON CONFLICT(agent) DO UPDATE SET tools_off = ?2, updated_at = unixepoch()",
+            params![agent, payload],
+        )?;
+        Ok(())
+    }
+
+    pub fn tools_off(&self, agent: &str) -> Result<Vec<ToolGroup>> {
+        let payload: Option<String> = self
+            .connection
+            .query_row(
+                "SELECT tools_off FROM agent_tools WHERE agent = ?1",
+                params![agent],
+                |row| row.get(0),
+            )
+            .optional()?;
+        let Some(payload) = payload else { return Ok(Vec::new()) };
+        Ok(serde_json::from_str(&payload).unwrap_or_default())
     }
 
     pub fn insert_session(
