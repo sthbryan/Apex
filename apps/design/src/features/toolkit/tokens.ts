@@ -49,8 +49,9 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       "--apex-surface",
       "--apex-raised",
       "--apex-overlay",
-      "--apex-tty",
       "--apex-border",
+      "--apex-accent-soft",
+      "--apex-selection",
     ],
   },
   {
@@ -74,6 +75,17 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       "--apex-state-blocked",
       "--apex-state-done",
       "--apex-state-failed",
+    ],
+  },
+  {
+    title: "Terminal",
+    kind: "color",
+    note: "The terminal keeps its own ground in both themes.",
+    tokens: [
+      "--apex-tty",
+      "--apex-tty-fg",
+      "--apex-tty-dim",
+      "--apex-tty-bright",
     ],
   },
   {
