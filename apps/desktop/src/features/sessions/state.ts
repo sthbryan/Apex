@@ -235,6 +235,10 @@ export async function attachSession(id: string): Promise<void> {
   await invoke("attach_session", { id });
 }
 
+export async function detachSession(id: string): Promise<void> {
+  await invoke("detach_session", { id });
+}
+
 export async function sendInput(id: string, data: string): Promise<void> {
   await invoke("send_input", { id, data });
 }

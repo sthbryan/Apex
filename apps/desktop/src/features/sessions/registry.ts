@@ -4,6 +4,7 @@ import type { Terminal } from "@xterm/xterm";
 
 import {
   attachSession,
+  detachSession,
   onSessionOutput,
   resizeSession,
   resumeTerminal,
@@ -106,6 +107,7 @@ export function detachTerminal(id: string, host?: HTMLElement): void {
   }
   suspendTerminal(id);
   disposeTerminal(id);
+  void detachSession(id).catch(() => {});
 }
 
 export function disposeTerminal(id: string): void {
