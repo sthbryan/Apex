@@ -1,4 +1,14 @@
-import { Button, Chip, ListRow, Notice, Popover, SectionLabel, StatusPill } from "@apex/ui";
+import {
+  Button,
+  Chip,
+  Dot,
+  Glyph,
+  ListRow,
+  Notice,
+  Popover,
+  SectionLabel,
+  StatusPill,
+} from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
@@ -47,8 +57,7 @@ export function TargetChip({ project, placement = "below" }: Props) {
       : null;
   const label = onProject ? (status?.branch ?? project.name) : (tree?.branch ?? project.name);
   const owners = sessionOfWorktree.value;
-  const attached = worktrees.value.filter((candidate) => owners.has(candidate.path));
-  const orphans = worktrees.value.filter((candidate) => !owners.has(candidate.path));
+  const trees = worktrees.value;
   const above = placement === "above";
   const current = onProject ? status?.branch : tree?.branch;
   const others = branches.value.filter((branch) => branch.name !== current);
@@ -92,7 +101,7 @@ export function TargetChip({ project, placement = "below" }: Props) {
       side={above ? "top" : "bottom"}
       align={above ? "start" : "end"}
       width={256}
-      label={t("git.branches", { count: String(others.length) })}
+      title={t("git.whereRuns")}
       anchor={
         <StatusPill
           class={cn("min-w-0", onProject ? undefined : "text-accent")}
@@ -126,18 +135,12 @@ export function TargetChip({ project, placement = "below" }: Props) {
         selected={onProject}
         onPick={() => setOpen(false)}
       />
-      {attached.length > 0 && (
-        <SectionLabel flush count={attached.length}>
+      {trees.length > 0 && (
+        <SectionLabel flush count={trees.length}>
           {t("git.worktrees")}
         </SectionLabel>
       )}
-      {attached.map(row)}
-      {orphans.length > 0 && (
-        <SectionLabel flush count={orphans.length}>
-          {t("git.orphanTreesLabel")}
-        </SectionLabel>
-      )}
-      {orphans.map(row)}
+      {trees.map(row)}
       <SectionLabel flush count={others.length}>
         {t("git.branchesLabel")}
       </SectionLabel>
@@ -215,11 +218,19 @@ function Target({
       sub={branch ? <span class="font-mono">{branch}</span> : undefined}
       selected={selected}
       lead={
-        <Icon
-          name={target.type === "project" ? "files" : "branch"}
-          size={12}
-          class={live ? "text-state-working" : "text-faint"}
-        />
+        live ? (
+          <Dot state="working" />
+        ) : selected ? (
+          <Glyph size="sm">
+            <Icon name="check" size={11} />
+          </Glyph>
+        ) : (
+          <Icon
+            name={target.type === "project" ? "files" : "branch"}
+            size={12}
+            class="text-faint"
+          />
+        )
       }
       trail={
         <>
