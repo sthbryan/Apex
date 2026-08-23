@@ -5,6 +5,7 @@ body {
     radial-gradient(900px 600px at 10% 110%, color-mix(in oklab, var(--apex-state-working) 6%, transparent), transparent 60%),
     color-mix(in oklab, var(--apex-bg) 88%, var(--apex-text));
   background-attachment: fixed;
+  overflow-x: hidden;
 }
 
 .apx {
@@ -31,6 +32,7 @@ html[data-theme="light"] .stage-links {
 .stage-links a {
   @apply flex h-[27px] items-center gap-[7px] rounded-full px-3.5 text-xs font-medium no-underline text-muted;
   transition: color var(--apex-quick) var(--apex-ease), background var(--apex-quick) var(--apex-ease);
+  white-space: nowrap;
 }
 
 .stage-links a:hover {
@@ -108,20 +110,206 @@ html[data-theme="light"] .stage-links {
   @apply mb-1 border-t pt-1 border-border/45;
 }
 
-@media (max-width: 780px) {
+/* --- layout helpers --- */
+
+.layout-backdrop {
+  display: none;
+}
+
+.mobile-rail {
+  display: none;
+}
+
+.ui-title-bar-mobile-toggle {
+  display: none;
+}
+
+/* ============================================================
+   Responsive — App shell
+   Breakpoints: 1120 (tablet), 768 (mobile), 640 (compact), 480 (xs)
+   ============================================================ */
+
+/* Tablet: side panel becomes overlay drawer */
+@media (max-width: 1120px) {
   .apx {
-    @apply gap-1.5 p-1.5;
+    @apply px-3;
   }
 
   .window {
-    @apply w-full rounded-none border-0 shadow-none;
+    @apply max-w-full;
+  }
+
+  /* side-panel as drawer overlay */
+  .ui-app-body {
+    position: relative;
+  }
+
+  .ui-app-body > .ui-side-panel {
+    position: absolute;
+    inset: 0 auto 0  var(--apex-rail-width);
+    z-index: var(--apex-z-modal);
+    height: 100%;
+    box-shadow: var(--apex-shadow-lg), 12px 0 32px rgb(0 0 0 / 0.18);
+    background-color: var(--apex-surface);
+    border-right: 1px solid var(--apex-border);
+    /* animate in/out */
+    transition:
+      transform var(--apex-swift) var(--apex-ease),
+      opacity var(--apex-swift) var(--apex-ease);
+  }
+
+  .ui-app-body > .ui-side-panel[data-collapsed] {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+    width: var(--apex-dock-width);
+    border-right-width: 1px;
+    overflow: hidden;
+  }
+
+  /* backdrop */
+  .layout-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: calc(var(--apex-z-modal) - 1);
+    background: rgb(0 0 0 / 0.32);
+    backdrop-filter: blur(2px);
+    animation: apex-fade-in var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-app-body > .ui-side-panel[data-collapsed] ~ .layout-backdrop,
+  .ui-app-body:has(> .ui-side-panel[data-collapsed]) .layout-backdrop {
+    display: none;
   }
 }
 
-@media (max-width: 1020px) {
-  .ui-app-body > .ui-side-panel { display: none; }
+/* Mobile rail -> hide vertical, show mobile horizontal strip */
+@media (max-width: 768px) {
+  .apx {
+    @apply gap-2 px-2.5 pb-[76px] pt-2;
+  }
+
+  .window {
+    @apply rounded-xl border shadow-xl;
+  }
+
+  /* keep rail visible but slimmer on narrow tablet */
+  .ui-app-body > .ui-rail {
+    width: 48px;
+  }
+  .ui-rail-button {
+    width: 36px;
+    height: 36px;
+  }
 }
 
-@media (max-width: 780px) {
-  .ui-app-body > .ui-rail { display: none; }
+@media (max-width: 640px) {
+  .apx {
+    @apply gap-1.5 p-1.5 pb-[72px];
+    gap: 8px;
+  }
+
+  .window {
+    @apply w-full rounded-[14px] border-0 shadow-none;
+    overflow: hidden;
+  }
+
+  /* hide desktop rail, show mobile rail */
+  .ui-app-body > .ui-rail {
+    display: none;
+  }
+
+  .mobile-rail {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--apex-border);
+    background: var(--apex-bar);
+    scrollbar-width: none;
+  }
+  .mobile-rail::-webkit-scrollbar { display: none; }
+
+  .mobile-rail button {
+    flex: none;
+    font-size: 12px;
+  }
+
+  .ui-title-bar-mobile-toggle {
+    display: grid;
+  }
+
+  /* drawer takes full width on phone */
+  .ui-app-body > .ui-side-panel {
+    left: 0;
+    width: min(86vw, 320px);
+  }
+  .ui-app-body > .ui-side-panel .ui-side-panel-inner {
+    width: min(86vw, 320px);
+  }
+
+  .stage-links {
+    bottom: 10px;
+    padding: 2px;
+    gap: 1px;
+    max-width: calc(100vw - 16px);
+  }
+  .stage-links a {
+    @apply px-2.5 text-[11px] gap-1;
+    height: 26px;
+  }
+  .stage-links a svg { flex: none; }
+
+  .home-summary {
+    grid-template-columns: 1fr;
+  }
+
+  /* hide secondary actions in title bar on very narrow */
+  .ui-title-bar-actions .ui-button .ui-button-label {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .apx {
+    @apply p-1 pb-[68px];
+  }
+  .window {
+    border-radius: 10px;
+  }
+  .stage-links {
+    bottom: 8px;
+  }
+  .stage-links a {
+    @apply px-2;
+    font-size: 11px;
+  }
+  /* hide labels on xs, keep icons */
+  .stage-links a span { display: none; }
+  .stage-links a { gap: 0; min-width: 36px; justify-content: center; }
+  .stage-links a[aria-current="page"] span { display: inline; }
+  .stage-links a[aria-current="page"] { gap: 6px; padding-inline: 12px; }
+}
+
+/* reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .ui-side-panel,
+  .layout-backdrop,
+  .stage-links a {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ensure pane content doesn't overflow viewport */
+@media (max-width: 640px) {
+  .ui-app-body {
+    min-height: 0;
+  }
+  .ui-app-main {
+    min-width: 0;
+  }
 }

@@ -161,6 +161,81 @@
   @apply flex shrink-0 items-baseline gap-2;
 }
 
+/* responsive — toolkit */
+@media (max-width: 860px) {
+  .tk {
+    @apply gap-4 pb-16;
+  }
+  .tk-head {
+    @apply gap-3;
+  }
+  .tk-title {
+    @apply text-2xl;
+  }
+  .tk-palette {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tk-size-row,
+  .tk-spec-row {
+    @apply gap-x-6 gap-y-4;
+  }
+  .tk-compositions {
+    grid-template-columns: 1fr;
+  }
+  .tk-components {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .tk {
+    @apply gap-3 pb-12;
+    max-width: 100%;
+  }
+  .tk-head {
+    @apply flex-col items-stretch gap-3;
+  }
+  .tk-controls {
+    @apply flex-wrap;
+  }
+  .tk-palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tk-segment {
+    @apply h-16 px-2 py-1;
+  }
+  .tk-segment-name {
+    @apply text-xs;
+  }
+  .tk-specimen-card {
+    @apply px-3;
+  }
+  .tk-specimen {
+    @apply gap-3 py-2.5;
+  }
+  .tk-aliases {
+    grid-template-columns: 1fr;
+  }
+  .tk-size-row,
+  .tk-spec-row {
+    grid-template-columns: 1fr;
+  }
+  .tk-motion code {
+    @apply w-20 text-xs;
+  }
+  .tk-z-stack {
+    height: 160px;
+  }
+  .tk-z {
+    @apply w-36 px-2 py-1;
+    left: calc(var(--tk-i) * 18px);
+    top: calc(var(--tk-i) * 15px);
+  }
+  .tk-h2 {
+    @apply text-lg flex-wrap;
+  }
+}
+
 .tk-specimen-meta code {
   @apply font-mono text-sm text-text;
 }
@@ -312,4 +387,25 @@
 
 .tk-axis-sample {
   @apply min-w-0 flex-1 text-md text-text;
+}
+
+@media (max-width: 480px) {
+  .tk-palette {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .tk-segment {
+    @apply h-auto min-h-[64px] flex-row items-center justify-between gap-2;
+  }
+  .tk-segment-name,
+  .tk-segment-hex,
+  .tk-segment-alt {
+    @apply truncate;
+  }
+  .tk-components {
+    gap: 8px;
+  }
+  .tk-compositions {
+    gap: 8px;
+  }
 }

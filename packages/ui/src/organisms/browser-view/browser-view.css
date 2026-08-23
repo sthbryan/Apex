@@ -8,6 +8,7 @@
   .ui-browser-bar {
     @apply flex flex-none items-center gap-1.5 px-2.5 py-1.5;
     border-bottom: 1px solid var(--apex-border);
+    flex-wrap: wrap;
   }
 
   .ui-browser-nav {
@@ -57,4 +58,18 @@
   .ui-browser-log[data-level="error"] { color: var(--apex-state-failed); }
   .ui-browser-log[data-level="warn"] { color: var(--apex-state-blocked); }
   .ui-browser-log[data-level="info"] { color: var(--apex-tty-dim); }
+
+  @media (max-width: 640px) {
+    .ui-browser-bar {
+      @apply px-2 py-1 gap-1;
+    }
+    .ui-browser-url {
+      @apply px-2;
+      height: 30px;
+      font-size: 12px;
+    }
+    .ui-browser-console {
+      height: 120px;
+    }
+  }
 }

@@ -32,7 +32,7 @@ export function App() {
             aria-current={route.value === p.to ? "page" : undefined}
             onClick={(e) => { e.preventDefault(); navigate(p.to); }}
           >
-            <p.Icon size={13} />{p.label}
+            <p.Icon size={13} /><span>{p.label}</span>
           </a>
         ))}
       </nav>

@@ -23,6 +23,27 @@
 
   .ui-composer-bar {
     @apply flex items-center gap-1.5 px-2.5 pt-2 pb-2.5;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 640px) {
+    .ui-composer {
+      @apply rounded-[14px];
+    }
+    .ui-composer textarea {
+      @apply px-3 pt-3;
+      font-size: var(--apex-text-md);
+      min-height: 52px;
+    }
+    .ui-composer-bar {
+      @apply px-2 pt-1.5 pb-2 gap-1;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .ui-composer-bar {
+      gap: 6px;
+    }
   }
 
   .ui-composer-spacer {

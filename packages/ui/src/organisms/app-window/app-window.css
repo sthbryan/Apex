@@ -21,4 +21,13 @@
     @apply flex min-w-0 flex-1 flex-col;
     background-color: var(--apex-bg);
   }
+
+  @media (max-width: 640px) {
+    .ui-app-window {
+      border-radius: var(--apex-r-md);
+    }
+    .ui-app-body {
+      flex-direction: column;
+    }
+  }
 }

@@ -62,3 +62,38 @@
 .vw-overlay-stage[data-kind="popover"] .ui-popover {
   @apply max-h-[340px];
 }
+
+@media (max-width: 860px) {
+  .vw-stage,
+  .vw-overlay-stage {
+    @apply h-[360px];
+  }
+  .vw-dock {
+    @apply h-[480px];
+  }
+  .vw-carousel-track > .vw-cell {
+    flex-basis: min(var(--vw-item, 240px), 88vw);
+  }
+}
+
+@media (max-width: 640px) {
+  .vw-stage,
+  .vw-overlay-stage {
+    @apply h-[320px];
+  }
+  .vw-dock {
+    @apply h-[420px];
+  }
+  .vw-carousel {
+    @apply gap-2;
+  }
+  .vw-carousel-track {
+    @apply gap-3;
+  }
+  .vw-carousel-track > .vw-cell {
+    flex-basis: min(var(--vw-item, 240px), 92vw);
+  }
+  .vw-label {
+    @apply flex-wrap text-[10px];
+  }
+}
