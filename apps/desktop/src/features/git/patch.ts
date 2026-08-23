@@ -138,6 +138,13 @@ export function parsePatch(patch: string): DiffFile[] {
   return files.filter((entry) => entry.hunks.length > 0);
 }
 
+function closing(open: string[]): string {
+  return open
+    .map((tag) => `</${/^<([a-zA-Z0-9-]+)/.exec(tag)?.[1] ?? "span"}>`)
+    .reverse()
+    .join("");
+}
+
 export function splitMarkup(markup: string): string[] {
   const lines: string[] = [];
   const open: string[] = [];
@@ -156,13 +163,13 @@ export function splitMarkup(markup: string): string[] {
     const parts = piece.split("\n");
     parts.forEach((part, index) => {
       if (index > 0) {
-        lines.push(current + "</span>".repeat(open.length));
+        lines.push(current + closing(open));
         current = open.join("");
       }
       current += part;
     });
   }
-  lines.push(current + "</span>".repeat(open.length));
+  lines.push(current + closing(open));
 
   return lines;
 }
