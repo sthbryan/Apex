@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 
-export type Page = "workspace" | "settings";
+export type Page = "workspace" | "settings" | "shortcuts" | "veil";
 
 export const page = signal<Page>("workspace");
 export const settingsSection = signal("look");
