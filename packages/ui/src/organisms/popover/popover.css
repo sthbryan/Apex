@@ -9,7 +9,7 @@
     z-index: var(--apex-z-overlay);
     background-color: var(--apex-overlay);
     box-shadow: var(--apex-shadow-lg);
-    backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
+    backdrop-filter: blur(var(--apex-glass-blur)) saturate(var(--apex-glass-saturate));
     animation: apex-pop-in var(--apex-quick) var(--apex-ease-out) both;
   }
 

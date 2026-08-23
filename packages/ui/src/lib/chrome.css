@@ -3,6 +3,5 @@
 @layer components {
   .ui-chrome {
     background-color: var(--apex-surface);
-    backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
   }
 }

@@ -5,7 +5,7 @@
     @apply relative flex w-72 items-center gap-2.5 overflow-hidden rounded-md border border-border p-3;
     background-color: var(--apex-overlay);
     box-shadow: var(--apex-shadow-lg);
-    backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
+    backdrop-filter: blur(var(--apex-glass-blur)) saturate(var(--apex-glass-saturate));
     animation: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
   }
 

@@ -133,36 +133,44 @@
 }
 
 :root {
-  --apex-veil-surface: 100%;
-  --apex-veil-raised: 100%;
-  --apex-veil-overlay: 100%;
-  --apex-veil-tty: 100%;
-  --apex-veil-blur: 0px;
-  --apex-veil-saturate: 1;
-  --apex-veil-contrast: 0%;
+  --apex-glass-blur: 20px;
+  --apex-glass-saturate: 1.4;
+
+  --apex-veil-tint: 100%;
+  --apex-veil-lift: 0%;
+  --apex-veil-shell: var(--apex-bg-solid);
 }
 
 [data-veil="on"] {
-  --apex-veil-surface: 76%;
-  --apex-veil-raised: 82%;
-  --apex-veil-overlay: 88%;
-  --apex-veil-tty: 90%;
-  --apex-veil-blur: 26px;
-  --apex-veil-saturate: 1.5;
-  --apex-veil-contrast: 22%;
+  --apex-veil-tint: 72%;
+  --apex-veil-lift: 12%;
+  --apex-veil-shell: transparent;
+
+  --apex-text-solid: light-dark(#26213a, #eae8fb);
+  --apex-muted-solid: light-dark(#3b3757, #aaa6c0);
+  --apex-faint-solid: light-dark(#4f4a6b, #837e9c);
+  --apex-border-solid: light-dark(#bdb3aa, #4a4763);
 }
 
 :root {
-  --apex-bg: var(--apex-bg-solid);
-  --apex-surface: color-mix(in oklab, var(--apex-surface-solid) var(--apex-veil-surface), transparent);
-  --apex-raised: color-mix(in oklab, var(--apex-raised-solid) var(--apex-veil-raised), transparent);
-  --apex-overlay: color-mix(in oklab, var(--apex-overlay-solid) var(--apex-veil-overlay), transparent);
+  --apex-bg: var(--apex-veil-shell);
+  --apex-surface: color-mix(in oklab, var(--apex-surface-solid) var(--apex-veil-tint), transparent);
+  --apex-raised: color-mix(
+    in oklab,
+    var(--apex-raised-solid) min(100%, calc(var(--apex-veil-tint) + var(--apex-veil-lift))),
+    transparent
+  );
+  --apex-overlay: color-mix(
+    in oklab,
+    var(--apex-overlay-solid) min(100%, calc(var(--apex-veil-tint) + var(--apex-veil-lift) * 2)),
+    transparent
+  );
   --apex-float: var(--apex-overlay);
-  --apex-tty: color-mix(in oklab, var(--apex-tty-solid) var(--apex-veil-tty), transparent);
-  --apex-border: color-mix(in oklab, var(--apex-border-solid), var(--apex-text-solid) var(--apex-veil-contrast));
+  --apex-tty: var(--apex-tty-solid);
+  --apex-border: var(--apex-border-solid);
   --apex-text: var(--apex-text-solid);
-  --apex-muted: color-mix(in oklab, var(--apex-muted-solid), var(--apex-text-solid) var(--apex-veil-contrast));
-  --apex-faint: color-mix(in oklab, var(--apex-faint-solid), var(--apex-text-solid) var(--apex-veil-contrast));
+  --apex-muted: var(--apex-muted-solid);
+  --apex-faint: var(--apex-faint-solid);
 }
 
 :root[data-theme="light"] { color-scheme: light; }

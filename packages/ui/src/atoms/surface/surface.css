@@ -16,7 +16,7 @@
   }
 
   .ui-surface[data-blur="true"] {
-    backdrop-filter: blur(var(--apex-veil-blur)) saturate(var(--apex-veil-saturate));
+    backdrop-filter: blur(var(--apex-glass-blur)) saturate(var(--apex-glass-saturate));
   }
 
   .ui-surface[data-bordered="true"] {
