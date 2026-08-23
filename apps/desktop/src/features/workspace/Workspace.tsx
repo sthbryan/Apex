@@ -1,4 +1,4 @@
-import { Kbd, Welcome } from "@apex/ui";
+import { Kbd, Welcome, Wordmark } from "@apex/ui";
 import type { ComponentChildren } from "preact";
 import { useMemo } from "preact/hooks";
 
@@ -112,9 +112,9 @@ function Splash({ children }: { children: ComponentChildren }) {
       mark={
         <>
           <ApexMark />
-          <h1 class="relative font-serif text-[clamp(3rem,12vw,7rem)] leading-none font-normal tracking-tight text-text">
+          <Wordmark size="xl" class="relative">
             APEX
-          </h1>
+          </Wordmark>
         </>
       }
     >
