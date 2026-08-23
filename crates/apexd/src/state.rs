@@ -18,6 +18,9 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
         "store ready"
     );
 
+    let swept = paths.clone();
+    tokio::task::spawn_blocking(move || apex_core::sweep(&swept));
+
     let profiles = ProfileSet::load(&paths.agents_dir())?;
     let environment = ShellEnvironment::probe().await;
     tracing::info!(
