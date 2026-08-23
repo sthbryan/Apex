@@ -5,6 +5,18 @@ export interface TokenGroup {
   note?: string;
 }
 
+export interface TokenAlias {
+  token: string;
+  target: string;
+}
+
+export const GIT_ALIASES: TokenAlias[] = [
+  { token: "--apex-git-added", target: "--apex-state-done" },
+  { token: "--apex-git-removed", target: "--apex-state-failed" },
+  { token: "--apex-git-modified", target: "--apex-state-working" },
+  { token: "--apex-git-dirty", target: "--apex-muted" },
+];
+
 export const TOKEN_GROUPS: TokenGroup[] = [
   {
     title: "Surfaces",
@@ -40,17 +52,6 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       "--apex-state-done",
       "--apex-state-failed",
     ],
-  },
-  {
-    title: "Git",
-    kind: "color",
-    tokens: [
-      "--apex-git-added",
-      "--apex-git-removed",
-      "--apex-git-modified",
-      "--apex-git-dirty",
-    ],
-    note: "Aliases of the State tokens.",
   },
   {
     title: "Radii",

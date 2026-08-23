@@ -200,3 +200,36 @@
 .tk-composition {
   @apply mt-1;
 }
+
+.tk-aliases {
+  @apply grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-1.5;
+}
+
+.tk-alias {
+  @apply relative flex cursor-pointer items-center gap-2 overflow-hidden rounded-sm border border-border/60 bg-surface px-2.5 py-1.5 text-left;
+  transition: border-color var(--apex-instant) var(--apex-ease);
+}
+
+.tk-alias:hover {
+  @apply border-border;
+}
+
+.tk-alias:focus-visible {
+  @apply -outline-offset-2 outline-2 outline-focus;
+}
+
+.tk-alias code {
+  @apply font-mono text-sm text-text;
+}
+
+.tk-alias-dot {
+  @apply size-3 flex-none rounded-xs;
+}
+
+.tk-alias-arrow {
+  @apply text-sm text-faint;
+}
+
+.tk-alias-target {
+  @apply truncate text-muted;
+}

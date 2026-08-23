@@ -3,7 +3,7 @@ import type { ComponentLayer, ComponentMeta } from "@apex/ui";
 import { Chip, Pill, Segmented, Switch, Wordmark } from "@apex/ui";
 import { themeMode, veil } from "@/shared/theme/mode";
 import type { ThemeMode } from "@/shared/theme/mode";
-import { SAMPLES, TOKEN_GROUPS, TYPE_TOKENS } from "@/features/toolkit/tokens";
+import { GIT_ALIASES, SAMPLES, TOKEN_GROUPS, TYPE_TOKENS } from "@/features/toolkit/tokens";
 import { useTokenValues } from "@/features/toolkit/useTokenValues";
 import type { TokenKind } from "@/features/toolkit/useTokenValues";
 import { renderVariant } from "@/features/toolkit/harness";
@@ -20,7 +20,10 @@ const ALL_TOKENS: Record<string, TokenKind> = {
     TOKEN_GROUPS.flatMap((g) => g.tokens.map((t) => [t, g.kind === "color" ? "color" : "size"] as const)),
   ),
   ...Object.fromEntries(TYPE_TOKENS.map((t) => [t, "size"] as const)),
+  ...Object.fromEntries(GIT_ALIASES.map((a) => [a.token, "color"] as const)),
 };
+
+const short = (token: string): string => token.replace("--apex-", "");
 
 function roundPx(value?: string): string {
   if (!value?.endsWith("px")) return value ?? "";
@@ -101,7 +104,7 @@ export function Toolkit() {
                       flashCopied(e.currentTarget);
                     }}
                   >
-                    <span class="tk-segment-name">{token.replace("--apex-", "")}</span>
+                    <span class="tk-segment-name">{short(token)}</span>
                     <span class="tk-segment-hex">{value?.[themeMode.value]}</span>
                     <span class="tk-copied">copied</span>
                   </button>
@@ -110,6 +113,35 @@ export function Toolkit() {
             </div>
           </div>
         ))}
+
+        <div class="tk-token-group">
+          <div class="tk-token-group-head">
+            <h3 class="tk-h3">Git</h3>
+            <span class="tk-token-count">{GIT_ALIASES.length}</span>
+            <span class="tk-group-note">Names, not colours. Each one points at a token above.</span>
+          </div>
+          <div class="tk-aliases">
+            {GIT_ALIASES.map((alias) => (
+              <button
+                type="button"
+                class="tk-alias"
+                key={alias.token}
+                title={`${alias.token} · click to copy`}
+                onClick={(e) => {
+                  const value = values[alias.token];
+                  void copyToken(alias.token, value?.light, value?.dark);
+                  flashCopied(e.currentTarget);
+                }}
+              >
+                <span class="tk-alias-dot" style={`background:${values[alias.token]?.[themeMode.value]}`} />
+                <code>{short(alias.token)}</code>
+                <span class="tk-alias-arrow">→</span>
+                <code class="tk-alias-target">{short(alias.target)}</code>
+                <span class="tk-copied">copied</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div class="tk-size-row">
           {TOKEN_GROUPS.filter((g) => g.kind === "size").map((group) => (
@@ -141,7 +173,7 @@ export function Toolkit() {
                           <span class="tk-radius" style={`border-radius:${values[token]?.light}`} />
                         )}
                       </td>
-                      <td><code>{token.replace("--apex-", "")}</code></td>
+                      <td><code>{short(token)}</code></td>
                       <td class="tk-value">{roundPx(values[token]?.light)}</td>
                     </tr>
                   ))}
