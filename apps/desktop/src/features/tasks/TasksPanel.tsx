@@ -1,3 +1,4 @@
+import { Chip, Dot, ListRow } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 import { PanelActions } from "@/app/layout/PanelActions";
@@ -35,7 +36,7 @@ export function TasksPanel() {
   }
 
   return (
-    <div class="flex h-full flex-col">
+    <div class="dock-view">
       <PanelActions>
         <button
           type="button"
@@ -47,26 +48,24 @@ export function TasksPanel() {
         </button>
       </PanelActions>
 
-      {failure.value && <p class="px-2 text-state-failed">{failure.value}</p>}
+      {failure.value && <p class="px-1.5 text-state-failed">{failure.value}</p>}
 
       {tasks.value.length === 0 && !failure.value && (
-        <p class="px-2 text-faint">{t("tasks.empty")}</p>
+        <p class="px-1.5 text-faint">{t("tasks.empty")}</p>
       )}
 
-      <ul class="min-h-0 flex-1 overflow-auto pb-2">
-        {arrange(tasks.value).map((entry) =>
-          entry.kind === "task" ? (
-            <Row
-              key={entry.task.name}
-              task={entry.task}
-              label={entry.task.name}
-              session={running.value.get(entry.task.name) ?? null}
-            />
-          ) : (
-            <Group key={entry.group.name} group={entry.group} />
-          ),
-        )}
-      </ul>
+      {arrange(tasks.value).map((entry) =>
+        entry.kind === "task" ? (
+          <Row
+            key={entry.task.name}
+            task={entry.task}
+            label={entry.task.name}
+            session={running.value.get(entry.task.name) ?? null}
+          />
+        ) : (
+          <Group key={entry.group.name} group={entry.group} />
+        ),
+      )}
     </div>
   );
 }
@@ -90,16 +89,12 @@ function Group({ group }: { group: TaskGroup }) {
           onToggle={toggle}
         />
       ) : (
-        <li>
-          <button
-            type="button"
-            onClick={toggle}
-            class="flex w-full items-center gap-2 px-2 py-px text-left transition-colors hover:bg-raised"
-          >
-            <Chevron open={open} busy={busy} />
-            <span class="min-w-0 truncate text-muted">{group.name}</span>
-          </button>
-        </li>
+        <ListRow
+          label={group.name}
+          class="text-muted"
+          lead={<Chevron open={open} busy={busy} />}
+          onClick={toggle}
+        />
       )}
 
       {open &&
@@ -154,7 +149,7 @@ function Row({
 
   if (asking) {
     return (
-      <li class={cn("flex items-center gap-2 bg-raised px-2 py-1", indent && "pl-6")}>
+      <div class={cn("flex items-center gap-2 rounded-sm bg-raised px-2 py-1", indent && "pl-6")}>
         <span class="min-w-0 flex-1 truncate text-muted">{t("tasks.ask")}</span>
         <button
           type="button"
@@ -173,94 +168,78 @@ function Row({
         >
           {t("tasks.askNo")}
         </button>
-      </li>
+      </div>
     );
   }
 
   return (
-    <li class="group">
-      <div
-        class={cn(
-          "flex items-center gap-2 px-2 py-px transition-colors hover:bg-raised",
-          indent && "pl-6",
-        )}
-      >
-        {onToggle ? (
-          <button type="button" onClick={onToggle} class="shrink-0">
-            <Chevron open={open === true} busy={false} />
-          </button>
-        ) : (
-          <span class="size-3 shrink-0" />
-        )}
-
-        <button
-          type="button"
-          title={session ? t("tasks.stop") : t("tasks.start")}
-          onClick={() => {
-            if (session) {
-              requestClose(session);
-            } else if (task.risky) {
-              setAsking(true);
-            } else {
-              void startTask(task);
-            }
-          }}
-          class={cn(
-            "shrink-0 transition-colors",
-            session ? "text-state-working hover:text-state-failed" : "text-faint hover:text-text",
-          )}
-        >
-          <Icon name={session ? "stop" : "play"} size={12} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (session && !focusSession(session.id)) {
-              openInNewTab(session);
-            }
-          }}
-          class="flex min-w-0 flex-1 items-center gap-2 py-px text-left"
-        >
-          {session && (
-            <span
-              aria-hidden="true"
-              class="size-1.5 shrink-0 animate-pulse rounded-full bg-state-working"
-            />
-          )}
-          <span class={cn("min-w-0 truncate", session ? "text-text" : "text-muted")}>{label}</span>
-          {url && (
-            <span
-              role="button"
-              tabIndex={0}
-              title={t("tasks.preview")}
-              onClick={(event) => {
-                event.stopPropagation();
-                openWeb(url);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  openWeb(url);
+    <div class={cn("group", indent && "pl-4")}>
+      <ListRow
+        as="div"
+        label={label}
+        class={session ? "text-text" : "text-muted"}
+        lead={
+          <>
+            {onToggle ? (
+              <button type="button" onClick={onToggle}>
+                <Chevron open={open === true} busy={false} />
+              </button>
+            ) : (
+              <span class="size-3" />
+            )}
+            <button
+              type="button"
+              title={session ? t("tasks.stop") : t("tasks.start")}
+              onClick={() => {
+                if (session) {
+                  requestClose(session);
+                } else if (task.risky) {
+                  setAsking(true);
+                } else {
+                  void startTask(task);
                 }
               }}
-              class="shrink-0 text-state-done transition-colors hover:underline"
+              class={cn(
+                "transition-colors",
+                session
+                  ? "text-state-working hover:text-state-failed"
+                  : "text-faint hover:text-text",
+              )}
             >
-              :{portOf(url)}
+              <Icon name={session ? "stop" : "play"} size={12} />
+            </button>
+            {session && <Dot state="working" size="sm" />}
+          </>
+        }
+        trail={
+          <>
+            {url && (
+              <Chip
+                as="button"
+                tone="done"
+                title={t("tasks.preview")}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openWeb(url);
+                }}
+              >
+                :{portOf(url)}
+              </Chip>
+            )}
+            <span class="truncate opacity-0 transition-opacity group-hover:opacity-100">
+              {task.command}
             </span>
-          )}
-          <span class="ml-auto shrink-0 truncate text-faint opacity-0 transition-opacity group-hover:opacity-100">
-            {task.command}
-          </span>
-        </button>
-      </div>
+          </>
+        }
+        onClick={() => {
+          if (session && !focusSession(session.id)) {
+            openInNewTab(session);
+          }
+        }}
+      />
 
       {lines.length > 0 && (
-        <pre
-          class={cn(
-            "animate-veil-in overflow-hidden px-2 pb-1 text-faint",
-            indent ? "pl-13" : "pl-10",
-          )}
-        >
+        <pre class="animate-veil-in overflow-hidden px-2 pb-1 pl-10 text-faint">
           {lines.map((line) => (
             <div key={line} class="truncate">
               {line}
@@ -268,7 +247,7 @@ function Row({
           ))}
         </pre>
       )}
-    </li>
+    </div>
   );
 }
 
