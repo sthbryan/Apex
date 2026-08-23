@@ -282,9 +282,11 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
-        "apex_browser_read" => {
-            Ok(Command::BrowserRead { project: caller.project, pane: text("pane") })
-        }
+        "apex_browser_read" => Ok(Command::BrowserRead {
+            project: caller.project,
+            pane: text("pane"),
+            text: arguments.get("text").and_then(Value::as_bool).unwrap_or(true),
+        }),
         "apex_browser_console" => {
             Ok(Command::BrowserLogs { project: caller.project, pane: text("pane") })
         }

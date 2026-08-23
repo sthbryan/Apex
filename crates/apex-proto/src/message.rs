@@ -611,6 +611,8 @@ pub enum Command {
         project: Uuid,
         #[serde(default)]
         pane: Option<String>,
+        #[serde(default)]
+        text: bool,
     },
     BrowserLogs {
         #[ts(type = "string")]

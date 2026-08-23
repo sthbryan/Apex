@@ -627,8 +627,13 @@ impl SessionManager {
         self.browsers.forget(pane).await;
     }
 
-    pub async fn browser_read(&self, project: Uuid, pane: Option<&str>) -> Result<String> {
-        let taken = self.ask_page(project, pane, true).await?;
+    pub async fn browser_read(
+        &self,
+        project: Uuid,
+        pane: Option<&str>,
+        text: bool,
+    ) -> Result<String> {
+        let taken = self.ask_page(project, pane, text).await?;
         let page = crate::services::browsers::describe_page(&taken);
         Ok(match self.browsers.describe(project).await {
             Some(others) => format!("{others}\n\n{page}"),

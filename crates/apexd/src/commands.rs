@@ -230,8 +230,11 @@ async fn execute(
             manager.browser_forget(&pane).await;
             Ok(Reply::Done)
         }
-        Command::BrowserRead { project, pane } => Ok(Reply::Text {
-            text: manager.browser_read(project, pane.as_deref()).await.map_err(internal_error)?,
+        Command::BrowserRead { project, pane, text } => Ok(Reply::Text {
+            text: manager
+                .browser_read(project, pane.as_deref(), text)
+                .await
+                .map_err(internal_error)?,
         }),
         Command::BrowserLogs { project, pane } => Ok(Reply::Text {
             text: manager.browser_logs(project, pane.as_deref()).await.map_err(internal_error)?,
