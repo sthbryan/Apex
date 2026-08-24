@@ -6,7 +6,7 @@
   }
 
   .ui-diff-file {
-    @apply overflow-x-auto rounded-sm border border-border;
+    @apply flex-none overflow-x-auto rounded-sm border border-border;
     background-color: var(--apex-overlay);
   }
 
