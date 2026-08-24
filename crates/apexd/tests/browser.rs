@@ -18,9 +18,12 @@ async fn answer_once(mut desktop: TestClient, page: Option<String>) {
             if !matches!(frame, Frame::Control(_)) {
                 continue;
             }
-            let ServerMessage::Event(Event::AskPage { request, .. }) =
+            let ServerMessage::Event(event) =
                 frame.parse_control::<ServerMessage>().expect("parse")
             else {
+                continue;
+            };
+            let Event::AskPage { request, .. } = *event else {
                 continue;
             };
             desktop

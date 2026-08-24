@@ -1119,7 +1119,7 @@ pub enum ClientMessage {
 pub enum ServerMessage {
     Welcome(Welcome),
     Response { id: RequestId, outcome: CommandOutcome },
-    Event(Event),
+    Event(Box<Event>),
 }
 
 impl ServerMessage {

@@ -135,7 +135,7 @@ fn spawn_event_forwarder(manager: Arc<SessionManager>, outbox: Outbox) -> JoinHa
         loop {
             match events.recv().await {
                 Ok(event) => {
-                    let Ok(frame) = Frame::control(&ServerMessage::Event(event)) else {
+                    let Ok(frame) = Frame::control(&ServerMessage::Event(Box::new(event))) else {
                         continue;
                     };
                     if outbox.send(frame).await.is_err() {

@@ -64,8 +64,8 @@ fn a_notice_survives_the_server_envelope() {
         title: Some("Apex".into()),
         body: "ready".into(),
     };
-    let message = ServerMessage::Event(event.clone());
+    let message = ServerMessage::Event(Box::new(event.clone()));
     let decoded: ServerMessage =
         roundtrip(Frame::control(&message).expect("encode")).parse_control().expect("parse");
-    assert_eq!(decoded, ServerMessage::Event(event));
+    assert_eq!(decoded, ServerMessage::Event(Box::new(event)));
 }

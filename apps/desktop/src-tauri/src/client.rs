@@ -130,7 +130,7 @@ fn spawn_reader(
                         ServerMessage::Event(event) => {
                             let guard = events.lock().await;
                             if let Some(channel) = guard.as_ref()
-                                && channel.send(event).is_err()
+                                && channel.send(*event).is_err()
                             {
                                 break;
                             }
