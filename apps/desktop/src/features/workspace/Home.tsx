@@ -117,7 +117,7 @@ export function Home() {
         onSubmit={start}
         lead={
           <>
-            <ToggleChipGroup label={t("home.agents")}>
+            <ToggleChipGroup label={t("home.agents")} scroll>
               {runnable.map((agent) => {
                 const on = chosen.includes(agent.name);
                 return (
