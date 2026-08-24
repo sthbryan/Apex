@@ -209,6 +209,7 @@ export const en = {
     updateReady: "Version {version} is ready. Restart to finish.",
     updateRestart: "Restart now",
     updateFailed: "Could not reach the update server.",
+    updateEndsSessions: "It will end {live} running sessions.",
     updateManual: "Version {version} is out, but this install cannot update itself.",
     updateOpenRelease: "Open release page",
     updateAuto: "Download updates automatically",

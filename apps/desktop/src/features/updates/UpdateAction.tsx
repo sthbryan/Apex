@@ -1,4 +1,5 @@
 import { Button, Meter } from "@apex/ui";
+import { sessions } from "@/features/sessions/state";
 import {
   applyUpdate,
   failure,
@@ -30,8 +31,15 @@ export function UpdateNote() {
       );
     case "manual":
       return <>{t("settings.updateManual", { version })}</>;
-    case "ready":
-      return <>{t("settings.updateReady", { version })}</>;
+    case "ready": {
+      const live = sessions.value.filter((session) => session.exit_code === null).length;
+      return (
+        <>
+          {t("settings.updateReady", { version })}
+          {live > 0 ? ` ${t("settings.updateEndsSessions", { live: String(live) })}` : null}
+        </>
+      );
+    }
     case "failed":
       return <>{failure.value ?? t("settings.updateFailed")}</>;
     default:
