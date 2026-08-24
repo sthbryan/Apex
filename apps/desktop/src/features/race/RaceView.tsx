@@ -92,7 +92,7 @@ function Column({ contender, onKeep }: { contender: Contender; onKeep: () => voi
           {!dead && (
             <Button
               size="xs"
-              variant="subtle"
+              variant="ghost"
               onClick={() => {
                 if (!focusSession(session.id)) {
                   openInNewTab(session);
@@ -109,7 +109,7 @@ function Column({ contender, onKeep }: { contender: Contender; onKeep: () => voi
             {t("review.files", { count: String(changed.files) })}
             <DiffStat added={changed.added} removed={changed.removed} />
           </p>
-          <Button size="xs" variant="subtle" onClick={() => void openReview(target)}>
+          <Button size="xs" variant="ghost" onClick={() => void openReview(target)}>
             {t("race.inspect")}
           </Button>
           <Button size="xs" variant="primary" onClick={onKeep}>
