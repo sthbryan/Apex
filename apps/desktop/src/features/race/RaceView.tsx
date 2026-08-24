@@ -1,13 +1,7 @@
-import {
-  AgentIcon,
-  Button,
-  DiffStat,
-  Dot,
-  RaceView as KitRaceView,
-  RaceColumn,
-  RaceDecision,
-} from "@apex/ui";
+import { Button, DiffStat, Dot, RaceView as KitRaceView, RaceColumn, RaceDecision } from "@apex/ui";
 import { useState } from "preact/hooks";
+
+import type { SessionSummary } from "@/bindings/SessionSummary";
 
 import {
   type Contender,
@@ -17,7 +11,9 @@ import {
   settleRace,
 } from "@/features/race/state";
 import { openReview } from "@/features/review/state";
+import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { stateOf } from "@/features/sessions/dot";
+import { focusSession } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 
 export function RaceView({ run }: { run: string }) {
@@ -68,6 +64,16 @@ export function RaceView({ run }: { run: string }) {
   );
 }
 
+function idle(
+  session: SessionSummary,
+  dead: boolean,
+): "leftNothing" | "stillWorking" | "toldYouNothing" {
+  if (dead) {
+    return "leftNothing";
+  }
+  return session.state === "working" ? "stillWorking" : "toldYouNothing";
+}
+
 function Column({ contender, onKeep }: { contender: Contender; onKeep: () => void }) {
   const { session, changed } = contender;
   const target = contenderTarget(session);
@@ -81,7 +87,14 @@ function Column({ contender, onKeep }: { contender: Contender; onKeep: () => voi
       trail={<Dot state={stateOf(session)} size="sm" />}
     >
       {changed === null ? (
-        <p class="text-faint">{dead ? t("race.leftNothing") : t("race.stillWorking")}</p>
+        <div class="flex flex-col items-start gap-1.5">
+          <p class="text-faint">{t(`race.${idle(session, dead)}`)}</p>
+          {!dead && (
+            <Button size="xs" variant="subtle" onClick={() => focusSession(session.id)}>
+              {t("race.watch")}
+            </Button>
+          )}
+        </div>
       ) : (
         <div class="flex flex-col items-start gap-1.5">
           <p class="flex items-center gap-1.5 tabular-nums text-faint">

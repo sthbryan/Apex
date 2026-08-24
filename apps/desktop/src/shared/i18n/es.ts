@@ -315,6 +315,8 @@ export const es: Messages = {
     gone: "Esa corrida ya no está.",
     stillWorking: "Todavía trabajando…",
     leftNothing: "No dejó nada.",
+    toldYouNothing: "Terminó sin tocar ningún archivo.",
+    watch: "Abrir su sesión",
     inspect: "Mirarlo",
     keep: "Quedarme con este",
     keepAsk: "¿Descartar los otros {count}?",

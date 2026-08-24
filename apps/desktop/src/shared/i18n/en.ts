@@ -314,6 +314,8 @@ export const en = {
     gone: "That race is gone.",
     stillWorking: "Still working…",
     leftNothing: "Left nothing behind.",
+    toldYouNothing: "Finished without touching a file.",
+    watch: "Open its session",
     inspect: "Look at it",
     keep: "Keep this one",
     keepAsk: "Drop the other {count}?",
