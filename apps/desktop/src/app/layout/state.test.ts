@@ -5,7 +5,6 @@ import {
   dockPanel,
   dockWidth,
   isDockPanel,
-  moveDockPanel,
   placePanelInDock,
   reconcileDock,
   removePanelFromDock,
@@ -13,6 +12,7 @@ import {
   setDockMode,
   setDockPanel,
   setDockWidth,
+  settleDockPanel,
   toggleDock,
 } from "./state";
 
@@ -47,17 +47,23 @@ describe("setDockPanel", () => {
   });
 });
 
-describe("moveDockPanel", () => {
-  it("moves a panel by delta", () => {
-    moveDockPanel("sessions", 1);
+describe("settleDockPanel", () => {
+  it("moves a panel to a seat", () => {
+    settleDockPanel("sessions", 1);
     expect(dockOrder.value[1]).toBe("sessions");
   });
 
-  it("ignores out of bounds moves", () => {
+  it("ignores seats outside the list", () => {
     const before = [...dockOrder.value];
-    moveDockPanel("sessions", -1);
+    settleDockPanel("sessions", -1);
     expect(dockOrder.value).toEqual(before);
-    moveDockPanel("tasks", 1);
+    settleDockPanel("sessions", before.length);
+    expect(dockOrder.value).toEqual(before);
+  });
+
+  it("ignores a seat a panel already holds", () => {
+    const before = [...dockOrder.value];
+    settleDockPanel(before[0], 0);
     expect(dockOrder.value).toEqual(before);
   });
 });

@@ -56,10 +56,6 @@ export function settleDockPanel(id: DockPanel, to: number): void {
   persistOrder();
 }
 
-export function moveDockPanel(id: DockPanel, delta: number): void {
-  settleDockPanel(id, dockOrder.value.indexOf(id) + delta);
-}
-
 export function placePanelInDock(id: DockPanel, before?: DockPanel): void {
   const rest = dockOrder.value.filter((panel) => panel !== id);
   const at = before ? rest.indexOf(before) : rest.length;
