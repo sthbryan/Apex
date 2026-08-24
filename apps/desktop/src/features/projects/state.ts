@@ -121,11 +121,13 @@ export function scheduleLayoutSave(): void {
 
 let pending: ReturnType<typeof setTimeout> | null = null;
 
-tabs.subscribe(() => {
-  if (activeProjectId.value) {
-    scheduleLayoutSave();
-  }
-});
+export function startLayoutSaves(): () => void {
+  return tabs.subscribe(() => {
+    if (activeProjectId.value) {
+      scheduleLayoutSave();
+    }
+  });
+}
 
 function readStored(): string | null {
   try {

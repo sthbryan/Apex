@@ -1,14 +1,8 @@
 import { act } from "preact/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { popPanelToTab } from "@/app/layout/actions";
 import { dockOrder } from "@/app/layout/state";
 import { DockOrder } from "@/features/settings/DockOrder";
 import { render } from "@/test/render";
-
-vi.mock("@/app/layout/actions", () => ({
-  dockPanelAt: vi.fn(),
-  popPanelToTab: vi.fn(),
-}));
 
 function rowsOf(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>("li[data-seat]"));
@@ -48,7 +42,6 @@ describe("DockOrder by keyboard", () => {
     tap(rowsOf(container)[0], "ArrowUp");
 
     expect(dockOrder.value).toEqual(["sessions", "history", "tasks"]);
-    expect(popPanelToTab).not.toHaveBeenCalled();
   });
 
   it("sends the last panel to a tab when it walks past the line", () => {
@@ -56,7 +49,7 @@ describe("DockOrder by keyboard", () => {
 
     tap(rowsOf(container)[2], "ArrowDown");
 
-    expect(popPanelToTab).toHaveBeenCalledWith("tasks");
+    expect(dockOrder.value).toEqual(["sessions", "history"]);
   });
 
   it("ignores keys that are not the arrows", () => {

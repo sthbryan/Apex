@@ -14,7 +14,7 @@ import { startNotifications, warnBlockedAgents } from "@/features/notifications/
 import { Toasts } from "@/features/notifications/Toasts";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { finderOpen, paletteOpen, toggleFinder, togglePalette } from "@/features/palette/state";
-import { activeProject, history, loadProjects } from "@/features/projects/state";
+import { activeProject, history, loadProjects, startLayoutSaves } from "@/features/projects/state";
 import { CloseSession } from "@/features/sessions/CloseSession";
 import { NewSession } from "@/features/sessions/NewSession";
 import { focusTerminal } from "@/features/sessions/registry";
@@ -71,6 +71,7 @@ export function App() {
     const stopTheme = startThemeWatcher();
     applyAppearance();
     const stopDockWidth = startDockWidth();
+    const stopLayoutSaves = startLayoutSaves();
     return () => {
       stopNotifications?.();
       stopMenu?.();
@@ -82,6 +83,7 @@ export function App() {
       stopBlocked();
       stopTheme();
       stopDockWidth();
+      stopLayoutSaves();
     };
   }, []);
 
