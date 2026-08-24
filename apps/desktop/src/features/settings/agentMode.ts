@@ -65,12 +65,17 @@ export function setAgentEnabled(agent: string, on: boolean): void {
 
 const IDLE_GRACE = "apex.idle-grace";
 
+const MOVED_GRACES: Record<number, number> = { 60: 300, 7200: 18000 };
+
 function restoreIdleGrace(): number {
   try {
-    const raw = localStorage.getItem(IDLE_GRACE);
-    return raw ? parseInt(raw, 10) : 60;
+    const stored = parseInt(localStorage.getItem(IDLE_GRACE) ?? "", 10);
+    if (!Number.isFinite(stored)) {
+      return 300;
+    }
+    return MOVED_GRACES[stored] ?? stored;
   } catch {
-    return 60;
+    return 300;
   }
 }
 

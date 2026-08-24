@@ -26,6 +26,6 @@ describe("constants", () => {
   });
 
   it("defines idle graces", () => {
-    expect(IDLE_GRACES.map((g) => g.value)).toEqual([0, 60, 7200]);
+    expect(IDLE_GRACES.map((g) => g.value)).toEqual([0, 300, 18000]);
   });
 });

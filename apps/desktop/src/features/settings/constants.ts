@@ -43,8 +43,8 @@ export const UI_SCALE_LABEL = {
 
 export const IDLE_GRACES = [
   { value: 0, key: "settings.idleGrace0" },
-  { value: 60, key: "settings.idleGrace60" },
-  { value: 7200, key: "settings.idleGrace7200" },
+  { value: 300, key: "settings.idleGrace300" },
+  { value: 18000, key: "settings.idleGrace18000" },
 ] as const;
 
 export const THEME_HINT = {

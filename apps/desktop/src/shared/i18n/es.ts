@@ -198,8 +198,8 @@ export const es: Messages = {
     idleGraceHint:
       "Cuánto tiempo sigue el daemon después de cerrar Apex. Después de esto se apaga y los agentes paran. Cierra y reabre dentro de la ventana para reanudar las sesiones.",
     idleGrace0: "Apagar al cerrar",
-    idleGrace60: "60 segundos",
-    idleGrace7200: "2 horas",
+    idleGrace300: "5 minutos",
+    idleGrace18000: "5 horas",
     about: "Acerca de",
     aboutHint: "Versiones de la app y del daemon.",
     agentsPath: "Archivos de agentes",

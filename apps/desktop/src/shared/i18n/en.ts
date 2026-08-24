@@ -197,8 +197,8 @@ export const en = {
     idleGraceHint:
       "How long the daemon keeps running after you close Apex. After this it shuts down and your agents stop. Close and reopen within the window to resume sessions.",
     idleGrace0: "Stop on close",
-    idleGrace60: "60 seconds",
-    idleGrace7200: "2 hours",
+    idleGrace300: "5 minutes",
+    idleGrace18000: "5 hours",
     about: "About",
     aboutHint: "Versions of the app and the background daemon.",
     agentsPath: "Agent files",
