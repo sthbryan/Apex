@@ -293,7 +293,7 @@ impl SessionManager {
                 cwd: None,
                 size: TerminalSize::default(),
                 isolation: Isolation::Worktree,
-                slug: None,
+                slug: Some(format!("race-{agent}")),
                 mode: None,
                 parent: None,
                 run: Some(run),

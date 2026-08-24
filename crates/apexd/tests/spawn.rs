@@ -387,6 +387,23 @@ async fn a_race_hands_the_same_task_to_every_agent_under_one_run() {
 }
 
 #[tokio::test]
+async fn race_worktrees_say_they_belong_to_a_race_and_never_collide() {
+    let harness = Harness::start_in_repo().await;
+    let started = harness
+        .manager
+        .race(harness.project, vec!["sh".into(), "sh".into()], "count to three".into(), vec![])
+        .await
+        .expect("race");
+
+    let mut branches: Vec<String> = started
+        .iter()
+        .map(|session| session.worktree.as_ref().expect("worktree").branch.clone())
+        .collect();
+    branches.sort();
+    assert_eq!(branches, ["apex/race-sh", "apex/race-sh-2"]);
+}
+
+#[tokio::test]
 async fn a_race_needs_agents_and_a_task() {
     let harness = Harness::start_in_repo().await;
     assert!(
