@@ -419,7 +419,6 @@ function RacePane() {
       actions={<PaneTools />}
     >
       <RaceView
-        task={RACE_PROMPT}
         foot={kept || !winner ? undefined : (
           <RaceDecision
             info={raceAsking.value
