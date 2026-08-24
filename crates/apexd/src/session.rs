@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use apex_proto::{
     ClientMessage, Command, Connection, ConnectionReader, ErrorCode, Frame, Hello,
@@ -12,7 +13,26 @@ use crate::sessions::SessionManager;
 const DAEMON_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CLIENT_QUEUE_DEPTH: usize = 1024;
 
-pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
+struct Census(Arc<AtomicUsize>);
+
+impl Census {
+    fn enter(clients: Arc<AtomicUsize>) -> Self {
+        clients.fetch_add(1, Ordering::SeqCst);
+        Self(clients)
+    }
+}
+
+impl Drop for Census {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+pub async fn serve(
+    manager: Arc<SessionManager>,
+    mut connection: Connection,
+    clients: Arc<AtomicUsize>,
+) {
     let peer = connection.peer().clone();
     match handshake(&mut connection).await {
         Ok(Some(_)) => tracing::info!(peer = %peer.label, "client connected"),
@@ -25,6 +45,7 @@ pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
             return;
         }
     }
+    let _census = Census::enter(clients);
 
     let (mut writer, reader) = connection.split();
     let (outbox, mut queue) = tokio::sync::mpsc::channel::<Frame>(CLIENT_QUEUE_DEPTH);

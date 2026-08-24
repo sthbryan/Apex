@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::AtomicUsize;
 
 use anyhow::{Context, Result};
 use apex_core::ApexPaths;
@@ -45,11 +45,7 @@ async fn main() -> Result<()> {
                 let (stream, peer) = accepted.context("accepting connection")?;
                 let manager = manager.clone();
                 let clients = Arc::clone(&clients);
-                tokio::spawn(async move {
-                    clients.fetch_add(1, Ordering::SeqCst);
-                    session::serve(manager, Connection::new(stream, peer)).await;
-                    clients.fetch_sub(1, Ordering::SeqCst);
-                });
+                tokio::spawn(session::serve(manager, Connection::new(stream, peer), clients));
             }
             _ = tokio::signal::ctrl_c() => {
                 shutdown().await;
