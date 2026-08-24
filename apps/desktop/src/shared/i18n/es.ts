@@ -517,6 +517,7 @@ export const es: Messages = {
     splitRightWith: "Dividir a la derecha: {agent}",
     splitDownWith: "Dividir abajo: {agent}",
     race: "Correr una tarea entre agentes",
+    dock: "Mostrar u ocultar la barra lateral",
     layout: "Disposición: {name}",
     closePane: "Cerrar panel",
     closeTab: "Cerrar pestaña",

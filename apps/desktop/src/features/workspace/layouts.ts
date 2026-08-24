@@ -11,7 +11,6 @@ export type LayoutSpec =
 export type LayoutPreset = {
   id: string;
   nameKey: LayoutName;
-  preview: string[];
   spec: LayoutSpec;
 };
 
@@ -22,19 +21,16 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "twoColumns",
     nameKey: "layout.twoColumns",
-    preview: ["┌─────┬─────┐", "│     │     │", "└─────┴─────┘"],
     spec: { type: "split", direction: "row", first: pane(), second: pane() },
   },
   {
     id: "twoRows",
     nameKey: "layout.twoRows",
-    preview: ["┌─────────┐", "│         │", "├─────────┤", "│         │", "└─────────┘"],
     spec: { type: "split", direction: "column", first: pane(), second: pane() },
   },
   {
     id: "threeColumns",
     nameKey: "layout.threeColumns",
-    preview: ["┌───┬───┬───┐", "│   │   │   │", "└───┴───┴───┘"],
     spec: {
       type: "split",
       direction: "row",
@@ -46,7 +42,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "threeRows",
     nameKey: "layout.threeRows",
-    preview: ["┌─────────┐", "├─────────┤", "├─────────┤", "└─────────┘"],
     spec: {
       type: "split",
       direction: "column",
@@ -58,7 +53,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "mainLeft",
     nameKey: "layout.mainLeft",
-    preview: ["┌─────┬─────┐", "│     ├─────┤", "│     │     │", "└─────┴─────┘"],
     spec: {
       type: "split",
       direction: "row",
@@ -70,7 +64,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "mainTop",
     nameKey: "layout.mainTop",
-    preview: ["┌─────────┐", "│         │", "├─────┬───┤", "│     │   │", "└─────┴───┘"],
     spec: {
       type: "split",
       direction: "column",
@@ -82,7 +75,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "mainRight",
     nameKey: "layout.mainRight",
-    preview: ["┌─────┬─────┐", "├─────┤     │", "│     │     │", "└─────┴─────┘"],
     spec: {
       type: "split",
       direction: "row",
@@ -94,7 +86,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "mainBottom",
     nameKey: "layout.mainBottom",
-    preview: ["┌─────┬───┐", "│     │   │", "├─────┴───┤", "│         │", "└─────────┘"],
     spec: {
       type: "split",
       direction: "column",
@@ -106,7 +97,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "grid",
     nameKey: "layout.grid",
-    preview: ["┌─────┬─────┐", "├─────┼─────┤", "└─────┴─────┘"],
     spec: {
       type: "split",
       direction: "row",
@@ -117,7 +107,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "mainStackThree",
     nameKey: "layout.mainStackThree",
-    preview: ["┌─────┬──┬──┐", "│     │  │  │", "│     ├──┴──┤", "│     │     │", "└─────┴─────┘"],
     spec: {
       type: "split",
       direction: "row",
@@ -134,7 +123,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "mainStackFour",
     nameKey: "layout.mainStackFour",
-    preview: ["┌─────┬──┬──┐", "│     │  │  │", "│     ├──┼──┤", "│     │  │  │", "└─────┴──┴──┘"],
     spec: {
       type: "split",
       direction: "row",
@@ -150,7 +138,6 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "sixGrid",
     nameKey: "layout.sixGrid",
-    preview: ["┌───┬───┬───┐", "├───┼───┼───┤", "└───┴───┴───┘"],
     spec: {
       type: "split",
       direction: "row",

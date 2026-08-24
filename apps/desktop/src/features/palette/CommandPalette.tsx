@@ -1,4 +1,6 @@
+import { LayoutGlyph } from "@apex/ui";
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { toggleDock } from "@/app/layout/state";
 import { toggleSettings } from "@/app/view";
 import type { AgentSummary } from "@/bindings/AgentSummary";
 import type { HistoryEntry } from "@/bindings/HistoryEntry";
@@ -141,6 +143,16 @@ function buildActions(
   }
 
   actions.push({
+    id: "dock",
+    label: t("palette.dock"),
+    keys: ["⌘", "B"],
+    run: () => {
+      onClose();
+      toggleDock();
+    },
+  });
+
+  actions.push({
     id: "settings",
     label: t("palette.settings"),
     keys: ["⌘", ","],
@@ -186,7 +198,7 @@ function buildActions(
         actions.push({
           id: `layout:${preset.id}`,
           label: t("palette.layout", { name: t(preset.nameKey) }),
-          preview: preset.preview,
+          glyph: <LayoutGlyph shape={preset.spec} />,
           run: () => {
             onClose();
             void applyLayout(preset.spec);
