@@ -30,6 +30,8 @@ pub fn run() {
         .plugin(prevent_default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let paths = ApexPaths::discover()?;
             let daemon = tauri::async_runtime::block_on(DaemonClient::attach(&paths.socket));
