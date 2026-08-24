@@ -5,19 +5,8 @@
     @apply flex min-h-0 flex-1 flex-col;
   }
 
-  .ui-browser-bar {
-    @apply flex flex-none items-center gap-1.5 px-2.5 py-1.5;
-    border-bottom: 1px solid var(--apex-border);
-    flex-wrap: wrap;
-  }
-
-  .ui-browser-nav {
-    @apply flex flex-none items-center;
-  }
-
   .ui-browser-url {
-    @apply flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-raised px-2.5;
-    height: var(--apex-h-md);
+    @apply flex h-5.5 min-w-0 flex-1 items-center gap-1.5 rounded-full border border-border bg-raised px-2.5;
   }
 
   .ui-browser-url:focus-within {
@@ -25,7 +14,7 @@
   }
 
   .ui-browser-url input {
-    @apply min-w-0 flex-1 font-mono text-sm;
+    @apply min-w-0 flex-1 font-mono text-xs;
   }
 
   .ui-browser-body {
@@ -60,12 +49,8 @@
   .ui-browser-log[data-level="info"] { color: var(--apex-tty-dim); }
 
   @media (max-width: 640px) {
-    .ui-browser-bar {
-      @apply px-2 py-1 gap-1;
-    }
     .ui-browser-url {
       @apply px-2;
-      height: 30px;
       font-size: 12px;
     }
     .ui-browser-console {

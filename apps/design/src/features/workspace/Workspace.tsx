@@ -1,10 +1,10 @@
 import { useEffect, useState } from "preact/hooks";
 import {
   ArrowLeft, ArrowLeftRight, ArrowRight, Check, Columns3, FileText, GitBranch, Globe,
-  Image as ImageIcon, Lock, Plus, RotateCw, Search, Send, Terminal, X,
+  Image as ImageIcon, Lock, PanelLeft, Plus, RotateCw, Search, Send, Terminal, X,
 } from "lucide-preact";
 import {
-  activePanel, activeTab, consoleOpen, fmode, launcherOpen, paletteOpen,
+  activePanel, activeTab, consoleOpen, dlayout, fmode, ifit, launcherOpen, paletteOpen,
   raceAsking, raceKept, railOnly, settingsOpen, toastCount,
 } from "@/app/state";
 import { SettingsModal } from "@/features/workspace/Settings";
@@ -12,7 +12,7 @@ import { CONTENDERS, RACE_PROMPT, REVIEWS, SESSIONS } from "@/features/dock/fixt
 import { ReviewPanel } from "@/features/dock/Panels";
 import {
   AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, CommandItem, CommandPalette, Modal,
-  Button, Chip, CodeLine, CodeView, Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot,
+  BrowserUrl, Button, Chip, CodeLine, CodeView, Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot,
   ImageView, Kbd, KbdGroup, MarkdownView, Message,
   ListRow, Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, SectionLabel, Segmented,
   StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript,
@@ -218,14 +218,23 @@ export const PANE_TYPES = [
 
 export const ALL_VIEWS = [...WORKSPACE_VIEWS, ...PANE_TYPES];
 
+function PaneTools() {
+  return (
+    <>
+      <Button variant="ghost" size="xs" iconOnly title="Split right"><Columns3 size={12} /></Button>
+      <Button variant="ghost" size="xs" iconOnly title="Close pane"><X size={12} /></Button>
+    </>
+  );
+}
+
 function AcpPane() {
   const [openTool, setOpenTool] = useState<string | null>(null);
   return (
     <Pane
       title="Refactor auth middleware"
-      sub={<><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span></>}
+      sub={<><Chip>⎇ apex/claude</Chip><span class="mono">2m 14s</span><StatePill state="blocked">Waiting</StatePill></>}
       lead={<AgentIcon agent="claude" />}
-      actions={<StatePill state="blocked">Waiting</StatePill>}
+      actions={<PaneTools />}
       scroll={false}
       foot={
         <Composer
@@ -284,9 +293,9 @@ function TerminalSessionPane() {
   return (
     <Pane
       title="Fix flaky checkout tests"
-      sub={<><Chip>⎇ apex/codex</Chip><span class="mono">14m</span></>}
+      sub={<><Chip>⎇ apex/codex</Chip><span class="mono">14m</span><StatePill state="working">Running</StatePill></>}
       lead={<AgentIcon agent="codex" />}
-      actions={<StatePill state="working">Running</StatePill>}
+      actions={<PaneTools />}
       scroll={false}
     >
       <img class="pane-mock" data-mock="tty" src="/mock/tty.svg" alt="Terminal session rendered by xterm" />
@@ -323,16 +332,20 @@ function ImagePane() {
   return (
     <Pane
       lead={<ImageIcon size={12} style="color:var(--apex-muted)" />}
-      title="assets/brand/welcome.png"
-      actions={<Chip>PNG</Chip>}
+      title="welcome.png"
+      sub={<><span>assets/brand</span><Chip>PNG</Chip><span class="mono">520 × 340 · 48 KB</span></>}
+      controls={
+        <Segmented
+          label="Image fit"
+          options={[{ value: "contain", label: "Fit" }, { value: "actual", label: "Actual" }]}
+          value={ifit.value}
+          onChange={(v) => ifit.value = v as "contain" | "actual"}
+        />
+      }
+      actions={<PaneTools />}
       scroll={false}
     >
-      <ImageView
-        src="/mock/browser.svg"
-        alt="welcome.png"
-        meta="520 × 340 · 48 KB"
-        actions={<Chip tone="accent">fit</Chip>}
-      />
+      <ImageView src="/mock/browser.svg" alt="welcome.png" fit={ifit.value} />
     </Pane>
   );
 }
@@ -342,7 +355,8 @@ function PanelTabPane() {
     <Pane
       lead={<ArrowLeftRight size={12} style="color:var(--apex-muted)" />}
       title="Review"
-      actions={<Button variant="subtle" size="sm">Move to sidebar</Button>}
+      controls={<Button variant="ghost" size="xs" iconOnly title="Move to the sidebar"><PanelLeft size={12} /></Button>}
+      actions={<PaneTools />}
     >
       <ReviewPanel />
     </Pane>
@@ -351,30 +365,33 @@ function PanelTabPane() {
 
 function BrowserPane() {
   return (
-    <Pane scroll={false}>
+    <Pane
+      scroll={false}
+      wide
+      lead={
+        <>
+          <Button variant="ghost" size="xs" iconOnly title="Back" disabled><ArrowLeft size={13} /></Button>
+          <Button variant="ghost" size="xs" iconOnly title="Forward" disabled><ArrowRight size={13} /></Button>
+          <Button variant="ghost" size="xs" iconOnly title="Reload"><RotateCw size={12} /></Button>
+        </>
+      }
+      title={<BrowserUrl url="localhost:5173/login" secure={<Lock size={11} style="color:var(--apex-state-done)" />} />}
+      controls={
+        <Button
+          variant="ghost"
+          size="xs"
+          aria-pressed={consoleOpen.value}
+          title="Console ⌥⌘J"
+          onClick={() => consoleOpen.value = !consoleOpen.value}
+        >
+          <Terminal size={12} />Console<Badge tone="removed">2</Badge>
+        </Button>
+      }
+      actions={<PaneTools />}
+    >
       <BrowserView
-        url="localhost:5173/login"
-        secure={<Lock size={11} style="color:var(--apex-state-done)" />}
         consoleOpen={consoleOpen.value}
-        nav={
-          <>
-            <Button variant="subtle" size="sm" iconOnly title="Back" disabled><ArrowLeft size={14} /></Button>
-            <Button variant="subtle" size="sm" iconOnly title="Forward" disabled><ArrowRight size={14} /></Button>
-            <Button variant="subtle" size="sm" iconOnly title="Reload"><RotateCw size={13} /></Button>
-          </>
-        }
-        actions={
-          <Button
-            variant={consoleOpen.value ? "primary" : "subtle"}
-            size="sm"
-            aria-pressed={consoleOpen.value}
-            title="Console ⌥⌘J"
-            onClick={() => consoleOpen.value = !consoleOpen.value}
-          >
-            <Terminal size={13} />Console<Badge tone="removed">2</Badge>
-          </Button>
-        }
-        consoleActions={<Button variant="subtle" size="xs">Clear</Button>}
+        consoleActions={<Button variant="ghost" size="xs">Clear</Button>}
         console={
           <>
             <BrowserLog level="error">[auth] Failed to verify legacy cookie: invalid signature</BrowserLog>
@@ -394,10 +411,15 @@ function RacePane() {
   const winner = CONTENDERS.find((c) => c.state === "done");
   const waiting = CONTENDERS.find((c) => c.state === "working");
   return (
-    <Pane scroll={false}>
+    <Pane
+      scroll={false}
+      lead={<ArrowLeftRight size={12} style="color:var(--apex-muted)" />}
+      title="Race"
+      sub={<><span class="truncate">{RACE_PROMPT}</span><Chip>{CONTENDERS.length} contenders</Chip></>}
+      actions={<PaneTools />}
+    >
       <RaceView
         task={RACE_PROMPT}
-        actions={<Chip>{CONTENDERS.length} contenders</Chip>}
         foot={kept || !winner ? undefined : (
           <RaceDecision
             info={raceAsking.value
@@ -449,18 +471,17 @@ function MarkdownPane() {
   return (
     <Pane
       lead={<FileText size={12} style="color:var(--apex-muted)" />}
-      title="docs/README.md"
-      actions={
-        <>
-        <Chip>markdown</Chip>
+      title="README.md"
+      sub={<><span>docs</span><Chip>markdown</Chip></>}
+      controls={
         <Segmented
           label="File view"
           options={[{ value: "preview", label: "Preview" }, { value: "source", label: "Source" }]}
           value={view}
           onChange={(v) => fmode.value = v as "preview" | "source"}
         />
-        </>
       }
+      actions={<><Button variant="ghost" size="xs" iconOnly title="Reload"><RotateCw size={12} /></Button><PaneTools /></>}
     >
         {view === "preview" ? (
           <MarkdownView>
@@ -491,8 +512,9 @@ function CodePane() {
   return (
     <Pane
       lead={<FileText size={12} style="color:var(--apex-muted)" />}
-      title="src/dock/DockResize.ts"
-      actions={<Chip>typescript</Chip>}
+      title="DockResize.ts"
+      sub={<><span>src/dock</span><Chip>typescript</Chip></>}
+      actions={<><Button variant="ghost" size="xs" iconOnly title="Reload"><RotateCw size={12} /></Button><PaneTools /></>}
     >
       <CodeView>
         <CodeLine number={1}><Code token="comment">// clamp the dock between the rail and half the window</Code></CodeLine>
@@ -510,8 +532,17 @@ function DiffPane() {
   return (
     <Pane
       lead={<GitBranch size={12} style="color:var(--apex-muted)" />}
-      title="apex/claude · DockResize.tsx"
-      actions={<><Chip>staged</Chip><span class="mono text-xs">2 / 4</span></>}
+      title="DockResize.tsx"
+      sub={<><span>apex/claude</span><Chip>staged</Chip><span class="mono">2 / 4</span></>}
+      controls={
+        <Segmented
+          label="Diff layout"
+          options={[{ value: "unified", label: "Unified" }, { value: "split", label: "Split" }]}
+          value={dlayout.value}
+          onChange={(v) => dlayout.value = v as "unified" | "split"}
+        />
+      }
+      actions={<><Button variant="ghost" size="xs" iconOnly title="Reload"><RotateCw size={12} /></Button><PaneTools /></>}
     >
       <DiffView>
         <DiffFile path="apps/desktop/…/DockResize.tsx" added={24} removed={11}>

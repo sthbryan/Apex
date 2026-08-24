@@ -1,4 +1,4 @@
-import { BrowserLog, Button, BrowserView as KitBrowserView, type LogLevel } from "@apex/ui";
+import { BrowserLog, BrowserUrl, Button, BrowserView as KitBrowserView, type LogLevel } from "@apex/ui";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -188,62 +188,57 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
   };
 
   return (
+    <div class="flex h-full w-full flex-col">
+      <div class="flex h-8 flex-none items-center gap-1.5 border-b border-border px-2">
+        <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("history.back()")} />
+        <Step
+          icon="chevronRight"
+          hint={t("browser.forward")}
+          onPick={() => run("history.forward()")}
+        />
+        <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("location.reload()")} />
+        <BrowserUrl
+          url={draft}
+          onInput={(event) => setDraft(event.currentTarget.value)}
+          onFocus={() => {
+            editing.current = true;
+          }}
+          onBlur={() => {
+            editing.current = false;
+            setDraft(here);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+              openWeb(draft);
+            }
+            if (event.key === "Escape") {
+              event.currentTarget.blur();
+            }
+          }}
+        />
+        <Step
+          icon="external"
+          hint={t("browser.external")}
+          onPick={() => {
+            void invoke("open_url", { url: here }).catch(complain);
+          }}
+        />
+        <button
+          type="button"
+          title={t("browser.console")}
+          aria-pressed={drawer}
+          onClick={() => setDrawer((open) => !open)}
+          class="flex h-5 shrink-0 items-center gap-1 rounded px-1 text-faint transition-colors hover:bg-raised hover:text-text aria-pressed:text-text"
+        >
+          <Icon name="braces" size={12} />
+          {failures > 0 && <span class="text-state-failed">{failures}</span>}
+        </button>
+      </div>
     <KitBrowserView
-      class="h-full w-full"
-      url={draft}
+      class="min-h-0 flex-1"
       consoleOpen={drawer}
       consoleTitle={t("browser.console")}
-      nav={
-        <>
-          <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("history.back()")} />
-          <Step
-            icon="chevronRight"
-            hint={t("browser.forward")}
-            onPick={() => run("history.forward()")}
-          />
-          <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("location.reload()")} />
-        </>
-      }
-      onUrlInput={(event) => setDraft(event.currentTarget.value)}
-      urlProps={{
-        onFocus: () => {
-          editing.current = true;
-        },
-        onBlur: () => {
-          editing.current = false;
-          setDraft(here);
-        },
-        onKeyDown: (event) => {
-          if (event.key === "Enter") {
-            event.currentTarget.blur();
-            openWeb(draft);
-          }
-          if (event.key === "Escape") {
-            event.currentTarget.blur();
-          }
-        },
-      }}
-      actions={
-        <>
-          <Step
-            icon="external"
-            hint={t("browser.external")}
-            onPick={() => {
-              void invoke("open_url", { url: here }).catch(complain);
-            }}
-          />
-          <button
-            type="button"
-            title={t("browser.console")}
-            aria-pressed={drawer}
-            onClick={() => setDrawer((open) => !open)}
-            class="flex h-5 shrink-0 items-center gap-1 rounded px-1 text-faint transition-colors hover:bg-raised hover:text-text aria-pressed:text-text"
-          >
-            <Icon name="braces" size={12} />
-            {failures > 0 && <span class="text-state-failed">{failures}</span>}
-          </button>
-        </>
-      }
       consoleActions={
         <Button size="xs" variant="subtle" onClick={() => setLogs([])}>
           {t("browser.clear")}
@@ -262,6 +257,7 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
     >
       <div ref={host} class="size-full" />
     </KitBrowserView>
+    </div>
   );
 }
 

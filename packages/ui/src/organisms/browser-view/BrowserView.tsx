@@ -3,14 +3,21 @@ import { cn } from "@/lib/cn";
 
 export type LogLevel = "error" | "warn" | "info";
 
-export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
+export interface BrowserUrlProps extends Omit<JSX.IntrinsicElements["input"], "value" | "ref"> {
   url: string;
-  onUrlInput?: JSX.GenericEventHandler<HTMLInputElement>;
-  urlProps?: Omit<JSX.IntrinsicElements["input"], "value" | "ref">;
-  nav?: ComponentChildren;
-  lead?: ComponentChildren;
-  actions?: ComponentChildren;
   secure?: ComponentChildren;
+}
+
+export function BrowserUrl({ url, secure, class: className, ...rest }: BrowserUrlProps) {
+  return (
+    <span class={cn("ui-browser-url", className as string)}>
+      {secure}
+      <input value={url} aria-label="Address" spellcheck={false} {...rest} />
+    </span>
+  );
+}
+
+export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   console?: ComponentChildren;
   consoleOpen?: boolean;
   consoleTitle?: ComponentChildren;
@@ -19,13 +26,6 @@ export interface BrowserViewProps extends Omit<JSX.IntrinsicElements["div"], "re
 }
 
 export function BrowserView({
-  url,
-  onUrlInput,
-  urlProps,
-  nav,
-  lead,
-  actions,
-  secure,
   console: consoleSlot,
   consoleOpen,
   consoleTitle = "Console",
@@ -40,15 +40,6 @@ export function BrowserView({
       data-console={consoleOpen ? "open" : undefined}
       {...rest}
     >
-      <div class="ui-browser-bar">
-        {nav ? <div class="ui-browser-nav">{nav}</div> : null}
-        {lead}
-        <div class="ui-browser-url">
-          {secure}
-          <input value={url} onInput={onUrlInput} aria-label="Address" spellcheck={false} {...urlProps} />
-        </div>
-        {actions}
-      </div>
       <div class="ui-browser-body">{children}</div>
       {consoleSlot ? (
         <div class="ui-browser-console">

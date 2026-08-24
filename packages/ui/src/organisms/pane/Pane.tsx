@@ -9,10 +9,11 @@ export interface PaneProps extends Omit<JSX.IntrinsicElements["article"], "title
   actions?: ComponentChildren;
   foot?: ComponentChildren;
   scroll?: boolean;
+  wide?: boolean;
   children?: ComponentChildren;
 }
 
-export function Pane({ title, sub, lead, controls, actions, foot, scroll = true, class: className, children, ...rest }: PaneProps) {
+export function Pane({ title, sub, lead, controls, actions, foot, scroll = true, wide, class: className, children, ...rest }: PaneProps) {
   const head = title || lead || controls || actions;
   return (
     <article class={cn("ui-pane", className as string)} {...rest}>
@@ -20,7 +21,7 @@ export function Pane({ title, sub, lead, controls, actions, foot, scroll = true,
         <header class="ui-pane-head">
           {lead}
           {title ? (
-            <div class="ui-pane-heading">
+            <div class="ui-pane-heading" data-wide={wide || undefined}>
               <span class="ui-pane-title">{title}</span>
               {sub ? <span class="ui-pane-sub">{sub}</span> : null}
             </div>
