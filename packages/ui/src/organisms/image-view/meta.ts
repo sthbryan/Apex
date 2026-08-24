@@ -11,6 +11,5 @@ export const imageViewMeta: ComponentMeta = {
   component: ImageView,
   variants: [
     { name: "contain", props: { src: SRC, alt: "Sample", class: "h-24 w-48" } },
-    { name: "with meta", props: { src: SRC, alt: "Sample", meta: "120 × 80 · PNG", class: "h-24 w-48" } },
   ],
 };

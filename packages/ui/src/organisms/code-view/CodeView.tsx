@@ -25,6 +25,20 @@ export function CodeLine({ number, class: className, children, ...rest }: CodeLi
   );
 }
 
+export interface CodeGutterProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
+  lines: number;
+}
+
+export function CodeGutter({ lines, class: className, ...rest }: CodeGutterProps) {
+  return (
+    <div aria-hidden="true" class={cn("ui-code-numbers", className as string)} {...rest}>
+      {Array.from({ length: lines }, (_, index) => (
+        <div key={index}>{index + 1}</div>
+      ))}
+    </div>
+  );
+}
+
 export interface CodeTokenProps extends Omit<JSX.IntrinsicElements["span"], "ref"> {
   token: CodeToken;
   children?: ComponentChildren;

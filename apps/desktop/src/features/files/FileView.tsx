@@ -1,4 +1,4 @@
-import { ImageView, MarkdownView, Segmented } from "@apex/ui";
+import { type ImageFit, ImageView, MarkdownView, Segmented } from "@apex/ui";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -35,7 +35,13 @@ export function FileView({ path }: { path: string }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  const [fit, setFit] = useState<ImageFit>("contain");
+  const [shape, setShape] = useState<string | null>(null);
   const ticket = useRef(0);
+
+  const measure = useCallback((width: number, height: number) => {
+    setShape(`${width} × ${height}`);
+  }, []);
 
   const load = useCallback(() => {
     if (!projectId) {
@@ -47,6 +53,7 @@ export function FileView({ path }: { path: string }) {
     setConflict(false);
     setEditing(readBuffer(projectId, path) !== null);
     setFailure(null);
+    setShape(null);
 
     void readFile(projectId, path)
       .then((contents) => {
@@ -161,6 +168,18 @@ export function FileView({ path }: { path: string }) {
     </button>
   );
 
+  const fitter = (contents?.image || drawn) && (
+    <Segmented
+      label={t("files.fit")}
+      options={[
+        { value: "contain", label: t("files.fitScreen") },
+        { value: "actual", label: t("files.fitActual") },
+      ]}
+      value={fit}
+      onChange={(next) => setFit(next as ImageFit)}
+    />
+  );
+
   const chooser = text !== null && isMarkdown(path) && !contents?.truncated && (
     <Segmented
       label={t("files.view")}
@@ -210,12 +229,16 @@ export function FileView({ path }: { path: string }) {
 
   return (
     <div class="flex h-full flex-col bg-bg">
-      <PaneSub>{contents ? formatSize(contents.size) : null}</PaneSub>
+      <PaneSub>
+        {shape ? <span>{shape}</span> : null}
+        {contents ? <span>{formatSize(contents.size)}</span> : null}
+      </PaneSub>
       <PaneControls>
         {eraser}
         {floppy}
         {pencil}
         {chooser}
+        {fitter}
         {toggle}
         {reloader}
         {outside}
@@ -228,7 +251,8 @@ export function FileView({ path }: { path: string }) {
           class="animate-fade-in"
           src={contents.image}
           alt={fileName(path)}
-          meta={formatSize(contents.size)}
+          fit={fit}
+          onMeasure={measure}
         />
       )}
 
@@ -239,7 +263,8 @@ export function FileView({ path }: { path: string }) {
           class="animate-fade-in"
           src={svgSource(text)}
           alt={fileName(path)}
-          meta={contents ? formatSize(contents.size) : undefined}
+          fit={fit}
+          onMeasure={measure}
         />
       )}
 

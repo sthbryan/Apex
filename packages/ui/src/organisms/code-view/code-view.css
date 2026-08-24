@@ -16,6 +16,12 @@
     width: 40px;
   }
 
+  .ui-code-numbers {
+    @apply sticky left-0 flex-none px-2 py-3 text-right text-faint select-none;
+    border-right: 1px solid var(--apex-border);
+    background-color: var(--apex-bg);
+  }
+
   .ui-code-token[data-token="keyword"] { color: var(--apex-state-working); }
   .ui-code-token[data-token="function"] { color: var(--apex-state-done); }
   .ui-code-token[data-token="string"] { color: var(--apex-state-blocked); }
