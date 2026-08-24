@@ -220,13 +220,31 @@ impl Harness {
     }
 
     pub async fn client(&self) -> TestClient {
+        self.greet(false).await
+    }
+
+    pub async fn probe(&self) -> TestClient {
+        self.greet(true).await
+    }
+
+    pub async fn settle(&self, want: usize) -> usize {
+        for _ in 0..200 {
+            if self.counted() == want {
+                return want;
+            }
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        self.counted()
+    }
+
+    async fn greet(&self, probe: bool) -> TestClient {
         let mut connection = connect_unix(&self.socket).await.expect("connect");
         connection
             .send_control(&ClientMessage::Hello(Hello {
                 protocol_version: PROTOCOL_VERSION,
                 client_name: "test".into(),
                 identity: None,
-                probe: false,
+                probe,
             }))
             .await
             .expect("hello");
