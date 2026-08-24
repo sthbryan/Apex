@@ -337,3 +337,18 @@ describe("warnBlockedAgents", () => {
     expect(state.live.value).toHaveLength(1);
   });
 });
+
+describe("an info notice", () => {
+  it("shows on screen without waking the operating system", async () => {
+    const state: typeof StateModule = await import("./state");
+    state.notices.value = [];
+    state.live.value = [];
+    state.permitted.value = true;
+    sendNotification.mockClear();
+
+    state.push({ sessionId: null, kind: "info", title: "3 agents are on it", body: "pi, grok" });
+
+    expect(state.live.value).toHaveLength(1);
+    expect(sendNotification).not.toHaveBeenCalled();
+  });
+});

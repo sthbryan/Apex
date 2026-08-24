@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import { revealPanel } from "@/app/layout/actions";
 import { pending } from "@/features/git/state";
+import { push } from "@/features/notifications/state";
 import { activeProject, projectSessions } from "@/features/projects/state";
 import { openRace } from "@/features/race/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
@@ -77,6 +78,12 @@ export function Home() {
       void raceSession(project.id, chosen, text, chosen.filter(runsUnattended))
         .then((started) => {
           openRace.value = started[0]?.run ?? null;
+          push({
+            sessionId: null,
+            kind: "info",
+            title: t("race.started", { count: String(started.length) }),
+            body: started.map((session) => session.agent).join(", "),
+          });
         })
         .catch(complain);
       return;

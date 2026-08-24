@@ -17,7 +17,7 @@ import { agents, complain, notices as toasts } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
 
-export type NoticeKind = NotifyKind | "blocked" | "done" | "quota" | "error";
+export type NoticeKind = NotifyKind | "blocked" | "done" | "quota" | "error" | "info";
 
 export type Notice = {
   id: number;
@@ -109,7 +109,7 @@ export function forgetNotices(): void {
 }
 
 function shouldDisturb(notice: Notice): boolean {
-  if (notice.kind === "quiet") {
+  if (notice.kind === "quiet" || notice.kind === "info") {
     return false;
   }
   if (!permitted.peek() || !notifyEnabled.peek()) {

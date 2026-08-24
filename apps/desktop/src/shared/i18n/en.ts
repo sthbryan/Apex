@@ -297,6 +297,7 @@ export const en = {
     latest: "Jump to latest",
   },
   race: {
+    started: "{count} agents are on it",
     running: "{count} racing",
     live: "Running",
     contenders: "{count} contenders",

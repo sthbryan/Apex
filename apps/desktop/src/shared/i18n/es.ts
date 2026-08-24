@@ -301,6 +301,7 @@ export const es: Messages = {
     live: "Corriendo",
     contenders: "{count} competidores",
     changed: "{files} archivos +{added} -{removed}",
+    started: "{count} agentes están en eso",
     running: "{count} corriendo",
     title: "Corridas",
     empty: "Todavía no hay corridas.",
