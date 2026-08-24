@@ -483,6 +483,7 @@ export const en = {
     toSplit: "Split into this tab",
     mergeTab: "Merge this tab into another",
     tabs: "Tabs",
+    rotateLayout: "Rotate the layout",
     swapPane: "Swap with the sibling pane",
     splitRight: "Split right",
     splitDown: "Split down",

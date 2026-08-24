@@ -484,6 +484,7 @@ export const es: Messages = {
     toSplit: "Partir en esta pestaña",
     mergeTab: "Fusionar esta pestaña en otra",
     tabs: "Pestañas",
+    rotateLayout: "Rotar la disposición",
     swapPane: "Intercambiar con el pane hermano",
     splitRight: "Dividir a la derecha",
     splitDown: "Dividir abajo",

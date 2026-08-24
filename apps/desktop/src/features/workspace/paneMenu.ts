@@ -1,7 +1,7 @@
 import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
-import { splitWithShellAt } from "@/features/sessions/pending";
+import { cycleLayout, splitWithShellAt } from "@/features/sessions/pending";
 import { closePane, extractLeafToTab, swapPaneWithSibling, tabs } from "@/features/workspace/state";
 import type { Leaf } from "@/features/workspace/tree";
 import { siblingOf } from "@/features/workspace/tree";
@@ -26,6 +26,14 @@ export function paneMenu(tabId: string, leaf: Leaf): MenuEntry[] {
       label: t("workspace.splitDown"),
       icon: "splitDown",
       run: () => void splitWithShellAt(tabId, leaf.id, "column"),
+    });
+  }
+  if (split) {
+    entries.push({
+      label: t("workspace.rotateLayout"),
+      icon: "grid",
+      hint: "⌘⇧L",
+      run: cycleLayout,
     });
   }
   if (swapable) {

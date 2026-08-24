@@ -1,4 +1,4 @@
-import { CommandItem, CommandPalette } from "@apex/ui";
+import { CommandItem, CommandPalette, KbdGroup } from "@apex/ui";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useOverlay } from "@/features/browser/state";
 import { t } from "@/shared/i18n";
@@ -16,6 +16,7 @@ export type PickerItem = {
   id: string;
   label: string;
   hint?: string;
+  keys?: string[];
   badge?: { text: string; alert: boolean };
   preview?: string[];
   remove?: PickerRemove;
@@ -98,6 +99,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
       label={placeholder}
       placeholder={placeholder}
       onInput={(event) => onQuery(event.currentTarget.value)}
+      lead={<Icon name="search" size={15} class="shrink-0 text-faint" />}
     >
       {items.length === 0 ? (
         <p class="px-2.5 py-2 text-faint">{t("palette.empty")}</p>
@@ -145,6 +147,7 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
                         {item.badge.text}
                       </span>
                     )}
+                    {item.keys && <KbdGroup keys={item.keys} />}
                     {item.preview && (
                       <span class="shrink-0 whitespace-pre rounded border border-border bg-black/20 px-1 py-0.5 font-mono text-2xs leading-tight text-faint">
                         {item.preview.join("\n")}

@@ -131,6 +131,7 @@ function buildActions(
   actions.push({
     id: "settings",
     label: t("palette.settings"),
+    keys: ["⌘", ","],
     run: () => {
       onClose();
       toggleSettings();
@@ -140,6 +141,7 @@ function buildActions(
   actions.push({
     id: "shortcuts",
     label: t("palette.shortcuts"),
+    keys: ["⌘", "H"],
     run: () => {
       onClose();
       toggleSettings("shortcuts");
@@ -185,6 +187,7 @@ function buildActions(
       actions.push({
         id: "close:pane",
         label: t("palette.closePane"),
+        keys: ["⌘", "W"],
         run: () => {
           onClose();
           closePane(tab.id, current, true);

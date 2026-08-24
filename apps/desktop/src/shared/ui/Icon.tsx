@@ -57,6 +57,7 @@ import {
   Rocket,
   Rows3,
   Save,
+  Search,
   Send,
   Settings2,
   Sparkles,
@@ -137,6 +138,7 @@ const ICONS = {
   globe: Globe,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  search: Search,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
