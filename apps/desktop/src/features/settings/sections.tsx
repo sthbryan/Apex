@@ -379,6 +379,7 @@ export function agentsSection(): Section {
     entries: [],
     panel: (
       <div class="flex flex-col">
+        <p class="px-3 pb-2 text-xs opacity-60">{t("settings.agentToolsHint")}</p>
         {agents.value
           .filter((agent) => agent.resolved_path !== null)
           .sort((left, right) => left.name.localeCompare(right.name))
