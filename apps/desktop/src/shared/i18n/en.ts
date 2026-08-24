@@ -205,6 +205,7 @@ export const en = {
     idleGrace18000: "5 hours",
     idleGraceNever: "Until you stop it",
     about: "About",
+    product: "Apex Desktop",
     aboutHint: "Versions of the app and the background daemon.",
     agentsPath: "Agent files",
     configPath: "Config",

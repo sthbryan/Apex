@@ -206,6 +206,7 @@ export const es: Messages = {
     idleGrace18000: "5 horas",
     idleGraceNever: "Hasta que lo apagues",
     about: "Acerca de",
+    product: "Apex Desktop",
     aboutHint: "Versiones de la app y del daemon.",
     agentsPath: "Archivos de agentes",
     configPath: "Config",

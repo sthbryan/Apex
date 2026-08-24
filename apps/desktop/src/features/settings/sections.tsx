@@ -553,7 +553,7 @@ export function aboutSection(appVersion: string): Section {
         <IdentityCard
           icon={<img src="/brand/apex-icon.svg" alt="" width="44" height="44" />}
           name={<Wordmark size="sm">APEX</Wordmark>}
-          sub={t("app.name")}
+          sub={t("settings.product")}
           meta={`${appVersion ? `v${appVersion} · ` : ""}Tauri 2`}
           status={
             <StatePill state={linked ? "done" : "failed"}>
