@@ -8,6 +8,7 @@ import type { DockPanel } from "@/app/layout/state";
 import { sessions as allSessions } from "@/features/sessions/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
 import { PaneActions } from "@/features/workspace/PaneActions";
+import { paneMenu } from "@/features/workspace/paneMenu";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
 import type { PaneHosts } from "@/features/workspace/slots";
 import { PaneSlots } from "@/features/workspace/slots";
@@ -15,6 +16,7 @@ import { focusLeaf } from "@/features/workspace/state";
 import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
 import type { Leaf, PaneNode } from "@/features/workspace/tree";
 import { Boundary } from "@/shared/ui/Boundary";
+import { editable, openMenu } from "@/shared/ui/ContextMenu";
 import { Icon } from "@/shared/ui/Icon";
 
 const AcpView = lazy(async () => ({ default: (await import("@/features/acp/AcpView")).AcpView }));
@@ -117,6 +119,13 @@ function PaneLeaf({
       )}
       onFocusCapture={() => focusLeaf(tabId, node.id)}
       onMouseDown={() => focusLeaf(tabId, node.id)}
+      onContextMenu={(event) => {
+        if (editable(event.target)) {
+          return;
+        }
+        focusLeaf(tabId, node.id);
+        openMenu(event, paneMenu(tabId, node));
+      }}
       lead={
         own ? (
           <span ref={holdLead} class="flex flex-none items-center gap-0.5" />

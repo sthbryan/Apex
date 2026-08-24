@@ -31,6 +31,7 @@ import { connect, platform, status } from "@/shared/daemon";
 import { locale } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
+import { ContextMenu } from "@/shared/ui/ContextMenu";
 import { watchFullscreen } from "@/shared/window";
 
 export function App() {
@@ -120,6 +121,7 @@ export function App() {
   return (
     <>
       <Layout onNewSession={togglePalette} />
+      <ContextMenu />
       <Toasts />
       <Settings />
       <NewSession />
