@@ -14,7 +14,7 @@ key = "mcp_servers.apex"
 TERM = ""
 
 [state_patterns]
-blocked = ["\\(y/n\\)", "Allow command", "Do you trust"]
+blocked = ["\\(y/n\\)", "Allow command", "Do you trust", "Press enter to continue"]
 
 [quota]
 cache_ttl_secs = 900

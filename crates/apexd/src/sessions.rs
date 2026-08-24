@@ -29,7 +29,8 @@ const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis
 const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
 const BLOCKED_GRACE: std::time::Duration = std::time::Duration::from_secs(300);
 const POLL_WHILE_BLOCKED: std::time::Duration = std::time::Duration::from_millis(200);
-const ECHO_WAIT: std::time::Duration = std::time::Duration::from_secs(1);
+const ECHO_GRACE: std::time::Duration = std::time::Duration::from_secs(6);
+const ECHO_POLL: std::time::Duration = std::time::Duration::from_millis(250);
 const TYPING_TRIES: u32 = 6;
 const PROBE_LEN: usize = 16;
 pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
@@ -535,15 +536,52 @@ impl SessionManager {
     async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {
         let typed = text.replace(['\n', '\r'], " ");
         let probe = probe_of(&typed);
-        for attempt in 1..=TYPING_TRIES {
+        for _ in 1..=TYPING_TRIES {
             self.write(id, &typed).await?;
-            tokio::time::sleep(ECHO_WAIT * attempt).await;
-            if self.echoed(id, &probe).await {
+            if self.await_echo(id, &probe).await {
                 tokio::time::sleep(BEFORE_ENTER).await;
                 return self.write(id, "\r").await;
             }
+            if !self.blocked_now(id).await {
+                break;
+            }
+            self.await_unblocked(id).await;
         }
-        bail!("never saw the task appear on screen")
+        bail!("never saw the task appear on screen, it is showing: {}", self.on_screen(id).await)
+    }
+
+    async fn await_echo(&self, id: Uuid, probe: &str) -> bool {
+        let deadline = std::time::Instant::now() + ECHO_GRACE;
+        while std::time::Instant::now() < deadline {
+            if self.echoed(id, probe).await {
+                return true;
+            }
+            tokio::time::sleep(ECHO_POLL).await;
+        }
+        false
+    }
+
+    async fn blocked_now(&self, id: Uuid) -> bool {
+        self.list_sessions()
+            .await
+            .iter()
+            .find(|session| session.id == id)
+            .is_some_and(|session| session.state == SessionState::Blocked)
+    }
+
+    async fn on_screen(&self, id: Uuid) -> String {
+        let Ok(seen) = self.registry.transcript(id, 4096, true).await else {
+            return "nothing".to_owned();
+        };
+        let tail: String = seen
+            .lines()
+            .rev()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .take(3)
+            .collect::<Vec<_>>()
+            .join(" / ");
+        if tail.is_empty() { "nothing".to_owned() } else { tail.chars().take(160).collect() }
     }
 
     async fn echoed(&self, id: Uuid, probe: &str) -> bool {

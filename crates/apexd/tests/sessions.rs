@@ -411,3 +411,32 @@ async fn the_tool_groups_that_are_off_are_reported_back() {
     };
     assert_eq!(tools_off, vec![ToolGroup::Views]);
 }
+
+#[tokio::test]
+async fn a_task_that_never_appears_says_what_the_screen_is_showing() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    let project = harness.project;
+    let session = client
+        .request(Command::SessionCreate {
+            mode: None,
+            isolation: Isolation::Directory,
+            slug: None,
+            project,
+            agent: "mute".into(),
+            cwd: Some("/tmp".into()),
+            size: TerminalSize { rows: 24, cols: 80 },
+        })
+        .await;
+    let Reply::Session { session } = session else { panic!("expected a session") };
+
+    let failure = harness
+        .manager
+        .tell(session.id, "this text will never be echoed back".into())
+        .await
+        .expect_err("the agent never echoes");
+
+    let told = format!("{failure:#}");
+    assert!(told.contains("never saw the task"), "{told}");
+    assert!(told.contains("PRESS ENTER TO CONTINUE"), "{told}");
+}

@@ -98,6 +98,14 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
     );
     profiles.upsert(
         AgentProfile::parse(
+            "name = \"mute\"\n\
+             command = \"sh\"\n\
+             args = [\"-c\", \"stty -echo; printf 'PRESS ENTER TO CONTINUE\\n'; cat >/dev/null\"]\n",
+        )
+        .expect("mute profile"),
+    );
+    profiles.upsert(
+        AgentProfile::parse(
             "name = \"mcp-gated\"\n\
              command = \"echo\"\n\
              [mcp]\n\
