@@ -43,6 +43,7 @@ webview2-com = "0.38"
 windows = { version = "0.61", features = ["Win32_System_Com"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+cairo-rs = { version = "0.18", features = ["png"] }
 gtk = "0.18"
 webkit2gtk = "2.0"
 
