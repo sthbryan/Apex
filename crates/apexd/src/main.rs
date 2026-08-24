@@ -1,15 +1,12 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
 use apexd::session;
-use apexd::sessions::SessionManager;
 use apexd::state;
-
-const IDLE_POLL: Duration = Duration::from_secs(1);
+use apexd::watchdog::{IDLE_POLL, watch_for_idle};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,7 +31,7 @@ async fn main() -> Result<()> {
     let clients = Arc::new(AtomicUsize::new(0));
     let mut shutdown_rx = manager.quitting();
 
-    let watchdog = tokio::spawn(watch_for_idle(Arc::clone(&clients), manager.clone()));
+    let watchdog = tokio::spawn(watch_for_idle(Arc::clone(&clients), manager.clone(), IDLE_POLL));
 
     let shutdown = || async {
         tracing::info!("apexd shutting down");
@@ -64,38 +61,6 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
             }
-        }
-    }
-}
-
-async fn watch_for_idle(clients: Arc<AtomicUsize>, manager: Arc<SessionManager>) {
-    let idle_grace = manager.idle_grace();
-    let mut seen_client = false;
-    let mut idle_since: Option<Instant> = None;
-
-    loop {
-        tokio::time::sleep(IDLE_POLL).await;
-
-        let active = clients.load(Ordering::SeqCst);
-        if active > 0 {
-            seen_client = true;
-            idle_since = None;
-            continue;
-        }
-
-        if !seen_client {
-            continue;
-        }
-
-        let grace = Duration::from_secs(idle_grace.load(Ordering::Relaxed));
-        match idle_since {
-            None => idle_since = Some(Instant::now()),
-            Some(start) if start.elapsed() >= grace => {
-                tracing::info!("no clients for {grace:?}, shutting down");
-                manager.quit();
-                return;
-            }
-            Some(_) => {}
         }
     }
 }

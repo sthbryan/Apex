@@ -6,6 +6,8 @@ use crate::error::ProtocolError;
 
 pub const PROTOCOL_VERSION: u32 = 17;
 
+pub const IDLE_GRACE_NEVER: u32 = u32::MAX;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct RequestId(pub u64);

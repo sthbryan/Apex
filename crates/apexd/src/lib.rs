@@ -6,3 +6,4 @@ pub mod services;
 pub mod session;
 pub mod sessions;
 pub mod state;
+pub mod watchdog;
