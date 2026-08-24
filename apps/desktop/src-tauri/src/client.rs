@@ -6,13 +6,14 @@ use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
 use apex_proto::{
-    ClientMessage, Command, CommandOutcome, ConnectionReader, ConnectionWriter, Event, Frame,
-    Hello, PROTOCOL_VERSION, Reply, RequestId, ServerMessage, connect_unix,
+    ClientMessage, Command, CommandOutcome, Connection, ConnectionReader, ConnectionWriter, Event,
+    Frame, Hello, PROTOCOL_VERSION, Reply, RequestId, ServerMessage, connect_unix,
 };
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tokio::sync::{Mutex, oneshot};
 use tokio::time::sleep;
 
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 const SPAWN_ATTEMPTS: u32 = 25;
 const SPAWN_INTERVAL: Duration = Duration::from_millis(120);
 
@@ -31,28 +32,20 @@ pub struct DaemonClient {
 
 impl DaemonClient {
     pub async fn attach(socket: &Path) -> Result<Arc<Self>> {
-        ensure_running(socket).await?;
-        let mut connection = connect_unix(socket)
-            .await
-            .with_context(|| format!("connecting to {}", socket.display()))?;
-
-        connection
-            .send_control(&ClientMessage::Hello(Hello {
-                protocol_version: PROTOCOL_VERSION,
-                client_name: "apex-desktop".into(),
-                identity: None,
-            }))
-            .await?;
-
-        let frame = connection.recv().await.context("apexd closed during handshake")??;
-        let daemon_version = match frame.parse_control::<ServerMessage>()? {
-            ServerMessage::Welcome(welcome) => welcome.daemon_version,
-            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
-                bail!("apexd rejected the handshake: {error}")
+        let mut replaced = false;
+        loop {
+            ensure_running(socket).await?;
+            let (connection, daemon_version) = shake_hands(socket).await?;
+            if replaced || daemon_version == APP_VERSION {
+                return Ok(Self::adopt(connection, daemon_version));
             }
-            other => bail!("unexpected handshake reply: {other:?}"),
-        };
+            tracing::info!(daemon = %daemon_version, app = APP_VERSION, "replacing the stale apexd");
+            retire(socket, connection).await?;
+            replaced = true;
+        }
+    }
 
+    fn adopt(connection: Connection, daemon_version: String) -> Arc<Self> {
         let (writer, reader) = connection.split();
         let client = Arc::new(Self {
             writer: Mutex::new(writer),
@@ -64,7 +57,7 @@ impl DaemonClient {
         });
 
         spawn_reader(reader, client.pending.clone(), client.output.clone(), client.events.clone());
-        Ok(client)
+        client
     }
 
     pub fn daemon_version(&self) -> &str {
@@ -149,6 +142,50 @@ fn spawn_reader(
         }
         pending.lock().await.clear();
     });
+}
+
+async fn shake_hands(socket: &Path) -> Result<(Connection, String)> {
+    let mut connection = connect_unix(socket)
+        .await
+        .with_context(|| format!("connecting to {}", socket.display()))?;
+
+    connection
+        .send_control(&ClientMessage::Hello(Hello {
+            protocol_version: PROTOCOL_VERSION,
+            client_name: "apex-desktop".into(),
+            identity: None,
+        }))
+        .await?;
+
+    let frame = connection.recv().await.context("apexd closed during handshake")??;
+    let daemon_version = match frame.parse_control::<ServerMessage>()? {
+        ServerMessage::Welcome(welcome) => welcome.daemon_version,
+        ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
+            bail!("apexd rejected the handshake: {error}")
+        }
+        other => bail!("unexpected handshake reply: {other:?}"),
+    };
+
+    Ok((connection, daemon_version))
+}
+
+async fn retire(socket: &Path, mut connection: Connection) -> Result<()> {
+    connection
+        .send_control(&ClientMessage::Request {
+            id: RequestId(1),
+            command: Command::DaemonShutdown,
+        })
+        .await
+        .context("asking apexd to step aside")?;
+    drop(connection);
+
+    for _ in 0..SPAWN_ATTEMPTS {
+        if connect_unix(socket).await.is_err() {
+            return Ok(());
+        }
+        sleep(SPAWN_INTERVAL).await;
+    }
+    bail!("apexd kept holding {}", socket.display())
 }
 
 async fn ensure_running(socket: &Path) -> Result<()> {
