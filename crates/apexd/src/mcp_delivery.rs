@@ -191,7 +191,7 @@ fn render(
     })
 }
 
-fn expand_home(path: &str, home: &Path) -> PathBuf {
+pub fn expand_home(path: &str, home: &Path) -> PathBuf {
     match path.strip_prefix("~/") {
         Some(rest) => home.join(rest),
         None => PathBuf::from(path),

@@ -115,6 +115,8 @@ pub struct AgentSummary {
     pub supports_resume: bool,
     pub speaks_acp: bool,
     pub shares_config: bool,
+    #[serde(default)]
+    pub mcp_blocked: bool,
 }
 
 impl AgentSummary {

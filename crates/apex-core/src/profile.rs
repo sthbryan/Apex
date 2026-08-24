@@ -177,6 +177,13 @@ impl AgentProfile {
         expand_env(&self.command)
     }
 
+    pub fn mcp_requires(&self) -> Option<&str> {
+        match &self.mcp {
+            Some(McpDelivery::Flag { requires_path, .. }) => requires_path.as_deref(),
+            _ => None,
+        }
+    }
+
     pub fn supports_resume(&self) -> bool {
         self.history.as_ref().is_some_and(|history| !history.resume_args.is_empty())
     }
@@ -193,6 +200,7 @@ impl AgentProfile {
             supports_resume: self.supports_resume(),
             speaks_acp: self.acp_command.is_some(),
             shares_config: matches!(self.mcp, Some(McpDelivery::Flag { merge_from: Some(_), .. })),
+            mcp_blocked: false,
         }
     }
 }

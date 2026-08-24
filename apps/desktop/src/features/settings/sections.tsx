@@ -388,7 +388,11 @@ export function agentsSection(): Section {
                 dim={!on}
                 lead={<AgentIcon agent={agent.name} size="sm" />}
                 label={agent.name}
-                sub={t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")}
+                sub={
+                  agent.mcp_blocked
+                    ? t("settings.mcpBlocked")
+                    : t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")
+                }
                 trail={
                   <Segmented
                     size="sm"

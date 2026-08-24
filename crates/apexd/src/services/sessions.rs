@@ -127,8 +127,19 @@ impl SessionRegistry {
     }
 
     pub async fn list_agents(&self) -> Vec<AgentSummary> {
-        let mut resolver = self.resolver.lock().await;
-        self.profiles.summarize(&mut resolver)
+        let mut agents = {
+            let mut resolver = self.resolver.lock().await;
+            self.profiles.summarize(&mut resolver)
+        };
+        for agent in &mut agents {
+            agent.mcp_blocked =
+                self.profiles.get(&agent.name).and_then(AgentProfile::mcp_requires).is_some_and(
+                    |required| {
+                        !crate::mcp_delivery::expand_home(required, &self.paths.home).exists()
+                    },
+                );
+        }
+        agents
     }
 
     pub async fn tool_groups_off(&self) -> Vec<ToolGroup> {
