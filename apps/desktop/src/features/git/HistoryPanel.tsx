@@ -68,7 +68,7 @@ function History({ target }: { target: GitTarget }) {
             label={commit.summary}
             title={commit.summary}
             selected={open}
-            class={cn("border-l-2", open ? "border-accent" : "border-transparent")}
+            class={cn("border-l-2", open ? "border-l-accent" : "border-l-transparent")}
             lead={<span class="font-mono tabular-nums text-faint">{commit.short}</span>}
             sub={
               <>
