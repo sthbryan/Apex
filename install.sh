@@ -189,7 +189,15 @@ install_linux_deb() {
     fi
   fi
   ok "installed Apex via dpkg"
-  info "run: ${BOLD}apex${RESET}  (or open from your app menu)"
+  info "run: ${BOLD}apex-desktop${RESET}  (or open from your app menu)"
+}
+
+retire_old_appimage() {
+  local stale="$1"
+  if [[ -f "$stale" && ! -L "$stale" ]]; then
+    warn "removing the old ${stale} so the apex command is free"
+    rm -f "$stale"
+  fi
 }
 
 install_linux_appimage() {
@@ -199,10 +207,11 @@ install_linux_appimage() {
 
   dest_dir="${APEX_DIR:-${HOME}/.local/bin}"
   mkdir -p "$dest_dir"
-  dest="${dest_dir}/apex"
+  dest="${dest_dir}/apex-desktop"
 
   download "$(asset_url "$version" "$name")" "${TMP_DIR}/${name}"
   install -m 755 "${TMP_DIR}/${name}" "$dest"
+  retire_old_appimage "${dest_dir}/apex"
 
   ok "installed AppImage → ${dest}"
   if ! echo ":$PATH:" | grep -q ":${dest_dir}:"; then
