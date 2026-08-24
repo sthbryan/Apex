@@ -45,7 +45,7 @@ export function DockOrder() {
     place(id as DockPanel, seat);
   }, []);
 
-  const { held, seat, hold, grab } = useReorder(settle);
+  const { held, seat, grab } = useReorder(settle);
   const from = held ? rows.indexOf(held) : -1;
 
   const edge = (index: number): "top" | "bottom" | null => {
@@ -66,7 +66,7 @@ export function DockOrder() {
   };
 
   return (
-    <ol ref={hold} class="flex w-64 flex-col gap-0.5">
+    <ol data-reorder class="flex w-64 flex-col gap-0.5">
       {rows.map((row, index) => {
         const mark = edge(index);
         const marker = mark ? (
@@ -80,7 +80,11 @@ export function DockOrder() {
 
         if (row === LINE) {
           return (
-            <li key={row} class="relative flex items-center gap-2 py-1.5 text-faint text-xs">
+            <li
+              key={row}
+              data-seat
+              class="relative flex items-center gap-2 py-1.5 text-faint text-xs"
+            >
               {marker}
               <span class="h-px flex-1 bg-border" />
               {t("settings.sidebarTab")}
@@ -94,6 +98,7 @@ export function DockOrder() {
         return (
           <li
             key={row}
+            data-seat
             tabIndex={0}
             title={t("settings.sidebarDrag")}
             data-held={held === row || undefined}

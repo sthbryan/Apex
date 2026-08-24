@@ -8,17 +8,21 @@ import {
   TitleBar,
   Wordmark,
 } from "@apex/ui";
+import cn from "cnfast";
+import { useCallback } from "preact/hooks";
 import { Dock } from "@/app/layout/Dock";
 import { DockResize } from "@/app/layout/DockResize";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { StatusBar } from "@/app/layout/StatusBar";
 import {
+  type DockPanel,
   dockMode,
   dockOrder,
   dockPanel,
   dockResizing,
   setDockMode,
   setDockPanel,
+  settleDockPanel,
   toggleDock,
 } from "@/app/layout/state";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
@@ -30,6 +34,7 @@ import { homeOpen, openHome } from "@/features/workspace/state";
 import { status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+import { useReorder } from "@/shared/ui/reorder";
 
 const NEXT = {
   expanded: { label: "dock.toRail", icon: "panelClose" },
@@ -45,6 +50,13 @@ export function Layout({ onNewSession }: Props) {
   const rail = mode === "rail";
   const order = dockOrder.value;
   const active = order.includes(dockPanel.value) ? dockPanel.value : order[0];
+
+  const settle = useCallback((id: string, seat: number) => {
+    settleDockPanel(id as DockPanel, seat);
+  }, []);
+
+  const { held, seat, grab } = useReorder(settle);
+  const from = held ? order.indexOf(held as DockPanel) : -1;
 
   return (
     <div class="relative flex h-full flex-col text-text">
@@ -77,25 +89,39 @@ export function Layout({ onNewSession }: Props) {
       />
 
       <AppBody>
-        <Rail aria-label={t("dock.panels")}>
+        <Rail aria-label={t("dock.panels")} data-reorder>
           <RailButton label={t("home.title")} current={homeOpen.value} onClick={openHome}>
             <Icon name="home" size={16} />
           </RailButton>
           <RailDivider />
-          {order.map((id) => (
-            <RailButton
-              key={id}
-              label={DOCK_PANELS[id].label()}
-              current={!rail && active === id}
-              badge={DOCK_PANELS[id].badge?.() ?? undefined}
-              onClick={() => {
-                setDockPanel(id);
-                setDockMode("expanded");
-              }}
-            >
-              <Icon name={DOCK_PANELS[id].icon} size={16} />
-            </RailButton>
-          ))}
+          {order.map((id, index) => {
+            const mark = seat !== null && from >= 0 && seat !== from && index === seat;
+            return (
+              <RailButton
+                key={id}
+                data-seat
+                label={DOCK_PANELS[id].label()}
+                current={!rail && active === id}
+                badge={DOCK_PANELS[id].badge?.() ?? undefined}
+                class={cn(held === id && "opacity-40")}
+                onMouseDown={(event) => grab(id, index, event)}
+                onClick={() => {
+                  setDockPanel(id);
+                  setDockMode("expanded");
+                }}
+              >
+                <Icon name={DOCK_PANELS[id].icon} size={16} />
+                {mark ? (
+                  <span
+                    class={cn(
+                      "absolute inset-x-1 h-0.5 bg-accent",
+                      seat < from ? "top-0" : "bottom-0",
+                    )}
+                  />
+                ) : null}
+              </RailButton>
+            );
+          })}
         </Rail>
 
         <SidePanel

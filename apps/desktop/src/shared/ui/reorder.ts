@@ -1,26 +1,21 @@
-import { useCallback, useRef, useState } from "preact/hooks";
+import { useCallback, useState } from "preact/hooks";
 
 const SLACK = 4;
 
 export type Reorder = {
   held: string | null;
   seat: number | null;
-  hold: (element: HTMLElement | null) => void;
   grab: (id: string, from: number, event: MouseEvent) => void;
 };
 
 export function useReorder(settle: (id: string, seat: number) => void): Reorder {
-  const list = useRef<HTMLElement | null>(null);
   const [held, setHeld] = useState<string | null>(null);
   const [seat, setSeat] = useState<number | null>(null);
 
-  const hold = useCallback((element: HTMLElement | null) => {
-    list.current = element;
-  }, []);
-
   const grab = useCallback(
     (id: string, from: number, event: MouseEvent) => {
-      if (event.button !== 0 || !list.current) {
+      const list = (event.currentTarget as HTMLElement | null)?.closest("[data-reorder]");
+      if (event.button !== 0 || !list) {
         return;
       }
 
@@ -38,7 +33,7 @@ export function useReorder(settle: (id: string, seat: number) => void): Reorder 
           document.body.style.cursor = "grabbing";
           document.body.style.userSelect = "none";
         }
-        landing = seatOf(rowsOf(list.current), moved.clientY, from);
+        landing = seatOf(seatsOf(list), moved.clientY, from);
         setSeat(landing);
       };
 
@@ -49,7 +44,11 @@ export function useReorder(settle: (id: string, seat: number) => void): Reorder 
         document.body.style.userSelect = "";
         setHeld(null);
         setSeat(null);
-        if (lifted && landing !== from) {
+        if (!lifted) {
+          return;
+        }
+        window.addEventListener("click", swallow, { capture: true, once: true });
+        if (landing !== from) {
           settle(id, landing);
         }
       };
@@ -60,19 +59,24 @@ export function useReorder(settle: (id: string, seat: number) => void): Reorder 
     [settle],
   );
 
-  return { held, seat, hold, grab };
+  return { held, seat, grab };
 }
 
-function rowsOf(list: HTMLElement | null): HTMLElement[] {
-  return Array.from(list?.children ?? []) as HTMLElement[];
+function swallow(event: MouseEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
 }
 
-function seatOf(rows: HTMLElement[], y: number, from: number): number {
-  for (let index = 0; index < rows.length; index += 1) {
-    const box = rows[index].getBoundingClientRect();
+function seatsOf(list: Element): HTMLElement[] {
+  return Array.from(list.querySelectorAll<HTMLElement>("[data-seat]"));
+}
+
+function seatOf(seats: HTMLElement[], y: number, from: number): number {
+  for (let index = 0; index < seats.length; index += 1) {
+    const box = seats[index].getBoundingClientRect();
     if (y < box.top + box.height / 2) {
       return index > from ? index - 1 : index;
     }
   }
-  return rows.length - 1;
+  return seats.length - 1;
 }
