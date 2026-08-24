@@ -501,7 +501,7 @@ export function daemonSection(): Section {
         label: t("settings.idleGrace"),
         hint: t("settings.idleGraceHint"),
         control: (
-          <Segmented
+          <Select
             label={t("settings.idleGrace")}
             value={String(idleGrace.value)}
             onChange={(value) => {

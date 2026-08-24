@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   FROSTS,
+  IDLE_GRACE_NEVER,
   IDLE_GRACES,
   LANGUAGES,
   PANE_CAPS,
@@ -26,6 +27,6 @@ describe("constants", () => {
   });
 
   it("defines idle graces", () => {
-    expect(IDLE_GRACES.map((g) => g.value)).toEqual([0, 300, 18000]);
+    expect(IDLE_GRACES.map((g) => g.value)).toEqual([0, 300, 18000, IDLE_GRACE_NEVER]);
   });
 });

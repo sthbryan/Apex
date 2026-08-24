@@ -196,10 +196,11 @@ export const es: Messages = {
     closingTray: "Dejarlo vivo",
     idleGrace: "Tiempo del daemon en fondo",
     idleGraceHint:
-      "Cuánto tiempo sigue el daemon después de cerrar Apex. Después de esto se apaga y los agentes paran. Cierra y reabre dentro de la ventana para reanudar las sesiones.",
+      "Cuánto tiempo sigue el daemon después de que salgas de Apex. Después de esto se apaga y los agentes paran. Reabrí dentro de la ventana para reanudar las sesiones.",
     idleGrace0: "Apagar al cerrar",
     idleGrace300: "5 minutos",
     idleGrace18000: "5 horas",
+    idleGraceNever: "Hasta que lo apagues",
     about: "Acerca de",
     aboutHint: "Versiones de la app y del daemon.",
     agentsPath: "Archivos de agentes",

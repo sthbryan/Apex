@@ -41,10 +41,13 @@ export const UI_SCALE_LABEL = {
   roomy: "settings.uiScaleRoomy",
 } as const;
 
+export const IDLE_GRACE_NEVER = 4294967295;
+
 export const IDLE_GRACES = [
   { value: 0, key: "settings.idleGrace0" },
   { value: 300, key: "settings.idleGrace300" },
   { value: 18000, key: "settings.idleGrace18000" },
+  { value: IDLE_GRACE_NEVER, key: "settings.idleGraceNever" },
 ] as const;
 
 export const THEME_HINT = {
