@@ -28,12 +28,12 @@
   }
 
   .ui-pane-head {
-    @apply flex flex-none items-center gap-2.5 px-3.5 py-2;
+    @apply flex h-8 flex-none items-center gap-2.5 px-3;
     border-bottom: 1px solid var(--apex-border);
   }
 
   .ui-pane-heading {
-    @apply min-w-0 flex-1;
+    @apply flex min-w-0 flex-1 items-baseline gap-2;
   }
 
   .ui-pane-title {
@@ -42,7 +42,16 @@
   }
 
   .ui-pane-sub {
-    @apply mt-0.5 flex items-center gap-1.5 text-xs text-muted;
+    @apply flex min-w-0 items-baseline gap-1.5 truncate text-xs text-muted;
+  }
+
+  .ui-pane-tools {
+    @apply flex flex-none items-center gap-1;
+  }
+
+  .ui-pane-divider {
+    @apply mx-0.5 h-4 w-px flex-none;
+    background-color: var(--apex-border);
   }
 
   .ui-pane-body {
@@ -79,14 +88,13 @@
 
   @media (max-width: 640px) {
     .ui-pane-head {
-      @apply px-3 py-1.5 gap-2;
-      flex-wrap: wrap;
+      @apply gap-2 px-2.5;
     }
     .ui-pane-title {
       font-size: var(--apex-text-sm);
     }
     .ui-pane-sub {
-      @apply text-[11px] gap-1;
+      @apply hidden;
     }
     .ui-pane-grid {
       grid-auto-rows: minmax(280px, auto);

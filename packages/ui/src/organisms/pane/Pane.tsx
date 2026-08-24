@@ -2,17 +2,18 @@ import type { ComponentChildren, JSX } from "preact";
 import { cn } from "@/lib/cn";
 
 export interface PaneProps extends Omit<JSX.IntrinsicElements["article"], "title" | "ref"> {
-  title?: string;
+  title?: ComponentChildren;
   sub?: ComponentChildren;
   lead?: ComponentChildren;
+  controls?: ComponentChildren;
   actions?: ComponentChildren;
   foot?: ComponentChildren;
   scroll?: boolean;
   children?: ComponentChildren;
 }
 
-export function Pane({ title, sub, lead, actions, foot, scroll = true, class: className, children, ...rest }: PaneProps) {
-  const head = title || lead || actions;
+export function Pane({ title, sub, lead, controls, actions, foot, scroll = true, class: className, children, ...rest }: PaneProps) {
+  const head = title || lead || controls || actions;
   return (
     <article class={cn("ui-pane", className as string)} {...rest}>
       {head ? (
@@ -20,11 +21,17 @@ export function Pane({ title, sub, lead, actions, foot, scroll = true, class: cl
           {lead}
           {title ? (
             <div class="ui-pane-heading">
-              <div class="ui-pane-title">{title}</div>
-              {sub ? <div class="ui-pane-sub">{sub}</div> : null}
+              <span class="ui-pane-title">{title}</span>
+              {sub ? <span class="ui-pane-sub">{sub}</span> : null}
             </div>
           ) : null}
-          {actions}
+          {controls || actions ? (
+            <div class="ui-pane-tools">
+              {controls}
+              {controls && actions ? <span class="ui-pane-divider" /> : null}
+              {actions}
+            </div>
+          ) : null}
         </header>
       ) : null}
       {scroll ? <div class="ui-pane-body">{children}</div> : children}
