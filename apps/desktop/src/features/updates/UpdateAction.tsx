@@ -5,6 +5,7 @@ import {
   fetchUpdate,
   lookForUpdate,
   offered,
+  openReleases,
   progress,
   stage,
 } from "@/features/updates/state";
@@ -27,6 +28,8 @@ export function UpdateNote() {
           class="w-full"
         />
       );
+    case "manual":
+      return <>{t("settings.updateManual", { version })}</>;
     case "ready":
       return <>{t("settings.updateReady", { version })}</>;
     case "failed":
@@ -52,6 +55,8 @@ export function UpdateAction() {
       );
     case "found":
       return <Button onClick={() => void fetchUpdate()}>{t("settings.updateDownload")}</Button>;
+    case "manual":
+      return <Button onClick={() => void openReleases()}>{t("settings.updateOpenRelease")}</Button>;
     case "ready":
       return (
         <Button variant="primary" onClick={() => void applyUpdate()}>

@@ -1,4 +1,5 @@
 import { signal } from "@preact/signals";
+import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 
@@ -7,6 +8,7 @@ export type UpdateStage =
   | "checking"
   | "current"
   | "found"
+  | "manual"
   | "downloading"
   | "ready"
   | "failed";
@@ -35,7 +37,25 @@ export function setAutoUpdate(next: boolean): void {
   localStorage.setItem(AUTO_KEY, next ? "on" : "off");
 }
 
+const RELEASES = "https://github.com/sthbryan/Apex/releases/latest";
+
 let pending: Update | null = null;
+let selfUpdating: boolean | null = null;
+
+async function canSelfUpdate(): Promise<boolean> {
+  if (selfUpdating === null) {
+    try {
+      selfUpdating = await invoke<boolean>("self_updating");
+    } catch {
+      selfUpdating = true;
+    }
+  }
+  return selfUpdating;
+}
+
+export async function openReleases(): Promise<void> {
+  await invoke("open_url", { url: RELEASES });
+}
 
 function settled(): boolean {
   return stage.value === "downloading" || stage.value === "ready";
@@ -57,7 +77,7 @@ export async function lookForUpdate(): Promise<boolean> {
     }
     pending = found;
     offered.value = { version: found.version, notes: found.body ?? null };
-    stage.value = "found";
+    stage.value = (await canSelfUpdate()) ? "found" : "manual";
     return true;
   } catch (error) {
     pending = null;
@@ -69,7 +89,7 @@ export async function lookForUpdate(): Promise<boolean> {
 }
 
 export async function fetchUpdate(): Promise<void> {
-  if (!pending || settled()) {
+  if (!pending || settled() || stage.value === "manual") {
     return;
   }
   stage.value = "downloading";
@@ -124,7 +144,7 @@ export async function watchForUpdates(): Promise<void> {
     }
     return;
   }
-  if (autoUpdate.value) {
+  if (autoUpdate.value && stage.value === "found") {
     await fetchUpdate();
   }
 }

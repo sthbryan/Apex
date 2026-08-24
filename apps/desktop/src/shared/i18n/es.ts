@@ -210,6 +210,8 @@ export const es: Messages = {
     updateReady: "La versión {version} está lista. Reiniciá para terminar.",
     updateRestart: "Reiniciar ahora",
     updateFailed: "No se pudo contactar al servidor de actualizaciones.",
+    updateManual: "Salió la versión {version}, pero esta instalación no puede actualizarse sola.",
+    updateOpenRelease: "Abrir la página del release",
     updateAuto: "Descargar actualizaciones automáticamente",
     updateAutoHint: "Baja la versión nueva en segundo plano y sólo te queda reiniciar.",
   },

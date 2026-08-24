@@ -48,6 +48,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::daemon_version,
+            commands::self_updating,
             commands::host_platform,
             commands::set_badge,
             commands::set_window_material,

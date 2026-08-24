@@ -14,6 +14,14 @@ pub fn host_platform() -> &'static str {
     std::env::consts::OS
 }
 
+#[tauri::command]
+pub fn self_updating() -> bool {
+    if cfg!(target_os = "linux") {
+        return std::env::var_os("APPIMAGE").is_some();
+    }
+    true
+}
+
 #[cfg(target_os = "macos")]
 fn material_of(frost: &str) -> Option<window_vibrancy::NSVisualEffectMaterial> {
     use window_vibrancy::NSVisualEffectMaterial::{
