@@ -238,3 +238,68 @@ async fn a_branch_can_be_listed_and_checked_out_on_the_project() {
         harness.manager.git_status(harness.project, GitTarget::Project).await.expect("status");
     assert_eq!(status.branch, "second");
 }
+
+async fn kept_worktree(harness: &Harness) -> apex_proto::WorktreeInfo {
+    let session = harness
+        .manager
+        .create(NewSession {
+            project: harness.project,
+            agent: "sh".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Worktree,
+            slug: None,
+            mode: None,
+            parent: None,
+            run: None,
+            unattended: false,
+        })
+        .await
+        .expect("session");
+    let tree = session.worktree.clone().expect("worktree");
+    harness.manager.close(session.id, WorktreeDisposal::Keep).await.expect("close");
+    tree
+}
+
+#[tokio::test]
+async fn pruning_clears_the_worktrees_with_nothing_left_in_them() {
+    let harness = Harness::start().await;
+    init_repo(harness.root.path());
+    let tree = kept_worktree(&harness).await;
+
+    let removed = harness.manager.prune_worktrees(harness.project).await.expect("prune");
+
+    assert_eq!(removed, vec![tree.path.clone()]);
+    assert!(!std::path::Path::new(&tree.path).exists());
+    assert!(harness.manager.list_worktrees(harness.project).await.expect("list").is_empty());
+}
+
+#[tokio::test]
+async fn pruning_leaves_a_worktree_that_still_has_changes() {
+    let harness = Harness::start().await;
+    init_repo(harness.root.path());
+    let tree = kept_worktree(&harness).await;
+    std::fs::write(std::path::Path::new(&tree.path).join("late.txt"), "after\n").expect("write");
+
+    let removed = harness.manager.prune_worktrees(harness.project).await.expect("prune");
+
+    assert!(removed.is_empty(), "a dirty worktree is not reviewed");
+    assert!(std::path::Path::new(&tree.path).exists());
+}
+
+#[tokio::test]
+async fn pruning_leaves_a_worktree_whose_commits_never_came_back() {
+    let harness = Harness::start().await;
+    init_repo(harness.root.path());
+    let tree = kept_worktree(&harness).await;
+    let at = std::path::Path::new(&tree.path);
+    std::fs::write(at.join("late.txt"), "after\n").expect("write");
+    for args in [vec!["add", "."], vec!["commit", "-m", "late"]] {
+        std::process::Command::new("git").args(args).current_dir(at).output().expect("git");
+    }
+
+    let removed = harness.manager.prune_worktrees(harness.project).await.expect("prune");
+
+    assert!(removed.is_empty(), "committed work is not reviewed either");
+    assert!(std::path::Path::new(&tree.path).exists());
+}

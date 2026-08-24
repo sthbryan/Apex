@@ -429,3 +429,22 @@ fn a_branch_left_behind_still_holds_its_slug() {
 
     assert_eq!(free_slug(dir.path(), "pi"), "pi-2");
 }
+
+#[test]
+fn a_worktree_with_nothing_of_its_own_counts_as_merged() {
+    let dir = repo();
+    let tree = add_worktree(dir.path(), "pi").expect("worktree");
+
+    assert_eq!(unmerged_count(dir.path(), &tree.branch).expect("count"), 0);
+}
+
+#[test]
+fn a_commit_that_never_came_back_is_counted() {
+    let dir = repo();
+    let tree = add_worktree(dir.path(), "pi").expect("worktree");
+    std::fs::write(tree.path.join("note.txt"), "work").expect("write");
+    run(&tree.path, &["add", "."]).expect("add");
+    run(&tree.path, &["commit", "-m", "work"]).expect("commit");
+
+    assert_eq!(unmerged_count(dir.path(), &tree.branch).expect("count"), 1);
+}

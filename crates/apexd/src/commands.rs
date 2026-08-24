@@ -195,6 +195,9 @@ async fn execute(
         Command::WorktreeMerge { project, target } => Ok(Reply::Merge {
             report: manager.merge_worktree(project, target).await.map_err(not_found_error)?,
         }),
+        Command::WorktreePrune { project } => Ok(Reply::Pruned {
+            removed: manager.prune_worktrees(project).await.map_err(not_found_error)?,
+        }),
         Command::WorktreeRemove { project, path, branch } => {
             manager.remove_worktree(project, path, branch).await.map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -497,6 +500,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::GitSync { .. }
             | Command::WorktreeMerge { .. }
             | Command::WorktreeRemove { .. }
+            | Command::WorktreePrune { .. }
             | Command::SessionCreate { .. }
             | Command::OpenView { .. }
             | Command::CloseView { .. }

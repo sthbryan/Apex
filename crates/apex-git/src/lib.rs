@@ -402,6 +402,13 @@ pub fn show(dir: &Path, commit: &str, path: Option<&str>) -> Result<String> {
     run(dir, &args)
 }
 
+pub fn unmerged_count(root: &Path, branch: &str) -> Result<usize> {
+    let base = current_branch(root)?;
+    let range = format!("{base}..{branch}");
+    let raw = run(root, &["rev-list", "--count", &range])?;
+    Ok(raw.trim().parse().unwrap_or(1))
+}
+
 pub fn free_slug(root: &Path, wanted: &str) -> String {
     let taken: Vec<String> =
         branches(root).unwrap_or_default().into_iter().map(|branch| branch.name).collect();

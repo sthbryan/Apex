@@ -885,6 +885,34 @@ impl SessionManager {
         self.git.list_worktrees(&root).await
     }
 
+    pub async fn prune_worktrees(&self, project: Uuid) -> Result<Vec<String>> {
+        let root = PathBuf::from(self.project_root(project).await?);
+        let mut removed = Vec::new();
+        for entry in self.list_worktrees(project).await? {
+            if entry.changed > 0 {
+                continue;
+            }
+            let branch = entry.branch.clone();
+            let unmerged = tokio::task::spawn_blocking({
+                let root = root.clone();
+                move || apex_git::unmerged_count(&root, &branch)
+            })
+            .await?
+            .unwrap_or(1);
+            if unmerged > 0 {
+                continue;
+            }
+            if self
+                .remove_worktree(project, entry.path.clone(), Some(entry.branch.clone()))
+                .await
+                .is_ok()
+            {
+                removed.push(entry.path);
+            }
+        }
+        Ok(removed)
+    }
+
     pub async fn merge_worktree(&self, project: Uuid, target: GitTarget) -> Result<MergeReport> {
         let root = PathBuf::from(self.project_root(project).await?);
         let dir = self.git_dir(project, &target).await?;

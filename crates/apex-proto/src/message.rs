@@ -925,6 +925,10 @@ pub enum Command {
         path: String,
         branch: Option<String>,
     },
+    WorktreePrune {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
     AcpTranscript {
         #[ts(type = "string")]
         id: Uuid,
@@ -982,6 +986,7 @@ pub enum Reply {
     Pending { reviews: Vec<PendingReview> },
     Rejects { rejects: Vec<RejectedHunk> },
     Worktrees { worktrees: Vec<WorktreeEntry> },
+    Pruned { removed: Vec<String> },
     Branches { branches: Vec<GitBranch> },
     Context { entries: Vec<ContextEntry> },
     Tasks { tasks: Vec<TaskSummary> },
