@@ -13,7 +13,7 @@ import {
 import { openReview } from "@/features/review/state";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { stateOf } from "@/features/sessions/dot";
-import { focusSession } from "@/features/workspace/state";
+import { focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 
 export function RaceView({ run }: { run: string }) {
@@ -90,7 +90,15 @@ function Column({ contender, onKeep }: { contender: Contender; onKeep: () => voi
         <div class="flex flex-col items-start gap-1.5">
           <p class="text-faint">{t(`race.${idle(session, dead)}`)}</p>
           {!dead && (
-            <Button size="xs" variant="subtle" onClick={() => focusSession(session.id)}>
+            <Button
+              size="xs"
+              variant="subtle"
+              onClick={() => {
+                if (!focusSession(session.id)) {
+                  openInNewTab(session);
+                }
+              }}
+            >
               {t("race.watch")}
             </Button>
           )}
