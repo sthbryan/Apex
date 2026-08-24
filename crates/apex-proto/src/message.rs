@@ -573,6 +573,7 @@ pub struct MetricsSnapshot {
 pub enum Command {
     Ping,
     DaemonShutdown,
+    DaemonStatus,
     ListAgents,
     ListToolGroups,
     SetToolGroups {
@@ -1002,7 +1003,22 @@ pub enum Reply {
     Wrote { revision: String },
     Metrics { snapshot: MetricsSnapshot },
     Acp { snapshot: AcpSnapshot },
+    Daemon { report: DaemonReport },
     Done,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct DaemonReport {
+    pub daemon_version: String,
+    pub protocol_version: u32,
+    pub uptime: u64,
+    pub idle_grace: u32,
+    pub idle_for: Option<u64>,
+    pub remaining: Option<u64>,
+    pub clients: u32,
+    pub sessions: u32,
+    pub live: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]

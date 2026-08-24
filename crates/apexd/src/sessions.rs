@@ -6,10 +6,11 @@ use std::time::{Duration, Instant};
 use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
 use apex_proto::{
-    ContextEntry, DiffScope, EditorSummary, Event, FileContents, FileEntry, GitBranch, GitCommit,
-    GitStatus, GitSyncOp, GitTarget, HistoryEntry, ImagePair, Isolation, MergeReport,
-    MetricsSnapshot, PendingReview, ProjectSummary, RejectedHunk, SessionState, SessionSummary,
-    TaskSummary, TerminalSize, WorktreeDisposal, WorktreeEntry,
+    ContextEntry, DaemonReport, DiffScope, EditorSummary, Event, FileContents, FileEntry,
+    GitBranch, GitCommit, GitStatus, GitSyncOp, GitTarget, HistoryEntry, IDLE_GRACE_NEVER,
+    ImagePair, Isolation, MergeReport, MetricsSnapshot, PROTOCOL_VERSION, PendingReview,
+    ProjectSummary, RejectedHunk, SessionState, SessionSummary, TaskSummary, TerminalSize,
+    WorktreeDisposal, WorktreeEntry,
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
@@ -521,6 +522,29 @@ impl SessionManager {
 
     pub fn client_count(&self) -> usize {
         self.clients.load(Ordering::SeqCst)
+    }
+
+    pub async fn daemon_report(&self) -> DaemonReport {
+        let sessions = self.list_sessions().await;
+        let live = sessions.iter().filter(|session| session.exit_code.is_none()).count();
+        let grace = self.idle_grace.load(Ordering::Relaxed);
+        let idle_for = self.idle_for().map(|elapsed| elapsed.as_secs());
+        let remaining = if grace == u64::from(IDLE_GRACE_NEVER) {
+            None
+        } else {
+            idle_for.map(|spent| grace.saturating_sub(spent))
+        };
+        DaemonReport {
+            daemon_version: env!("CARGO_PKG_VERSION").to_string(),
+            protocol_version: PROTOCOL_VERSION,
+            uptime: self.uptime().as_secs(),
+            idle_grace: grace.min(u64::from(u32::MAX)) as u32,
+            idle_for,
+            remaining,
+            clients: self.client_count().min(u32::MAX as usize) as u32,
+            sessions: sessions.len().min(u32::MAX as usize) as u32,
+            live: live.min(u32::MAX as usize) as u32,
+        }
     }
 
     pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
