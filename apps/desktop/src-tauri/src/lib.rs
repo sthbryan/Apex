@@ -3,6 +3,7 @@ mod commands;
 #[cfg(target_os = "macos")]
 mod menu;
 mod state;
+mod tray;
 
 use apex_core::ApexPaths;
 use client::DaemonClient;
@@ -40,6 +41,7 @@ pub fn run() {
             }
             #[cfg(target_os = "macos")]
             menu::install(app.handle())?;
+            tray::install(app.handle())?;
             app.manage(AppState {
                 daemon: std::sync::Mutex::new(daemon.ok()),
                 socket: paths.socket,
