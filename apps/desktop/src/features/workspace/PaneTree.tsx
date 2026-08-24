@@ -1,7 +1,7 @@
 import { Pane } from "@apex/ui";
 import cn from "cnfast";
 import { lazy, Suspense } from "preact/compat";
-import { useState } from "preact/hooks";
+import { useCallback, useState } from "preact/hooks";
 
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
@@ -93,9 +93,18 @@ function PaneLeaf({
   });
   const own = node.view.type === "browser";
 
-  const mount = (into: keyof PaneHosts) => (el: HTMLElement | null) => {
-    setHosts((current) => (current[into] === el ? current : { ...current, [into]: el }));
-  };
+  const holdLead = useCallback((el: HTMLElement | null) => {
+    setHosts((current) => ({ ...current, lead: el }));
+  }, []);
+  const holdTitle = useCallback((el: HTMLElement | null) => {
+    setHosts((current) => ({ ...current, title: el }));
+  }, []);
+  const holdSub = useCallback((el: HTMLElement | null) => {
+    setHosts((current) => ({ ...current, sub: el }));
+  }, []);
+  const holdControls = useCallback((el: HTMLElement | null) => {
+    setHosts((current) => ({ ...current, controls: el }));
+  }, []);
 
   return (
     <Pane
@@ -110,7 +119,7 @@ function PaneLeaf({
       onMouseDown={() => focusLeaf(tabId, node.id)}
       lead={
         own ? (
-          <span ref={mount("lead")} class="flex flex-none items-center gap-0.5" />
+          <span ref={holdLead} class="flex flex-none items-center gap-0.5" />
         ) : (
           <Icon
             name={paneIcon(node.view)}
@@ -121,7 +130,7 @@ function PaneLeaf({
       }
       title={
         own ? (
-          <span ref={mount("title")} class="flex min-w-0 flex-1 items-center" />
+          <span ref={holdTitle} class="flex min-w-0 flex-1 items-center" />
         ) : (
           paneTitle(node.view, allSessions.value)
         )
@@ -129,10 +138,10 @@ function PaneLeaf({
       sub={
         <>
           {own ? null : paneSubtitle(node.view)}
-          <span ref={mount("sub")} class="contents" />
+          <span ref={holdSub} class="contents" />
         </>
       }
-      controls={<span ref={mount("controls")} class="contents" />}
+      controls={<span ref={holdControls} class="contents" />}
       actions={<PaneActions tabId={tabId} leaf={node} focused={focused} />}
     >
       <PaneSlots.Provider value={hosts}>
