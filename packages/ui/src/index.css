@@ -30,6 +30,7 @@
 @import "./molecules/notice/notice.css";
 @import "./molecules/process-row/process-row.css";
 @import "./molecules/section-label/section-label.css";
+@import "./molecules/menu/menu.css";
 @import "./molecules/segmented/segmented.css";
 @import "./molecules/slider/slider.css";
 @import "./molecules/state-pill/state-pill.css";

@@ -20,6 +20,7 @@ import { cardMeta } from "@/molecules/card/meta";
 import { dataRowMeta } from "@/molecules/data-row/meta";
 import { fieldMeta } from "@/molecules/field/meta";
 import { listRowMeta } from "@/molecules/list-row/meta";
+import { menuMeta } from "@/molecules/menu/meta";
 import { meterMeta } from "@/molecules/meter/meta";
 import { noticeMeta } from "@/molecules/notice/meta";
 import { processRowMeta } from "@/molecules/process-row/meta";
@@ -81,6 +82,7 @@ export const REGISTRY: ComponentMeta[] = [
   dataRowMeta,
   fieldMeta,
   listRowMeta,
+  menuMeta,
   meterMeta,
   noticeMeta,
   processRowMeta,

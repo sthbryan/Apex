@@ -3,6 +3,7 @@ export * from "@/molecules/card";
 export * from "@/molecules/data-row";
 export * from "@/molecules/field";
 export * from "@/molecules/list-row";
+export * from "@/molecules/menu";
 export * from "@/molecules/meter";
 export * from "@/molecules/project-button";
 export * from "@/molecules/readout";

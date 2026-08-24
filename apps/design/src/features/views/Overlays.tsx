@@ -1,10 +1,11 @@
-import { Toast, ToastStack } from "@apex/ui";
+import { Menu, MenuItem, MenuSeparator, Toast, ToastStack } from "@apex/ui";
 import { SettingsModal } from "@/features/workspace/Settings";
 import { Launcher, Palette } from "@/features/workspace/Workspace";
 import {
   NotificationsPop, ProjectsPop, ResourcesPop, TargetPop, UsagePop,
 } from "@/features/workspace/Pops";
 import { AgentIcon } from "@apex/ui";
+import { ArrowLeftRight, Columns2, ExternalLink, Rows2, X } from "lucide-preact";
 
 export interface Overlay {
   id: string;
@@ -22,6 +23,19 @@ function Toasts() {
       <Toast title="Build failed" detail="exit 1" tone="failed"
         lead={<AgentIcon agent="claude" size="sm" />} onDismiss={() => {}} />
     </ToastStack>
+  );
+}
+
+function PaneMenu() {
+  return (
+    <Menu label="Pane">
+      <MenuItem lead={<Columns2 size={12} />}>Split right</MenuItem>
+      <MenuItem lead={<Rows2 size={12} />}>Split down</MenuItem>
+      <MenuItem lead={<ArrowLeftRight size={12} />}>Swap with the sibling</MenuItem>
+      <MenuItem lead={<ExternalLink size={12} />}>Move to a tab</MenuItem>
+      <MenuSeparator />
+      <MenuItem lead={<X size={12} />} danger hint="⌘W">Close the pane</MenuItem>
+    </Menu>
   );
 }
 
@@ -50,6 +64,7 @@ export const OVERLAYS: Overlay[] = [
     Live: ({ open, onClose }) => <Launcher open={open} onClose={onClose} />,
   },
   { id: "toasts", label: "Toasts", kind: "overlay", Component: Toasts },
+  { id: "menu", label: "Right click", kind: "popover", Component: PaneMenu },
   { id: "usage", label: "Usage", kind: "popover", Component: () => <UsagePop open onClose={noop} /> },
   { id: "resources", label: "Resources", kind: "popover", Component: () => <ResourcesPop open onClose={noop} /> },
   { id: "notifications", label: "Notifications", kind: "popover", Component: () => <NotificationsPop open onClose={noop} /> },

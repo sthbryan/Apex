@@ -1,0 +1,51 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-menu {
+    @apply flex min-w-44 flex-col gap-px overflow-y-auto rounded-md border border-border p-1;
+    max-width: 20rem;
+    max-height: 70vh;
+    z-index: var(--apex-z-overlay);
+    background-color: var(--apex-overlay);
+    box-shadow: var(--apex-shadow-lg);
+    backdrop-filter: blur(var(--apex-glass-blur)) saturate(var(--apex-glass-saturate));
+    animation: apex-pop-in var(--apex-quick) var(--apex-ease-out) both;
+  }
+
+  .ui-menu-item {
+    @apply flex w-full flex-none items-center gap-2 rounded-xs px-2 py-1 text-left text-sm;
+  }
+
+  .ui-menu-item:hover:not(:disabled) {
+    background-color: var(--apex-raised);
+  }
+
+  .ui-menu-item:disabled {
+    @apply opacity-40;
+  }
+
+  .ui-menu-item[data-danger] {
+    color: var(--apex-state-failed);
+  }
+
+  .ui-menu-lead {
+    @apply flex size-3.5 flex-none items-center justify-center text-faint;
+  }
+
+  .ui-menu-item[data-danger] .ui-menu-lead {
+    color: inherit;
+  }
+
+  .ui-menu-name {
+    @apply min-w-0 flex-1 truncate;
+  }
+
+  .ui-menu-hint {
+    @apply flex-none pl-3 font-mono text-2xs text-faint;
+  }
+
+  .ui-menu-rule {
+    @apply my-1 h-px flex-none;
+    background-color: var(--apex-border);
+  }
+}
