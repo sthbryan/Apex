@@ -18,7 +18,7 @@ apex-proto.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = { version = "2", features = ["macos-private-api", "tray-icon", "unstable"] }
+tauri = { version = "2", features = ["image-png", "macos-private-api", "tray-icon", "unstable"] }
 tokio.workspace = true
 uuid.workspace = true
 tracing.workspace = true
