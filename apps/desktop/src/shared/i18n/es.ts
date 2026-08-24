@@ -175,9 +175,8 @@ export const es: Messages = {
     agentNoAcp: "{agent} no habla ACP, así que Apex solo puede manejarlo como terminal.",
     agentEnabled: "Ofrecer {agent} al abrir una sesión",
     groupTools: "Herramientas",
-    groupToolsSub: "Qué le pueden pedir los agentes a Apex",
-    toolsHint:
-      "Todos los agentes reciben estas. Apagar una la esconde de las sesiones que arranquen después del cambio, no de las que ya corren.",
+    groupToolsSub:
+      "Qué le puede pedir cada agente a Apex. Los cambios llegan a las sesiones que arranquen después, no a las que ya corren.",
     toolObservation: "Ver a los demás",
     toolObservationSub: "listar sesiones, leer su salida, dejar notas",
     toolOrchestration: "Arrancar y dirigir agentes",
@@ -186,8 +185,6 @@ export const es: Messages = {
     toolViewsSub: "pedirle a Apex que muestre una sesión, una URL o un diff",
     toolBrowser: "Leer el navegador",
     toolBrowserSub: "listar paneles, leer la consola, sacar una captura",
-    toolAlwaysOn:
-      "El contexto compartido, dar por terminada una tarea y leer el worktree siempre están.",
     idleGrace: "Tiempo del daemon en fondo",
     idleGraceHint:
       "Cuánto tiempo sigue el daemon después de cerrar Apex. Después de esto se apaga y los agentes paran. Cierra y reabre dentro de la ventana para reanudar las sesiones.",

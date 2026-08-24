@@ -174,9 +174,8 @@ export const en = {
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",
     agentEnabled: "Offer {agent} when starting a session",
     groupTools: "Tools",
-    groupToolsSub: "What agents can ask Apex to do",
-    toolsHint:
-      "Every agent gets these. Turning one off hides it from the sessions started after the change, not from the ones already running.",
+    groupToolsSub:
+      "What every agent can ask Apex to do. Changes reach the sessions started after them, not the ones already running.",
     toolObservation: "Watch the others",
     toolObservationSub: "list sessions, read their output, leave notes",
     toolOrchestration: "Start and steer agents",
@@ -185,7 +184,6 @@ export const en = {
     toolViewsSub: "ask Apex to show a session, a URL or a diff",
     toolBrowser: "Read the browser",
     toolBrowserSub: "list panes, read the console, take a shot",
-    toolAlwaysOn: "Shared context, finishing a task and reading the worktree are always on.",
     idleGrace: "Daemon background time",
     idleGraceHint:
       "How long the daemon keeps running after you close Apex. After this it shuts down and your agents stop. Close and reopen within the window to resume sessions.",

@@ -467,12 +467,6 @@ export function toolsSection(): Section {
         />
       ),
     })),
-    panel: (
-      <div class="flex flex-col gap-2 px-3 pb-2">
-        <p class="text-xs opacity-60">{t("settings.toolsHint")}</p>
-        <p class="text-xs opacity-60">{t("settings.toolAlwaysOn")}</p>
-      </div>
-    ),
   };
 }
 
