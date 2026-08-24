@@ -5,7 +5,7 @@ import { DockOrder } from "@/features/settings/DockOrder";
 import { render } from "@/test/render";
 
 function rowsOf(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>("li[data-seat]"));
+  return Array.from(container.querySelectorAll<HTMLElement>("[data-seat]"));
 }
 
 function tap(row: HTMLElement, key: string): void {

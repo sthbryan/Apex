@@ -96,23 +96,25 @@ export function DockOrder() {
         const id = row as DockPanel;
         const tabbed = index > rows.indexOf(LINE);
         return (
-          <li
-            key={row}
-            data-seat
-            tabIndex={0}
-            title={t("settings.sidebarDrag")}
-            data-held={held === row || undefined}
-            onMouseDown={(event) => grab(row, index, event)}
-            onKeyDown={(event) => nudge(row, index, event)}
-            class={cn(
-              "relative flex cursor-grab select-none items-center gap-1.5 rounded px-1 py-0.5 outline-none focus-visible:bg-raised",
-              tabbed ? "text-faint" : "text-text",
-              held === row && "opacity-40",
-            )}
-          >
-            {marker}
-            <Icon name={DOCK_PANELS[id].icon} class={tabbed ? undefined : "text-faint"} />
-            <span class="min-w-0 flex-1 truncate">{DOCK_PANELS[id].label()}</span>
+          <li key={row}>
+            <div
+              data-seat
+              role="button"
+              tabIndex={0}
+              title={t("settings.sidebarDrag")}
+              data-held={held === row || undefined}
+              onMouseDown={(event) => grab(row, index, event)}
+              onKeyDown={(event) => nudge(row, index, event)}
+              class={cn(
+                "relative flex cursor-grab select-none items-center gap-1.5 rounded px-1 py-0.5 outline-none focus-visible:bg-raised",
+                tabbed ? "text-faint" : "text-text",
+                held === row && "opacity-40",
+              )}
+            >
+              {marker}
+              <Icon name={DOCK_PANELS[id].icon} class={tabbed ? undefined : "text-faint"} />
+              <span class="min-w-0 flex-1 truncate">{DOCK_PANELS[id].label()}</span>
+            </div>
           </li>
         );
       })}
