@@ -44,17 +44,20 @@ export function setDockPanel(panel: DockPanel): void {
   }
 }
 
-export function moveDockPanel(id: DockPanel, delta: number): void {
+export function settleDockPanel(id: DockPanel, to: number): void {
   const order = [...dockOrder.value];
   const from = order.indexOf(id);
-  const to = from + delta;
-  if (from < 0 || to < 0 || to >= order.length) {
+  if (from < 0 || to < 0 || to >= order.length || to === from) {
     return;
   }
   const [item] = order.splice(from, 1);
   order.splice(to, 0, item);
   dockOrder.value = order;
   persistOrder();
+}
+
+export function moveDockPanel(id: DockPanel, delta: number): void {
+  settleDockPanel(id, dockOrder.value.indexOf(id) + delta);
 }
 
 export function placePanelInDock(id: DockPanel, before?: DockPanel): void {
