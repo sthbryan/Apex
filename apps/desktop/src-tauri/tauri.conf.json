@@ -25,7 +25,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ2NDhGQzY4OTExRjY4MjYKUldRbWFCK1JhUHhJUnJHMDF5Mmo4Z0FUaG5teW1XRU5jcTBLbWpKeWQydlNyWVhFTStMNjVWTzgK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlFRUI4MEJCMzZFQjU1MkYKUldRdlZlczJ1NERybms4bS9BUFMxclZ1c2lLc1BWcVdDQlpDckt5cE5xL1pDUzJ2NnduMDRIc3QK",
       "endpoints": [
         "https://github.com/sthbryan/Apex/releases/latest/download/latest.json"
       ]
