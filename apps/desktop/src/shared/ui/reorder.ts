@@ -22,6 +22,7 @@ export function useReorder(settle: (id: string, seat: number) => void): Reorder 
       const origin = event.clientY;
       let lifted = false;
       let landing = from;
+      document.body.style.userSelect = "none";
 
       const drag = (moved: MouseEvent) => {
         if (!lifted && Math.abs(moved.clientY - origin) < SLACK) {
@@ -31,7 +32,7 @@ export function useReorder(settle: (id: string, seat: number) => void): Reorder 
           lifted = true;
           setHeld(id);
           document.body.style.cursor = "grabbing";
-          document.body.style.userSelect = "none";
+          document.getSelection()?.removeAllRanges();
         }
         landing = seatOf(seatsOf(list), moved.clientY, from);
         setSeat(landing);

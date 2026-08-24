@@ -125,6 +125,20 @@ describe("useReorder", () => {
     expect(list?.dataset.seatNow).toBe("");
   });
 
+  it("blocks text selection from the first pixel of a press", () => {
+    const settle = vi.fn();
+    const { container } = render(<List settle={settle} />);
+    const rows = measured(container);
+
+    press(rows[0], 10);
+
+    expect(document.body.style.userSelect).toBe("none");
+
+    release();
+
+    expect(document.body.style.userSelect).toBe("");
+  });
+
   it("swallows the click that ends a drag", () => {
     const settle = vi.fn();
     const { container } = render(<List settle={settle} />);

@@ -83,7 +83,7 @@ export function DockOrder() {
             <li
               key={row}
               data-seat
-              class="relative flex items-center gap-2 py-1.5 text-faint text-xs"
+              class="relative flex select-none items-center gap-2 py-1.5 text-faint text-xs"
             >
               {marker}
               <span class="h-px flex-1 bg-border" />
@@ -105,7 +105,7 @@ export function DockOrder() {
             onMouseDown={(event) => grab(row, index, event)}
             onKeyDown={(event) => nudge(row, index, event)}
             class={cn(
-              "relative flex cursor-grab items-center gap-1.5 rounded px-1 py-0.5 outline-none focus-visible:bg-raised",
+              "relative flex cursor-grab select-none items-center gap-1.5 rounded px-1 py-0.5 outline-none focus-visible:bg-raised",
               tabbed ? "text-faint" : "text-text",
               held === row && "opacity-40",
             )}
