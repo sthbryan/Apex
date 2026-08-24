@@ -1,5 +1,6 @@
 import {
   DataRow,
+  Field,
   IdentityCard,
   KbdGroup,
   SectionLabel,
@@ -75,6 +76,7 @@ import {
   type OptionalGroup,
   setGroupOn,
 } from "@/features/settings/toolGroups";
+import { autoUpdate, setAutoUpdate } from "@/features/updates/state";
 import { UpdateAction, UpdateNote } from "@/features/updates/UpdateAction";
 import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
@@ -502,12 +504,22 @@ export function daemonSection(): Section {
 
 export function aboutSection(appVersion: string): Section {
   const linked = daemonVersion.value !== null;
+  const auto = (
+    <Switch label={t("settings.updateAuto")} checked={autoUpdate.value} onChange={setAutoUpdate} />
+  );
   return {
     id: "about",
     label: t("settings.about"),
     sub: t("settings.aboutSub"),
     icon: "help",
-    entries: [],
+    entries: [
+      {
+        id: "autoUpdate",
+        label: t("settings.updateAuto"),
+        hint: t("settings.updateAutoHint"),
+        control: auto,
+      },
+    ],
     panel: (
       <div class="flex flex-col gap-3">
         <IdentityCard
@@ -523,6 +535,9 @@ export function aboutSection(appVersion: string): Section {
           note={<UpdateNote />}
           action={<UpdateAction />}
         />
+        <Field label={t("settings.updateAuto")} hint={t("settings.updateAutoHint")}>
+          {auto}
+        </Field>
         <div class="flex flex-col">
           <DataRow
             label="apexd"

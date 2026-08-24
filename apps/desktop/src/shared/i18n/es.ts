@@ -210,6 +210,8 @@ export const es: Messages = {
     updateReady: "La versión {version} está lista. Reiniciá para terminar.",
     updateRestart: "Reiniciar ahora",
     updateFailed: "No se pudo contactar al servidor de actualizaciones.",
+    updateAuto: "Descargar actualizaciones automáticamente",
+    updateAutoHint: "Baja la versión nueva en segundo plano y sólo te queda reiniciar.",
   },
   shortcuts: {
     title: "Atajos de teclado",

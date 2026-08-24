@@ -24,6 +24,7 @@ import { applyAppearance } from "@/features/settings/appearance";
 import { Settings } from "@/features/settings/Settings";
 import { loadToolGroups } from "@/features/settings/toolGroups";
 import { startPeeking } from "@/features/tasks/state";
+import { watchForUpdates } from "@/features/updates/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
 import { activeSessionId } from "@/features/workspace/state";
@@ -44,6 +45,8 @@ export function App() {
       .then(adoptAgents)
       .then(loadToolGroups)
       .then(warnBlockedAgents);
+
+    void watchForUpdates();
 
     let stopNotifications: (() => void) | undefined;
     void startNotifications().then((stop) => {

@@ -209,6 +209,8 @@ export const en = {
     updateReady: "Version {version} is ready. Restart to finish.",
     updateRestart: "Restart now",
     updateFailed: "Could not reach the update server.",
+    updateAuto: "Download updates automatically",
+    updateAutoHint: "Fetch a new version in the background so only the restart is left to you.",
   },
   shortcuts: {
     title: "Keyboard shortcuts",

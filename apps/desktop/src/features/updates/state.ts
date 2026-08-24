@@ -18,6 +18,23 @@ export const offered = signal<Offer | null>(null);
 export const progress = signal(0);
 export const failure = signal<string | null>(null);
 
+const AUTO_KEY = "apex.autoUpdate";
+
+function restoreAuto(): boolean {
+  try {
+    return localStorage.getItem(AUTO_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+export const autoUpdate = signal(restoreAuto());
+
+export function setAutoUpdate(next: boolean): void {
+  autoUpdate.value = next;
+  localStorage.setItem(AUTO_KEY, next ? "on" : "off");
+}
+
 let pending: Update | null = null;
 
 function settled(): boolean {
@@ -96,4 +113,18 @@ export function forgetUpdate(): void {
   progress.value = 0;
   failure.value = null;
   stage.value = "idle";
+}
+
+export async function watchForUpdates(): Promise<void> {
+  const found = await lookForUpdate();
+  if (!found) {
+    if (stage.value === "failed") {
+      failure.value = null;
+      stage.value = "idle";
+    }
+    return;
+  }
+  if (autoUpdate.value) {
+    await fetchUpdate();
+  }
 }
