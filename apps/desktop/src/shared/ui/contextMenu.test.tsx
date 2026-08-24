@@ -1,5 +1,6 @@
+import { act } from "preact/test-utils";
 import { describe, expect, it } from "vitest";
-import { ContextMenu, editable, openMenu } from "@/shared/ui/ContextMenu";
+import { ContextMenu, closeMenu, editable, openMenu } from "@/shared/ui/ContextMenu";
 import { render } from "@/test/render";
 
 function fire(target: Element): MouseEvent {
@@ -44,5 +45,25 @@ describe("ContextMenu", () => {
     openMenu(new MouseEvent("contextmenu", { cancelable: true }), []);
 
     expect(container.querySelector(".ui-menu")).toBeNull();
+  });
+});
+
+describe("the open menu", () => {
+  it("floats on the body, above whatever the pane stacks", () => {
+    render(<ContextMenu />);
+    const target = document.createElement("div");
+    document.body.append(target);
+    act(() => {
+      openMenu(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }), [
+        { label: "Close the pane", run: () => {} },
+      ]);
+    });
+
+    const float = document.body.querySelector(".ui-menu-float");
+    expect(float?.parentElement).toBe(document.body);
+    expect(float?.querySelector(".ui-menu")?.textContent).toContain("Close the pane");
+
+    closeMenu();
+    target.remove();
   });
 });

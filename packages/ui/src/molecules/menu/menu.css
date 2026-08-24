@@ -5,11 +5,15 @@
     @apply flex min-w-44 flex-col gap-px overflow-y-auto rounded-md border border-border p-1;
     max-width: 20rem;
     max-height: 70vh;
-    z-index: var(--apex-z-overlay);
     background-color: var(--apex-overlay);
     box-shadow: var(--apex-shadow-lg);
     backdrop-filter: blur(var(--apex-glass-blur)) saturate(var(--apex-glass-saturate));
     animation: apex-pop-in var(--apex-quick) var(--apex-ease-out) both;
+  }
+
+  .ui-menu-float {
+    @apply fixed;
+    z-index: var(--apex-z-modal);
   }
 
   .ui-menu-item {

@@ -1,5 +1,6 @@
 import { Menu, MenuItem, MenuSeparator } from "@apex/ui";
 import { signal } from "@preact/signals";
+import { createPortal } from "preact/compat";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import { Icon, type IconName } from "@/shared/ui/Icon";
@@ -106,8 +107,8 @@ function Floating({ at }: { at: Opened }) {
     };
   }, []);
 
-  return (
-    <div ref={box} class="fixed" style={{ left: `${spot.left}px`, top: `${spot.top}px` }}>
+  return createPortal(
+    <div ref={box} class="ui-menu-float" style={{ left: `${spot.left}px`, top: `${spot.top}px` }}>
       <Menu>
         {at.entries.map((entry, index) =>
           entry.rule ? (
@@ -129,6 +130,7 @@ function Floating({ at }: { at: Opened }) {
           ),
         )}
       </Menu>
-    </div>
+    </div>,
+    document.body,
   );
 }
