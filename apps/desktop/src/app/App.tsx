@@ -22,6 +22,7 @@ import { sessions } from "@/features/sessions/state";
 import { adoptAgents, applyIdleGrace, enabledAgents } from "@/features/settings/agentMode";
 import { applyAppearance } from "@/features/settings/appearance";
 import { Settings } from "@/features/settings/Settings";
+import { loadToolGroups } from "@/features/settings/toolGroups";
 import { startPeeking } from "@/features/tasks/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
@@ -35,7 +36,12 @@ import { watchFullscreen } from "@/shared/window";
 export function App() {
   useEffect(() => {
     document.documentElement.lang = locale.value;
-    void connect().then(loadProjects).then(loadEditors).then(applyIdleGrace).then(adoptAgents);
+    void connect()
+      .then(loadProjects)
+      .then(loadEditors)
+      .then(applyIdleGrace)
+      .then(adoptAgents)
+      .then(loadToolGroups);
 
     let stopNotifications: (() => void) | undefined;
     void startNotifications().then((stop) => {

@@ -65,6 +65,7 @@ import {
   SquareTerminal,
   Sun,
   Undo2,
+  Wrench,
   X,
 } from "lucide-preact";
 
@@ -95,6 +96,7 @@ const ICONS = {
   send: Send,
   inbox: Inbox,
   combine: Combine,
+  wrench: Wrench,
   move: MoveHorizontal,
   context: BookMarked,
   play: CirclePlay,

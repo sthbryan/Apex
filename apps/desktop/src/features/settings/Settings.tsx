@@ -11,6 +11,7 @@ import {
   lookSection,
   shortcutsSection,
   spaceSection,
+  toolsSection,
 } from "@/features/settings/sections";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -30,6 +31,7 @@ export function Settings() {
     lookSection(),
     spaceSection(),
     agentsSection(),
+    toolsSection(),
     daemonSection(),
     shortcutsSection(),
     aboutSection(appVersion),
