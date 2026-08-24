@@ -29,10 +29,12 @@ const SETTLE_AFTER_PAINT: std::time::Duration = std::time::Duration::from_millis
 const BEFORE_ENTER: std::time::Duration = std::time::Duration::from_millis(150);
 const BLOCKED_GRACE: std::time::Duration = std::time::Duration::from_secs(300);
 const POLL_WHILE_BLOCKED: std::time::Duration = std::time::Duration::from_millis(200);
-const ECHO_GRACE: std::time::Duration = std::time::Duration::from_secs(6);
+const ECHO_GRACE: std::time::Duration = std::time::Duration::from_secs(4);
 const ECHO_POLL: std::time::Duration = std::time::Duration::from_millis(250);
-const TYPING_TRIES: u32 = 6;
+const TYPING_TRIES: u32 = 3;
+const BLOCKED_TRIES: u32 = 4;
 const PROBE_LEN: usize = 16;
+const TRACE_LEN: usize = 4;
 pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
 
 pub struct NewSession {
@@ -536,16 +538,27 @@ impl SessionManager {
     async fn type_into(&self, id: Uuid, text: &str) -> Result<()> {
         let typed = text.replace(['\n', '\r'], " ");
         let probe = probe_of(&typed);
-        for _ in 1..=TYPING_TRIES {
+        let trace: String = probe.chars().take(TRACE_LEN).collect();
+        let mut retyped = 0;
+        let mut unblocked = 0;
+        loop {
             self.write(id, &typed).await?;
             if self.await_echo(id, &probe).await {
                 tokio::time::sleep(BEFORE_ENTER).await;
                 return self.write(id, "\r").await;
             }
-            if !self.blocked_now(id).await {
+            if unblocked < BLOCKED_TRIES && self.blocked_now(id).await {
+                unblocked += 1;
+                self.await_unblocked(id).await;
+                continue;
+            }
+            if self.echoed(id, &trace).await {
                 break;
             }
-            self.await_unblocked(id).await;
+            retyped += 1;
+            if retyped >= TYPING_TRIES {
+                break;
+            }
         }
         bail!("never saw the task appear on screen, it is showing: {}", self.on_screen(id).await)
     }
