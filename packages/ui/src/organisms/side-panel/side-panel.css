@@ -27,7 +27,7 @@
 
   .ui-side-panel-inner {
     @apply flex min-h-0 flex-1 flex-col;
-    width: var(--ui-side-panel-width, var(--apex-dock-width));
+    width: calc(var(--ui-side-panel-width, var(--apex-dock-width)) - 1px);
   }
 
   .ui-side-panel[data-side="right"] {
