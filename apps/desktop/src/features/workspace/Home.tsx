@@ -47,8 +47,7 @@ export function Home() {
 
   const racing = mode === "race";
   const chosen = picked.filter((name) => runnable.some((agent) => agent.name === name));
-  const ready =
-    project !== null && task.trim().length > 0 && chosen.length >= (racing ? 2 : 1);
+  const ready = project !== null && task.trim().length > 0 && chosen.length >= (racing ? 2 : 1);
 
   const pick = (name: string) => {
     if (!racing) {
@@ -74,6 +73,9 @@ export function Home() {
     }
     const text = task.trim();
     setTask("");
+    setMode("session");
+    setIsolate(false);
+    setPicked(remembered(runnable.map((agent) => agent.name)));
 
     if (racing) {
       void raceSession(project.id, chosen, text, chosen.filter(runsUnattended))
