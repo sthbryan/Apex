@@ -10,9 +10,9 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
+    "rootDir": "src",
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
+    "paths": { "@/*": ["./src/*"] },
     "verbatimModuleSyntax": true
   },
   "include": ["src"]

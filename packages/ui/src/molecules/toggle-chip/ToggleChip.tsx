@@ -29,12 +29,19 @@ export function ToggleChip({ pressed, size = "md", iconOnly, lead, trail, class:
 
 export interface ToggleChipGroupProps extends Omit<JSX.IntrinsicElements["div"], "ref"> {
   label: string;
+  scroll?: boolean;
   children?: ComponentChildren;
 }
 
-export function ToggleChipGroup({ label, class: className, children, ...rest }: ToggleChipGroupProps) {
+export function ToggleChipGroup({ label, scroll, class: className, children, ...rest }: ToggleChipGroupProps) {
   return (
-    <div class={cn("ui-toggle-chip-group", className as string)} role="group" aria-label={label} {...rest}>
+    <div
+      class={cn("ui-toggle-chip-group", className as string)}
+      data-scroll={scroll || undefined}
+      role="group"
+      aria-label={label}
+      {...rest}
+    >
       {children}
     </div>
   );

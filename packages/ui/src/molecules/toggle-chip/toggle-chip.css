@@ -37,4 +37,17 @@
   .ui-toggle-chip-group {
     @apply flex flex-wrap items-center gap-1.5;
   }
+
+  .ui-toggle-chip-group[data-scroll] {
+    @apply flex-nowrap overflow-x-auto;
+    scrollbar-width: none;
+  }
+
+  .ui-toggle-chip-group[data-scroll]::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ui-toggle-chip-group[data-scroll] > * {
+    @apply shrink-0;
+  }
 }
