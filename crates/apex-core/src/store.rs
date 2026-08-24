@@ -11,6 +11,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/0002_projects.sql"),
     include_str!("migrations/0003_worktrees.sql"),
     include_str!("migrations/0004_agent_tools.sql"),
+    include_str!("migrations/0005_settings.sql"),
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -162,25 +163,21 @@ impl Store {
             .optional()?)
     }
 
-    pub fn save_tools_off(&self, agent: &str, groups: &[ToolGroup]) -> Result<()> {
+    pub fn save_tools_off(&self, groups: &[ToolGroup]) -> Result<()> {
         let payload = serde_json::to_string(groups)?;
         self.connection.execute(
-            "INSERT INTO agent_tools (agent, tools_off, updated_at)
-             VALUES (?1, ?2, unixepoch())
-             ON CONFLICT(agent) DO UPDATE SET tools_off = ?2, updated_at = unixepoch()",
-            params![agent, payload],
+            "INSERT INTO settings (key, value, updated_at)
+             VALUES ('tools_off', ?1, unixepoch())
+             ON CONFLICT(key) DO UPDATE SET value = ?1, updated_at = unixepoch()",
+            params![payload],
         )?;
         Ok(())
     }
 
-    pub fn tools_off(&self, agent: &str) -> Result<Vec<ToolGroup>> {
+    pub fn tools_off(&self) -> Result<Vec<ToolGroup>> {
         let payload: Option<String> = self
             .connection
-            .query_row(
-                "SELECT tools_off FROM agent_tools WHERE agent = ?1",
-                params![agent],
-                |row| row.get(0),
-            )
+            .query_row("SELECT value FROM settings WHERE key = 'tools_off'", [], |row| row.get(0))
             .optional()?;
         let Some(payload) = payload else { return Ok(Vec::new()) };
         Ok(serde_json::from_str(&payload).unwrap_or_default())
