@@ -365,12 +365,11 @@ async fn a_plain_transcript_carries_no_terminal_codes() {
 }
 
 #[tokio::test]
-async fn a_new_session_carries_the_groups_its_agent_starts_without() {
+async fn a_new_session_carries_the_tool_groups_that_are_off() {
     let harness = Harness::start().await;
     let mut client = harness.client().await;
     client
-        .request(Command::SetAgentTools {
-            agent: "sh".into(),
+        .request(Command::SetToolGroups {
             tools_off: vec![ToolGroup::Browser, ToolGroup::Orchestration],
         })
         .await;
@@ -387,9 +386,7 @@ async fn a_session_started_earlier_keeps_the_groups_it_was_born_with() {
     let session = client.create_shell(harness.project).await;
     assert!(session.tools_off.is_empty());
 
-    client
-        .request(Command::SetAgentTools { agent: "sh".into(), tools_off: vec![ToolGroup::Browser] })
-        .await;
+    client.request(Command::SetToolGroups { tools_off: vec![ToolGroup::Browser] }).await;
 
     let Reply::Sessions { sessions } = client.request(Command::ListSessions).await else {
         panic!("expected sessions")
@@ -399,19 +396,18 @@ async fn a_session_started_earlier_keeps_the_groups_it_was_born_with() {
 }
 
 #[tokio::test]
-async fn the_agent_listing_reports_the_groups_that_are_off() {
+async fn the_tool_groups_that_are_off_are_reported_back() {
     let harness = Harness::start().await;
     let mut client = harness.client().await;
-    client
-        .request(Command::SetAgentTools { agent: "sh".into(), tools_off: vec![ToolGroup::Views] })
-        .await;
-
-    let Reply::Agents { agents } = client.request(Command::ListAgents).await else {
-        panic!("expected agents")
+    let Reply::ToolGroups { tools_off } = client.request(Command::ListToolGroups).await else {
+        panic!("expected tool groups")
     };
-    let sh = agents.iter().find(|agent| agent.name == "sh").expect("the sh agent");
-    assert_eq!(sh.tools_off, vec![ToolGroup::Views]);
-    assert!(
-        agents.iter().filter(|agent| agent.name != "sh").all(|agent| agent.tools_off.is_empty())
-    );
+    assert!(tools_off.is_empty());
+
+    client.request(Command::SetToolGroups { tools_off: vec![ToolGroup::Views] }).await;
+
+    let Reply::ToolGroups { tools_off } = client.request(Command::ListToolGroups).await else {
+        panic!("expected tool groups")
+    };
+    assert_eq!(tools_off, vec![ToolGroup::Views]);
 }

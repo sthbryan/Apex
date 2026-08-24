@@ -133,12 +133,12 @@ impl SessionManager {
         self.registry.list_agents().await
     }
 
-    pub async fn set_agent_tools(
-        &self,
-        agent: &str,
-        groups: &[apex_proto::ToolGroup],
-    ) -> anyhow::Result<()> {
-        self.registry.set_agent_tools(agent, groups).await
+    pub async fn tool_groups_off(&self) -> Vec<apex_proto::ToolGroup> {
+        self.registry.tool_groups_off().await
+    }
+
+    pub async fn set_tool_groups(&self, groups: &[apex_proto::ToolGroup]) -> anyhow::Result<()> {
+        self.registry.set_tool_groups(groups).await
     }
 
     pub async fn list_sessions(&self) -> Vec<SessionSummary> {

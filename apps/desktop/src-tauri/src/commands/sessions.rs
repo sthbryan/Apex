@@ -15,12 +15,19 @@ pub async fn list_agents(state: tauri::State<'_, AppState>) -> Answer<Vec<AgentS
 }
 
 #[tauri::command]
-pub async fn set_agent_tools(
+pub async fn list_tool_groups(state: tauri::State<'_, AppState>) -> Answer<Vec<ToolGroup>> {
+    match state.daemon()?.request(Command::ListToolGroups).await.map_err(failed)? {
+        Reply::ToolGroups { tools_off } => Ok(tools_off),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+pub async fn set_tool_groups(
     state: tauri::State<'_, AppState>,
-    agent: String,
     tools_off: Vec<ToolGroup>,
 ) -> Answer<()> {
-    state.daemon()?.request(Command::SetAgentTools { agent, tools_off }).await.map_err(failed)?;
+    state.daemon()?.request(Command::SetToolGroups { tools_off }).await.map_err(failed)?;
     Ok(())
 }
 

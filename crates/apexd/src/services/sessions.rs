@@ -127,20 +127,18 @@ impl SessionRegistry {
     }
 
     pub async fn list_agents(&self) -> Vec<AgentSummary> {
-        let mut agents = {
-            let mut resolver = self.resolver.lock().await;
-            self.profiles.summarize(&mut resolver)
-        };
-        let store = self.store.lock().await;
-        for agent in &mut agents {
-            agent.tools_off = store.tools_off(&agent.name).unwrap_or_default();
-        }
-        agents
+        let mut resolver = self.resolver.lock().await;
+        self.profiles.summarize(&mut resolver)
     }
 
-    pub async fn set_agent_tools(&self, agent: &str, groups: &[ToolGroup]) -> Result<()> {
+    pub async fn tool_groups_off(&self) -> Vec<ToolGroup> {
         let store = self.store.lock().await;
-        store.save_tools_off(agent, groups)
+        store.tools_off().unwrap_or_default()
+    }
+
+    pub async fn set_tool_groups(&self, groups: &[ToolGroup]) -> Result<()> {
+        let store = self.store.lock().await;
+        store.save_tools_off(groups)
     }
 
     pub async fn list_sessions(&self) -> Vec<SessionSummary> {
@@ -358,7 +356,7 @@ impl SessionRegistry {
                     &cwd.display().to_string(),
                     worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
                 )?,
-                store.tools_off(&profile.name)?,
+                store.tools_off()?,
             )
         };
 

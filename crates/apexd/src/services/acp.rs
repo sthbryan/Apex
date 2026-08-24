@@ -580,7 +580,7 @@ impl AcpRegistry {
                     &cwd.display().to_string(),
                     worktree.as_ref().map(|tree| (tree.path.as_str(), tree.branch.as_str())),
                 )?,
-                store.tools_off(&profile.name)?,
+                store.tools_off()?,
             )
         };
 
