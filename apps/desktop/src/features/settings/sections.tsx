@@ -1,5 +1,4 @@
 import {
-  Button,
   DataRow,
   IdentityCard,
   KbdGroup,
@@ -76,6 +75,7 @@ import {
   type OptionalGroup,
   setGroupOn,
 } from "@/features/settings/toolGroups";
+import { UpdateAction, UpdateNote } from "@/features/updates/UpdateAction";
 import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
@@ -520,8 +520,8 @@ export function aboutSection(appVersion: string): Section {
               {t(linked ? "settings.daemonLinked" : "settings.daemonLost")}
             </StatePill>
           }
-          note={t("settings.updatesLater")}
-          action={<Button disabled>{t("settings.checkUpdates")}</Button>}
+          note={<UpdateNote />}
+          action={<UpdateAction />}
         />
         <div class="flex flex-col">
           <DataRow
