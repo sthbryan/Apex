@@ -91,8 +91,8 @@ describe("races", () => {
       session("s2", "run-1", { agent: "b", started_at: 2 }),
       session("s3", null),
     ];
-    expect(mod.races.value.map((race: any) => race.id)).toEqual(["run-1"]);
-    expect(mod.races.value[0].contenders.map((c: any) => c.id)).toEqual(["s1", "s2"]);
+    expect(mod.races.value.map((race) => race.id)).toEqual(["run-1"]);
+    expect(mod.races.value[0].contenders.map((contender) => contender.id)).toEqual(["s1", "s2"]);
   });
 
   it("filters out races with a single contender", async () => {
@@ -109,7 +109,7 @@ describe("races", () => {
       session("s3", "run-2", { started_at: 3 }),
       session("s4", "run-2", { started_at: 4 }),
     ];
-    const ids = mod.races.value.map((race: any) => race.id);
+    const ids = mod.races.value.map((race) => race.id);
     expect(ids).toEqual(["run-2", "run-1"]);
   });
 
@@ -137,7 +137,7 @@ describe("races", () => {
       session("s1", "run-1", { agent: "b" }),
       session("s2", "run-1", { agent: "a" }),
     ];
-    expect(mod.races.value[0].contenders.map((c: any) => c.id)).toEqual(["s2", "s1"]);
+    expect(mod.races.value[0].contenders.map((contender) => contender.id)).toEqual(["s2", "s1"]);
   });
 });
 
@@ -213,8 +213,8 @@ describe("contendersOf", () => {
     const race = mod.races.value[0];
     const mapped = mod.contendersOf(race);
     expect(mapped).toHaveLength(2);
-    expect(mapped.find((c: any) => c.session.id === "s1")?.changed).not.toBeNull();
-    expect(mapped.find((c: any) => c.session.id === "s2")?.changed).toBeNull();
+    expect(mapped.find((contender) => contender.session.id === "s1")?.changed).not.toBeNull();
+    expect(mapped.find((contender) => contender.session.id === "s2")?.changed).toBeNull();
   });
 
   it("leaves null when there is no pending review", async () => {
