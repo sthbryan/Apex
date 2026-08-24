@@ -12,6 +12,7 @@ use apex_proto::{
 };
 use tokio::sync::Mutex;
 use tokio::sync::broadcast;
+use tokio::sync::watch;
 use uuid::Uuid;
 
 use crate::services::acp::AcpRegistry;
@@ -64,6 +65,7 @@ pub struct SessionManager {
     registry: Arc<SessionRegistry>,
     acp: Arc<AcpRegistry>,
     idle_grace: Arc<AtomicU64>,
+    quit: Arc<watch::Sender<bool>>,
 }
 
 impl SessionManager {
@@ -122,10 +124,20 @@ impl SessionManager {
             registry,
             acp,
             idle_grace: Arc::new(AtomicU64::new(DEFAULT_IDLE_GRACE_SECONDS)),
+            quit: Arc::new(watch::channel(false).0),
         });
         let dispatch: Arc<dyn crate::commands::Dispatch> = manager.clone();
         manager.acp.bind(Arc::downgrade(&dispatch));
         manager
+    }
+
+    pub fn quitting(&self) -> watch::Receiver<bool> {
+        self.quit.subscribe()
+    }
+
+    pub fn quit(&self) {
+        self.registry.announce(Event::DaemonShutdown);
+        let _ = self.quit.send(true);
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<Event> {

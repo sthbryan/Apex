@@ -79,6 +79,10 @@ async fn execute(
 ) -> Result<Reply, ProtocolError> {
     match command {
         Command::Ping => Ok(Reply::Pong),
+        Command::DaemonShutdown => {
+            manager.quit();
+            Ok(Reply::Done)
+        }
         Command::ListAgents => Ok(Reply::Agents { agents: manager.list_agents().await }),
         Command::ListToolGroups => {
             Ok(Reply::ToolGroups { tools_off: manager.tool_groups_off().await })
