@@ -47,7 +47,8 @@ export function Home() {
 
   const racing = mode === "race";
   const chosen = picked.filter((name) => runnable.some((agent) => agent.name === name));
-  const ready = project !== null && chosen.length >= (racing ? 2 : 1);
+  const ready =
+    project !== null && task.trim().length > 0 && chosen.length >= (racing ? 2 : 1);
 
   const pick = (name: string) => {
     if (!racing) {
