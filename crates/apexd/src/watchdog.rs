@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
@@ -14,8 +15,8 @@ pub async fn watch_for_idle(
     poll: Duration,
 ) {
     let idle_grace = manager.idle_grace();
+    let idle_since = manager.idle_since();
     let mut seen_client = false;
-    let mut idle_since: Option<Instant> = None;
 
     loop {
         tokio::time::sleep(poll).await;
@@ -23,7 +24,7 @@ pub async fn watch_for_idle(
         let active = clients.load(Ordering::SeqCst);
         if active > 0 {
             seen_client = true;
-            idle_since = None;
+            mark(&idle_since, None);
             continue;
         }
 
@@ -33,13 +34,13 @@ pub async fn watch_for_idle(
 
         let seconds = idle_grace.load(Ordering::Relaxed);
         if seconds == u64::from(IDLE_GRACE_NEVER) {
-            idle_since = None;
+            mark(&idle_since, None);
             continue;
         }
 
         let grace = Duration::from_secs(seconds);
-        match idle_since {
-            None => idle_since = Some(Instant::now()),
+        match read(&idle_since) {
+            None => mark(&idle_since, Some(Instant::now())),
             Some(start) if start.elapsed() >= grace => {
                 tracing::info!("no clients for {grace:?}, shutting down");
                 manager.quit();
@@ -47,5 +48,15 @@ pub async fn watch_for_idle(
             }
             Some(_) => {}
         }
+    }
+}
+
+fn read(slot: &Mutex<Option<Instant>>) -> Option<Instant> {
+    slot.lock().ok().and_then(|held| *held)
+}
+
+fn mark(slot: &Mutex<Option<Instant>>, at: Option<Instant>) {
+    if let Ok(mut held) = slot.lock() {
+        *held = at;
     }
 }

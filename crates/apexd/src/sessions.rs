@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, bail};
 use apex_core::{ApexPaths, BinaryResolver, ProfileSet, Store};
@@ -65,6 +66,8 @@ pub struct SessionManager {
     registry: Arc<SessionRegistry>,
     acp: Arc<AcpRegistry>,
     idle_grace: Arc<AtomicU64>,
+    idle_since: Arc<std::sync::Mutex<Option<Instant>>>,
+    started: Instant,
     quit: Arc<watch::Sender<bool>>,
 }
 
@@ -124,6 +127,8 @@ impl SessionManager {
             registry,
             acp,
             idle_grace: Arc::new(AtomicU64::new(DEFAULT_IDLE_GRACE_SECONDS)),
+            idle_since: Arc::new(std::sync::Mutex::new(None)),
+            started: Instant::now(),
             quit: Arc::new(watch::channel(false).0),
         });
         let dispatch: Arc<dyn crate::commands::Dispatch> = manager.clone();
@@ -493,6 +498,19 @@ impl SessionManager {
 
     pub fn idle_grace(&self) -> Arc<AtomicU64> {
         Arc::clone(&self.idle_grace)
+    }
+
+    pub fn idle_since(&self) -> Arc<std::sync::Mutex<Option<Instant>>> {
+        Arc::clone(&self.idle_since)
+    }
+
+    pub fn idle_for(&self) -> Option<Duration> {
+        let since = self.idle_since.lock().ok()?;
+        since.map(|start| start.elapsed())
+    }
+
+    pub fn uptime(&self) -> Duration {
+        self.started.elapsed()
     }
 
     pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {
