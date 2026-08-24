@@ -21,6 +21,17 @@ export function setSvgView(view: SvgView): void {
   localStorage.setItem(SVG_VIEW, view);
 }
 
+const MD_VIEW = "apex.md-view";
+
+export const mdView = signal<SvgView>(
+  (localStorage.getItem(MD_VIEW) as SvgView | null) ?? "preview",
+);
+
+export function setMdView(view: SvgView): void {
+  mdView.value = view;
+  localStorage.setItem(MD_VIEW, view);
+}
+
 export function isSvg(path: string): boolean {
   return path.toLowerCase().endsWith(".svg");
 }

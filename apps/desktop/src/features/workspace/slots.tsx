@@ -16,7 +16,7 @@ export const PaneSlots = createContext<PaneHosts>(EMPTY);
 
 function Slot({ into, children }: { into: keyof PaneHosts; children: ComponentChildren }) {
   const host = useContext(PaneSlots)[into];
-  return host ? createPortal(<>{children}</>, host) : null;
+  return host ? createPortal(children, host) : null;
 }
 
 export function PaneLead({ children }: { children: ComponentChildren }) {

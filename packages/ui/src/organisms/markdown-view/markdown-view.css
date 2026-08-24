@@ -17,6 +17,18 @@
     font-size: var(--apex-text-xl);
   }
 
+  .ui-markdown-view h3 {
+    @apply mt-4 mb-1 font-semibold;
+    font-size: var(--apex-text-lg);
+  }
+
+  .ui-markdown-view h4,
+  .ui-markdown-view h5,
+  .ui-markdown-view h6 {
+    @apply mt-3 mb-1 font-semibold;
+    font-size: var(--apex-text-md);
+  }
+
   .ui-markdown-view p,
   .ui-markdown-view li {
     font-size: var(--apex-text-lg);
@@ -24,8 +36,40 @@
 
   .ui-markdown-view p { @apply my-2; }
   .ui-markdown-view ul { @apply my-2 pl-5 list-disc; }
+  .ui-markdown-view ol { @apply my-2 pl-5 list-decimal; }
   .ui-markdown-view li { @apply my-1; }
+  .ui-markdown-view li > ul, .ui-markdown-view li > ol { @apply my-0; }
   .ui-markdown-view strong { font-weight: var(--apex-weight-semibold); }
+  .ui-markdown-view em { @apply italic; }
+  .ui-markdown-view img { @apply my-3 max-w-full rounded-sm; }
+
+  .ui-markdown-view a {
+    @apply underline underline-offset-2;
+    color: var(--apex-accent);
+    text-decoration-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
+  }
+
+  .ui-markdown-view hr {
+    @apply my-5 border-0 border-t border-border;
+  }
+
+  .ui-markdown-view blockquote {
+    @apply my-3 border-l-2 border-border pl-3.5 text-muted;
+  }
+
+  .ui-markdown-view table {
+    @apply my-3 w-full border-collapse text-sm;
+  }
+
+  .ui-markdown-view th,
+  .ui-markdown-view td {
+    @apply border border-border px-2.5 py-1.5 text-left align-top;
+  }
+
+  .ui-markdown-view th {
+    @apply font-semibold;
+    background-color: var(--apex-raised);
+  }
 
   .ui-markdown-view code {
     @apply rounded-xs bg-raised px-1.5 py-px font-mono text-sm;

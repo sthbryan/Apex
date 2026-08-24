@@ -1,15 +1,19 @@
-import { ImageView } from "@apex/ui";
+import { ImageView, MarkdownView, Segmented } from "@apex/ui";
+import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { FileContents } from "@/bindings/FileContents";
 import { dropBuffer, keepBuffer, readBuffer } from "@/features/files/buffers";
 import { openExternally } from "@/features/files/editors";
+import { isMarkdown, renderMarkdown } from "@/features/files/markdown";
 import {
   fileName,
   formatSize,
   isStaleWrite,
   isSvg,
+  mdView,
   readFile,
+  setMdView,
   setSvgView,
   svgSource,
   svgView,
@@ -18,6 +22,7 @@ import {
 import { TextEditor } from "@/features/files/TextEditor";
 import { activeProject } from "@/features/projects/state";
 import { PaneControls, PaneSub } from "@/features/workspace/slots";
+import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -65,7 +70,10 @@ export function FileView({ path }: { path: string }) {
   const revision = held?.revision ?? contents?.revision ?? null;
   const text = buffer ?? contents?.text ?? null;
   const drawn = text !== null && isSvg(path) && svgView.value === "preview";
-  const writable = contents !== null && text !== null && !drawn && !contents.truncated;
+  const prose = text !== null && isMarkdown(path) && mdView.value === "preview";
+  const written = prose ? renderMarkdown(text) : null;
+  const reading = drawn || (prose && written !== null);
+  const writable = contents !== null && text !== null && !reading && !contents.truncated;
   const dirty = buffer !== null && buffer !== saved;
 
   const edit = (next: string) => {
@@ -153,6 +161,18 @@ export function FileView({ path }: { path: string }) {
     </button>
   );
 
+  const chooser = text !== null && isMarkdown(path) && !contents?.truncated && (
+    <Segmented
+      label={t("files.view")}
+      options={[
+        { value: "preview", label: t("files.preview") },
+        { value: "source", label: t("files.source") },
+      ]}
+      value={mdView.value}
+      onChange={(next) => setMdView(next as "preview" | "source")}
+    />
+  );
+
   const toggle = text !== null && isSvg(path) && (
     <button
       type="button"
@@ -195,6 +215,7 @@ export function FileView({ path }: { path: string }) {
         {eraser}
         {floppy}
         {pencil}
+        {chooser}
         {toggle}
         {reloader}
         {outside}
@@ -235,7 +256,17 @@ export function FileView({ path }: { path: string }) {
         </div>
       )}
 
-      {text !== null && !drawn && (
+      {prose && written !== null && (
+        <div class="min-h-0 flex-1 overflow-auto">
+          <MarkdownView
+            class="animate-fade-in"
+            onClick={steerLinks}
+            dangerouslySetInnerHTML={{ __html: written }}
+          />
+        </div>
+      )}
+
+      {text !== null && !reading && (
         <TextEditor
           key={path}
           path={path}
@@ -253,4 +284,16 @@ export function FileView({ path }: { path: string }) {
       )}
     </div>
   );
+}
+
+function steerLinks(event: MouseEvent): void {
+  const link = (event.target as HTMLElement | null)?.closest("a");
+  if (!link) {
+    return;
+  }
+  event.preventDefault();
+  const href = link.getAttribute("href") ?? "";
+  if (/^https?:\/\//i.test(href)) {
+    void invoke("open_url", { url: href }).catch(complain);
+  }
 }
