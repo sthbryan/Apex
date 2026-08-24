@@ -173,7 +173,6 @@ export const en = {
     agentSplitsSpareOption: "{panes} in the spare one",
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",
     agentEnabled: "Offer {agent} when starting a session",
-    mcpBlocked: "no Apex tools until you run: pi install npm:pi-mcp-adapter",
     groupTools: "Tools",
     groupToolsSub:
       "What every agent can ask Apex to do. Changes reach the sessions started after them, not the ones already running.",
@@ -231,6 +230,7 @@ export const en = {
   notify: {
     allow: "Allow",
     blocked: "An agent is waiting for you",
+    mcpBlocked: "{agent} started without the Apex tools",
     done: "An agent finished",
     terminal: "An agent rang",
     exited: "An agent exited badly",

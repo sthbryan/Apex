@@ -132,10 +132,10 @@ impl SessionRegistry {
             self.profiles.summarize(&mut resolver)
         };
         for agent in &mut agents {
-            agent.mcp_blocked = self
-                .profiles
-                .get(&agent.name)
-                .is_some_and(|profile| profile.mcp_blocked(&self.paths.home));
+            let profile = self.profiles.get(&agent.name);
+            agent.mcp_blocked =
+                profile.is_some_and(|profile| profile.mcp_blocked(&self.paths.home));
+            agent.mcp_hint = profile.and_then(AgentProfile::mcp_hint).map(str::to_owned);
         }
         agents
     }

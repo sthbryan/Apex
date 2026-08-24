@@ -10,7 +10,7 @@ import { startBlockedUrls } from "@/features/browser/state";
 import { loadEditors } from "@/features/files/editors";
 import { FileFinder } from "@/features/files/FileFinder";
 import { startGitWatch } from "@/features/git/state";
-import { startNotifications } from "@/features/notifications/state";
+import { startNotifications, warnBlockedAgents } from "@/features/notifications/state";
 import { Toasts } from "@/features/notifications/Toasts";
 import { CommandPalette } from "@/features/palette/CommandPalette";
 import { finderOpen, paletteOpen, toggleFinder, togglePalette } from "@/features/palette/state";
@@ -41,7 +41,8 @@ export function App() {
       .then(loadEditors)
       .then(applyIdleGrace)
       .then(adoptAgents)
-      .then(loadToolGroups);
+      .then(loadToolGroups)
+      .then(warnBlockedAgents);
 
     let stopNotifications: (() => void) | undefined;
     void startNotifications().then((stop) => {

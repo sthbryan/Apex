@@ -117,6 +117,8 @@ pub struct AgentSummary {
     pub shares_config: bool,
     #[serde(default)]
     pub mcp_blocked: bool,
+    #[serde(default)]
+    pub mcp_hint: Option<String>,
 }
 
 impl AgentSummary {

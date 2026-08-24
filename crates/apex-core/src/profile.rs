@@ -33,6 +33,8 @@ pub enum McpDelivery {
         requires_package: Option<String>,
         #[serde(default)]
         requires_package_in: Option<String>,
+        #[serde(default)]
+        requires_hint: Option<String>,
     },
     Project {
         path: String,
@@ -224,6 +226,13 @@ impl AgentProfile {
         self.mcp.as_ref().is_some_and(|delivery| !delivery.available(home))
     }
 
+    pub fn mcp_hint(&self) -> Option<&str> {
+        match &self.mcp {
+            Some(McpDelivery::Flag { requires_hint, .. }) => requires_hint.as_deref(),
+            _ => None,
+        }
+    }
+
     pub fn supports_resume(&self) -> bool {
         self.history.as_ref().is_some_and(|history| !history.resume_args.is_empty())
     }
@@ -241,6 +250,7 @@ impl AgentProfile {
             speaks_acp: self.acp_command.is_some(),
             shares_config: matches!(self.mcp, Some(McpDelivery::Flag { merge_from: Some(_), .. })),
             mcp_blocked: false,
+            mcp_hint: None,
         }
     }
 }

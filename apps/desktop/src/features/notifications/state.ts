@@ -13,7 +13,7 @@ import { projects } from "@/features/projects/state";
 import { onNotice, sessions } from "@/features/sessions/state";
 import { mutedSessions, notifyEnabled } from "@/features/settings/agentMode";
 import { visibleSessions } from "@/features/workspace/state";
-import { complain, notices as toasts } from "@/shared/daemon";
+import { agents, complain, notices as toasts } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { metrics } from "@/shared/telemetry";
 
@@ -61,6 +61,17 @@ export function push(entry: Omit<Notice, "id" | "at" | "read">): void {
   }
   if (shouldDisturb(notice)) {
     sendNotification({ title: notice.title, body: notice.body });
+  }
+}
+
+export function warnBlockedAgents(): void {
+  for (const agent of agents.value.filter((found) => found.mcp_blocked)) {
+    push({
+      sessionId: null,
+      kind: "error",
+      title: t("notify.mcpBlocked", { agent: agent.name }),
+      body: agent.mcp_hint ?? "",
+    });
   }
 }
 

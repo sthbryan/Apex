@@ -86,7 +86,11 @@ vi.mock("@/shared/telemetry", () => ({
 
 const toasts = vi.hoisted(() => ({ value: [] as Array<{ id: number; text: string }> }));
 const complain = vi.hoisted(() => vi.fn());
+const agents = vi.hoisted(() => ({
+  value: [] as Array<{ name: string; mcp_blocked: boolean; mcp_hint: string | null }>,
+}));
 vi.mock("@/shared/daemon", () => ({
+  agents,
   complain,
   notices: toasts,
 }));
@@ -298,5 +302,38 @@ describe("push + shouldDisturb", () => {
     mod.push({ sessionId: "s1", kind: "done", title: "t", body: "b" });
     mod.push({ sessionId: "s2", kind: "done", title: "t", body: "b" });
     expect(sendNotification).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("warnBlockedAgents", () => {
+  beforeEach(() => {
+    agents.value = [];
+  });
+
+  it("says nothing when every agent has its plugin", async () => {
+    const state: typeof StateModule = await import("./state");
+    agents.value = [{ name: "pi", mcp_blocked: false, mcp_hint: "pi install x" }];
+    state.notices.value = [];
+
+    state.warnBlockedAgents();
+
+    expect(state.notices.value).toHaveLength(0);
+  });
+
+  it("toasts the agent that lost its tools and hands over the fix", async () => {
+    const state: typeof StateModule = await import("./state");
+    agents.value = [
+      { name: "pi", mcp_blocked: true, mcp_hint: "pi install npm:pi-mcp-adapter" },
+      { name: "claude", mcp_blocked: false, mcp_hint: null },
+    ];
+    state.notices.value = [];
+    state.live.value = [];
+
+    state.warnBlockedAgents();
+
+    expect(state.notices.value).toHaveLength(1);
+    expect(state.notices.value[0].title).toContain("pi");
+    expect(state.notices.value[0].body).toBe("pi install npm:pi-mcp-adapter");
+    expect(state.live.value).toHaveLength(1);
   });
 });

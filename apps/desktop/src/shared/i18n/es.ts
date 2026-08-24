@@ -174,7 +174,6 @@ export const es: Messages = {
     agentSplitsSpareOption: "{panes} en la aparte",
     agentNoAcp: "{agent} no habla ACP, así que Apex solo puede manejarlo como terminal.",
     agentEnabled: "Ofrecer {agent} al abrir una sesión",
-    mcpBlocked: "sin herramientas de Apex hasta que corras: pi install npm:pi-mcp-adapter",
     groupTools: "Herramientas",
     groupToolsSub:
       "Qué le puede pedir cada agente a Apex. Los cambios llegan a las sesiones que arranquen después, no a las que ya corren.",
@@ -232,6 +231,7 @@ export const es: Messages = {
   notify: {
     allow: "Permitir",
     blocked: "Un agente te está esperando",
+    mcpBlocked: "{agent} arrancó sin las herramientas de Apex",
     done: "Un agente terminó",
     terminal: "Un agente te avisa",
     exited: "Un agente salió con error",
