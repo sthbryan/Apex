@@ -45,11 +45,35 @@
     border-color: var(--apex-focus);
   }
 
-  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-track-piece,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  ::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
   ::-webkit-scrollbar-thumb {
     background: color-mix(in oklab, var(--apex-faint) 32%, transparent);
     border-radius: 5px;
     border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--apex-faint) 52%, transparent);
     background-clip: content-box;
   }
 
