@@ -5,16 +5,15 @@ import { useState } from "preact/hooks";
 
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
-import { openExternally } from "@/features/files/editors";
-import { activeProject } from "@/features/projects/state";
 import { sessions as allSessions } from "@/features/sessions/state";
 import { TerminalView } from "@/features/sessions/TerminalView";
 import { PaneActions } from "@/features/workspace/PaneActions";
 import { SplitDivider } from "@/features/workspace/SplitDivider";
+import type { PaneHosts } from "@/features/workspace/slots";
+import { PaneSlots } from "@/features/workspace/slots";
 import { focusLeaf } from "@/features/workspace/state";
 import { paneIcon, paneSubtitle, paneTitle } from "@/features/workspace/title";
 import type { Leaf, PaneNode } from "@/features/workspace/tree";
-import { t } from "@/shared/i18n";
 import { Boundary } from "@/shared/ui/Boundary";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -86,14 +85,23 @@ function PaneLeaf({
   focused: boolean;
   visible: boolean;
 }) {
-  const [reload, setReload] = useState(0);
-  const projectId = activeProject.value?.id ?? null;
-  const sub = paneSubtitle(node.view);
+  const [hosts, setHosts] = useState<PaneHosts>({
+    lead: null,
+    title: null,
+    sub: null,
+    controls: null,
+  });
+  const own = node.view.type === "browser";
+
+  const mount = (into: keyof PaneHosts) => (el: HTMLElement | null) => {
+    setHosts((current) => (current[into] === el ? current : { ...current, [into]: el }));
+  };
 
   return (
     <Pane
       scroll={false}
       tabIndex={-1}
+      wide={own}
       class={cn(
         "group h-full w-full overflow-hidden border transition-colors",
         focused ? "pane-focused border-border" : "border-transparent",
@@ -101,66 +109,56 @@ function PaneLeaf({
       onFocusCapture={() => focusLeaf(tabId, node.id)}
       onMouseDown={() => focusLeaf(tabId, node.id)}
       lead={
-        <Icon
-          name={paneIcon(node.view)}
-          size={12}
-          class={cn("shrink-0", focused ? "text-accent" : "text-faint")}
-        />
+        own ? (
+          <span ref={mount("lead")} class="flex flex-none items-center gap-0.5" />
+        ) : (
+          <Icon
+            name={paneIcon(node.view)}
+            size={12}
+            class={cn("shrink-0", focused ? "text-accent" : "text-faint")}
+          />
+        )
       }
-      title={paneTitle(node.view, allSessions.value)}
-      sub={sub}
-      actions={
-        <PaneActions
-          tabId={tabId}
-          leaf={node}
-          focused={focused}
-          extra={
-            node.view.type === "file" ? (
-              <FileExtras
-                path={node.view.path}
-                projectId={projectId}
-                onReload={() => setReload((tick) => tick + 1)}
-              />
-            ) : node.view.type === "diff" ? (
-              <button
-                type="button"
-                title={t("git.reload")}
-                onClick={() => setReload((tick) => tick + 1)}
-                class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
-              >
-                <Icon name="refresh" size={12} />
-              </button>
-            ) : null
-          }
-        />
+      title={
+        own ? (
+          <span ref={mount("title")} class="flex min-w-0 flex-1 items-center" />
+        ) : (
+          paneTitle(node.view, allSessions.value)
+        )
       }
+      sub={
+        <>
+          {own ? null : paneSubtitle(node.view)}
+          <span ref={mount("sub")} class="contents" />
+        </>
+      }
+      controls={<span ref={mount("controls")} class="contents" />}
+      actions={<PaneActions tabId={tabId} leaf={node} focused={focused} />}
     >
-      <div class="min-h-0 flex-1">
-        <Boundary key={node.id}>
-          <Suspense fallback={<PanePlaceholder />}>
-            {node.view.type === "session" && (
-              <SessionView id={node.view.sessionId} focused={focused} />
-            )}
-            {node.view.type === "file" && (
-              <FileView key={reload} path={node.view.path} chrome={false} />
-            )}
-            {node.view.type === "diff" && (
-              <DiffView
-                key={reload}
-                target={node.view.target}
-                path={node.view.path}
-                commit={node.view.commit}
-                chrome={false}
-              />
-            )}
-            {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
-            {node.view.type === "race" && <RaceView run={node.view.run} />}
-            {node.view.type === "browser" && (
-              <BrowserView id={node.id} url={node.view.url} visible={visible} focused={focused} />
-            )}
-          </Suspense>
-        </Boundary>
-      </div>
+      <PaneSlots.Provider value={hosts}>
+        <div class="min-h-0 flex-1">
+          <Boundary key={node.id}>
+            <Suspense fallback={<PanePlaceholder />}>
+              {node.view.type === "session" && (
+                <SessionView id={node.view.sessionId} focused={focused} />
+              )}
+              {node.view.type === "file" && <FileView path={node.view.path} />}
+              {node.view.type === "diff" && (
+                <DiffView
+                  target={node.view.target}
+                  path={node.view.path}
+                  commit={node.view.commit}
+                />
+              )}
+              {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
+              {node.view.type === "race" && <RaceView run={node.view.run} />}
+              {node.view.type === "browser" && (
+                <BrowserView id={node.id} url={node.view.url} visible={visible} focused={focused} />
+              )}
+            </Suspense>
+          </Boundary>
+        </div>
+      </PaneSlots.Provider>
     </Pane>
   );
 }
@@ -171,39 +169,6 @@ function SessionView({ id, focused }: { id: string; focused: boolean }) {
     return <AcpView id={id} />;
   }
   return <TerminalView id={id} active={focused} />;
-}
-
-function FileExtras({
-  path,
-  projectId,
-  onReload,
-}: {
-  path: string;
-  projectId: string | null;
-  onReload: () => void;
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        title={t("files.reload")}
-        onClick={onReload}
-        class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
-      >
-        <Icon name="refresh" size={12} />
-      </button>
-      {projectId && (
-        <button
-          type="button"
-          title={t("files.openExternally")}
-          onClick={() => void openExternally(projectId, path)}
-          class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
-        >
-          <Icon name="externalApp" size={12} />
-        </button>
-      )}
-    </>
-  );
 }
 
 function DockPanelView({ id }: { id: string }) {

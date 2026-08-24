@@ -49,15 +49,17 @@ export function paneIcon(view: PaneView): IconName {
 
 export function paneSubtitle(view: PaneView): string | null {
   if (view.type === "file") {
-    return view.path;
+    return folderOf(view.path);
   }
   if (view.type === "diff") {
-    return view.path || view.commit;
-  }
-  if (view.type === "browser") {
-    return null;
+    return view.path ? folderOf(view.path) : view.commit;
   }
   return null;
+}
+
+function folderOf(path: string): string | null {
+  const cut = path.lastIndexOf("/");
+  return cut > 0 ? path.slice(0, cut) : null;
 }
 
 function hostOf(url: string): string {

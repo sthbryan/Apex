@@ -1,5 +1,4 @@
 import cn from "cnfast";
-import type { ComponentChildren } from "preact";
 import { dockPanelAt } from "@/app/layout/actions";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import type { DockPanel } from "@/app/layout/state";
@@ -13,11 +12,10 @@ import { Icon } from "@/shared/ui/Icon";
 type Props = {
   tabId: string;
   leaf: Leaf;
-  extra?: ComponentChildren;
   focused?: boolean;
 };
 
-export function PaneActions({ tabId, leaf, extra, focused = false }: Props) {
+export function PaneActions({ tabId, leaf, focused = false }: Props) {
   const currentTab = tabs.value.find((tab) => tab.id === tabId);
   const split = (currentTab?.root.kind ?? "leaf") === "split";
   const panel = leaf.view.type === "panel" && leaf.view.panel in DOCK_PANELS;
@@ -30,7 +28,6 @@ export function PaneActions({ tabId, leaf, extra, focused = false }: Props) {
         focused ? "opacity-100" : "opacity-0",
       )}
     >
-      {extra}
       {(leaf.view.type === "session" || leaf.view.type === "browser") && (
         <>
           <button

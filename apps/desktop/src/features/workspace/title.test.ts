@@ -77,14 +77,15 @@ describe("paneIcon", () => {
 });
 
 describe("paneSubtitle", () => {
-  it("returns path for file", () => {
-    expect(paneSubtitle({ type: "file", path: "a/b.ts" })).toBe("a/b.ts");
+  it("returns the folder for file, never the name the title already shows", () => {
+    expect(paneSubtitle({ type: "file", path: "a/b.ts" })).toBe("a");
+    expect(paneSubtitle({ type: "file", path: "b.ts" })).toBeNull();
   });
 
-  it("returns path or commit for diff", () => {
+  it("returns folder or commit for diff", () => {
     expect(
-      paneSubtitle({ type: "diff", target: { type: "project" }, path: "a.ts", commit: null }),
-    ).toBe("a.ts");
+      paneSubtitle({ type: "diff", target: { type: "project" }, path: "src/a.ts", commit: null }),
+    ).toBe("src");
     expect(
       paneSubtitle({ type: "diff", target: { type: "project" }, path: "", commit: "abc" }),
     ).toBe("abc");

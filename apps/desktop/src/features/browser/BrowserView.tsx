@@ -1,4 +1,10 @@
-import { BrowserLog, BrowserUrl, Button, BrowserView as KitBrowserView, type LogLevel } from "@apex/ui";
+import {
+  BrowserLog,
+  BrowserUrl,
+  Button,
+  BrowserView as KitBrowserView,
+  type LogLevel,
+} from "@apex/ui";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -6,6 +12,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { openWeb, overlays } from "@/features/browser/state";
 import { activeProjectId } from "@/features/projects/state";
 import { onAskPage, onAskShot } from "@/features/sessions/state";
+import { PaneControls, PaneLead, PaneTitle } from "@/features/workspace/slots";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -188,8 +195,8 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
   };
 
   return (
-    <div class="flex h-full w-full flex-col">
-      <div class="flex h-8 flex-none items-center gap-1.5 border-b border-border px-2">
+    <>
+      <PaneLead>
         <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("history.back()")} />
         <Step
           icon="chevronRight"
@@ -197,6 +204,8 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
           onPick={() => run("history.forward()")}
         />
         <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("location.reload()")} />
+      </PaneLead>
+      <PaneTitle>
         <BrowserUrl
           url={draft}
           onInput={(event) => setDraft(event.currentTarget.value)}
@@ -217,6 +226,8 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
             }
           }}
         />
+      </PaneTitle>
+      <PaneControls>
         <Step
           icon="external"
           hint={t("browser.external")}
@@ -234,30 +245,30 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
           <Icon name="braces" size={12} />
           {failures > 0 && <span class="text-state-failed">{failures}</span>}
         </button>
-      </div>
-    <KitBrowserView
-      class="min-h-0 flex-1"
-      consoleOpen={drawer}
-      consoleTitle={t("browser.console")}
-      consoleActions={
-        <Button size="xs" variant="subtle" onClick={() => setLogs([])}>
-          {t("browser.clear")}
-        </Button>
-      }
-      console={
-        <>
-          {logs.length === 0 && <BrowserLog>{t("browser.quiet")}</BrowserLog>}
-          {logs.map((entry) => (
-            <BrowserLog key={`${entry.at}-${entry.text}`} level={levelOf(entry.level)}>
-              {entry.text}
-            </BrowserLog>
-          ))}
-        </>
-      }
-    >
-      <div ref={host} class="size-full" />
-    </KitBrowserView>
-    </div>
+      </PaneControls>
+      <KitBrowserView
+        class="h-full w-full"
+        consoleOpen={drawer}
+        consoleTitle={t("browser.console")}
+        consoleActions={
+          <Button size="xs" variant="subtle" onClick={() => setLogs([])}>
+            {t("browser.clear")}
+          </Button>
+        }
+        console={
+          <>
+            {logs.length === 0 && <BrowserLog>{t("browser.quiet")}</BrowserLog>}
+            {logs.map((entry) => (
+              <BrowserLog key={`${entry.at}-${entry.text}`} level={levelOf(entry.level)}>
+                {entry.text}
+              </BrowserLog>
+            ))}
+          </>
+        }
+      >
+        <div ref={host} class="size-full" />
+      </KitBrowserView>
+    </>
   );
 }
 

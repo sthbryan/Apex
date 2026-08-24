@@ -17,10 +17,11 @@ import {
 } from "@/features/files/state";
 import { TextEditor } from "@/features/files/TextEditor";
 import { activeProject } from "@/features/projects/state";
+import { PaneControls, PaneSub } from "@/features/workspace/slots";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
-export function FileView({ path, chrome = true }: { path: string; chrome?: boolean }) {
+export function FileView({ path }: { path: string }) {
   const project = activeProject.value;
   const projectId = project?.id ?? null;
   const [contents, setContents] = useState<FileContents | null>(null);
@@ -163,53 +164,41 @@ export function FileView({ path, chrome = true }: { path: string; chrome?: boole
     </button>
   );
 
+  const reloader = (
+    <button
+      type="button"
+      title={t("files.reload")}
+      onClick={load}
+      class="shrink-0 text-faint transition-colors hover:text-text"
+    >
+      <Icon name="refresh" size={12} />
+    </button>
+  );
+
+  const outside = projectId && (
+    <button
+      type="button"
+      title={t("files.openExternally")}
+      onClick={() =>
+        void openExternally(projectId, path).catch((error: unknown) => setFailure(String(error)))
+      }
+      class="shrink-0 text-faint transition-colors hover:text-text"
+    >
+      <Icon name="externalApp" size={12} />
+    </button>
+  );
+
   return (
     <div class="flex h-full flex-col bg-bg">
-      {chrome && (
-        <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
-          <Icon name="file" size={12} />
-          <span class="truncate text-text">{fileName(path)}</span>
-          <span class="truncate text-faint">{path}</span>
-          <span class="ml-auto shrink-0 text-faint">
-            {contents ? formatSize(contents.size) : ""}
-          </span>
-          {eraser}
-          {floppy}
-          {pencil}
-          {toggle}
-          <button
-            type="button"
-            title={t("files.reload")}
-            onClick={load}
-            class="shrink-0 text-faint transition-colors hover:text-text"
-          >
-            <Icon name="refresh" size={12} />
-          </button>
-          {projectId && (
-            <button
-              type="button"
-              title={t("files.openExternally")}
-              onClick={() =>
-                void openExternally(projectId, path).catch((error: unknown) =>
-                  setFailure(String(error)),
-                )
-              }
-              class="shrink-0 text-faint transition-colors hover:text-text"
-            >
-              <Icon name="external" size={12} />
-            </button>
-          )}
-        </header>
-      )}
-
-      {!chrome && (pencil || toggle) && (
-        <div class="flex h-6 shrink-0 items-center justify-end gap-2 border-b border-border px-2">
-          {eraser}
-          {floppy}
-          {pencil}
-          {toggle}
-        </div>
-      )}
+      <PaneSub>{contents ? formatSize(contents.size) : null}</PaneSub>
+      <PaneControls>
+        {eraser}
+        {floppy}
+        {pencil}
+        {toggle}
+        {reloader}
+        {outside}
+      </PaneControls>
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 

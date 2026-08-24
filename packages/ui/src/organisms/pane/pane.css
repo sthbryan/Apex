@@ -57,6 +57,10 @@
     @apply flex flex-none items-center gap-1;
   }
 
+  .ui-pane-tools > :empty + .ui-pane-divider {
+    display: none;
+  }
+
   .ui-pane-divider {
     @apply mx-0.5 h-4 w-px flex-none;
     background-color: var(--apex-border);

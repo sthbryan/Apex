@@ -23,6 +23,7 @@ import {
 import { UnifiedPatch } from "@/features/git/UnifiedPatch";
 import { inReview, reviewFiles, settleReview, stepReview } from "@/features/review/state";
 import { sessions } from "@/features/sessions/state";
+import { PaneControls, PaneSub } from "@/features/workspace/slots";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -37,10 +38,9 @@ type Props = {
   target: GitTarget;
   path: string;
   commit: string | null;
-  chrome?: boolean;
 };
 
-export function DiffView({ target, path, commit, chrome = true }: Props) {
+export function DiffView({ target, path, commit }: Props) {
   const [unstaged, setUnstaged] = useState<Painted[]>([]);
   const [staged, setStaged] = useState<Painted[]>([]);
   const [whole, setWhole] = useState<Painted | null>(null);
@@ -185,32 +185,19 @@ export function DiffView({ target, path, commit, chrome = true }: Props) {
 
   return (
     <div ref={frame} class="flex h-full flex-col bg-bg">
-      {chrome && (
-        <header class="flex h-7 shrink-0 items-center gap-2 border-b border-border pr-7 pl-2">
-          <Icon name="branch" size={12} />
-          <span class="truncate text-text">{path || (commit ?? "").slice(0, 7)}</span>
-          <span class="truncate text-faint">{label}</span>
-          <div class="ml-auto flex shrink-0 items-center gap-2">
-            {walker}
-            {toggle}
-            <button
-              type="button"
-              title={t("git.reload")}
-              onClick={load}
-              class="text-faint transition-colors hover:text-text"
-            >
-              <Icon name="refresh" size={12} />
-            </button>
-          </div>
-        </header>
-      )}
-
-      {!chrome && (walker || toggle) && (
-        <div class="flex h-6 shrink-0 items-center justify-end gap-2 border-b border-border px-2">
-          {walker}
-          {toggle}
-        </div>
-      )}
+      <PaneSub>{label}</PaneSub>
+      <PaneControls>
+        {walker}
+        {toggle}
+        <button
+          type="button"
+          title={t("git.reload")}
+          onClick={load}
+          class="shrink-0 text-faint transition-colors hover:text-text"
+        >
+          <Icon name="refresh" size={12} />
+        </button>
+      </PaneControls>
 
       {failure && <p class="p-3 text-state-failed">{failure}</p>}
 
