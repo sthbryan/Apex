@@ -55,6 +55,7 @@ import {
   veilOpacity,
 } from "@/features/settings/appearance";
 import { browsing, setBrowsing } from "@/features/settings/browsing";
+import { type Closing, closing, setClosing } from "@/features/settings/closing";
 import {
   FROST_LABEL,
   FROSTS,
@@ -479,6 +480,22 @@ export function daemonSection(): Section {
     sub: t("settings.groupDaemonSub"),
     icon: "activity",
     entries: [
+      {
+        id: "closing",
+        label: t("settings.closing"),
+        hint: t("settings.closingHint"),
+        control: (
+          <Segmented
+            label={t("settings.closing")}
+            value={closing.value}
+            onChange={(value) => setClosing(value as Closing)}
+            options={[
+              { value: "quit", label: t("settings.closingQuit") },
+              { value: "tray", label: t("settings.closingTray") },
+            ]}
+          />
+        ),
+      },
       {
         id: "idleGrace",
         label: t("settings.idleGrace"),

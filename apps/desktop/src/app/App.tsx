@@ -21,6 +21,7 @@ import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { adoptAgents, applyIdleGrace, enabledAgents } from "@/features/settings/agentMode";
 import { applyAppearance } from "@/features/settings/appearance";
+import { applyClosing } from "@/features/settings/closing";
 import { Settings } from "@/features/settings/Settings";
 import { loadToolGroups } from "@/features/settings/toolGroups";
 import { startPeeking } from "@/features/tasks/state";
@@ -70,6 +71,7 @@ export function App() {
     const stopBlocked = startBlockedUrls();
     const stopTheme = startThemeWatcher();
     applyAppearance();
+    applyClosing();
     const stopDockWidth = startDockWidth();
     const stopLayoutSaves = startLayoutSaves();
     const stopTargetFollow = startTargetFollow();

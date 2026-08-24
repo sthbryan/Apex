@@ -189,6 +189,10 @@ export const en = {
     toolViewsSub: "ask Apex to show a session, a URL or a diff",
     toolBrowser: "Read the browser",
     toolBrowserSub: "list panes, read the console, take a shot",
+    closing: "When you close Apex",
+    closingHint: "Quit for good, or leave Apex running behind its tray icon.",
+    closingQuit: "Quit",
+    closingTray: "Keep running",
     idleGrace: "Daemon background time",
     idleGraceHint:
       "How long the daemon keeps running after you close Apex. After this it shuts down and your agents stop. Close and reopen within the window to resume sessions.",
