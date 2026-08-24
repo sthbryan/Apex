@@ -1,5 +1,4 @@
 import { ListRow, SectionLabel } from "@apex/ui";
-import cn from "cnfast";
 import { useEffect } from "preact/hooks";
 
 import { PanelActions } from "@/app/layout/PanelActions";
