@@ -132,12 +132,10 @@ impl SessionRegistry {
             self.profiles.summarize(&mut resolver)
         };
         for agent in &mut agents {
-            agent.mcp_blocked =
-                self.profiles.get(&agent.name).and_then(AgentProfile::mcp_requires).is_some_and(
-                    |required| {
-                        !crate::mcp_delivery::expand_home(required, &self.paths.home).exists()
-                    },
-                );
+            agent.mcp_blocked = self
+                .profiles
+                .get(&agent.name)
+                .is_some_and(|profile| profile.mcp_blocked(&self.paths.home));
         }
         agents
     }

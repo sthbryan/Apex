@@ -9,6 +9,8 @@ kind = "flag"
 flag = "--mcp-config"
 merge_from = "~/.pi/agent/mcp.json"
 requires_path = "~/.pi/agent/npm/node_modules/pi-mcp-adapter"
+requires_package = "npm:pi-mcp-adapter"
+requires_package_in = "~/.pi/agent/settings.json"
 
 [state_patterns]
 blocked = ["\\(y/n\\)", "\\[y/N\\]", "Allow"]

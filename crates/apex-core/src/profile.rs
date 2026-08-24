@@ -29,6 +29,10 @@ pub enum McpDelivery {
         prefix: Option<String>,
         #[serde(default)]
         requires_path: Option<String>,
+        #[serde(default)]
+        requires_package: Option<String>,
+        #[serde(default)]
+        requires_package_in: Option<String>,
     },
     Project {
         path: String,
@@ -41,6 +45,45 @@ pub enum McpDelivery {
     Shared {
         path: String,
     },
+}
+
+impl McpDelivery {
+    pub fn available(&self, home: &Path) -> bool {
+        let Self::Flag { requires_path, requires_package, requires_package_in, .. } = self else {
+            return true;
+        };
+        if requires_path.as_deref().is_some_and(|path| under_home(path, home).exists()) {
+            return true;
+        }
+        if let Some(package) = requires_package.as_deref()
+            && let Some(listing) = requires_package_in.as_deref()
+        {
+            return packages_in(&under_home(listing, home)).iter().any(|found| found == package);
+        }
+        requires_path.is_none()
+    }
+}
+
+fn under_home(path: &str, home: &Path) -> std::path::PathBuf {
+    match path.strip_prefix("~/") {
+        Some(rest) => home.join(rest),
+        None => std::path::PathBuf::from(path),
+    }
+}
+
+fn packages_in(listing: &Path) -> Vec<String> {
+    let Ok(raw) = std::fs::read(listing) else { return Vec::new() };
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(&raw) else { return Vec::new() };
+    let Some(entries) = value.get("packages").and_then(|found| found.as_array()) else {
+        return Vec::new();
+    };
+    entries
+        .iter()
+        .filter_map(|entry| {
+            entry.as_str().or_else(|| entry.get("source").and_then(|found| found.as_str()))
+        })
+        .map(str::to_owned)
+        .collect()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -177,11 +220,8 @@ impl AgentProfile {
         expand_env(&self.command)
     }
 
-    pub fn mcp_requires(&self) -> Option<&str> {
-        match &self.mcp {
-            Some(McpDelivery::Flag { requires_path, .. }) => requires_path.as_deref(),
-            _ => None,
-        }
+    pub fn mcp_blocked(&self, home: &Path) -> bool {
+        self.mcp.as_ref().is_some_and(|delivery| !delivery.available(home))
     }
 
     pub fn supports_resume(&self) -> bool {

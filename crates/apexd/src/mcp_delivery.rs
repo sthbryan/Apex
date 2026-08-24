@@ -11,16 +11,15 @@ pub fn offer(
     isolated: bool,
     paths: &ApexPaths,
 ) -> Result<Option<Vec<String>>> {
+    if !delivery.available(&paths.home) {
+        return Ok(None);
+    }
+
     let binary = locate()?;
     let launcher = binary.display().to_string();
 
     match delivery {
-        McpDelivery::Flag { flag, merge_from, prefix, requires_path } => {
-            if let Some(required) = requires_path.as_deref()
-                && !expand_home(required, &paths.home).exists()
-            {
-                return Ok(None);
-            }
+        McpDelivery::Flag { flag, merge_from, prefix, .. } => {
             let dir = paths.mcp_dir();
             std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
             let args = vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()];
@@ -191,7 +190,7 @@ fn render(
     })
 }
 
-pub fn expand_home(path: &str, home: &Path) -> PathBuf {
+fn expand_home(path: &str, home: &Path) -> PathBuf {
     match path.strip_prefix("~/") {
         Some(rest) => home.join(rest),
         None => PathBuf::from(path),

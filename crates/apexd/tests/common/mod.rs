@@ -103,7 +103,9 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
              [mcp]\n\
              kind = \"flag\"\n\
              flag = \"--mcp-config\"\n\
-             requires_path = \"~/.apex-test-plugin\"\n",
+             requires_path = \"~/.apex-test-plugin\"\n\
+             requires_package = \"npm:apex-test-plugin\"\n\
+             requires_package_in = \"~/.apex-test-settings.json\"\n",
         )
         .expect("gated mcp profile"),
     );

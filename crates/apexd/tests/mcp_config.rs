@@ -407,3 +407,49 @@ async fn an_agent_whose_plugin_is_there_is_handed_our_config() {
         "the config should be written once the plugin is there"
     );
 }
+
+#[tokio::test]
+async fn a_plugin_listed_in_the_agent_settings_counts_as_installed() {
+    let home = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        home.path().join(".apex-test-settings.json"),
+        serde_json::json!({ "packages": ["npm:something-else", "npm:apex-test-plugin"] })
+            .to_string(),
+    )
+    .expect("settings");
+    let (paths, session) = gated_session(home.path()).await;
+
+    assert!(
+        paths.mcp_dir().join(format!("{session}.json")).is_file(),
+        "the listing alone should be enough"
+    );
+}
+
+#[tokio::test]
+async fn a_plugin_listed_as_an_object_counts_as_installed() {
+    let home = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        home.path().join(".apex-test-settings.json"),
+        serde_json::json!({ "packages": [{ "source": "npm:apex-test-plugin" }] }).to_string(),
+    )
+    .expect("settings");
+    let (paths, session) = gated_session(home.path()).await;
+
+    assert!(paths.mcp_dir().join(format!("{session}.json")).is_file(), "objects count too");
+}
+
+#[tokio::test]
+async fn a_listing_without_the_plugin_is_still_missing() {
+    let home = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        home.path().join(".apex-test-settings.json"),
+        serde_json::json!({ "packages": ["npm:something-else"] }).to_string(),
+    )
+    .expect("settings");
+    let (paths, session) = gated_session(home.path()).await;
+
+    assert!(
+        !paths.mcp_dir().join(format!("{session}.json")).exists(),
+        "another package should not stand in for it"
+    );
+}
