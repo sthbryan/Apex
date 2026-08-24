@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::error::ProtocolError;
 
-pub const PROTOCOL_VERSION: u32 = 17;
+pub const PROTOCOL_VERSION: u32 = 18;
 
 pub const IDLE_GRACE_NEVER: u32 = u32::MAX;
 
@@ -55,6 +55,7 @@ pub struct Hello {
     pub protocol_version: u32,
     pub client_name: String,
     pub identity: Option<Identity>,
+    pub probe: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

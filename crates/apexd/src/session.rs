@@ -34,8 +34,11 @@ pub async fn serve(
     clients: Arc<AtomicUsize>,
 ) {
     let peer = connection.peer().clone();
-    match handshake(&mut connection).await {
-        Ok(Some(_)) => tracing::info!(peer = %peer.label, "client connected"),
+    let hello = match handshake(&mut connection).await {
+        Ok(Some(hello)) => {
+            tracing::info!(peer = %peer.label, probe = hello.probe, "client connected");
+            hello
+        }
         Ok(None) => {
             tracing::debug!(peer = %peer.label, "availability probe");
             return;
@@ -44,8 +47,8 @@ pub async fn serve(
             tracing::warn!(peer = %peer.label, %error, "handshake failed");
             return;
         }
-    }
-    let _census = Census::enter(clients);
+    };
+    let _census = (!hello.probe).then(|| Census::enter(clients));
 
     let (mut writer, reader) = connection.split();
     let (outbox, mut queue) = tokio::sync::mpsc::channel::<Frame>(CLIENT_QUEUE_DEPTH);

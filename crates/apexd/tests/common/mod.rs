@@ -231,6 +231,7 @@ impl Harness {
                 protocol_version: PROTOCOL_VERSION,
                 client_name: "test".into(),
                 identity: None,
+                probe: false,
             }))
             .await
             .expect("hello");

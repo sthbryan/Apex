@@ -16,6 +16,7 @@ fn control_frame_roundtrips() {
         protocol_version: PROTOCOL_VERSION,
         client_name: "apex-desktop".into(),
         identity: None,
+        probe: false,
     });
     let decoded: ClientMessage =
         roundtrip(Frame::control(&hello).expect("encode")).parse_control().expect("parse");

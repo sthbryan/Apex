@@ -30,6 +30,7 @@ impl Link {
                 protocol_version: PROTOCOL_VERSION,
                 client_name: "apex-mcp".into(),
                 identity: None,
+                probe: false,
             }))
             .await?;
 

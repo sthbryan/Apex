@@ -154,6 +154,7 @@ async fn shake_hands(socket: &Path) -> Result<(Connection, String)> {
             protocol_version: PROTOCOL_VERSION,
             client_name: "apex-desktop".into(),
             identity: None,
+            probe: false,
         }))
         .await?;
 
