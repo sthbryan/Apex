@@ -7,13 +7,13 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let quit = MenuItemBuilder::with_id("tray-quit", "Quit Apex").build(app)?;
     let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
 
-    let mut tray = TrayIconBuilder::with_id("apex")
-        .tooltip("Apex")
-        .menu(&menu)
-        .on_menu_event(|app, event| match event.id().0.as_str() {
-            "tray-open" => reveal(app),
-            "tray-quit" => app.exit(0),
-            _ => {}
+    let mut tray =
+        TrayIconBuilder::with_id("apex").tooltip("Apex").menu(&menu).on_menu_event(|app, event| {
+            match event.id().0.as_str() {
+                "tray-open" => reveal(app),
+                "tray-quit" => app.exit(0),
+                _ => {}
+            }
         });
 
     if let Some(icon) = app.default_window_icon().cloned() {

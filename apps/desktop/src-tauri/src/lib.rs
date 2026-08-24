@@ -33,6 +33,14 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event
+                && window.state::<AppState>().keep_alive.load(std::sync::atomic::Ordering::Relaxed)
+            {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .setup(|app| {
             let paths = ApexPaths::discover()?;
             let daemon = tauri::async_runtime::block_on(DaemonClient::attach(&paths.socket));
@@ -45,12 +53,14 @@ pub fn run() {
             app.manage(AppState {
                 daemon: std::sync::Mutex::new(daemon.ok()),
                 socket: paths.socket,
+                keep_alive: std::sync::atomic::AtomicBool::new(false),
             });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::daemon_version,
             commands::self_updating,
+            commands::set_keep_alive,
             commands::host_platform,
             commands::set_badge,
             commands::set_window_material,

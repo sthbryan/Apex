@@ -15,6 +15,11 @@ pub fn host_platform() -> &'static str {
 }
 
 #[tauri::command]
+pub fn set_keep_alive(state: tauri::State<'_, AppState>, keep: bool) {
+    state.keep_alive.store(keep, std::sync::atomic::Ordering::Relaxed);
+}
+
+#[tauri::command]
 pub fn self_updating() -> bool {
     if cfg!(target_os = "linux") {
         return std::env::var_os("APPIMAGE").is_some();

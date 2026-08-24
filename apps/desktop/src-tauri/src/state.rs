@@ -1,11 +1,13 @@
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use crate::client::DaemonClient;
 
 pub struct AppState {
     pub daemon: std::sync::Mutex<Option<Arc<DaemonClient>>>,
     pub socket: PathBuf,
+    pub keep_alive: AtomicBool,
 }
 
 impl AppState {
