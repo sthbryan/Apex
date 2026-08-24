@@ -6,12 +6,12 @@
   }
 
   .ui-diff-file {
-    @apply overflow-hidden rounded-sm border border-border;
+    @apply overflow-x-auto rounded-sm border border-border;
     background-color: var(--apex-overlay);
   }
 
   .ui-diff-head {
-    @apply flex items-center gap-2 px-2.5 py-1.5 font-mono text-sm;
+    @apply sticky left-0 flex items-center gap-2 px-2.5 py-1.5 font-mono text-sm;
     background-color: var(--apex-raised);
     border-bottom: 1px solid var(--apex-border);
   }
@@ -21,7 +21,7 @@
   }
 
   .ui-diff-hunk {
-    @apply flex items-center gap-2 px-2.5 py-1 font-mono text-xs text-muted;
+    @apply sticky left-0 flex items-center gap-2 px-2.5 py-1 font-mono text-xs text-muted;
     background-color: color-mix(in oklab, var(--apex-raised) 60%, transparent);
     border-bottom: 1px solid var(--apex-border);
   }
@@ -36,8 +36,10 @@
   }
 
   .ui-diff-line {
-    @apply overflow-x-auto px-2.5 py-0.5 font-mono text-sm;
+    @apply px-2.5 py-0.5 font-mono text-sm;
     white-space: pre;
+    width: max-content;
+    min-width: 100%;
   }
 
   .ui-diff-line[data-kind="add"] {
