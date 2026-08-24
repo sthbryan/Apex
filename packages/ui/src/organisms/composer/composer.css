@@ -22,8 +22,7 @@
   }
 
   .ui-composer-bar {
-    @apply flex items-center gap-1.5 px-2.5 pt-2 pb-2.5;
-    flex-wrap: wrap;
+    @apply flex min-w-0 items-center gap-1.5 px-2.5 pt-2 pb-2.5;
   }
 
   @media (max-width: 640px) {
@@ -37,6 +36,7 @@
     }
     .ui-composer-bar {
       @apply px-2 pt-1.5 pb-2 gap-1;
+      flex-wrap: wrap;
     }
   }
 
