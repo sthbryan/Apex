@@ -27,7 +27,7 @@ import { startPeeking } from "@/features/tasks/state";
 import { watchForUpdates } from "@/features/updates/state";
 import { startPaneCleanup } from "@/features/workspace/autoclose";
 import { startViewIntents } from "@/features/workspace/intents";
-import { activeSessionId } from "@/features/workspace/state";
+import { activeSessionId, startTargetFollow } from "@/features/workspace/state";
 import { connect, platform, status } from "@/shared/daemon";
 import { locale } from "@/shared/i18n";
 import { startMetrics } from "@/shared/telemetry";
@@ -72,6 +72,7 @@ export function App() {
     applyAppearance();
     const stopDockWidth = startDockWidth();
     const stopLayoutSaves = startLayoutSaves();
+    const stopTargetFollow = startTargetFollow();
     return () => {
       stopNotifications?.();
       stopMenu?.();
@@ -84,6 +85,7 @@ export function App() {
       stopTheme();
       stopDockWidth();
       stopLayoutSaves();
+      stopTargetFollow();
     };
   }, []);
 

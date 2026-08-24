@@ -532,13 +532,15 @@ function updateTab(tabId: string, change: (tab: Tab) => Tab): void {
   tabs.value = tabs.value.map((tab) => (tab.id === tabId ? change(tab) : tab));
 }
 
-activeSessionId.subscribe((sessionId) => {
-  const worktree = sessions.value.find((session) => session.id === sessionId)?.worktree;
-  if (!worktree) {
-    return;
-  }
-  const wanted: GitTarget = { type: "worktree", path: worktree.path };
-  if (!sameTarget(gitTarget.value, wanted)) {
-    selectTarget(wanted);
-  }
-});
+export function startTargetFollow(): () => void {
+  return activeSessionId.subscribe((sessionId) => {
+    const worktree = sessions.value.find((session) => session.id === sessionId)?.worktree;
+    if (!worktree) {
+      return;
+    }
+    const wanted: GitTarget = { type: "worktree", path: worktree.path };
+    if (!sameTarget(gitTarget.value, wanted)) {
+      selectTarget(wanted);
+    }
+  });
+}
