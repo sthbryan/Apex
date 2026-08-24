@@ -55,6 +55,9 @@ jobs:
           cp target/release/apexd apps/desktop/src-tauri/binaries/apexd-$(rustc -vV | sed -n 's|host: ||p')
           chmod +x apps/desktop/src-tauri/binaries/apexd-*
 
+      - name: Build UI package
+        run: bun run build:packages
+
       - name: Build, sign and upload release
         uses: tauri-apps/tauri-action@v0
         env:

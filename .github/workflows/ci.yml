@@ -25,6 +25,10 @@ jobs:
       - name: Install JS deps
         run: bun install --frozen-lockfile
 
+      - name: Build UI package
+        working-directory: .
+        run: bun run build:packages
+
       - name: Lint
         run: bun run lint
 
