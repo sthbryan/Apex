@@ -2,18 +2,17 @@
 
 @layer components {
   .ui-code-view {
-    @apply py-3 font-mono text-sm;
+    @apply flex font-mono text-sm;
     line-height: 1.7;
+  }
+
+  .ui-code-body {
+    @apply min-w-0 grow py-3 pl-3;
   }
 
   .ui-code-line {
     @apply flex;
     white-space: pre;
-  }
-
-  .ui-code-gutter {
-    @apply flex-none pr-3 text-right text-faint select-none;
-    width: 40px;
   }
 
   .ui-code-numbers {

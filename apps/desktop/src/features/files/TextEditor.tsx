@@ -1,4 +1,4 @@
-import { CodeGutter, CodeView } from "@apex/ui";
+import { CodeView } from "@apex/ui";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import { highlight } from "@/features/files/highlight";
@@ -40,10 +40,9 @@ export function TextEditor({ text, path, editable, onInput, onSave }: Props) {
 
   return (
     <div class="min-h-0 flex-1 overflow-auto">
-      <CodeView class="flex min-h-full w-max min-w-full animate-fade-in py-0">
-        <CodeGutter lines={lines} />
-        <div class="relative grow">
-          <pre aria-hidden={editable} class="px-3 py-3">
+      <CodeView lines={lines} class="min-h-full w-max min-w-full animate-fade-in">
+        <div class="relative">
+          <pre aria-hidden={editable}>
             {painted ? <code dangerouslySetInnerHTML={{ __html: painted }} /> : <code>{text}</code>}
             {"\n"}
           </pre>
@@ -58,7 +57,7 @@ export function TextEditor({ text, path, editable, onInput, onSave }: Props) {
               autocorrect="off"
               onKeyDown={onKeyDown}
               onInput={(event) => onInput(event.currentTarget.value)}
-              class="absolute inset-0 resize-none overflow-hidden whitespace-pre border-0 bg-transparent px-3 py-3 text-transparent caret-text outline-none"
+              class="absolute inset-0 resize-none overflow-hidden whitespace-pre border-0 bg-transparent text-transparent caret-text outline-none"
             />
           )}
         </div>

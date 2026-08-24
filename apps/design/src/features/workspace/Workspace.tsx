@@ -495,12 +495,14 @@ function MarkdownPane() {
             </ul>
           </MarkdownView>
         ) : (
-          <CodeView>
-            <CodeLine number={1}><Code token="comment"># Apex</Code></CodeLine>
-            <CodeLine number={2} />
-            <CodeLine number={3}>Run a team of AI agents.</CodeLine>
-            <CodeLine number={5}><Code token="comment">## Install</Code></CodeLine>
-            <CodeLine number={7}>    curl -fsSL https://apex.dev/install.sh | sh</CodeLine>
+          <CodeView lines={7}>
+            <CodeLine><Code token="comment"># Apex</Code></CodeLine>
+            <CodeLine />
+            <CodeLine>Run a team of AI agents.</CodeLine>
+            <CodeLine />
+            <CodeLine><Code token="comment">## Install</Code></CodeLine>
+            <CodeLine />
+            <CodeLine>    curl -fsSL https://apex.dev/install.sh | sh</CodeLine>
           </CodeView>
         )}
     </Pane>
@@ -515,13 +517,13 @@ function CodePane() {
       sub={<><span>src/dock</span><Chip>typescript</Chip></>}
       actions={<><Button variant="ghost" size="xs" iconOnly title="Reload"><RotateCw size={12} /></Button><PaneTools /></>}
     >
-      <CodeView>
-        <CodeLine number={1}><Code token="comment">// clamp the dock between the rail and half the window</Code></CodeLine>
-        <CodeLine number={2}><Code token="keyword">export function</Code>{" "}<Code token="function">clamp</Code>(x: number, rail: number, max: number) {"{"}</CodeLine>
-        <CodeLine number={3}>  <Code token="keyword">return</Code> Math.<Code token="function">min</Code>(Math.<Code token="function">max</Code>(x, rail), max);</CodeLine>
-        <CodeLine number={4}>{"}"}</CodeLine>
-        <CodeLine number={5} />
-        <CodeLine number={6}><Code token="keyword">export const</Code> STORAGE_KEY = <Code token="string">"apex.dock.width"</Code>;</CodeLine>
+      <CodeView lines={6}>
+        <CodeLine><Code token="comment">// clamp the dock between the rail and half the window</Code></CodeLine>
+        <CodeLine><Code token="keyword">export function</Code>{" "}<Code token="function">clamp</Code>(x: number, rail: number, max: number) {"{"}</CodeLine>
+        <CodeLine>  <Code token="keyword">return</Code> Math.<Code token="function">min</Code>(Math.<Code token="function">max</Code>(x, rail), max);</CodeLine>
+        <CodeLine>{"}"}</CodeLine>
+        <CodeLine />
+        <CodeLine><Code token="keyword">export const</Code> STORAGE_KEY = <Code token="string">"apex.dock.width"</Code>;</CodeLine>
       </CodeView>
     </Pane>
   );
