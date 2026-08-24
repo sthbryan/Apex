@@ -28,11 +28,7 @@ impl Drop for Census {
     }
 }
 
-pub async fn serve(
-    manager: Arc<SessionManager>,
-    mut connection: Connection,
-    clients: Arc<AtomicUsize>,
-) {
+pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     let peer = connection.peer().clone();
     let hello = match handshake(&mut connection).await {
         Ok(Some(hello)) => {
@@ -48,7 +44,7 @@ pub async fn serve(
             return;
         }
     };
-    let _census = (!hello.probe).then(|| Census::enter(clients));
+    let _census = (!hello.probe).then(|| Census::enter(manager.clients()));
 
     let (mut writer, reader) = connection.split();
     let (outbox, mut queue) = tokio::sync::mpsc::channel::<Frame>(CLIENT_QUEUE_DEPTH);

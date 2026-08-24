@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
 use apex_proto::IDLE_GRACE_NEVER;
@@ -9,11 +9,8 @@ use crate::sessions::SessionManager;
 
 pub const IDLE_POLL: Duration = Duration::from_secs(1);
 
-pub async fn watch_for_idle(
-    clients: Arc<AtomicUsize>,
-    manager: Arc<SessionManager>,
-    poll: Duration,
-) {
+pub async fn watch_for_idle(manager: Arc<SessionManager>, poll: Duration) {
+    let clients = manager.clients();
     let idle_grace = manager.idle_grace();
     let idle_since = manager.idle_since();
     let mut seen_client = false;

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, bail};
@@ -67,6 +67,7 @@ pub struct SessionManager {
     acp: Arc<AcpRegistry>,
     idle_grace: Arc<AtomicU64>,
     idle_since: Arc<std::sync::Mutex<Option<Instant>>>,
+    clients: Arc<AtomicUsize>,
     started: Instant,
     quit: Arc<watch::Sender<bool>>,
 }
@@ -128,6 +129,7 @@ impl SessionManager {
             acp,
             idle_grace: Arc::new(AtomicU64::new(DEFAULT_IDLE_GRACE_SECONDS)),
             idle_since: Arc::new(std::sync::Mutex::new(None)),
+            clients: Arc::new(AtomicUsize::new(0)),
             started: Instant::now(),
             quit: Arc::new(watch::channel(false).0),
         });
@@ -511,6 +513,14 @@ impl SessionManager {
 
     pub fn uptime(&self) -> Duration {
         self.started.elapsed()
+    }
+
+    pub fn clients(&self) -> Arc<AtomicUsize> {
+        Arc::clone(&self.clients)
+    }
+
+    pub fn client_count(&self) -> usize {
+        self.clients.load(Ordering::SeqCst)
     }
 
     pub async fn transcript(&self, id: Uuid, tail: usize, plain: bool) -> Result<String> {

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use apex_core::ApexPaths;
@@ -21,9 +21,10 @@ async fn it_quits_once_the_last_client_leaves() {
     let manager = daemon(&home).await;
     manager.set_idle_grace(0);
 
-    let clients = Arc::new(AtomicUsize::new(1));
+    let clients = manager.clients();
+    clients.store(1, Ordering::SeqCst);
     let mut quitting = manager.quitting();
-    tokio::spawn(watch_for_idle(Arc::clone(&clients), manager.clone(), POLL));
+    tokio::spawn(watch_for_idle(manager.clone(), POLL));
 
     tokio::time::sleep(POLL * 3).await;
     clients.store(0, Ordering::SeqCst);
@@ -42,9 +43,10 @@ async fn it_stands_down_when_the_grace_never_ends() {
     let manager = daemon(&home).await;
     manager.set_idle_grace(IDLE_GRACE_NEVER);
 
-    let clients = Arc::new(AtomicUsize::new(1));
+    let clients = manager.clients();
+    clients.store(1, Ordering::SeqCst);
     let mut quitting = manager.quitting();
-    tokio::spawn(watch_for_idle(Arc::clone(&clients), manager.clone(), POLL));
+    tokio::spawn(watch_for_idle(manager.clone(), POLL));
 
     tokio::time::sleep(POLL * 3).await;
     clients.store(0, Ordering::SeqCst);

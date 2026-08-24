@@ -2,7 +2,6 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use apex_core::{AgentProfile, ApexPaths, BinaryResolver, ProfileSet, ShellEnvironment, Store};
@@ -170,7 +169,6 @@ pub struct Harness {
     pub manager: Arc<SessionManager>,
     pub project: Uuid,
     pub root: tempfile::TempDir,
-    pub clients: Arc<AtomicUsize>,
 }
 
 pub fn make_repo(root: &std::path::Path) {
@@ -209,19 +207,16 @@ impl Harness {
         let mut transport = UnixTransport::bind(&socket).expect("bind");
 
         let served = manager.clone();
-        let clients = Arc::new(AtomicUsize::new(0));
-        let census = Arc::clone(&clients);
         tokio::spawn(async move {
             while let Ok((stream, peer)) = transport.accept().await {
-                let seen = Arc::clone(&census);
-                tokio::spawn(serve(served.clone(), Connection::new(stream, peer), seen));
+                tokio::spawn(serve(served.clone(), Connection::new(stream, peer)));
             }
         });
-        Self { socket, manager, project, root, clients }
+        Self { socket, manager, project, root }
     }
 
     pub fn counted(&self) -> usize {
-        self.clients.load(Ordering::SeqCst)
+        self.manager.client_count()
     }
 
     pub async fn client(&self) -> TestClient {

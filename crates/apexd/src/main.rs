@@ -1,6 +1,3 @@
-use std::sync::Arc;
-use std::sync::atomic::AtomicUsize;
-
 use anyhow::{Context, Result};
 use apex_core::ApexPaths;
 use apex_proto::{Connection, Listener, UnixTransport};
@@ -28,10 +25,9 @@ async fn main() -> Result<()> {
         .with_context(|| format!("listening on {}", paths.socket.display()))?;
     tracing::info!(transport = %transport.describe(), "apexd ready");
 
-    let clients = Arc::new(AtomicUsize::new(0));
     let mut shutdown_rx = manager.quitting();
 
-    let watchdog = tokio::spawn(watch_for_idle(Arc::clone(&clients), manager.clone(), IDLE_POLL));
+    let watchdog = tokio::spawn(watch_for_idle(manager.clone(), IDLE_POLL));
 
     let shutdown = || async {
         tracing::info!("apexd shutting down");
@@ -44,8 +40,7 @@ async fn main() -> Result<()> {
             accepted = transport.accept() => {
                 let (stream, peer) = accepted.context("accepting connection")?;
                 let manager = manager.clone();
-                let clients = Arc::clone(&clients);
-                tokio::spawn(session::serve(manager, Connection::new(stream, peer), clients));
+                tokio::spawn(session::serve(manager, Connection::new(stream, peer)));
             }
             _ = tokio::signal::ctrl_c() => {
                 shutdown().await;
