@@ -91,6 +91,7 @@ pub fn run() {
             commands::git_sync,
             commands::merge_worktree,
             commands::remove_worktree,
+            commands::prune_worktrees,
             commands::list_tasks,
             commands::run_task,
             commands::acp_transcript,

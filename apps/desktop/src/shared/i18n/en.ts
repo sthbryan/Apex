@@ -438,6 +438,7 @@ export const en = {
     empty: "No sessions yet.",
     worktrees: "Worktrees",
     treeChanged: "{count} changed",
+    treesPrune: "Clear the worktrees with nothing left to review",
     treeClean: "clean",
     spawned: "{count} agents",
     quiet: "Waiting for the first output…",

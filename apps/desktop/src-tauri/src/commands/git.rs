@@ -277,6 +277,17 @@ pub async fn merge_worktree(
 }
 
 #[tauri::command]
+pub async fn prune_worktrees(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+) -> Answer<Vec<String>> {
+    match state.daemon()?.request(Command::WorktreePrune { project }).await.map_err(failed)? {
+        Reply::Pruned { removed } => Ok(removed),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
 pub async fn remove_worktree(
     state: tauri::State<'_, AppState>,
     project: Uuid,

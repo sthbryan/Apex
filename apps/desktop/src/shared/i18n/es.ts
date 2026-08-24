@@ -439,6 +439,7 @@ export const es: Messages = {
     empty: "Todavía no hay sesiones.",
     worktrees: "Worktrees",
     treeChanged: "{count} cambios",
+    treesPrune: "Limpiar los worktrees que no tienen nada que revisar",
     treeClean: "limpio",
     spawned: "{count} agentes",
     quiet: "Esperando la primera salida…",

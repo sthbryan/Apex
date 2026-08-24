@@ -68,6 +68,16 @@ export function selectTarget(target: GitTarget): void {
   void readLog();
 }
 
+export async function pruneWorktrees(): Promise<number> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return 0;
+  }
+  const removed = await invoke<string[]>("prune_worktrees", { project });
+  await refreshGit();
+  return removed.length;
+}
+
 export async function refreshGit(): Promise<void> {
   const project = activeProjectId.value;
   if (!project) {

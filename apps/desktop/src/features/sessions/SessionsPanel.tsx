@@ -5,13 +5,14 @@ import { useState } from "preact/hooks";
 import { revealPanel } from "@/app/layout/actions";
 import { PanelActions } from "@/app/layout/PanelActions";
 import type { SessionSummary } from "@/bindings/SessionSummary";
-import { selectTarget, sessionOfWorktree, worktrees } from "@/features/git/state";
+import { pruneWorktrees, selectTarget, sessionOfWorktree, worktrees } from "@/features/git/state";
 import { waiting } from "@/features/notifications/state";
 import { foreignSessions, projectSessions, projects } from "@/features/projects/state";
 import { ElsewhereList } from "@/features/sessions/ElsewhereList";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
 import { WaitingList } from "@/features/sessions/WaitingList";
+import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -87,7 +88,25 @@ function OrphanTrees() {
 
   return (
     <Fragment>
-      <SectionLabel count={orphans.length}>{t("sessions.worktrees")}</SectionLabel>
+      <SectionLabel
+        count={orphans.length}
+        action={
+          orphans.some((tree) => tree.changed === 0) ? (
+            <button
+              type="button"
+              title={t("sessions.treesPrune")}
+              onClick={() => {
+                void pruneWorktrees().catch(complain);
+              }}
+              class="flex size-5 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
+            >
+              <Icon name="close" size={12} />
+            </button>
+          ) : undefined
+        }
+      >
+        {t("sessions.worktrees")}
+      </SectionLabel>
       {orphans.map((tree) => (
         <ListRow
           key={tree.path}
