@@ -15,7 +15,12 @@ pub fn offer(
     let launcher = binary.display().to_string();
 
     match delivery {
-        McpDelivery::Flag { flag, merge_from, prefix } => {
+        McpDelivery::Flag { flag, merge_from, prefix, requires_path } => {
+            if let Some(required) = requires_path.as_deref()
+                && !expand_home(required, &paths.home).exists()
+            {
+                return Ok(None);
+            }
             let dir = paths.mcp_dir();
             std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
             let args = vec!["mcp".to_owned(), "--session".to_owned(), session.to_string()];

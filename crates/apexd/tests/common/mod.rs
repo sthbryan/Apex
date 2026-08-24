@@ -98,6 +98,17 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
     );
     profiles.upsert(
         AgentProfile::parse(
+            "name = \"mcp-gated\"\n\
+             command = \"echo\"\n\
+             [mcp]\n\
+             kind = \"flag\"\n\
+             flag = \"--mcp-config\"\n\
+             requires_path = \"~/.apex-test-plugin\"\n",
+        )
+        .expect("gated mcp profile"),
+    );
+    profiles.upsert(
+        AgentProfile::parse(
             "name = \"mcp-prefixed\"\n\
              command = \"echo\"\n\
              [mcp]\n\

@@ -360,3 +360,50 @@ async fn adopting_an_agent_writes_apex_into_its_own_config_and_keeps_a_backup() 
     assert!(cleaned["mcpServers"]["apex"].is_null());
     assert_eq!(cleaned["mcpServers"]["theirs"]["command"], "echo");
 }
+
+async fn gated_session(home: &std::path::Path) -> (apex_core::ApexPaths, uuid::Uuid) {
+    let paths = apex_core::ApexPaths::rooted_at(home);
+    let manager = manager_at(&paths);
+    let root = tempfile::tempdir().expect("project");
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
+    let session = manager
+        .create(NewSession {
+            project,
+            agent: "mcp-gated".into(),
+            cwd: None,
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+            run: None,
+            unattended: false,
+        })
+        .await
+        .expect("session");
+    (paths, session.id)
+}
+
+#[tokio::test]
+async fn an_agent_whose_plugin_is_missing_starts_without_our_config() {
+    let home = tempfile::tempdir().expect("tempdir");
+    let (paths, session) = gated_session(home.path()).await;
+
+    assert!(
+        !paths.mcp_dir().join(format!("{session}.json")).exists(),
+        "no config should be written when the plugin is not there"
+    );
+}
+
+#[tokio::test]
+async fn an_agent_whose_plugin_is_there_is_handed_our_config() {
+    let home = tempfile::tempdir().expect("tempdir");
+    std::fs::create_dir_all(home.path().join(".apex-test-plugin")).expect("plugin");
+    let (paths, session) = gated_session(home.path()).await;
+
+    assert!(
+        paths.mcp_dir().join(format!("{session}.json")).is_file(),
+        "the config should be written once the plugin is there"
+    );
+}

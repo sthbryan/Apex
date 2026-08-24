@@ -8,6 +8,7 @@ acp_args = ["-y", "pi-acp"]
 kind = "flag"
 flag = "--mcp-config"
 merge_from = "~/.pi/agent/mcp.json"
+requires_path = "~/.pi/agent/npm/node_modules/pi-mcp-adapter"
 
 [state_patterns]
 blocked = ["\\(y/n\\)", "\\[y/N\\]", "Allow"]
