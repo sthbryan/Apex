@@ -7,10 +7,7 @@
     height: var(--apex-h-lg);
     z-index: var(--apex-z-dock);
     border-top: 1px solid var(--apex-border);
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-  .ui-status-bar::-webkit-scrollbar { display: none; }
 
   .ui-status-bar-right {
     @apply ml-auto flex items-center gap-1;
