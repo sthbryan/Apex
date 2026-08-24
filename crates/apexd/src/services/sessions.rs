@@ -397,7 +397,7 @@ impl SessionRegistry {
             Ok(process) => process,
             Err(error) => {
                 self.abandon_worktree(&project_root, worktree.as_ref()).await;
-                return Err(error.into());
+                return Err(error);
             }
         };
         let cwd_text = cwd.display().to_string();

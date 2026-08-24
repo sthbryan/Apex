@@ -12,11 +12,13 @@ struct Pane {
     seen: u64,
 }
 
+type Waiting = Arc<Mutex<HashMap<Uuid, oneshot::Sender<Result<String, String>>>>>;
+
 #[derive(Default)]
 pub struct BrowsersService {
     panes: Arc<Mutex<HashMap<String, Pane>>>,
     clock: Arc<Mutex<u64>>,
-    waiting: Arc<Mutex<HashMap<Uuid, oneshot::Sender<Result<String, String>>>>>,
+    waiting: Waiting,
 }
 
 impl BrowsersService {
