@@ -1,4 +1,5 @@
 import {
+  Button,
   DataRow,
   Field,
   IdentityCard,
@@ -79,7 +80,7 @@ import {
 } from "@/features/settings/toolGroups";
 import { autoUpdate, setAutoUpdate } from "@/features/updates/state";
 import { UpdateAction, UpdateNote } from "@/features/updates/UpdateAction";
-import { agents, complain, daemonVersion } from "@/shared/daemon";
+import { agents, complain, daemonVersion, stopDaemon } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
 import { Icon } from "@/shared/ui/Icon";
@@ -513,6 +514,16 @@ export function daemonSection(): Section {
               label: t(option.key),
             }))}
           />
+        ),
+      },
+      {
+        id: "stopDaemon",
+        label: t("settings.stopDaemon"),
+        hint: t("settings.stopDaemonHint"),
+        control: (
+          <Button variant="danger" onClick={stopDaemon}>
+            {t("settings.stopDaemonAction")}
+          </Button>
         ),
       },
     ],

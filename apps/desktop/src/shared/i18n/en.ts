@@ -196,6 +196,10 @@ export const en = {
     idleGrace: "Daemon background time",
     idleGraceHint:
       "How long the daemon keeps running after you quit Apex. After this it shuts down and your agents stop. Reopen within the window to resume sessions.",
+    stopDaemon: "Stop the daemon",
+    stopDaemonHint:
+      "Ends every running session and closes Apex. Opening it again starts a fresh daemon.",
+    stopDaemonAction: "Stop and quit",
     idleGrace0: "Stop on close",
     idleGrace300: "5 minutes",
     idleGrace18000: "5 hours",

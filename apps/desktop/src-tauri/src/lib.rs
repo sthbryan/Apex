@@ -61,6 +61,7 @@ pub fn run() {
             commands::daemon_version,
             commands::self_updating,
             commands::set_keep_alive,
+            commands::stop_daemon,
             commands::host_platform,
             commands::set_badge,
             commands::set_window_material,

@@ -30,6 +30,10 @@ export function complain(cause: unknown): void {
   setTimeout(() => hush(id), NOTICE_LIFETIME);
 }
 
+export function stopDaemon(): void {
+  invoke("stop_daemon");
+}
+
 export function hush(id: number): void {
   notices.value = notices.value.filter((notice) => notice.id !== id);
 }

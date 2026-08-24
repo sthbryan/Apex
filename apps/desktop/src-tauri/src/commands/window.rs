@@ -1,3 +1,5 @@
+use tauri::Manager;
+
 use crate::state::{Answer, AppState};
 
 #[cfg(target_os = "macos")]
@@ -12,6 +14,20 @@ pub async fn daemon_version(state: tauri::State<'_, AppState>) -> Answer<String>
 #[tauri::command]
 pub fn host_platform() -> &'static str {
     std::env::consts::OS
+}
+
+pub async fn halt<R: tauri::Runtime>(app: tauri::AppHandle<R>) {
+    let daemon = app.try_state::<AppState>().and_then(|state| state.daemon().ok());
+    if let Some(client) = daemon {
+        let _ = client.request(apex_proto::Command::DaemonShutdown).await;
+    }
+    app.exit(0);
+}
+
+#[tauri::command]
+pub async fn stop_daemon(app: tauri::AppHandle) -> Answer<()> {
+    halt(app).await;
+    Ok(())
 }
 
 #[tauri::command]

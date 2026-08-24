@@ -7,8 +7,9 @@ const GLYPH: &[u8] = include_bytes!("../icons/tray.png");
 
 pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let open = MenuItemBuilder::with_id("tray-open", "Open Apex").build(app)?;
+    let stop = MenuItemBuilder::with_id("tray-stop", "Stop the daemon and quit").build(app)?;
     let quit = MenuItemBuilder::with_id("tray-quit", "Quit Apex").build(app)?;
-    let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
+    let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &stop, &quit])?;
 
     let mut tray =
         TrayIconBuilder::with_id("apex").tooltip("Apex").menu(&menu).on_menu_event(|app, event| {
