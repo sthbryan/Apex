@@ -461,7 +461,7 @@ export const es: Messages = {
     placeholder: "Preguntá, delegá o arrancá una tarea…",
     racePlaceholder: "La tarea que corre cada agente, cada uno en su worktree…",
     modeRaceHint: "Corre la tarea en cada agente que marques",
-    modeRace: "Corrida",
+    modeRace: "Modo corrida",
     isolate: "Worktree",
     agents: "Agentes",
     start: "Arrancar",

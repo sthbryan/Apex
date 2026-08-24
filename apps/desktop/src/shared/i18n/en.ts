@@ -460,7 +460,7 @@ export const en = {
     placeholder: "Ask, delegate, or start a task…",
     racePlaceholder: "The task every agent runs, each in its own worktree…",
     modeRaceHint: "Run the task across every agent you pick",
-    modeRace: "Race",
+    modeRace: "Race mode",
     isolate: "Worktree",
     agents: "Agents",
     start: "Start",
