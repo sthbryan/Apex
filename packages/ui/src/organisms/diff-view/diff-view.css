@@ -10,6 +10,11 @@
     background-color: var(--apex-overlay);
   }
 
+  .ui-diff-body {
+    width: max-content;
+    min-width: 100%;
+  }
+
   .ui-diff-head {
     @apply sticky left-0 flex items-center gap-2 px-2.5 py-1.5 font-mono text-sm;
     background-color: var(--apex-raised);
@@ -36,10 +41,12 @@
   }
 
   .ui-diff-line {
-    @apply px-2.5 py-0.5 font-mono text-sm;
+    @apply w-full px-2.5 py-0.5 font-mono text-sm;
     white-space: pre;
-    width: max-content;
-    min-width: 100%;
+  }
+
+  .ui-diff-no {
+    @apply sticky left-0 mr-3 inline-block w-8 select-none text-right text-faint tabular-nums;
   }
 
   .ui-diff-line[data-kind="add"] {

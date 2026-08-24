@@ -39,7 +39,7 @@ export function DiffFile({ path, added, removed, class: className, children, ...
         <span class="ui-diff-path">{path}</span>
         <DiffStat added={added} removed={removed} />
       </div>
-      {children}
+      <div class="ui-diff-body">{children}</div>
     </div>
   );
 }

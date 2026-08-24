@@ -61,9 +61,7 @@ export function UnifiedPatch({ path, patch, actions }: Props) {
               <DiffHunk range={hunk.header} actions={actions} />
               {hunk.lines.map((line, index) => (
                 <DiffLine key={`${hunk.header}-${index}`} kind={line.kind}>
-                  <span class="mr-3 inline-block w-8 select-none text-right text-faint tabular-nums">
-                    {line.no ?? ""}
-                  </span>
+                  <span class="ui-diff-no">{line.no ?? ""}</span>
                   {line.markup === null ? (
                     line.text
                   ) : (
