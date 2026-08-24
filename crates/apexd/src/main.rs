@@ -12,6 +12,11 @@ async fn main() -> Result<()> {
         return apexd::mcp::run(&paths.socket, session).await;
     }
 
+    if let Some(verb) = apexd::cli::requested() {
+        let code = apexd::cli::run(&paths.socket, verb).await?;
+        std::process::exit(code);
+    }
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
