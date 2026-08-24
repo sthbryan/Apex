@@ -86,6 +86,7 @@ export function Layout({ children }: { children: ComponentChildren }) {
 
         <SidePanel
           collapsed={railOnly.value}
+          grip={<span class="ui-side-panel-grip" aria-hidden="true" />}
           head={<ProjectsPop />}
           foot={
             <Button

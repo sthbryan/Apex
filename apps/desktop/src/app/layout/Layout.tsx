@@ -9,6 +9,7 @@ import {
   Wordmark,
 } from "@apex/ui";
 import { Dock } from "@/app/layout/Dock";
+import { DockResize } from "@/app/layout/DockResize";
 import { DOCK_PANELS } from "@/app/layout/panels";
 import { StatusBar } from "@/app/layout/StatusBar";
 import {
@@ -99,6 +100,7 @@ export function Layout({ onNewSession }: Props) {
         <SidePanel
           flush
           collapsed={rail}
+          grip={<DockResize />}
           head={<ProjectPicker />}
           foot={
             <Button variant="primary" size="lg" class="w-full" onClick={openHome}>

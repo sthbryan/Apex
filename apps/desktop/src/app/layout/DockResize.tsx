@@ -1,5 +1,3 @@
-import cn from "cnfast";
-
 import {
   DOCK_WIDTH_MAX,
   DOCK_WIDTH_MIN,
@@ -59,12 +57,8 @@ export function DockResize() {
       onMouseDown={startDrag}
       onDblClick={resetDockWidth}
       onKeyDown={nudge}
-      class={cn(
-        "absolute inset-y-0 right-0 z-10 w-1 cursor-col-resize transition-[background-color,box-shadow]",
-        dockResizing.value
-          ? "bg-accent shadow-[0_0_0_1px_var(--apex-accent)]"
-          : "hover:bg-accent hover:shadow-[0_0_0_1px_var(--apex-accent)]",
-      )}
+      class="ui-side-panel-grip"
+      data-dragging={dockResizing.value || undefined}
     />
   );
 }

@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 export interface SidePanelProps extends Omit<JSX.IntrinsicElements["aside"], "ref"> {
   head?: ComponentChildren;
   foot?: ComponentChildren;
+  grip?: ComponentChildren;
   side?: "left" | "right";
   width?: number;
   collapsed?: boolean;
@@ -12,7 +13,7 @@ export interface SidePanelProps extends Omit<JSX.IntrinsicElements["aside"], "re
 }
 
 export function SidePanel({
-  head, foot, side = "left", width, collapsed, flush, class: className, children, ...rest
+  head, foot, grip, side = "left", width, collapsed, flush, class: className, children, ...rest
 }: SidePanelProps) {
   return (
     <aside
@@ -28,6 +29,7 @@ export function SidePanel({
         <div class="ui-side-panel-body" data-flush={flush || undefined}>{children}</div>
         {foot ? <div class="ui-side-panel-foot">{foot}</div> : null}
       </div>
+      {grip}
     </aside>
   );
 }
