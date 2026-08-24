@@ -22,7 +22,7 @@ import { slugify, suggestName } from "@/features/sessions/naming";
 import { startSession } from "@/features/sessions/pending";
 import { raceSession } from "@/features/sessions/state";
 import { enabledAgents, lastAgent, runsUnattended } from "@/features/settings/agentMode";
-import { focusSession, homeAsk } from "@/features/workspace/state";
+import { focusSession, homeAsk, homeRacing } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -43,6 +43,9 @@ export function Home() {
 
   useEffect(() => {
     field.current?.focus();
+    if (homeRacing.value) {
+      setMode("race");
+    }
   }, [homeAsk.value]);
 
   const racing = mode === "race";

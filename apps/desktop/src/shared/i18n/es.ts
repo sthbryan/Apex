@@ -516,6 +516,7 @@ export const es: Messages = {
     goTo: "Ir a: {title}",
     splitRightWith: "Dividir a la derecha: {agent}",
     splitDownWith: "Dividir abajo: {agent}",
+    race: "Correr una tarea entre agentes",
     layout: "Disposición: {name}",
     closePane: "Cerrar panel",
     closeTab: "Cerrar pestaña",

@@ -11,6 +11,7 @@ import {
   closePane,
   closeTab,
   focusSession,
+  openHomeRacing,
   openInNewTab,
 } from "@/features/workspace/state";
 import { findLeaf } from "@/features/workspace/tree";
@@ -124,6 +125,17 @@ function buildActions(
           rows: 24,
           cols: 80,
         }).then(openInNewTab);
+      },
+    });
+  }
+
+  if (project && installed(agents).filter((agent) => agent.agentic).length > 1) {
+    actions.push({
+      id: "race",
+      label: t("palette.race"),
+      run: () => {
+        onClose();
+        openHomeRacing();
       },
     });
   }

@@ -40,10 +40,12 @@ import {
   focusSession,
   homeAsk,
   homeOpen,
+  homeRacing,
   mergeTabInto,
   openDiff,
   openFile,
   openHome,
+  openHomeRacing,
   openInNewTab,
   openPanel,
   openQuietly,
@@ -88,6 +90,15 @@ describe("openHome", () => {
     openHome();
     expect(homeOpen.value).toBe(true);
     expect(homeAsk.value).toBe(1);
+    expect(homeRacing.value).toBe(false);
+  });
+
+  it("asks for race mode only through its own door", () => {
+    openHomeRacing();
+    expect(homeRacing.value).toBe(true);
+    expect(homeAsk.value).toBe(1);
+    openHome();
+    expect(homeRacing.value).toBe(false);
   });
 });
 

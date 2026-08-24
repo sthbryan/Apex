@@ -515,6 +515,7 @@ export const en = {
     goTo: "Go to: {title}",
     splitRightWith: "Split right: {agent}",
     splitDownWith: "Split down: {agent}",
+    race: "Race a task across agents",
     layout: "Layout: {name}",
     closePane: "Close pane",
     closeTab: "Close tab",

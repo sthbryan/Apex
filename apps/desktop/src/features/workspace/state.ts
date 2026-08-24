@@ -44,9 +44,17 @@ export const tabs = signal<Tab[]>([]);
 export const activeTabId = signal<string | null>(null);
 export const homeOpen = signal(true);
 export const homeAsk = signal(0);
+export const homeRacing = signal(false);
 
 export function openHome(): void {
   homeOpen.value = true;
+  homeRacing.value = false;
+  homeAsk.value += 1;
+}
+
+export function openHomeRacing(): void {
+  homeOpen.value = true;
+  homeRacing.value = true;
   homeAsk.value += 1;
 }
 
