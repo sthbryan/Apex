@@ -485,8 +485,10 @@ impl SessionRegistry {
         if slug.is_empty() {
             bail!("the worktree name is empty")
         }
-        let created =
-            tokio::task::spawn_blocking(move || apex_git::add_worktree(&root, &slug)).await??;
+        let created = tokio::task::spawn_blocking(move || {
+            apex_git::add_worktree(&root, &apex_git::free_slug(&root, &slug))
+        })
+        .await??;
         Ok(WorktreeInfo { path: created.path.display().to_string(), branch: created.branch })
     }
 

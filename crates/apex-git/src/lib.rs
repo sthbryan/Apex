@@ -402,6 +402,22 @@ pub fn show(dir: &Path, commit: &str, path: Option<&str>) -> Result<String> {
     run(dir, &args)
 }
 
+pub fn free_slug(root: &Path, wanted: &str) -> String {
+    let taken: Vec<String> =
+        branches(root).unwrap_or_default().into_iter().map(|branch| branch.name).collect();
+    let free = |slug: &str| {
+        !root.join(WORKTREE_DIR).join(slug).exists()
+            && !taken.iter().any(|name| name == &format!("{BRANCH_PREFIX}/{slug}"))
+    };
+    if free(wanted) {
+        return wanted.to_owned();
+    }
+    (2..)
+        .map(|attempt| format!("{wanted}-{attempt}"))
+        .find(|candidate| free(candidate))
+        .unwrap_or_else(|| wanted.to_owned())
+}
+
 pub fn add_worktree(root: &Path, slug: &str) -> Result<Worktree> {
     let branch = format!("{BRANCH_PREFIX}/{slug}");
     let path = root.join(WORKTREE_DIR).join(slug);

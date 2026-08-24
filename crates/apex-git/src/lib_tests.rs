@@ -397,3 +397,35 @@ fn a_patch_carries_its_path_and_its_line_counts() {
     assert_eq!(patch_path(&patch).as_deref(), Some("README.md"));
     assert_eq!(patch_counts(&patch), (2, 1));
 }
+
+#[test]
+fn a_free_slug_is_the_wanted_one_when_nothing_holds_it() {
+    let dir = repo();
+    assert_eq!(free_slug(dir.path(), "pi"), "pi");
+}
+
+#[test]
+fn a_slug_taken_on_disk_moves_to_the_next_one() {
+    let dir = repo();
+    add_worktree(dir.path(), "pi").expect("worktree");
+
+    assert_eq!(free_slug(dir.path(), "pi"), "pi-2");
+}
+
+#[test]
+fn a_slug_skips_every_number_already_in_use() {
+    let dir = repo();
+    add_worktree(dir.path(), "pi").expect("worktree");
+    add_worktree(dir.path(), "pi-2").expect("worktree");
+
+    assert_eq!(free_slug(dir.path(), "pi"), "pi-3");
+}
+
+#[test]
+fn a_branch_left_behind_still_holds_its_slug() {
+    let dir = repo();
+    let tree = add_worktree(dir.path(), "pi").expect("worktree");
+    remove_worktree(dir.path(), &tree.path, None).expect("remove");
+
+    assert_eq!(free_slug(dir.path(), "pi"), "pi-2");
+}
