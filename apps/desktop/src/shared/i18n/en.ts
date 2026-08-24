@@ -173,6 +173,13 @@ export const en = {
     agentSplitsSpareOption: "{panes} in the spare one",
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",
     agentEnabled: "Offer {agent} when starting a session",
+    agentTools: "Tools",
+    agentToolsHint: "Which Apex tools this agent gets. Changes reach the next session it starts.",
+    toolObservation: "watch",
+    toolOrchestration: "orchestrate",
+    toolViews: "views",
+    toolBrowser: "browser",
+    toolGroupOn: "Give {agent} the {group} tools",
     idleGrace: "Daemon background time",
     idleGraceHint:
       "How long the daemon keeps running after you close Apex. After this it shuts down and your agents stop. Close and reopen within the window to resume sessions.",

@@ -34,6 +34,7 @@ import {
   unattendedAgents,
   viewLanding,
 } from "@/features/settings/agentMode";
+import { groupOn, OPTIONAL_GROUPS, setGroupOn } from "@/features/settings/agentTools";
 import {
   frost,
   glassBlur,
@@ -70,7 +71,7 @@ import {
   VEIL_AREAS,
 } from "@/features/settings/constants";
 import { DockOrder } from "@/features/settings/DockOrder";
-import { agents, daemonVersion } from "@/shared/daemon";
+import { agents, complain, daemonVersion } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
 import { Icon } from "@/shared/ui/Icon";
@@ -362,6 +363,13 @@ export function spaceSection(): Section {
   };
 }
 
+const TOOL_LABEL = {
+  observation: "settings.toolObservation",
+  orchestration: "settings.toolOrchestration",
+  views: "settings.toolViews",
+  browser: "settings.toolBrowser",
+} as const;
+
 export function agentsSection(): Section {
   return {
     id: "agents",
@@ -377,56 +385,81 @@ export function agentsSection(): Section {
           .map((agent) => {
             const on = agentEnabled(agent.name);
             return (
-              <DataRow
-                key={agent.name}
-                dim={!on}
-                lead={<AgentIcon agent={agent.name} size="sm" />}
-                label={agent.name}
-                sub={t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")}
-                trail={
-                  <Segmented
-                    size="sm"
-                    label={t("settings.agentMode", { agent: agent.name })}
-                    value={agentModes.value[agent.name] ?? agent.mode}
-                    onChange={(option) => setAgentMode(agent.name, option)}
-                    disabled={!on}
-                    options={(["pty", "acp"] as const).map((option) => ({
-                      value: option,
-                      label: t(`isolation.${option}`),
-                      disabled: option === "acp" && !agent.speaks_acp,
-                      title:
-                        option === "acp" && !agent.speaks_acp
-                          ? t("settings.agentNoAcp", { agent: agent.name })
-                          : undefined,
-                    }))}
-                  />
-                }
-                actions={
-                  <>
-                    {raceUnattended.value && (
-                      <ToggleChip
-                        size="sm"
-                        pressed={unattendedAgents.value.includes(agent.name)}
-                        disabled={!on}
-                        title={t("race.yoloAgent", { agent: agent.name })}
-                        onClick={() =>
-                          setAgentUnattended(
-                            agent.name,
-                            !unattendedAgents.value.includes(agent.name),
-                          )
-                        }
-                      >
-                        {t("race.yoloShort")}
-                      </ToggleChip>
-                    )}
-                    <Switch
-                      label={t("settings.agentEnabled", { agent: agent.name })}
-                      checked={on}
-                      onChange={(next) => setAgentEnabled(agent.name, next)}
+              <div key={agent.name} class="flex flex-col">
+                <DataRow
+                  key={agent.name}
+                  dim={!on}
+                  lead={<AgentIcon agent={agent.name} size="sm" />}
+                  label={agent.name}
+                  sub={t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")}
+                  trail={
+                    <Segmented
+                      size="sm"
+                      label={t("settings.agentMode", { agent: agent.name })}
+                      value={agentModes.value[agent.name] ?? agent.mode}
+                      onChange={(option) => setAgentMode(agent.name, option)}
+                      disabled={!on}
+                      options={(["pty", "acp"] as const).map((option) => ({
+                        value: option,
+                        label: t(`isolation.${option}`),
+                        disabled: option === "acp" && !agent.speaks_acp,
+                        title:
+                          option === "acp" && !agent.speaks_acp
+                            ? t("settings.agentNoAcp", { agent: agent.name })
+                            : undefined,
+                      }))}
                     />
-                  </>
-                }
-              />
+                  }
+                  actions={
+                    <>
+                      {raceUnattended.value && (
+                        <ToggleChip
+                          size="sm"
+                          pressed={unattendedAgents.value.includes(agent.name)}
+                          disabled={!on}
+                          title={t("race.yoloAgent", { agent: agent.name })}
+                          onClick={() =>
+                            setAgentUnattended(
+                              agent.name,
+                              !unattendedAgents.value.includes(agent.name),
+                            )
+                          }
+                        >
+                          {t("race.yoloShort")}
+                        </ToggleChip>
+                      )}
+                      <Switch
+                        label={t("settings.agentEnabled", { agent: agent.name })}
+                        checked={on}
+                        onChange={(next) => setAgentEnabled(agent.name, next)}
+                      />
+                    </>
+                  }
+                />
+                {on && agent.agentic && (
+                  <div class="flex flex-wrap items-center gap-1 px-3 pb-2">
+                    <span class="text-xs opacity-60">{t("settings.agentTools")}</span>
+                    {OPTIONAL_GROUPS.map((group) => (
+                      <ToggleChip
+                        key={group}
+                        size="sm"
+                        pressed={groupOn(agent.name, group)}
+                        title={t("settings.toolGroupOn", {
+                          agent: agent.name,
+                          group: t(TOOL_LABEL[group]),
+                        })}
+                        onClick={() => {
+                          setGroupOn(agent.name, group, !groupOn(agent.name, group)).catch(
+                            complain,
+                          );
+                        }}
+                      >
+                        {t(TOOL_LABEL[group])}
+                      </ToggleChip>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })}
       </div>
