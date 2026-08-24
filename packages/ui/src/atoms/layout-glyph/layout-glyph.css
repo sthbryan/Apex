@@ -1,0 +1,28 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-layout-glyph {
+    @apply inline-flex flex-none overflow-hidden rounded-xs border border-border;
+    width: 26px;
+    height: 18px;
+  }
+
+  .ui-layout-split {
+    @apply flex min-h-0 min-w-0;
+    gap: 1px;
+    background-color: var(--apex-border);
+  }
+
+  .ui-layout-split[data-axis="col"] {
+    @apply flex-col;
+  }
+
+  .ui-layout-pane {
+    @apply min-h-0 min-w-0;
+    background-color: var(--apex-raised);
+  }
+
+  .ui-layout-pane[data-main] {
+    background-color: color-mix(in oklab, var(--apex-accent) 60%, transparent);
+  }
+}

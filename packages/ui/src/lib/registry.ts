@@ -20,6 +20,7 @@ import { cardMeta } from "@/molecules/card/meta";
 import { dataRowMeta } from "@/molecules/data-row/meta";
 import { fieldMeta } from "@/molecules/field/meta";
 import { listRowMeta } from "@/molecules/list-row/meta";
+import { layoutGlyphMeta } from "@/atoms/layout-glyph/meta";
 import { menuMeta } from "@/molecules/menu/meta";
 import { meterMeta } from "@/molecules/meter/meta";
 import { noticeMeta } from "@/molecules/notice/meta";
@@ -70,6 +71,7 @@ export const REGISTRY: ComponentMeta[] = [
   dotMeta,
   glyphMeta,
   kbdMeta,
+  layoutGlyphMeta,
   pillMeta,
   selectMeta,
   sparkMeta,

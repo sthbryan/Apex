@@ -14,7 +14,7 @@ import {
   AgentIcon, AppMain, ApprovalCard, Badge, BrowserLog, BrowserView, CommandItem, CommandPalette, Modal,
   BrowserUrl, Button, Chip, CodeLine, CodeView, Code, Composer, DiffFile, DiffHunk, DiffLine, DiffStat, DiffView, Dot,
   ImageView, Kbd, KbdGroup, MarkdownView, Message,
-  ListRow, Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, SectionLabel, Segmented,
+  LayoutGlyph, ListRow, Pane, PaneGrid, PaneSplit, RaceColumn, RaceDecision, RaceView, SectionLabel, Segmented,
   StatePill, Tab, TabBar, Toast, ToastStack, ToggleChip, ToggleChipGroup, ToolCall, Transcript,
   Welcome, Wordmark,
 } from "@apex/ui";
@@ -583,6 +583,17 @@ function Overlays() {
 
 const CONTENDER_POOL = ["claude", "codex", "grok", "opencode"];
 
+const noop = () => {};
+const PANE = { type: "pane" } as const;
+const TWO_COLUMNS = { type: "split", direction: "row", first: PANE, second: PANE } as const;
+const MAIN_LEFT = {
+  type: "split",
+  direction: "row",
+  ratio: 0.6,
+  first: { type: "pane", main: true },
+  second: { type: "split", direction: "column", first: PANE, second: PANE },
+} as const;
+
 export function Palette({ open = true, onClose, live }: { open?: boolean; onClose?: () => void; live?: boolean } = {}) {
   return (
     <CommandPalette
@@ -601,6 +612,8 @@ export function Palette({ open = true, onClose, live }: { open?: boolean; onClos
         onClick={() => { paletteOpen.value = false; railOnly.value = !railOnly.value; }} />
       <CommandItem name="Go to file…" trail={<Kbd>⌘P</Kbd>}
         onClick={() => { paletteOpen.value = false; activePanel.value = "files"; }} />
+      <CommandItem name="Layout: Two columns" trail={<LayoutGlyph shape={TWO_COLUMNS} />} onClick={noop} />
+      <CommandItem name="Layout: Main left" trail={<LayoutGlyph shape={MAIN_LEFT} />} onClick={noop} />
     </CommandPalette>
   );
 }

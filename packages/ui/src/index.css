@@ -12,6 +12,7 @@
 @import "./atoms/dot/dot.css";
 @import "./atoms/glyph/glyph.css";
 @import "./atoms/kbd/kbd.css";
+@import "./atoms/layout-glyph/layout-glyph.css";
 @import "./atoms/pill/pill.css";
 @import "./atoms/select/select.css";
 @import "./atoms/spark/spark.css";

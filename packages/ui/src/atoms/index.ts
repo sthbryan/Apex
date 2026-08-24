@@ -7,6 +7,7 @@ export * from "@/atoms/chip";
 export * from "@/atoms/dot";
 export * from "@/atoms/glyph";
 export * from "@/atoms/kbd";
+export * from "@/atoms/layout-glyph";
 export * from "@/atoms/pill";
 export * from "@/atoms/select";
 export * from "@/atoms/spark";
