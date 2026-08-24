@@ -11,6 +11,11 @@
       overflow var(--apex-swift) step-end allow-discrete;
   }
 
+  .ui-side-panel[data-resizing],
+  .ui-side-panel[data-resizing] .ui-side-panel-inner {
+    transition: none;
+  }
+
   .ui-side-panel[data-collapsed] {
     @apply overflow-hidden;
     width: 0;
@@ -43,19 +48,29 @@
   }
 
   .ui-side-panel-grip {
-    @apply absolute inset-y-0 right-0 w-1 cursor-col-resize;
+    @apply absolute inset-y-0 right-0 w-2 cursor-col-resize;
     z-index: var(--apex-z-sticky);
-    transition: background-color var(--apex-quick) var(--apex-ease), box-shadow var(--apex-quick) var(--apex-ease);
   }
 
   .ui-side-panel[data-side="right"] .ui-side-panel-grip {
     @apply right-auto left-0;
   }
 
-  .ui-side-panel-grip:hover,
-  .ui-side-panel-grip[data-dragging] {
+  .ui-side-panel-grip::after {
+    @apply absolute inset-y-0 right-0;
+    content: "";
+    width: 2px;
+    background-color: transparent;
+    transition: background-color var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-side-panel[data-side="right"] .ui-side-panel-grip::after {
+    @apply right-auto left-0;
+  }
+
+  .ui-side-panel-grip:hover::after,
+  .ui-side-panel-grip[data-dragging]::after {
     background-color: var(--apex-accent);
-    box-shadow: 0 0 0 1px var(--apex-accent);
   }
 
   .ui-side-panel-foot {

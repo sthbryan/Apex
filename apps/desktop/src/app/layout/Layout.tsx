@@ -16,6 +16,7 @@ import {
   dockMode,
   dockOrder,
   dockPanel,
+  dockResizing,
   setDockMode,
   setDockPanel,
   toggleDock,
@@ -100,6 +101,7 @@ export function Layout({ onNewSession }: Props) {
         <SidePanel
           flush
           collapsed={rail}
+          data-resizing={dockResizing.value || undefined}
           grip={<DockResize />}
           head={<ProjectPicker />}
           foot={
