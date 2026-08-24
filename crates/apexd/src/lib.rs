@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod link;
 pub mod mcp;
 pub mod mcp_delivery;
 pub mod mcp_http;
