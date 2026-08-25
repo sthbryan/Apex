@@ -56,6 +56,7 @@ import {
   veilOpacity,
 } from "@/features/settings/appearance";
 import { browsing, setBrowsing } from "@/features/settings/browsing";
+import { cli, cliBusy, installCli, removeCli } from "@/features/settings/cli";
 import { type Closing, closing, setClosing } from "@/features/settings/closing";
 import {
   FROST_LABEL,
@@ -517,6 +518,12 @@ export function daemonSection(): Section {
         ),
       },
       {
+        id: "cli",
+        label: t("settings.cli"),
+        hint: cliHint(),
+        control: <CliControl />,
+      },
+      {
         id: "stopDaemon",
         label: t("settings.stopDaemon"),
         hint: t("settings.stopDaemonHint"),
@@ -528,6 +535,42 @@ export function daemonSection(): Section {
       },
     ],
   };
+}
+
+function folderOf(path: string): string {
+  const cut = path.lastIndexOf("/");
+  return cut > 0 ? path.slice(0, cut) : path;
+}
+
+function cliHint(): string {
+  const state = cli.value;
+  if (!state || (!state.linked && !state.occupied)) {
+    return t("settings.cliHint");
+  }
+  if (state.occupied) {
+    return t("settings.cliTaken", { path: state.path });
+  }
+  if (!state.on_path) {
+    return t("settings.cliOffPath", { dir: folderOf(state.path) });
+  }
+  return t("settings.cliReady", { path: state.path });
+}
+
+function CliControl() {
+  const state = cli.value;
+  const busy = cliBusy.value;
+  if (state?.linked) {
+    return (
+      <Button disabled={busy} onClick={() => void removeCli()}>
+        {t("settings.cliRemove")}
+      </Button>
+    );
+  }
+  return (
+    <Button variant="primary" disabled={busy || state?.occupied} onClick={() => void installCli()}>
+      {t("settings.cliInstall")}
+    </Button>
+  );
 }
 
 export function aboutSection(appVersion: string): Section {

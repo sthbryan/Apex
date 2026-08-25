@@ -201,6 +201,13 @@ export const es: Messages = {
     stopDaemonHint:
       "Termina todas las sesiones en curso y cierra Apex. Al abrirlo de nuevo arranca uno limpio.",
     stopDaemonAction: "Apagar y salir",
+    cli: "El comando apex",
+    cliHint: "Hablale al daemon desde la terminal: apex status, apex start, apex stop.",
+    cliInstall: "Instalar",
+    cliRemove: "Quitar",
+    cliReady: "Instalado en {path}",
+    cliOffPath: 'Instalado, pero {dir} no está en tu PATH. Agregalo con: export PATH="{dir}:$PATH"',
+    cliTaken: "{path} ya está ocupado por otra cosa.",
     idleGrace0: "Apagar al cerrar",
     idleGrace300: "5 minutos",
     idleGrace18000: "5 horas",

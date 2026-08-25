@@ -200,6 +200,13 @@ export const en = {
     stopDaemonHint:
       "Ends every running session and closes Apex. Opening it again starts a fresh daemon.",
     stopDaemonAction: "Stop and quit",
+    cli: "The apex command",
+    cliHint: "Talk to the daemon from your terminal: apex status, apex start, apex stop.",
+    cliInstall: "Install",
+    cliRemove: "Remove",
+    cliReady: "Installed at {path}",
+    cliOffPath: 'Installed, but {dir} is not on your PATH. Add it with: export PATH="{dir}:$PATH"',
+    cliTaken: "{path} is already taken by something else.",
     idleGrace0: "Stop on close",
     idleGrace300: "5 minutes",
     idleGrace18000: "5 hours",

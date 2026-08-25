@@ -3,6 +3,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { useEffect, useState } from "preact/hooks";
 import { closePage, page, settingsSection } from "@/app/view";
 import { useOverlay } from "@/features/browser/state";
+import { loadCli } from "@/features/settings/cli";
 import type { Section } from "@/features/settings/constants";
 import {
   aboutSection,
@@ -26,6 +27,12 @@ export function Settings() {
   useEffect(() => {
     void getVersion().then(setAppVersion);
   }, []);
+
+  useEffect(() => {
+    if (page.value === "settings") {
+      void loadCli();
+    }
+  }, [page.value]);
 
   const sections: Section[] = [
     lookSection(),
