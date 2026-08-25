@@ -170,10 +170,10 @@ export function ApiPanel() {
             {t("api.headers")}
           </SectionLabel>
           {headers.length === 0 ? (
-            <p class="px-0.5 text-faint text-xs">{t("api.noHeaders")}</p>
+            <p class="text-faint text-xs">{t("api.noHeaders")}</p>
           ) : (
             headers.map(([key, value]) => (
-              <div key={key} class="flex gap-1.5">
+              <div key={key} class="flex items-center gap-1.5">
                 <input
                   value={key}
                   spellcheck={false}
