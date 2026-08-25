@@ -4,7 +4,11 @@ use crate::state::Answer;
 
 type Done = Box<dyn Fn(Answer<()>) + Send + 'static>;
 
-pub async fn take(webview: tauri::Webview, path: PathBuf) -> Answer<()> {
+pub async fn take(
+    webview: tauri::WebviewWindow,
+    bounds: Option<super::browser::Bounds>,
+    path: PathBuf,
+) -> Answer<()> {
     let (sender, receiver) = tokio::sync::oneshot::channel();
     let slot = std::sync::Mutex::new(Some(sender));
     let done: Done = Box::new(move |answer| {
@@ -15,14 +19,19 @@ pub async fn take(webview: tauri::Webview, path: PathBuf) -> Answer<()> {
         }
     });
     webview
-        .with_webview(move |platform| capture(&platform, path, done))
+        .with_webview(move |platform| capture(&platform, bounds, path, done))
         .map_err(|error| error.to_string())?;
     receiver.await.map_err(|error| error.to_string())?
 }
 
 #[cfg(target_os = "macos")]
 #[allow(unsafe_code)]
-fn capture(platform: &tauri::webview::PlatformWebview, path: PathBuf, done: Done) {
+fn capture(
+    platform: &tauri::webview::PlatformWebview,
+    bounds: Option<super::browser::Bounds>,
+    path: PathBuf,
+    done: Done,
+) {
     use objc2::MainThreadMarker;
     use objc2::rc::Retained;
     use objc2_app_kit::NSImage;
@@ -39,6 +48,14 @@ fn capture(platform: &tauri::webview::PlatformWebview, path: PathBuf, done: Done
         return;
     };
     let config = unsafe { WKSnapshotConfiguration::new(main) };
+    if let Some(area) = bounds {
+        unsafe {
+            config.setRect(objc2_foundation::NSRect::new(
+                objc2_foundation::NSPoint::new(area.x, area.y),
+                objc2_foundation::NSSize::new(area.width, area.height),
+            ));
+        }
+    }
     let block = block2::RcBlock::new(move |image: *mut NSImage, error: *mut NSError| {
         done(match unsafe { error.as_ref() } {
             Some(failure) => Err(failure.localizedDescription().to_string()),
@@ -65,7 +82,12 @@ fn write_png(image: *mut objc2_app_kit::NSImage, path: &Path) -> Answer<()> {
 
 #[cfg(windows)]
 #[allow(unsafe_code)]
-fn capture(platform: &tauri::webview::PlatformWebview, path: PathBuf, done: Done) {
+fn capture(
+    platform: &tauri::webview::PlatformWebview,
+    _bounds: Option<super::browser::Bounds>,
+    path: PathBuf,
+    done: Done,
+) {
     use webview2_com::CapturePreviewCompletedHandler;
     use webview2_com::Microsoft::Web::WebView2::Win32::COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG;
     use windows::Win32::System::Com::CreateStreamOnHGlobal;
@@ -115,7 +137,12 @@ fn drain(stream: &windows::Win32::System::Com::IStream, path: &Path) -> Answer<(
 }
 
 #[cfg(target_os = "linux")]
-fn capture(platform: &tauri::webview::PlatformWebview, path: PathBuf, done: Done) {
+fn capture(
+    platform: &tauri::webview::PlatformWebview,
+    _bounds: Option<super::browser::Bounds>,
+    path: PathBuf,
+    done: Done,
+) {
     use webkit2gtk::{SnapshotOptions, SnapshotRegion, WebViewExt};
 
     platform.inner().snapshot(
@@ -143,7 +170,12 @@ fn write_surface(surface: &gtk::cairo::Surface, path: &Path) -> Answer<()> {
 }
 
 #[cfg(not(any(target_os = "macos", windows, target_os = "linux")))]
-fn capture(_platform: &tauri::webview::PlatformWebview, _path: PathBuf, done: Done) {
+fn capture(
+    _platform: &tauri::webview::PlatformWebview,
+    _bounds: Option<super::browser::Bounds>,
+    _path: PathBuf,
+    done: Done,
+) {
     done(Err("this system cannot take a picture of a pane".into()));
 }
 

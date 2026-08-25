@@ -1,7 +1,6 @@
 import { CommandItem, CommandPalette, KbdGroup } from "@apex/ui";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { useOverlay } from "@/features/browser/state";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -38,7 +37,6 @@ export function Picker({ open, onClose, query, onQuery, placeholder, items }: Pr
   const [asking, setAsking] = useState<string | null>(null);
   const field = useRef<HTMLInputElement>(null);
   const selected = useRef<HTMLButtonElement>(null);
-  useOverlay(open);
 
   useEffect(() => {
     if (!open) {

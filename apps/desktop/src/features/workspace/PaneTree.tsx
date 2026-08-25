@@ -42,14 +42,7 @@ type Props = {
 
 export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
   if (node.kind === "leaf") {
-    return (
-      <PaneLeaf
-        tabId={tabId}
-        node={node}
-        focused={tabActive && node.id === activeLeafId}
-        visible={tabActive}
-      />
-    );
+    return <PaneLeaf tabId={tabId} node={node} focused={tabActive && node.id === activeLeafId} />;
   }
 
   const horizontal = node.direction === "row" || node.direction === "row-reverse";
@@ -76,17 +69,7 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
   );
 }
 
-function PaneLeaf({
-  tabId,
-  node,
-  focused,
-  visible,
-}: {
-  tabId: string;
-  node: Leaf;
-  focused: boolean;
-  visible: boolean;
-}) {
+function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused: boolean }) {
   const [hosts, setHosts] = useState<PaneHosts>({
     lead: null,
     title: null,
@@ -171,7 +154,7 @@ function PaneLeaf({
               {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
               {node.view.type === "race" && <RaceView run={node.view.run} />}
               {node.view.type === "browser" && (
-                <BrowserView id={node.id} url={node.view.url} visible={visible} focused={focused} />
+                <BrowserView id={node.id} url={node.view.url} name={node.view.name} />
               )}
             </Suspense>
           </Boundary>

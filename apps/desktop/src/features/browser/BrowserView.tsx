@@ -6,13 +6,13 @@ import {
   type LogLevel,
 } from "@apex/ui";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import { openWeb, overlays } from "@/features/browser/state";
+import { openWeb, readWord, type Word } from "@/features/browser/state";
 import { activeProjectId } from "@/features/projects/state";
 import { onAskPage, onAskShot } from "@/features/sessions/state";
 import { PaneControls, PaneLead, PaneTitle } from "@/features/workspace/slots";
+import { dragging } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -21,23 +21,13 @@ type Props = {
   id: string;
   url: string;
   name?: string;
-  visible: boolean;
-  focused: boolean;
 };
 
 type Entry = {
   level: string;
   text: string;
   at: number;
-};
-
-type Snapshot = {
-  url: string;
-  title: string | null;
-  logs: Entry[];
   seq: number;
-  born: number;
-  failures: number;
 };
 
 function report(pane: string, url: string, name?: string): void {
@@ -48,95 +38,106 @@ function report(pane: string, url: string, name?: string): void {
   void invoke("browser_report", { project, pane, url, name: name ?? null }).catch(complain);
 }
 
-type Loaded = {
-  label: string;
-  url: string;
-  title: string | null;
-};
-
 function boxOf(node: HTMLElement) {
   const box = node.getBoundingClientRect();
   return { x: box.x, y: box.y, width: box.width, height: box.height };
 }
 
-export function BrowserView({ id, url, name, visible, focused }: Props) {
-  const host = useRef<HTMLDivElement>(null);
+export function BrowserView({ id, url, name }: Props) {
+  const frame = useRef<HTMLIFrameElement>(null);
   const label = `browser-${id}`;
   const [here, setHere] = useState(url);
   const [draft, setDraft] = useState(url);
+  const [logs, setLogs] = useState<Entry[]>([]);
+  const [failures, setFailures] = useState(0);
+  const [drawer, setDrawer] = useState(false);
   const editing = useRef(false);
+  const said = useRef<{ url: string; title: string | null }>({ url, title: null });
 
   useEffect(() => {
-    const node = host.current;
-    if (!node) {
-      return;
-    }
-    void invoke("browser_open", { label, url, bounds: boxOf(node) }).catch(complain);
+    setHere(url);
+    setDraft(url);
+    setLogs([]);
+    setFailures(0);
+    said.current = { url, title: null };
+  }, [url]);
+
+  useEffect(() => {
     return () => {
-      void invoke("browser_close", { label }).catch(complain);
       void invoke("browser_forget", { pane: label }).catch(complain);
     };
-  }, [label, url]);
+  }, [label]);
 
   useEffect(() => {
     report(label, here, name);
   }, [label, here, name]);
 
   useEffect(() => {
-    if (focused) {
-      report(label, here, name);
-    }
-  }, [label, here, name, focused]);
-
-  useEffect(() => {
-    const node = host.current;
-    if (!node) {
-      return;
-    }
-    const move = () => {
-      void invoke("browser_bounds", { label, bounds: boxOf(node) }).catch(complain);
-    };
-    const observer = new ResizeObserver(move);
-    observer.observe(node);
-    window.addEventListener("resize", move);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", move);
-    };
-  }, [label]);
-
-  const [logs, setLogs] = useState<Entry[]>([]);
-  const [failures, setFailures] = useState(0);
-  const [drawer, setDrawer] = useState(false);
-  const cursor = useRef(0);
-  const born = useRef(0);
-  const shown = visible && overlays.value === 0;
-
-  useEffect(() => {
-    void invoke("browser_show", { label, visible: shown }).catch(complain);
-  }, [label, shown]);
-
-  useEffect(() => {
-    const stop = listen<Loaded>("browser-loaded", (event) => {
-      if (event.payload.label !== label || !event.payload.url) {
+    const heard = (event: MessageEvent) => {
+      if (event.source !== frame.current?.contentWindow) {
         return;
       }
-      setHere(event.payload.url);
-      if (!editing.current) {
-        setDraft(event.payload.url);
+      const word: Word | null = readWord(event.data);
+      if (!word) {
+        return;
       }
-    });
-    return () => {
-      void stop.then((off) => off());
+      if (word.kind === "loaded") {
+        said.current = { url: word.url, title: word.title };
+        setHere(word.url);
+        if (!editing.current) {
+          setDraft(word.url);
+        }
+        return;
+      }
+      if (word.kind === "logs") {
+        setFailures(word.failures);
+        setLogs((current) => [...current, ...(word.logs as Entry[])].slice(-500));
+        return;
+      }
+      if (word.kind === "leaving") {
+        openWeb(word.url);
+        return;
+      }
+      if (word.kind === "page") {
+        void invoke("page_done", {
+          request: word.request,
+          page: JSON.stringify(word.page),
+          error: null,
+        }).catch(complain);
+      }
     };
-  }, [label, name]);
+    window.addEventListener("message", heard);
+    return () => window.removeEventListener("message", heard);
+  }, []);
+
+  useEffect(() => {
+    return onAskPage((event) => {
+      if (event.pane !== label) {
+        return;
+      }
+      const window_ = frame.current?.contentWindow;
+      if (!window_) {
+        void invoke("page_done", {
+          request: event.request,
+          page: null,
+          error: "that pane has no page",
+        }).catch(complain);
+        return;
+      }
+      window_.postMessage({ apex: "ask", kind: "read", since: 0, request: event.request }, "*");
+    });
+  }, [label]);
 
   useEffect(() => {
     return onAskShot((event) => {
       if (event.pane !== label) {
         return;
       }
-      void invoke<string>("browser_shot", { label })
+      const node = frame.current;
+      void invoke<string>("browser_shot", {
+        label,
+        bounds: node ? boxOf(node) : null,
+      })
         .then((path) => invoke("shot_done", { request: event.request, path, error: null }))
         .catch((cause) =>
           invoke("shot_done", { request: event.request, path: null, error: String(cause) }),
@@ -145,65 +146,16 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
     });
   }, [label]);
 
-  useEffect(() => {
-    return onAskPage((event) => {
-      if (event.pane !== label) {
-        return;
-      }
-      void invoke<string>("browser_probe", { label, since: 0 })
-        .then((page) => invoke("page_done", { request: event.request, page, error: null }))
-        .catch((cause) =>
-          invoke("page_done", { request: event.request, page: null, error: String(cause) }),
-        )
-        .catch(complain);
-    });
-  }, [label]);
-
-  useEffect(() => {
-    if (!shown) {
-      return;
-    }
-    const read = () => {
-      void invoke<string>("browser_probe", { label, since: cursor.current })
-        .then((raw) => {
-          const taken = raw ? (JSON.parse(raw) as Snapshot | null) : null;
-          if (!taken) {
-            return;
-          }
-          if (taken.born !== born.current) {
-            born.current = taken.born;
-            cursor.current = 0;
-            setLogs([]);
-            read();
-            return;
-          }
-          cursor.current = taken.seq;
-          setFailures(taken.failures);
-          if (taken.logs.length > 0) {
-            setLogs((current) => [...current, ...taken.logs].slice(-500));
-          }
-        })
-        .catch(() => {});
-    };
-    read();
-    const timer = setInterval(read, drawer ? 1500 : 5000);
-    return () => clearInterval(timer);
-  }, [label, shown, drawer]);
-
-  const run = (script: string) => {
-    void invoke("browser_run", { label, script }).catch(complain);
+  const run = (kind: "back" | "forward" | "reload") => {
+    frame.current?.contentWindow?.postMessage({ apex: "ask", kind }, "*");
   };
 
   return (
     <>
       <PaneLead>
-        <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("history.back()")} />
-        <Step
-          icon="chevronRight"
-          hint={t("browser.forward")}
-          onPick={() => run("history.forward()")}
-        />
-        <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("location.reload()")} />
+        <Step icon="chevronLeft" hint={t("browser.back")} onPick={() => run("back")} />
+        <Step icon="chevronRight" hint={t("browser.forward")} onPick={() => run("forward")} />
+        <Step icon="refresh" hint={t("browser.reload")} onPick={() => run("reload")} />
       </PaneLead>
       <PaneTitle>
         <BrowserUrl
@@ -259,14 +211,21 @@ export function BrowserView({ id, url, name, visible, focused }: Props) {
           <>
             {logs.length === 0 && <BrowserLog>{t("browser.quiet")}</BrowserLog>}
             {logs.map((entry) => (
-              <BrowserLog key={`${entry.at}-${entry.text}`} level={levelOf(entry.level)}>
+              <BrowserLog key={`${entry.seq}-${entry.at}`} level={levelOf(entry.level)}>
                 {entry.text}
               </BrowserLog>
             ))}
           </>
         }
       >
-        <div ref={host} class="size-full" />
+        <iframe
+          ref={frame}
+          title={name ?? here}
+          src={url}
+          class="size-full border-0 bg-white"
+          style={dragging.value ? { pointerEvents: "none" } : undefined}
+          sandbox="allow-scripts allow-forms allow-same-origin"
+        />
       </KitBrowserView>
     </>
   );

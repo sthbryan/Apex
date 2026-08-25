@@ -1,5 +1,5 @@
 mod acp;
-mod browser;
+pub mod browser;
 pub(crate) mod cli;
 mod context;
 mod files;

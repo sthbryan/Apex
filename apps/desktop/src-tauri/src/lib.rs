@@ -49,6 +49,11 @@ pub fn run() {
             if let Err(error) = &daemon {
                 tracing::warn!(%error, "could not reach apexd at startup");
             }
+            if let Some(config) = app.config().app.windows.first().cloned() {
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
+                    .initialization_script_for_all_frames(commands::browser::PROBE)
+                    .build()?;
+            }
             #[cfg(target_os = "macos")]
             menu::install(app.handle())?;
             tray::install(app.handle())?;
@@ -138,12 +143,6 @@ pub fn run() {
             commands::acp_prompt,
             commands::acp_cancel,
             commands::acp_decide,
-            commands::browser_open,
-            commands::browser_close,
-            commands::browser_bounds,
-            commands::browser_show,
-            commands::browser_run,
-            commands::browser_probe,
             commands::browser_shot,
             commands::shot_done,
             commands::page_done,

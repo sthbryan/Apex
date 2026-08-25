@@ -1,14 +1,9 @@
-import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { useEffect } from "preact/hooks";
 
 import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
 import { openBrowser } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
-
-export const overlays = signal(0);
 
 const LOCAL = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
 const LAST_URL = "apex.browser.url";
@@ -45,23 +40,38 @@ export function openBrowserPane(): void {
   openWeb(pickUrl(running, localStorage.getItem(LAST_URL)));
 }
 
-export function startBlockedUrls(): () => void {
-  const stop = listen<string>("browser-blocked", (event) => {
-    void invoke("open_url", { url: event.payload }).catch(complain);
-  });
-  return () => {
-    void stop.then((off) => off());
-  };
+export type Word =
+  | { kind: "loaded"; url: string; title: string | null }
+  | {
+      kind: "logs";
+      logs: { level: string; text: string; at: number; seq: number }[];
+      failures: number;
+    }
+  | { kind: "leaving"; url: string }
+  | { kind: "page"; request: string; page: unknown };
+
+const KINDS = ["loaded", "logs", "leaving", "page"];
+
+export function readWord(data: unknown): Word | null {
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+  const said = data as { apex?: unknown; kind?: unknown };
+  if (said.apex !== true || typeof said.kind !== "string" || !KINDS.includes(said.kind)) {
+    return null;
+  }
+  return said as unknown as Word;
 }
 
-export function useOverlay(active: boolean): void {
-  useEffect(() => {
-    if (!active) {
+export function startBlockedUrls(): () => void {
+  const refused = (event: SecurityPolicyViolationEvent) => {
+    if (event.violatedDirective !== "frame-src" || !event.blockedURI) {
       return;
     }
-    overlays.value += 1;
-    return () => {
-      overlays.value -= 1;
-    };
-  }, [active]);
+    void invoke("open_url", { url: event.blockedURI }).catch(complain);
+  };
+  document.addEventListener("securitypolicyviolation", refused);
+  return () => {
+    document.removeEventListener("securitypolicyviolation", refused);
+  };
 }

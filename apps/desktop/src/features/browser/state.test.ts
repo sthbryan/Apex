@@ -31,7 +31,7 @@ vi.mock("@/shared/daemon", () => ({
 
 import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
-import { isLocal, openBrowserPane, openWeb, pickUrl } from "./state";
+import { isLocal, openBrowserPane, openWeb, pickUrl, readWord } from "./state";
 
 beforeEach(() => {
   invoke.mockReset();
@@ -117,5 +117,31 @@ describe("openBrowserPane", () => {
     openBrowser.mockReset();
     openBrowserPane();
     expect(openBrowser).toHaveBeenCalledWith("http://localhost:7000", undefined);
+  });
+});
+
+describe("readWord", () => {
+  it("accepts a word the probe sent", () => {
+    expect(readWord({ apex: true, kind: "loaded", url: "http://localhost:3000" })).toEqual({
+      apex: true,
+      kind: "loaded",
+      url: "http://localhost:3000",
+    });
+  });
+
+  it("refuses anything that does not carry the apex mark", () => {
+    expect(readWord({ kind: "loaded", url: "http://evil" })).toBeNull();
+    expect(readWord({ apex: "yes", kind: "loaded" })).toBeNull();
+  });
+
+  it("refuses a kind it does not know", () => {
+    expect(readWord({ apex: true, kind: "eval" })).toBeNull();
+    expect(readWord({ apex: true })).toBeNull();
+  });
+
+  it("refuses values that are not objects", () => {
+    expect(readWord(null)).toBeNull();
+    expect(readWord("apex")).toBeNull();
+    expect(readWord(42)).toBeNull();
   });
 });

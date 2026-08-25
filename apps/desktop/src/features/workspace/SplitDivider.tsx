@@ -1,7 +1,7 @@
 import cn from "cnfast";
 import { useRef } from "preact/hooks";
 
-import { resizeSplit } from "@/features/workspace/state";
+import { dragging, resizeSplit } from "@/features/workspace/state";
 import { clampRatio } from "@/features/workspace/tree";
 import { t } from "@/shared/i18n";
 
@@ -33,8 +33,10 @@ export function SplitDivider({ tabId, splitId, horizontal, ratio }: Props) {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", stop);
       document.body.style.cursor = "";
+      dragging.value = false;
     };
 
+    dragging.value = true;
     document.body.style.cursor = horizontal ? "col-resize" : "row-resize";
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", stop);

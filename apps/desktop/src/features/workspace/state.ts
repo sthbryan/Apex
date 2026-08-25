@@ -40,6 +40,8 @@ export type Tab = {
   activeLeafId: string;
 };
 
+export const dragging = signal(false);
+
 export const tabs = signal<Tab[]>([]);
 export const activeTabId = signal<string | null>(null);
 export const homeOpen = signal(true);

@@ -6,6 +6,7 @@ import {
   resetDockWidth,
   setDockWidth,
 } from "@/app/layout/state";
+import { dragging } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
 
 export function DockResize() {
@@ -17,6 +18,7 @@ export function DockResize() {
     const origin = event.clientX;
     const start = dockWidth.value;
     dockResizing.value = true;
+    dragging.value = true;
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
 
@@ -25,6 +27,7 @@ export function DockResize() {
     };
     const stop = () => {
       dockResizing.value = false;
+      dragging.value = false;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
       window.removeEventListener("mousemove", move);

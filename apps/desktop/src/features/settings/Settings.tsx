@@ -2,7 +2,6 @@ import { Field, SettingsDialog, SettingsHeading } from "@apex/ui";
 import { getVersion } from "@tauri-apps/api/app";
 import { useEffect, useState } from "preact/hooks";
 import { closePage, page, settingsSection } from "@/app/view";
-import { useOverlay } from "@/features/browser/state";
 import { loadCli } from "@/features/settings/cli";
 import type { Section } from "@/features/settings/constants";
 import {
@@ -21,8 +20,6 @@ export function Settings() {
   const [appVersion, setAppVersion] = useState("");
   const [query, setQuery] = useState("");
   const section = settingsSection.value;
-
-  useOverlay(page.value === "settings");
 
   useEffect(() => {
     void getVersion().then(setAppVersion);
