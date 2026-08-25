@@ -2,7 +2,6 @@ import { signal } from "@preact/signals";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.fn();
-const openBrowser = vi.fn();
 const listen = vi.fn();
 
 vi.mock("@tauri-apps/api/core", () => ({
@@ -21,24 +20,22 @@ vi.mock("@/features/settings/browsing", () => ({
   browsing: signal("internal"),
 }));
 
-vi.mock("@/features/workspace/state", () => ({
-  openBrowser: (...args: unknown[]) => openBrowser(...args),
-}));
-
 vi.mock("@/shared/daemon", () => ({
   complain: () => {},
 }));
 
+import { asideOpen, asidePanel, closeAside } from "@/app/layout/state";
 import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
-import { isLocal, openBrowserPane, openWeb, pickUrl, readWord } from "./state";
+import { browserUrl, isLocal, openWeb, pickUrl, readWord, toggleBrowser } from "./state";
 
 beforeEach(() => {
   invoke.mockReset();
   invoke.mockResolvedValue(undefined);
-  openBrowser.mockReset();
   (browsing as unknown as { value: string }).value = "internal";
   (projectSessions as unknown as { value: unknown[] }).value = [];
+  browserUrl.value = null;
+  closeAside();
   localStorage.clear();
 });
 
@@ -61,10 +58,18 @@ describe("isLocal", () => {
 });
 
 describe("openWeb", () => {
-  it("opens locally in a pane when internal", () => {
-    openWeb("http://localhost:3000", "test");
-    expect(openBrowser).toHaveBeenCalledWith("http://localhost:3000", "test");
+  it("shows a local url in the aside when internal", () => {
+    openWeb("http://localhost:3000");
+    expect(browserUrl.value).toBe("http://localhost:3000");
+    expect(asideOpen.value).toBe(true);
+    expect(asidePanel.value).toBe("browser");
     expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("leaves the aside shut for an external url", () => {
+    openWeb("https://example.com");
+    expect(asideOpen.value).toBe(false);
+    expect(browserUrl.value).toBeNull();
   });
 
   it("falls back to system browser for external", () => {
@@ -105,18 +110,36 @@ describe("pickUrl", () => {
   });
 });
 
-describe("openBrowserPane", () => {
-  it("opens a pane on the running server", () => {
+describe("toggleBrowser", () => {
+  it("opens on the running server", () => {
     (projectSessions as unknown as { value: unknown[] }).value = [{ url: "http://localhost:4000" }];
-    openBrowserPane();
-    expect(openBrowser).toHaveBeenCalledWith("http://localhost:4000", undefined);
+    toggleBrowser();
+    expect(browserUrl.value).toBe("http://localhost:4000");
+    expect(asideOpen.value).toBe(true);
   });
 
-  it("reopens where the last pane was left", () => {
+  it("shuts the aside when the browser is already showing", () => {
+    toggleBrowser();
+    expect(asideOpen.value).toBe(true);
+    toggleBrowser();
+    expect(asideOpen.value).toBe(false);
+  });
+
+  it("comes back to the page it was left on", () => {
     openWeb("http://localhost:7000");
-    openBrowser.mockReset();
-    openBrowserPane();
-    expect(openBrowser).toHaveBeenCalledWith("http://localhost:7000", undefined);
+    toggleBrowser();
+    expect(asideOpen.value).toBe(false);
+    toggleBrowser();
+    expect(asideOpen.value).toBe(true);
+    expect(browserUrl.value).toBe("http://localhost:7000");
+  });
+
+  it("reopens where the last run left it after a restart", () => {
+    openWeb("http://localhost:7000");
+    browserUrl.value = null;
+    closeAside();
+    toggleBrowser();
+    expect(browserUrl.value).toBe("http://localhost:7000");
   });
 });
 

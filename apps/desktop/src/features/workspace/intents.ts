@@ -22,7 +22,7 @@ export function startViewIntents(): () => void {
         openQuietly({ type: "file", path: target.path }, asSplit());
         break;
       case "url":
-        openWeb(target.url, target.name ?? undefined);
+        openWeb(target.url);
         break;
     }
   });

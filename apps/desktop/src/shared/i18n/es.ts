@@ -15,6 +15,9 @@ export const es: Messages = {
     stale: "Este daemon es más viejo que la app.",
     staleHint: "Cierra sus sesiones y reinícialo: pkill -f target/debug/apexd",
   },
+  aside: {
+    resize: "Cambiar el ancho del panel lateral",
+  },
   dock: {
     toRail: "Contraer la barra lateral a iconos",
     toExpanded: "Mostrar la barra lateral",
@@ -299,7 +302,7 @@ export const es: Messages = {
     shared: "Lo leen todos los agentes",
   },
   browser: {
-    open: "Abrir un pane del browser",
+    open: "Mostrar u ocultar el browser",
     back: "Atrás",
     forward: "Adelante",
     reload: "Recargar la página",

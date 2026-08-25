@@ -11,6 +11,7 @@ import {
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import cn from "cnfast";
 import { useCallback } from "preact/hooks";
+import { Aside } from "@/app/layout/Aside";
 import { Dock } from "@/app/layout/Dock";
 import { DockResize } from "@/app/layout/DockResize";
 import { DOCK_PANELS } from "@/app/layout/panels";
@@ -29,7 +30,7 @@ import {
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
 import { page, toggleSettings } from "@/app/view";
-import { openBrowserPane } from "@/features/browser/state";
+import { toggleBrowser } from "@/features/browser/state";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
 import { groupOn } from "@/features/settings/toolGroups";
@@ -85,7 +86,7 @@ export function Layout({ onNewSession }: Props) {
               onClick={toggleDock}
             />
             {groupOn("browser") && (
-              <ToolbarButton label={t("browser.open")} icon="globe" onClick={openBrowserPane} />
+              <ToolbarButton label={t("browser.open")} icon="globe" onClick={toggleBrowser} />
             )}
             <ToolbarButton label={t("shortcuts.palette")} icon="grid" onClick={onNewSession} />
             <ToolbarButton
@@ -153,6 +154,8 @@ export function Layout({ onNewSession }: Props) {
         <div class="flex min-w-0 flex-1 flex-col">
           <Views />
         </div>
+
+        <Aside />
       </AppBody>
 
       <StatusBar />

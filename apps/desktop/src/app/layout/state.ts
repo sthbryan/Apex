@@ -178,3 +178,76 @@ function readStoredWidth(): number {
   } catch {}
   return DOCK_WIDTH_DEFAULT;
 }
+
+export type AsidePanel = "browser";
+
+export const ASIDE_WIDTH_MIN = 280;
+export const ASIDE_WIDTH_MAX = 900;
+export const ASIDE_WIDTH_DEFAULT = 420;
+
+const OPEN_KEY = "apex.asideOpen";
+const ASIDE_WIDTH_KEY = "apex.asideWidth";
+
+export const asideOpen = signal(readStoredOpen());
+export const asideWidth = signal(readStoredAsideWidth());
+export const asideResizing = signal(false);
+export const asidePanel = signal<AsidePanel>("browser");
+
+export function openAside(panel: AsidePanel): void {
+  asidePanel.value = panel;
+  setAsideOpen(true);
+}
+
+export function closeAside(): void {
+  setAsideOpen(false);
+}
+
+export function toggleAside(panel: AsidePanel): void {
+  if (asideOpen.value && asidePanel.value === panel) {
+    closeAside();
+    return;
+  }
+  openAside(panel);
+}
+
+export function setAsideOpen(open: boolean): void {
+  asideOpen.value = open;
+  try {
+    localStorage.setItem(OPEN_KEY, open ? "1" : "0");
+  } catch {}
+}
+
+export function setAsideWidth(px: number): void {
+  const next = clampAside(px);
+  asideWidth.value = next;
+  try {
+    localStorage.setItem(ASIDE_WIDTH_KEY, String(next));
+  } catch {}
+}
+
+export function resetAsideWidth(): void {
+  setAsideWidth(ASIDE_WIDTH_DEFAULT);
+}
+
+function clampAside(px: number): number {
+  const room = typeof window === "undefined" ? ASIDE_WIDTH_MAX : window.innerWidth - 320;
+  return Math.round(Math.min(ASIDE_WIDTH_MAX, room, Math.max(ASIDE_WIDTH_MIN, px)));
+}
+
+function readStoredOpen(): boolean {
+  try {
+    return localStorage.getItem(OPEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function readStoredAsideWidth(): number {
+  try {
+    const stored = Number(localStorage.getItem(ASIDE_WIDTH_KEY));
+    if (Number.isFinite(stored) && stored > 0) {
+      return clampWidth(stored);
+    }
+  } catch {}
+  return ASIDE_WIDTH_DEFAULT;
+}

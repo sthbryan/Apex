@@ -29,9 +29,6 @@ const DiffView = lazy(async () => ({
 const RaceView = lazy(async () => ({
   default: (await import("@/features/race/RaceView")).RaceView,
 }));
-const BrowserView = lazy(async () => ({
-  default: (await import("@/features/browser/BrowserView")).BrowserView,
-}));
 
 type Props = {
   tabId: string;
@@ -153,9 +150,6 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
               )}
               {node.view.type === "panel" && <DockPanelView id={node.view.panel} />}
               {node.view.type === "race" && <RaceView run={node.view.run} />}
-              {node.view.type === "browser" && (
-                <BrowserView id={node.id} url={node.view.url} name={node.view.name} />
-              )}
             </Suspense>
           </Boundary>
         </div>

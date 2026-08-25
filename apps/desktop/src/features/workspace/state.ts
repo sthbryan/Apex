@@ -125,10 +125,6 @@ export function openRaceView(run: string): void {
   openBeside({ type: "race", run }, (view) => view.type === "race");
 }
 
-export function openBrowser(url: string, name?: string): void {
-  openBeside({ type: "browser", url, name }, (view) => view.type === "browser");
-}
-
 function openBeside(view: PaneView, replaceable: (view: PaneView) => boolean): void {
   if (focusPane((candidate) => same(candidate, view))) {
     return;

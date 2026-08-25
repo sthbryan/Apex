@@ -13,6 +13,9 @@ export const en = {
     stale: "This daemon is older than the app.",
     staleHint: "Close its sessions and restart it: pkill -f target/debug/apexd",
   },
+  aside: {
+    resize: "Resize the side panel",
+  },
   dock: {
     toRail: "Collapse the sidebar to icons",
     toExpanded: "Show the sidebar",
@@ -298,7 +301,7 @@ export const en = {
     shared: "Shared with every agent",
   },
   browser: {
-    open: "Open a browser pane",
+    open: "Toggle the browser",
     back: "Back",
     forward: "Forward",
     reload: "Reload the page",
