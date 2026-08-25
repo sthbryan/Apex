@@ -32,6 +32,7 @@ import { page, toggleSettings } from "@/app/view";
 import { openBrowserPane } from "@/features/browser/state";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
+import { groupOn } from "@/features/settings/toolGroups";
 import { homeOpen, openHome } from "@/features/workspace/state";
 import { platform, status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
@@ -83,7 +84,9 @@ export function Layout({ onNewSession }: Props) {
               icon={NEXT[mode].icon}
               onClick={toggleDock}
             />
-            <ToolbarButton label={t("browser.open")} icon="globe" onClick={openBrowserPane} />
+            {groupOn("browser") && (
+              <ToolbarButton label={t("browser.open")} icon="globe" onClick={openBrowserPane} />
+            )}
             <ToolbarButton label={t("shortcuts.palette")} icon="grid" onClick={onNewSession} />
             <ToolbarButton
               label={t("settings.title")}

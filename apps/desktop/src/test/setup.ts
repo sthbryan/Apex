@@ -20,6 +20,13 @@ function storage(): Storage {
   };
 }
 
+class Watcher implements ResizeObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+Object.defineProperty(globalThis, "ResizeObserver", { value: Watcher, configurable: true });
 Object.defineProperty(globalThis, "localStorage", { value: storage(), configurable: true });
 Object.defineProperty(globalThis, "sessionStorage", { value: storage(), configurable: true });
 
