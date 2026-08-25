@@ -25,6 +25,7 @@ import {
   setDockMode,
   setDockPanel,
   settleDockPanel,
+  toggleAside,
   toggleDock,
 } from "@/app/layout/state";
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
@@ -87,6 +88,9 @@ export function Layout({ onNewSession }: Props) {
             />
             {groupOn("browser") && (
               <ToolbarButton label={t("browser.open")} icon="globe" onClick={toggleBrowser} />
+            )}
+            {groupOn("api") && (
+              <ToolbarButton label={t("api.open")} icon="send" onClick={() => toggleAside("api")} />
             )}
             <ToolbarButton label={t("shortcuts.palette")} icon="grid" onClick={onNewSession} />
             <ToolbarButton

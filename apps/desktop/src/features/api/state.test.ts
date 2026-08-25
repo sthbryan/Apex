@@ -1,0 +1,184 @@
+import { signal } from "@preact/signals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const invoke = vi.fn();
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: (...args: unknown[]) => invoke(...args),
+}));
+
+vi.mock("@/features/projects/state", () => ({
+  activeProjectId: signal<string | null>("p1"),
+}));
+
+vi.mock("@/shared/daemon", () => ({
+  complain: () => {},
+}));
+
+import { activeProjectId } from "@/features/projects/state";
+import {
+  blank,
+  chosen,
+  dirty,
+  draft,
+  dropHeader,
+  edit,
+  environment,
+  environments,
+  last,
+  loadCollection,
+  names,
+  openRequest,
+  saved,
+  sendRequest,
+  setEnvironment,
+  setHeader,
+  shortBody,
+  startNew,
+  tone,
+  trouble,
+} from "./state";
+
+const RUN = {
+  name: "me",
+  method: "GET",
+  url: "http://localhost:3000/me",
+  status: 200,
+  millis: 5,
+  at: 0,
+  headers: [],
+  body: "hi",
+  truncated: false,
+  size: 2,
+};
+
+beforeEach(() => {
+  invoke.mockReset();
+  localStorage.clear();
+  (activeProjectId as unknown as { value: string | null }).value = "p1";
+  startNew();
+  names.value = [];
+  environments.value = [];
+  environment.value = null;
+});
+
+describe("loadCollection", () => {
+  it("keeps the names and the environments", async () => {
+    invoke.mockResolvedValue({ requests: ["a", "b"], environments: ["local"] });
+    await loadCollection();
+    expect(names.value).toEqual(["a", "b"]);
+    expect(environments.value).toEqual(["local"]);
+  });
+
+  it("drops a remembered environment that is gone", async () => {
+    setEnvironment("staging");
+    invoke.mockResolvedValue({ requests: [], environments: ["local"] });
+    await loadCollection();
+    expect(environment.value).toBe("local");
+  });
+
+  it("asks for nothing without a project", async () => {
+    (activeProjectId as unknown as { value: string | null }).value = null;
+    names.value = ["stale"];
+    await loadCollection();
+    expect(invoke).not.toHaveBeenCalled();
+    expect(names.value).toEqual([]);
+  });
+});
+
+describe("openRequest", () => {
+  it("loads the request and the run beside it", async () => {
+    const request = { method: "POST", url: "http://x", headers: {}, body: null };
+    invoke.mockResolvedValue({ request, last: RUN });
+    await openRequest("me");
+    expect(chosen.value).toBe("me");
+    expect(draft.value).toEqual(request);
+    expect(last.value).toEqual(RUN);
+    expect(dirty()).toBe(false);
+  });
+});
+
+describe("dirty", () => {
+  it("is false with nothing chosen", () => {
+    edit({ url: "http://x" });
+    expect(dirty()).toBe(false);
+  });
+
+  it("turns true once the draft leaves the saved copy", () => {
+    chosen.value = "me";
+    saved.value = blank();
+    draft.value = blank();
+    expect(dirty()).toBe(false);
+    edit({ url: "http://x" });
+    expect(dirty()).toBe(true);
+  });
+});
+
+describe("headers", () => {
+  it("adds, renames and drops", () => {
+    setHeader("Accept", "application/json");
+    expect(draft.value.headers).toEqual({ Accept: "application/json" });
+    setHeader("accept", "application/json", "Accept");
+    expect(draft.value.headers).toEqual({ accept: "application/json" });
+    dropHeader("accept");
+    expect(draft.value.headers).toEqual({});
+  });
+
+  it("an emptied name takes the row away", () => {
+    setHeader("Accept", "text/plain");
+    setHeader("", "text/plain", "Accept");
+    expect(draft.value.headers).toEqual({});
+  });
+});
+
+describe("sendRequest", () => {
+  it("saves an edited draft before sending it", async () => {
+    chosen.value = "me";
+    saved.value = blank();
+    draft.value = { ...blank(), url: "http://x" };
+    invoke.mockResolvedValueOnce(undefined).mockResolvedValueOnce(RUN);
+    await sendRequest();
+    expect(invoke.mock.calls[0][0]).toBe("api_write");
+    expect(invoke.mock.calls[1][0]).toBe("api_send");
+    expect(last.value).toEqual(RUN);
+  });
+
+  it("sends straight through when nothing changed", async () => {
+    chosen.value = "me";
+    saved.value = blank();
+    draft.value = blank();
+    invoke.mockResolvedValue(RUN);
+    await sendRequest();
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke.mock.calls[0][0]).toBe("api_send");
+  });
+
+  it("keeps the complaint instead of throwing", async () => {
+    chosen.value = "me";
+    saved.value = blank();
+    draft.value = blank();
+    invoke.mockRejectedValue("nothing answered at that address");
+    await sendRequest();
+    expect(trouble.value).toContain("nothing answered");
+    expect(last.value).toBeNull();
+  });
+
+  it("does nothing without a request chosen", async () => {
+    await sendRequest();
+    expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe("reading a run", () => {
+  it("marks a body that was cut", () => {
+    expect(shortBody(RUN)).toBe("hi");
+    expect(shortBody({ ...RUN, truncated: true })).toBe("hi\n\n...");
+  });
+
+  it("tells the status apart", () => {
+    expect(tone(200)).toBe("ok");
+    expect(tone(301)).toBe("warn");
+    expect(tone(404)).toBe("bad");
+    expect(tone(500)).toBe("bad");
+  });
+});

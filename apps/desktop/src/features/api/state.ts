@@ -1,0 +1,176 @@
+import { signal } from "@preact/signals";
+import { invoke } from "@tauri-apps/api/core";
+
+import type { ApiRequest } from "@/bindings/ApiRequest";
+import type { ApiRun } from "@/bindings/ApiRun";
+import { activeProjectId } from "@/features/projects/state";
+import { complain } from "@/shared/daemon";
+
+export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
+
+const LAST_ENV = "apex.api.environment";
+
+export const names = signal<string[]>([]);
+export const environments = signal<string[]>([]);
+export const chosen = signal<string | null>(null);
+export const draft = signal<ApiRequest>(blank());
+export const saved = signal<ApiRequest | null>(null);
+export const last = signal<ApiRun | null>(null);
+export const environment = signal<string | null>(readEnvironment());
+export const sending = signal(false);
+export const trouble = signal<string | null>(null);
+
+export function blank(): ApiRequest {
+  return { method: "GET", url: "", headers: {}, body: null };
+}
+
+export function dirty(): boolean {
+  return chosen.value !== null && JSON.stringify(draft.value) !== JSON.stringify(saved.value);
+}
+
+export async function loadCollection(): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    names.value = [];
+    environments.value = [];
+    return;
+  }
+  const found = await invoke<{ requests: string[]; environments: string[] }>("api_list", {
+    project,
+  });
+  names.value = found.requests;
+  environments.value = found.environments;
+  if (environment.value && !found.environments.includes(environment.value)) {
+    setEnvironment(found.environments[0] ?? null);
+  }
+}
+
+export async function openRequest(name: string): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  const found = await invoke<{ request: ApiRequest; last: ApiRun | null }>("api_read", {
+    project,
+    name,
+  });
+  chosen.value = name;
+  draft.value = found.request;
+  saved.value = found.request;
+  last.value = found.last;
+  trouble.value = null;
+}
+
+export async function saveRequest(name: string): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  await invoke("api_write", { project, name, request: draft.value });
+  saved.value = draft.value;
+  chosen.value = name;
+  await loadCollection();
+}
+
+export async function removeRequest(name: string): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  await invoke("api_remove", { project, name });
+  if (chosen.value === name) {
+    startNew();
+  }
+  await loadCollection();
+}
+
+export async function sendRequest(): Promise<void> {
+  const project = activeProjectId.value;
+  const name = chosen.value;
+  if (!project || !name || sending.value) {
+    return;
+  }
+  sending.value = true;
+  trouble.value = null;
+  try {
+    if (dirty()) {
+      await invoke("api_write", { project, name, request: draft.value });
+      saved.value = draft.value;
+    }
+    last.value = await invoke<ApiRun>("api_send", {
+      project,
+      name,
+      environment: environment.value,
+    });
+  } catch (cause) {
+    trouble.value = String(cause);
+  } finally {
+    sending.value = false;
+  }
+}
+
+export function startNew(): void {
+  chosen.value = null;
+  draft.value = blank();
+  saved.value = null;
+  last.value = null;
+  trouble.value = null;
+}
+
+export function edit(change: Partial<ApiRequest>): void {
+  draft.value = { ...draft.value, ...change };
+}
+
+export function setHeader(key: string, value: string, was?: string): void {
+  const headers = { ...draft.value.headers };
+  if (was !== undefined && was !== key) {
+    delete headers[was];
+  }
+  if (key === "") {
+    delete headers[was ?? key];
+  } else {
+    headers[key] = value;
+  }
+  edit({ headers });
+}
+
+export function dropHeader(key: string): void {
+  const headers = { ...draft.value.headers };
+  delete headers[key];
+  edit({ headers });
+}
+
+export function setEnvironment(name: string | null): void {
+  environment.value = name;
+  try {
+    if (name) {
+      localStorage.setItem(LAST_ENV, name);
+    } else {
+      localStorage.removeItem(LAST_ENV);
+    }
+  } catch {}
+}
+
+export function startCollection(): () => void {
+  void loadCollection().catch(complain);
+  return () => {};
+}
+
+function readEnvironment(): string | null {
+  try {
+    return localStorage.getItem(LAST_ENV);
+  } catch {
+    return null;
+  }
+}
+
+export function shortBody(run: ApiRun): string {
+  return run.truncated ? `${run.body}\n\n...` : run.body;
+}
+
+export function tone(status: number): "ok" | "warn" | "bad" {
+  if (status < 300) {
+    return "ok";
+  }
+  return status < 400 ? "warn" : "bad";
+}

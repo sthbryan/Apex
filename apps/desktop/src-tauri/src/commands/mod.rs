@@ -1,4 +1,5 @@
 mod acp;
+mod api;
 pub mod browser;
 pub(crate) mod cli;
 mod context;
@@ -14,6 +15,7 @@ mod tasks;
 mod window;
 
 pub use acp::*;
+pub use api::*;
 pub use browser::*;
 pub use cli::*;
 

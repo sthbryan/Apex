@@ -5,6 +5,7 @@ import {
   ASIDE_WIDTH_MAX,
   ASIDE_WIDTH_MIN,
   asideOpen,
+  asidePanel,
   asideResizing,
   asideWidth,
   resetAsideWidth,
@@ -15,9 +16,13 @@ import { t } from "@/shared/i18n";
 const BrowserView = lazy(async () => ({
   default: (await import("@/features/browser/BrowserView")).BrowserView,
 }));
+const ApiPanel = lazy(async () => ({
+  default: (await import("@/features/api/ApiPanel")).ApiPanel,
+}));
 
 export function Aside() {
   const open = asideOpen.value;
+  const panel = asidePanel.value;
 
   return (
     <SidePanel
@@ -41,7 +46,7 @@ export function Aside() {
     >
       {open ? (
         <Suspense fallback={<p class="p-3 text-faint">{t("dock.loading")}</p>}>
-          <BrowserView />
+          {panel === "browser" ? <BrowserView /> : <ApiPanel />}
         </Suspense>
       ) : null}
     </SidePanel>

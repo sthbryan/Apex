@@ -179,7 +179,7 @@ function readStoredWidth(): number {
   return DOCK_WIDTH_DEFAULT;
 }
 
-export type AsidePanel = "browser";
+export type AsidePanel = "browser" | "api";
 
 export const ASIDE_WIDTH_MIN = 280;
 export const ASIDE_WIDTH_MAX = 900;
