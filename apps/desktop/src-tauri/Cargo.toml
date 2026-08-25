@@ -18,7 +18,7 @@ apex-proto.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = { version = "2", features = ["image-png", "macos-private-api", "tray-icon", "unstable"] }
+tauri = { version = "2", features = ["image-png", "tray-icon", "unstable"] }
 tokio.workspace = true
 uuid.workspace = true
 tracing.workspace = true
@@ -31,6 +31,7 @@ tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
 window-vibrancy = "0.6"
 block2 = "0.6"
 objc2 = "0.6"
