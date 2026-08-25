@@ -47,6 +47,10 @@ impl ApexPaths {
         self.config_dir.join("run").join("shots")
     }
 
+    pub fn api_dir(&self, project: uuid::Uuid) -> PathBuf {
+        self.config_dir.join("api").join(project.to_string())
+    }
+
     pub fn database(&self) -> PathBuf {
         self.data_dir.join("apex.sqlite")
     }
