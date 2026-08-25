@@ -38,7 +38,7 @@ const TYPING_TRIES: u32 = 3;
 const BLOCKED_TRIES: u32 = 4;
 const PROBE_LEN: usize = 16;
 const TRACE_LEN: usize = 4;
-pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 60;
+pub const DEFAULT_IDLE_GRACE_SECONDS: u64 = 300;
 
 pub struct NewSession {
     pub project: Uuid,
