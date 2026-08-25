@@ -4,6 +4,7 @@ pub mod editors;
 pub mod files;
 pub mod history;
 pub mod paths;
+pub mod preview;
 pub mod profile;
 pub mod store;
 pub mod upkeep;
