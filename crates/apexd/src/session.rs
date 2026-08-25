@@ -1,9 +1,11 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Duration;
 
 use apex_proto::{
     ClientMessage, Command, Connection, ConnectionReader, ErrorCode, Frame, Hello,
-    PROTOCOL_VERSION, ProtocolError, RequestId, Scope, ServerMessage, TransportError, Welcome,
+    PROTOCOL_VERSION, ProtocolError, Reply, RequestId, Scope, ServerMessage, TransportError,
+    Welcome,
 };
 use tokio::task::JoinHandle;
 
@@ -12,6 +14,7 @@ use crate::sessions::SessionManager;
 
 const DAEMON_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CLIENT_QUEUE_DEPTH: usize = 1024;
+const STRANGER_GRACE: Duration = Duration::from_secs(5);
 
 struct Census(Arc<AtomicUsize>);
 
@@ -31,11 +34,16 @@ impl Drop for Census {
 pub async fn serve(manager: Arc<SessionManager>, mut connection: Connection) {
     let peer = connection.peer().clone();
     let hello = match handshake(&mut connection).await {
-        Ok(Some(hello)) => {
+        Ok(Greeting::Known(hello)) => {
             tracing::info!(peer = %peer.label, probe = hello.probe, "client connected");
             hello
         }
-        Ok(None) => {
+        Ok(Greeting::Stranger) => {
+            tracing::info!(peer = %peer.label, "a client from another protocol, offering the exit");
+            wave_off(manager, connection).await;
+            return;
+        }
+        Ok(Greeting::Silent) => {
             tracing::debug!(peer = %peer.label, "availability probe");
             return;
         }
@@ -169,9 +177,15 @@ fn spawn_event_forwarder(manager: Arc<SessionManager>, outbox: Outbox) -> JoinHa
     })
 }
 
-async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, TransportError> {
+pub enum Greeting {
+    Known(Hello),
+    Stranger,
+    Silent,
+}
+
+async fn handshake(connection: &mut Connection) -> Result<Greeting, TransportError> {
     let Some(frame) = connection.recv().await else {
-        return Ok(None);
+        return Ok(Greeting::Silent);
     };
     let hello = match frame?.parse_control::<ClientMessage>()? {
         ClientMessage::Hello(hello) => hello,
@@ -186,7 +200,7 @@ async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, Transpo
             hello.protocol_version
         ));
         let _ = connection.send(Frame::control(&ServerMessage::err(RequestId(0), error))?).await;
-        return Err(TransportError::MalformedFrame("version incompatible".into()));
+        return Ok(Greeting::Stranger);
     }
 
     connection
@@ -196,5 +210,30 @@ async fn handshake(connection: &mut Connection) -> Result<Option<Hello>, Transpo
             scope: connection.peer().scope,
         }))
         .await?;
-    Ok(Some(hello))
+    Ok(Greeting::Known(hello))
+}
+
+async fn wave_off(manager: Arc<SessionManager>, mut connection: Connection) {
+    let patience = tokio::time::sleep(STRANGER_GRACE);
+    tokio::pin!(patience);
+
+    loop {
+        tokio::select! {
+            _ = &mut patience => return,
+            heard = connection.recv() => {
+                let Some(Ok(frame)) = heard else {
+                    return;
+                };
+                let Ok(ClientMessage::Request { id, command: Command::DaemonShutdown }) =
+                    frame.parse_control::<ClientMessage>()
+                else {
+                    continue;
+                };
+                let _ = connection.send_control(&ServerMessage::ok(id, Reply::Done)).await;
+                tracing::info!("a client from another protocol asked us to step aside");
+                manager.quit();
+                return;
+            }
+        }
+    }
 }
