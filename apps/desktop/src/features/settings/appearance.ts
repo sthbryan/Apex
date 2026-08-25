@@ -57,8 +57,10 @@ function restoreScale(): UiScale {
   }
 }
 
-// TODO: Missing testing on Windows and Linux for translucency support
-export const translucencySupported = computed(() => platform.value === "macos");
+// TODO: Missing testing on Windows for translucency support
+export const translucencySupported = computed(
+  () => platform.value === "macos" || platform.value === "linux",
+);
 
 export const uiScale = signal<UiScale>(restoreScale());
 export const translucent = signal<boolean>(localStorage.getItem(TRANSLUCENT) === "on");
