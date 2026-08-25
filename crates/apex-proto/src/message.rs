@@ -653,6 +653,26 @@ pub enum Command {
         #[serde(default)]
         environment: Option<String>,
     },
+    ApiList {
+        #[ts(type = "string")]
+        project: Uuid,
+    },
+    ApiRead {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+    },
+    ApiWrite {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+        request: ApiRequest,
+    },
+    ApiRemove {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+    },
     BrowserLogs {
         #[ts(type = "string")]
         project: Uuid,
@@ -1015,8 +1035,38 @@ pub enum Reply {
     Metrics { snapshot: MetricsSnapshot },
     Acp { snapshot: AcpSnapshot },
     ApiRun { run: ApiRun },
+    ApiCollection { requests: Vec<String>, environments: Vec<String> },
+    ApiRequest { request: ApiRequest, last: Option<ApiRun> },
     Daemon { report: DaemonReport },
     Done,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ApiRequest {
+    #[serde(default = "get")]
+    pub method: String,
+    pub url: String,
+    #[serde(default)]
+    #[ts(type = "Record<string, string>")]
+    pub headers: std::collections::BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body: Option<String>,
+}
+
+fn get() -> String {
+    "GET".to_owned()
+}
+
+impl Default for ApiRequest {
+    fn default() -> Self {
+        Self {
+            method: get(),
+            url: String::new(),
+            headers: std::collections::BTreeMap::new(),
+            body: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

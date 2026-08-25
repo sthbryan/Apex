@@ -252,6 +252,22 @@ async fn execute(
         Command::BrowserPage { project } => {
             Ok(Reply::Text { text: manager.browser_page(project).await })
         }
+        Command::ApiList { project } => {
+            let (requests, environments) = manager.api_list(project);
+            Ok(Reply::ApiCollection { requests, environments })
+        }
+        Command::ApiRead { project, name } => {
+            let (request, last) = manager.api_read(project, &name).map_err(not_found_error)?;
+            Ok(Reply::ApiRequest { request, last })
+        }
+        Command::ApiWrite { project, name, request } => {
+            manager.api_write(project, &name, &request).map_err(write_error)?;
+            Ok(Reply::Done)
+        }
+        Command::ApiRemove { project, name } => {
+            manager.api_remove(project, &name).map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::ApiSend { project, name, environment } => Ok(Reply::ApiRun {
             run: manager
                 .api_send(project, &name, environment.as_deref())
@@ -493,6 +509,10 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::BrowserForget { .. }
             | Command::BrowserPage { .. }
             | Command::ApiSend { .. }
+            | Command::ApiList { .. }
+            | Command::ApiRead { .. }
+            | Command::ApiWrite { .. }
+            | Command::ApiRemove { .. }
             | Command::BrowserLogs { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }

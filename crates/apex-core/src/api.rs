@@ -2,33 +2,12 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
-use serde::{Deserialize, Serialize};
+pub use apex_proto::ApiRequest as Request;
 
 pub const REQUESTS: &str = "requests";
 pub const ENVIRONMENTS: &str = "environments";
 pub const RUNS: &str = "runs";
 pub const SECRETS: &str = ".env";
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Request {
-    #[serde(default = "get")]
-    pub method: String,
-    pub url: String,
-    #[serde(default)]
-    pub headers: BTreeMap<String, String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub body: Option<String>,
-}
-
-fn get() -> String {
-    "GET".to_owned()
-}
-
-impl Default for Request {
-    fn default() -> Self {
-        Self { method: get(), url: String::new(), headers: BTreeMap::new(), body: None }
-    }
-}
 
 pub fn ensure(root: &Path) -> Result<()> {
     for folder in [REQUESTS, ENVIRONMENTS, RUNS] {

@@ -184,3 +184,95 @@ async fn asking_for_a_request_nobody_saved_says_so() {
         .expect_err("no request");
     assert!(complaint.contains("missing"), "{complaint}");
 }
+
+#[tokio::test]
+async fn the_collection_lists_what_is_saved_and_reads_one_back() {
+    let harness = Harness::start().await;
+    write_request(&harness, "zeta", "url = \"http://localhost:1/z\"\n");
+    write_request(&harness, "alpha", "method = \"POST\"\nurl = \"http://localhost:1/a\"\n");
+    write_environment(&harness, "local", "host = \"http://localhost:1\"\n");
+
+    let mut client = harness.client().await;
+    let reply = client.request(Command::ApiList { project: harness.project }).await;
+    let Reply::ApiCollection { requests, environments } = reply else {
+        panic!("expected a collection, got {reply:?}")
+    };
+    assert_eq!(requests, vec!["alpha".to_owned(), "zeta".to_owned()]);
+    assert_eq!(environments, vec!["local".to_owned()]);
+
+    let reply =
+        client.request(Command::ApiRead { project: harness.project, name: "alpha".into() }).await;
+    let Reply::ApiRequest { request, last } = reply else {
+        panic!("expected a request, got {reply:?}")
+    };
+    assert_eq!(request.method, "POST");
+    assert_eq!(request.url, "http://localhost:1/a");
+    assert!(last.is_none());
+}
+
+#[tokio::test]
+async fn reading_a_request_brings_the_run_the_agent_left() {
+    let harness = Harness::start().await;
+    let (base, heard) = serving("500 Internal Server Error", "boom".into()).await;
+    write_request(&harness, "health", &format!("url = \"{base}/health\"\n"));
+    send(&harness, "health", None).await;
+    heard.await.expect("served");
+
+    let mut client = harness.client().await;
+    let reply =
+        client.request(Command::ApiRead { project: harness.project, name: "health".into() }).await;
+    let Reply::ApiRequest { last: Some(run), .. } = reply else {
+        panic!("expected a run, got {reply:?}")
+    };
+    assert_eq!(run.status, 500);
+    assert_eq!(run.body, "boom");
+}
+
+#[tokio::test]
+async fn the_panel_can_write_and_remove_a_request() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    let request = apex_proto::ApiRequest {
+        method: "PUT".into(),
+        url: "http://localhost:1/users/1".into(),
+        headers: std::collections::BTreeMap::from([("Accept".into(), "application/json".into())]),
+        body: Some("{}".into()),
+    };
+    client
+        .request(Command::ApiWrite {
+            project: harness.project,
+            name: "update user".into(),
+            request: request.clone(),
+        })
+        .await;
+
+    let reply = client
+        .request(Command::ApiRead { project: harness.project, name: "update user".into() })
+        .await;
+    let Reply::ApiRequest { request: back, .. } = reply else {
+        panic!("expected a request, got {reply:?}")
+    };
+    assert_eq!(back, request);
+
+    client
+        .request(Command::ApiRemove { project: harness.project, name: "update user".into() })
+        .await;
+    let reply = client.request(Command::ApiList { project: harness.project }).await;
+    let Reply::ApiCollection { requests, .. } = reply else { panic!("expected a collection") };
+    assert!(requests.is_empty());
+}
+
+#[tokio::test]
+async fn a_name_that_walks_out_of_the_folder_is_refused() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    let complaint = client
+        .try_request(Command::ApiWrite {
+            project: harness.project,
+            name: "../escaped".into(),
+            request: apex_proto::ApiRequest::default(),
+        })
+        .await
+        .expect_err("that is not a name");
+    assert!(complaint.contains("not a name"), "{complaint}");
+}

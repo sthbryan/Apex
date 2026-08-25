@@ -792,6 +792,35 @@ impl SessionManager {
         self.browsers.page(project).await
     }
 
+    pub fn api_list(&self, project: Uuid) -> (Vec<String>, Vec<String>) {
+        let root = self.paths.api_dir(project);
+        (apex_core::api::requests(&root), apex_core::api::environments(&root))
+    }
+
+    pub fn api_read(
+        &self,
+        project: Uuid,
+        name: &str,
+    ) -> Result<(apex_proto::ApiRequest, Option<apex_proto::ApiRun>)> {
+        let root = self.paths.api_dir(project);
+        Ok((apex_core::api::load(&root, name)?, self.api.last(&root, name)))
+    }
+
+    pub fn api_write(
+        &self,
+        project: Uuid,
+        name: &str,
+        request: &apex_proto::ApiRequest,
+    ) -> Result<()> {
+        let root = self.paths.api_dir(project);
+        apex_core::api::ensure(&root)?;
+        apex_core::api::save(&root, name, request)
+    }
+
+    pub fn api_remove(&self, project: Uuid, name: &str) -> Result<()> {
+        apex_core::api::remove(&self.paths.api_dir(project), name)
+    }
+
     pub async fn api_send(
         &self,
         project: Uuid,
