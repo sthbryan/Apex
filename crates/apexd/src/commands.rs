@@ -322,6 +322,9 @@ async fn execute(
             manager.pane_answered(request, page, error).await;
             Ok(Reply::Done)
         }
+        Command::Preview { asked_by, path, name } => Ok(Reply::Text {
+            text: manager.preview(asked_by, &path, name).await.map_err(not_found_error)?,
+        }),
         Command::CloseView { asked_by, target } => {
             manager.close_view(asked_by, target).await.map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -512,6 +515,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::WorktreePrune { .. }
             | Command::SessionCreate { .. }
             | Command::OpenView { .. }
+            | Command::Preview { .. }
             | Command::CloseView { .. }
             | Command::BrowserShot { .. }
             | Command::SessionTell { .. }

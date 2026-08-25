@@ -71,6 +71,7 @@ pub struct SessionManager {
     clients: Arc<AtomicUsize>,
     started: Instant,
     quit: Arc<watch::Sender<bool>>,
+    preview: tokio::sync::OnceCell<Arc<crate::preview::PreviewServer>>,
 }
 
 impl SessionManager {
@@ -133,6 +134,7 @@ impl SessionManager {
             clients: Arc::new(AtomicUsize::new(0)),
             started: Instant::now(),
             quit: Arc::new(watch::channel(false).0),
+            preview: tokio::sync::OnceCell::new(),
         });
         let dispatch: Arc<dyn crate::commands::Dispatch> = manager.clone();
         manager.acp.bind(Arc::downgrade(&dispatch));
@@ -371,6 +373,37 @@ impl SessionManager {
         }
         self.registry.announce(Event::OpenView { target, asked_by });
         Ok(())
+    }
+
+    pub async fn preview(
+        &self,
+        asked_by: Uuid,
+        path: &str,
+        name: Option<String>,
+    ) -> Result<String> {
+        let sessions = self.list_sessions().await;
+        let session = sessions
+            .iter()
+            .find(|session| session.id == asked_by)
+            .with_context(|| format!("session {asked_by} does not exist"))?;
+
+        let dir = apex_core::preview::ensure(std::path::Path::new(&session.cwd))?;
+        let wanted = path.trim_start_matches('/');
+        apex_core::files::resolve(&dir, wanted).with_context(|| {
+            format!("{wanted} is not in {}, write the page there and ask again", dir.display())
+        })?;
+
+        let server = self
+            .preview
+            .get_or_try_init(crate::preview::PreviewServer::start)
+            .await
+            .context("could not open the preview port")?;
+        let url = server.url(&server.issue(&dir).await, wanted);
+        self.registry.announce(Event::OpenView {
+            target: apex_proto::ViewTarget::Url { url: url.clone(), name },
+            asked_by,
+        });
+        Ok(url)
     }
 
     pub async fn close_view(&self, asked_by: Uuid, target: apex_proto::ViewTarget) -> Result<()> {

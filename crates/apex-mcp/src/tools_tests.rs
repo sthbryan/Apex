@@ -115,6 +115,24 @@ fn opening_and_closing_a_view_share_the_same_target() {
 }
 
 #[test]
+fn a_preview_carries_the_file_and_the_pane_name() {
+    let me = caller(session("claude", None));
+    assert!(matches!(
+        command_for(&me, "apex_preview", &json!({ "path": "index.html", "name": "proto" }))
+            .expect("command"),
+        Command::Preview { path, name: Some(name), .. } if path == "index.html" && name == "proto"
+    ));
+    assert!(command_for(&me, "apex_preview", &json!({})).is_err());
+}
+
+#[test]
+fn the_preview_tool_says_where_to_write_the_page() {
+    let told = TOOLS.iter().find(|tool| tool.name == "apex_preview").expect("tool");
+    assert!(told.description.contains(".apex/preview"), "{}", told.description);
+    assert!(told.description.contains("APEX_PREVIEW_DIR"), "{}", told.description);
+}
+
+#[test]
 fn a_named_pane_travels_with_the_view_and_the_reads() {
     let me = caller(session("claude", None));
     let opening = json!({ "kind": "url", "url": "http://localhost:6006", "name": "storybook" });

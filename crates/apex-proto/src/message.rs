@@ -710,6 +710,13 @@ pub enum Command {
         asked_by: Uuid,
         target: ViewTarget,
     },
+    Preview {
+        #[ts(type = "string")]
+        asked_by: Uuid,
+        path: String,
+        #[serde(default)]
+        name: Option<String>,
+    },
     SessionTell {
         #[ts(type = "string")]
         id: Uuid,

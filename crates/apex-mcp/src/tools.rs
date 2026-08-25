@@ -185,6 +185,31 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_preview",
+        group: ToolGroup::Views,
+        description: "Show a page you built. Write the html and everything it loads into the \
+                      .apex/preview folder of your working directory, the full path is in \
+                      APEX_PREVIEW_DIR, then call this with the name of the file. Apex serves \
+                      that folder on loopback and opens it in a browser pane, where \
+                      apex_browser_console and apex_browser_shot can read it back.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["path"],
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "File to show, relative to the preview folder"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name this pane so you can read it later"
+                    }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_close_view",
         group: ToolGroup::Views,
         description: "Ask Apex to close something it opened for the person watching: a session \
@@ -296,6 +321,11 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
             contents: text("content").context("content is required")?,
         }),
         "apex_sessions_list" => Ok(Command::ListSessions),
+        "apex_preview" => Ok(Command::Preview {
+            asked_by: caller.session,
+            path: text("path").context("path is required")?,
+            name: text("name"),
+        }),
         "apex_open_view" => {
             Ok(Command::OpenView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
