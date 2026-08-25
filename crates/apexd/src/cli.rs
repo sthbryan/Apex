@@ -1,9 +1,10 @@
 use std::os::unix::process::CommandExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
+use apex_core::ApexPaths;
 use apex_mcp::Daemon;
 use apex_proto::{Command, DaemonReport, IDLE_GRACE_NEVER, Reply, connect_unix};
 
@@ -17,6 +18,7 @@ usage:
   apex stop       stop the daemon and every session it holds
   apex notify <text> [--title <title>]
                   raise a desktop notice through Apex
+  apex uninstall  stop the daemon and remove Apex from this machine
   apex daemon     run the daemon here instead of in the background
   apex help       print this
 ";
@@ -24,12 +26,20 @@ usage:
 const WAKE_TRIES: u32 = 40;
 const WAKE_PAUSE: Duration = Duration::from_millis(100);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ask {
+    Yes,
+    No,
+    Prompt,
+}
+
 pub enum Verb {
     Help,
     Status,
     Start,
     Stop,
     Notify { title: Option<String>, body: String },
+    Uninstall { settings: Ask, confirmed: bool },
     Unknown(String),
 }
 
@@ -46,6 +56,7 @@ pub fn read(args: impl Iterator<Item = String>) -> Option<Verb> {
 
     match word.as_deref() {
         Some("notify") => Some(notice(&rest)),
+        Some("uninstall") => Some(removal(&rest)),
         Some("daemon") => None,
         Some("status") => Some(Verb::Status),
         Some("start") => Some(Verb::Start),
@@ -72,7 +83,18 @@ pub async fn run(socket: &Path, verb: Verb) -> Result<i32> {
         Verb::Start => start(socket).await,
         Verb::Stop => stop(socket).await,
         Verb::Notify { title, body } => notify(socket, title, body).await,
+        Verb::Uninstall { settings, confirmed } => uninstall(socket, settings, confirmed).await,
     }
+}
+
+fn removal(rest: &[String]) -> Verb {
+    let flag = |name: &str| rest.iter().any(|word| word == name);
+    let settings = match (flag("--all"), flag("--keep-settings")) {
+        (true, false) => Ask::Yes,
+        (false, true) => Ask::No,
+        _ => Ask::Prompt,
+    };
+    Verb::Uninstall { settings, confirmed: flag("--yes") }
 }
 
 fn notice(rest: &[String]) -> Verb {
@@ -213,4 +235,120 @@ pub fn spell(seconds: u64) -> String {
         return format!("{}m {rest}s", seconds / 60);
     }
     format!("{seconds}s")
+}
+
+const IDENTIFIER: &str = "com.justcallmebryan.apex";
+
+pub fn app_traces(bundle: Option<&Path>, link: Option<&Path>) -> Vec<PathBuf> {
+    bundle.into_iter().chain(link).map(Path::to_path_buf).collect()
+}
+
+pub fn data_traces(home: &Path, config: &Path) -> Vec<PathBuf> {
+    let mut found = vec![config.to_path_buf()];
+    let library = home.join("Library");
+    for leaf in [
+        library.join("Application Support").join(IDENTIFIER),
+        library.join("Caches").join(IDENTIFIER),
+        library.join("WebKit").join(IDENTIFIER),
+        library.join("HTTPStorages").join(IDENTIFIER),
+        library.join("Preferences").join(format!("{IDENTIFIER}.plist")),
+        library.join("Saved Application State").join(format!("{IDENTIFIER}.savedState")),
+        home.join(".config").join(IDENTIFIER),
+        home.join(".cache").join(IDENTIFIER),
+        home.join(".local").join("share").join(IDENTIFIER),
+    ] {
+        found.push(leaf);
+    }
+    found
+}
+
+pub fn bundle_of(binary: &Path, appimage: Option<PathBuf>) -> Option<PathBuf> {
+    if let Some(image) = appimage {
+        return Some(image);
+    }
+    binary
+        .ancestors()
+        .find(|step| step.extension().is_some_and(|kind| kind == "app"))
+        .map(Path::to_path_buf)
+}
+
+fn our_link(home: &Path, binary: &Path) -> Option<PathBuf> {
+    let link = home.join(".local").join("bin").join("apex");
+    let aimed = std::fs::read_link(&link).ok()?;
+    (aimed == binary).then_some(link)
+}
+
+async fn uninstall(socket: &Path, settings: Ask, confirmed: bool) -> Result<i32> {
+    let paths = ApexPaths::discover().context("finding the apex folders")?;
+    let binary = std::env::current_exe()
+        .ok()
+        .and_then(|exe| std::fs::canonicalize(exe).ok())
+        .unwrap_or_default();
+
+    let bundle = bundle_of(&binary, std::env::var_os("APPIMAGE").map(PathBuf::from));
+    let link = our_link(&paths.home, &binary);
+    let app = app_traces(bundle.as_deref(), link.as_deref());
+
+    let wipe = match settings {
+        Ask::Yes => true,
+        Ask::No => false,
+        Ask::Prompt => confirm("Also remove your settings, projects and history?")?,
+    };
+    let data = if wipe { data_traces(&paths.home, &paths.config_dir) } else { Vec::new() };
+
+    let doomed: Vec<PathBuf> =
+        app.into_iter().chain(data).filter(|path| path.symlink_metadata().is_ok()).collect();
+
+    if doomed.is_empty() {
+        println!("there is nothing left to remove");
+    } else {
+        println!("this will delete:");
+        for path in &doomed {
+            println!("  {}", path.display());
+        }
+    }
+    println!("and stop the daemon");
+
+    if !confirmed && !agrees("type uninstall to go ahead: ", "uninstall")? {
+        println!("nothing was touched");
+        return Ok(1);
+    }
+
+    if let Ok(mut link) = Link::hail(socket, "apex-cli", true).await {
+        let _ = link.request(Command::DaemonShutdown).await;
+    }
+
+    let mut failed = false;
+    for path in &doomed {
+        if let Err(error) = erase(path) {
+            eprintln!("could not remove {}: {error}", path.display());
+            failed = true;
+        }
+    }
+
+    if bundle.is_none() {
+        println!("the app itself was installed by your package manager, remove it from there");
+    }
+    if failed { Ok(1) } else { Ok(0) }
+}
+
+fn erase(path: &Path) -> std::io::Result<()> {
+    let about = path.symlink_metadata()?;
+    if about.is_dir() { std::fs::remove_dir_all(path) } else { std::fs::remove_file(path) }
+}
+
+fn confirm(question: &str) -> Result<bool> {
+    print!("{question} [y/N] ");
+    std::io::Write::flush(&mut std::io::stdout())?;
+    let mut said = String::new();
+    std::io::BufRead::read_line(&mut std::io::stdin().lock(), &mut said)?;
+    Ok(matches!(said.trim(), "y" | "Y" | "yes"))
+}
+
+fn agrees(question: &str, word: &str) -> Result<bool> {
+    print!("{question}");
+    std::io::Write::flush(&mut std::io::stdout())?;
+    let mut said = String::new();
+    std::io::BufRead::read_line(&mut std::io::stdin().lock(), &mut said)?;
+    Ok(said.trim() == word)
 }
