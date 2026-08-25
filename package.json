@@ -7,11 +7,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run dev:desktop",
     "dev:design": "bun run --cwd apps/design dev",
-    "dev:desktop": "bun run --cwd apps/desktop dev",
+    "desktop:linux": "bun run --cwd apps/desktop dev:linux",
+    "desktop:macos": "bun run --cwd apps/desktop dev:macos",
     "dev:daemon": "cargo run -p apexd",
-    "dev:sandbox": "APEX_HOME=$HOME/.apex-dev bun run dev:desktop",
+    "sandbox:linux": "APEX_HOME=$HOME/.apex-dev bun run desktop:linux",
+    "sandbox:macos": "APEX_HOME=$HOME/.apex-dev bun run desktop:macos",
     "build:packages": "bun run --cwd packages/ui build",
     "build:desktop": "bun run --cwd apps/desktop build",
     "build:rust": "cargo build --workspace",

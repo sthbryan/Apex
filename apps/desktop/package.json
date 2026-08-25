@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pkill -x apexd || true && bun tauri dev",
+    "dev:linux": "pkill -x apexd || true && WEBKIT_DISABLE_DMABUF_RENDERER=1 bun tauri dev",
+    "dev:macos": "pkill -x apexd || true && bun tauri dev",
     "build": "tsc --noEmit && vite build",
     "daemon": "cargo run -p apexd",
     "daemon:kill": "pkill -x apexd",
