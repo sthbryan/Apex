@@ -11,6 +11,7 @@
     "dev:design": "bun run --cwd apps/design dev",
     "dev:desktop": "bun run --cwd apps/desktop dev",
     "dev:daemon": "cargo run -p apexd",
+    "dev:sandbox": "APEX_HOME=$HOME/.apex-dev bun run dev:desktop",
     "build:packages": "bun run --cwd packages/ui build",
     "build:desktop": "bun run --cwd apps/desktop build",
     "build:rust": "cargo build --workspace",

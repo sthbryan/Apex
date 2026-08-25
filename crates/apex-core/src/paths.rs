@@ -14,6 +14,13 @@ pub struct ApexPaths {
 
 impl ApexPaths {
     pub fn discover() -> Result<Self> {
+        Self::discover_with(std::env::var_os("APEX_HOME"))
+    }
+
+    pub fn discover_with(elsewhere: Option<std::ffi::OsString>) -> Result<Self> {
+        if let Some(root) = elsewhere.filter(|root| !root.is_empty()) {
+            return Ok(Self::rooted_at(Path::new(&root)));
+        }
         let home = directories::UserDirs::new()
             .context("could not determine the home directory")?
             .home_dir()
@@ -92,6 +99,32 @@ mod tests {
         assert_eq!(paths.agents_dir(), PathBuf::from("/Users/tester/.apex/agents"));
         assert_eq!(paths.database(), PathBuf::from("/Users/tester/.apex/data/apex.sqlite"));
         assert_eq!(paths.socket, PathBuf::from("/Users/tester/.apex/run/d.sock"));
+    }
+
+    #[test]
+    fn a_named_root_moves_everything_including_the_socket() {
+        let moved = ApexPaths::discover_with(Some("/Users/tester/dev".into())).expect("paths");
+
+        assert_eq!(moved.config_dir, PathBuf::from("/Users/tester/dev/.apex"));
+        assert_eq!(moved.database(), PathBuf::from("/Users/tester/dev/.apex/data/apex.sqlite"));
+        assert_eq!(moved.socket, PathBuf::from("/Users/tester/dev/.apex/run/d.sock"));
+    }
+
+    #[test]
+    fn an_empty_root_is_ignored_instead_of_landing_at_the_filesystem_root() {
+        let real = ApexPaths::discover().expect("paths");
+        let asked = ApexPaths::discover_with(Some("".into())).expect("paths");
+
+        assert_eq!(asked, real);
+    }
+
+    #[test]
+    fn two_roots_never_share_a_socket() {
+        let one = ApexPaths::discover_with(Some("/Users/tester".into())).expect("paths");
+        let other = ApexPaths::discover_with(Some("/Users/tester/dev".into())).expect("paths");
+
+        assert_ne!(one.socket, other.socket);
+        assert_ne!(one.database(), other.database());
     }
 
     #[test]
