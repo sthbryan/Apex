@@ -81,7 +81,7 @@ import {
 } from "@/features/settings/toolGroups";
 import { autoUpdate, setAutoUpdate } from "@/features/updates/state";
 import { UpdateAction, UpdateNote } from "@/features/updates/UpdateAction";
-import { agents, complain, daemonVersion, stopDaemon } from "@/shared/daemon";
+import { agents, complain, daemonVersion, platform, stopDaemon } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { perfStatsEnabled, setPerfStatsEnabled } from "@/shared/perfStats";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
@@ -131,22 +131,6 @@ export function lookSection(): Section {
           />
         ),
       },
-      ...(translucencySupported.value
-        ? [
-            {
-              id: "translucent",
-              label: t("settings.translucent"),
-              hint: t("settings.translucentHint"),
-              control: (
-                <Switch
-                  label={t("settings.translucent")}
-                  checked={translucent.value}
-                  onChange={setTranslucent}
-                />
-              ),
-            },
-          ]
-        : []),
       ...(import.meta.env.DEV
         ? [
             {
@@ -158,6 +142,22 @@ export function lookSection(): Section {
                   label={t("settings.perfStats")}
                   checked={perfStatsEnabled.value}
                   onChange={setPerfStatsEnabled}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(translucencySupported.value
+        ? [
+            {
+              id: "translucent",
+              label: t("settings.translucent"),
+              hint: t("settings.translucentHint"),
+              control: (
+                <Switch
+                  label={t("settings.translucent")}
+                  checked={translucent.value}
+                  onChange={setTranslucent}
                 />
               ),
             },
@@ -176,21 +176,6 @@ export function lookSection(): Section {
                   min={MIN_OPACITY}
                   max={100}
                   onChange={setVeilOpacity}
-                />
-              ),
-            },
-            {
-              id: "glassBlur",
-              label: t("settings.glassBlur"),
-              hint: t("settings.glassBlurHint"),
-              control: (
-                <Slider
-                  label={t("settings.glassBlur")}
-                  value={glassBlur.value}
-                  min={0}
-                  max={MAX_BLUR}
-                  unit="px"
-                  onChange={setGlassBlur}
                 />
               ),
             },
@@ -224,22 +209,41 @@ export function lookSection(): Section {
                 />
               ),
             },
-            {
-              id: "frost",
-              label: t("settings.frost"),
-              hint: t("settings.frostHint"),
-              control: (
-                <Segmented
-                  label={t("settings.frost")}
-                  value={frost.value}
-                  onChange={setFrost}
-                  options={FROSTS.map((option) => ({
-                    value: option,
-                    label: t(FROST_LABEL[option]),
-                  }))}
-                />
-              ),
-            },
+            ...(platform.value === "macos"
+              ? [
+                  {
+                    id: "glassBlur",
+                    label: t("settings.glassBlur"),
+                    hint: t("settings.glassBlurHint"),
+                    control: (
+                      <Slider
+                        label={t("settings.glassBlur")}
+                        value={glassBlur.value}
+                        min={0}
+                        max={MAX_BLUR}
+                        unit="px"
+                        onChange={setGlassBlur}
+                      />
+                    ),
+                  },
+                  {
+                    id: "frost",
+                    label: t("settings.frost"),
+                    hint: t("settings.frostHint"),
+                    control: (
+                      <Segmented
+                        label={t("settings.frost")}
+                        value={frost.value}
+                        onChange={setFrost}
+                        options={FROSTS.map((option) => ({
+                          value: option,
+                          label: t(FROST_LABEL[option]),
+                        }))}
+                      />
+                    ),
+                  },
+                ]
+              : []),
           ]
         : []),
       {
