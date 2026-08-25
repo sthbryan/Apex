@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [preact(), tailwindcss()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    dedupe: ["preact", "preact/hooks", "@preact/signals"],
   },
   build: {
     rollupOptions: {
