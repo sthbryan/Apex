@@ -1,5 +1,6 @@
 mod acp;
 mod browser;
+mod cli;
 mod context;
 mod files;
 mod git;
@@ -14,6 +15,7 @@ mod window;
 
 pub use acp::*;
 pub use browser::*;
+pub use cli::*;
 pub use context::*;
 pub use files::*;
 pub use git::*;

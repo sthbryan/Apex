@@ -211,7 +211,7 @@ async fn ensure_running(socket: &Path) -> Result<()> {
     bail!("apexd did not respond on {}", socket.display())
 }
 
-fn daemon_binary() -> Result<PathBuf> {
+pub(crate) fn daemon_binary() -> Result<PathBuf> {
     let exe = std::env::current_exe().context("current executable path")?;
     let dir = exe.parent().context("current executable directory")?;
 
