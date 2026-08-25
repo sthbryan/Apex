@@ -130,6 +130,7 @@ fn the_preview_tool_says_where_to_write_the_page() {
     let told = TOOLS.iter().find(|tool| tool.name == "apex_preview").expect("tool");
     assert!(told.description.contains(".apex/preview"), "{}", told.description);
     assert!(told.description.contains("APEX_PREVIEW_DIR"), "{}", told.description);
+    assert!(told.description.contains("apex_close_view"), "{}", told.description);
 }
 
 #[test]

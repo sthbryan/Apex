@@ -191,7 +191,8 @@ pub const TOOLS: &[Tool] = &[
                       .apex/preview folder of your working directory, the full path is in \
                       APEX_PREVIEW_DIR, then call this with the name of the file. Apex serves \
                       that folder on loopback and opens it in a browser pane, where \
-                      apex_browser_console and apex_browser_shot can read it back.",
+                      apex_browser_console and apex_browser_shot can read it back. Name the \
+                      pane and apex_close_view with that name closes it again.",
         schema: || {
             json!({
                 "type": "object",
