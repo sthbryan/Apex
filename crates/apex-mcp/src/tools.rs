@@ -185,8 +185,30 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
-        name: "apex_preview",
+        name: "apex_close_view",
         group: ToolGroup::Views,
+        description: "Ask Apex to close something it opened for the person watching: a session \
+                      pane, a file of this project, or a url.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["kind"],
+                "properties": {
+                    "kind": { "type": "string", "enum": ["session", "file", "url"] },
+                    "session": { "type": "string", "description": "Session id, for kind session" },
+                    "path": { "type": "string", "description": "Path in the project, for kind file" },
+                    "url": { "type": "string", "description": "Address, for kind url" },
+                    "name": {
+                        "type": "string",
+                        "description": "Name this pane so you can read it later, for kind url"
+                    }
+                }
+            })
+        },
+    },
+    Tool {
+        name: "apex_preview",
+        group: ToolGroup::Browser,
         description: "Show a page you built. Write the html and everything it loads into the \
                       .apex/preview folder of your working directory, the full path is in \
                       APEX_PREVIEW_DIR, then call this with the name of the file. Apex serves \
@@ -205,28 +227,6 @@ pub const TOOLS: &[Tool] = &[
                     "name": {
                         "type": "string",
                         "description": "Name this pane so you can read it later"
-                    }
-                }
-            })
-        },
-    },
-    Tool {
-        name: "apex_close_view",
-        group: ToolGroup::Views,
-        description: "Ask Apex to close something it opened for the person watching: a session \
-                      pane, a file of this project, or a url.",
-        schema: || {
-            json!({
-                "type": "object",
-                "required": ["kind"],
-                "properties": {
-                    "kind": { "type": "string", "enum": ["session", "file", "url"] },
-                    "session": { "type": "string", "description": "Session id, for kind session" },
-                    "path": { "type": "string", "description": "Path in the project, for kind file" },
-                    "url": { "type": "string", "description": "Address, for kind url" },
-                    "name": {
-                        "type": "string",
-                        "description": "Name this pane so you can read it later, for kind url"
                     }
                 }
             })
