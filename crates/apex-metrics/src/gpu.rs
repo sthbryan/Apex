@@ -15,6 +15,7 @@ pub fn read_gpu_utilization() -> Option<f32> {
     None
 }
 
+#[cfg(target_os = "macos")]
 fn parse_utilization(raw: &str) -> Option<f32> {
     const KEY: &str = "\"Device Utilization %\"=";
 
@@ -28,6 +29,6 @@ fn parse_utilization(raw: &str) -> Option<f32> {
         .fold(None, |best: Option<f32>, value| Some(best.map_or(value, |top| top.max(value))))
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 #[path = "gpu_tests.rs"]
 mod tests;
