@@ -8,6 +8,7 @@ import {
   TitleBar,
   Wordmark,
 } from "@apex/ui";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import cn from "cnfast";
 import { useCallback } from "preact/hooks";
 import { Dock } from "@/app/layout/Dock";
@@ -31,7 +32,7 @@ import { page, toggleSettings } from "@/app/view";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
 import { homeOpen, openHome } from "@/features/workspace/state";
-import { status } from "@/shared/daemon";
+import { platform, status } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 import { useReorder } from "@/shared/ui/reorder";
@@ -57,12 +58,16 @@ export function Layout({ onNewSession }: Props) {
 
   const { held, seat, grab } = useReorder(settle);
   const from = held ? order.indexOf(held as DockPanel) : -1;
+  const undecorated = platform.value === "linux";
 
   return (
     <div class="relative flex h-full flex-col text-text">
       <TitleBar
         data-tauri-drag-region
-        lights={false}
+        lights={undecorated}
+        onClose={undecorated ? () => void getCurrentWindow().close() : undefined}
+        onMinimize={undecorated ? () => void getCurrentWindow().minimize() : undefined}
+        onMaximize={undecorated ? () => void getCurrentWindow().toggleMaximize() : undefined}
         style={{ paddingLeft: "max(var(--apex-controls-start, 0px), 12px)" }}
         title={
           <>

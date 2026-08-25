@@ -24,6 +24,7 @@ export function applyWindowControls(platform: string, fullscreen: boolean): void
   style.setProperty("--apex-controls-start", `${layout.side === "start" ? layout.inset : 0}px`);
   style.setProperty("--apex-controls-end", `${layout.side === "end" ? layout.inset : 0}px`);
   controlsSide.value = layout.side;
+  style.setProperty("--apex-window-radius", platform === "linux" ? "0px" : "10px");
 }
 
 export async function watchFullscreen(platform: string): Promise<() => void> {
