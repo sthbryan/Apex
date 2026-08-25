@@ -1,6 +1,6 @@
 mod acp;
 mod browser;
-mod cli;
+pub(crate) mod cli;
 mod context;
 mod files;
 mod git;
@@ -16,6 +16,9 @@ mod window;
 pub use acp::*;
 pub use browser::*;
 pub use cli::*;
+
+#[cfg(test)]
+mod cli_tests;
 pub use context::*;
 pub use files::*;
 pub use git::*;
