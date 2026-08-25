@@ -13,6 +13,10 @@ vi.mock("@tauri-apps/api/event", () => ({
   listen: (...args: unknown[]) => listen(...args),
 }));
 
+vi.mock("@/features/projects/state", () => ({
+  projectSessions: signal([] as { url: string | null }[]),
+}));
+
 vi.mock("@/features/settings/browsing", () => ({
   browsing: signal("internal"),
 }));
@@ -25,14 +29,17 @@ vi.mock("@/shared/daemon", () => ({
   complain: () => {},
 }));
 
+import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
-import { isLocal, openWeb } from "./state";
+import { isLocal, openBrowserPane, openWeb, pickUrl } from "./state";
 
 beforeEach(() => {
   invoke.mockReset();
   invoke.mockResolvedValue(undefined);
   openBrowser.mockReset();
   (browsing as unknown as { value: string }).value = "internal";
+  (projectSessions as unknown as { value: unknown[] }).value = [];
+  localStorage.clear();
 });
 
 describe("isLocal", () => {
@@ -69,5 +76,46 @@ describe("openWeb", () => {
     (browsing as unknown as { value: string }).value = "system";
     openWeb("http://localhost:3000");
     expect(invoke).toHaveBeenCalledWith("open_url", { url: "http://localhost:3000" });
+  });
+});
+
+describe("pickUrl", () => {
+  it("prefers a running local server", () => {
+    expect(pickUrl([null, "http://localhost:5173"], "http://localhost:9999")).toBe(
+      "http://localhost:5173",
+    );
+  });
+
+  it("falls back to the last url when nothing is running", () => {
+    expect(pickUrl([null], "http://localhost:9999")).toBe("http://localhost:9999");
+  });
+
+  it("ignores a remembered url that is no longer local", () => {
+    expect(pickUrl([], "https://example.com")).toBe("http://localhost:3000");
+  });
+
+  it("skips running sessions that are not local", () => {
+    expect(pickUrl(["https://example.com", "http://127.0.0.1:8080"], null)).toBe(
+      "http://127.0.0.1:8080",
+    );
+  });
+
+  it("lands on the default with nothing to go on", () => {
+    expect(pickUrl([], null)).toBe("http://localhost:3000");
+  });
+});
+
+describe("openBrowserPane", () => {
+  it("opens a pane on the running server", () => {
+    (projectSessions as unknown as { value: unknown[] }).value = [{ url: "http://localhost:4000" }];
+    openBrowserPane();
+    expect(openBrowser).toHaveBeenCalledWith("http://localhost:4000", undefined);
+  });
+
+  it("reopens where the last pane was left", () => {
+    openWeb("http://localhost:7000");
+    openBrowser.mockReset();
+    openBrowserPane();
+    expect(openBrowser).toHaveBeenCalledWith("http://localhost:7000", undefined);
   });
 });

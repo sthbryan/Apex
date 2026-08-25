@@ -299,6 +299,7 @@ export const es: Messages = {
     shared: "Lo leen todos los agentes",
   },
   browser: {
+    open: "Abrir un pane del browser",
     back: "Atrás",
     forward: "Adelante",
     reload: "Recargar la página",

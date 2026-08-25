@@ -29,6 +29,7 @@ import {
 import { Toolbar, ToolbarButton } from "@/app/layout/Toolbar";
 import { Views } from "@/app/Views";
 import { page, toggleSettings } from "@/app/view";
+import { openBrowserPane } from "@/features/browser/state";
 import { ProjectPicker } from "@/features/projects/ProjectPicker";
 import { activeProject } from "@/features/projects/state";
 import { homeOpen, openHome } from "@/features/workspace/state";
@@ -82,6 +83,7 @@ export function Layout({ onNewSession }: Props) {
               icon={NEXT[mode].icon}
               onClick={toggleDock}
             />
+            <ToolbarButton label={t("browser.open")} icon="globe" onClick={openBrowserPane} />
             <ToolbarButton label={t("shortcuts.palette")} icon="grid" onClick={onNewSession} />
             <ToolbarButton
               label={t("settings.title")}

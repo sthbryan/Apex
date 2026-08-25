@@ -298,6 +298,7 @@ export const en = {
     shared: "Shared with every agent",
   },
   browser: {
+    open: "Open a browser pane",
     back: "Back",
     forward: "Forward",
     reload: "Reload the page",
