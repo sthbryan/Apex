@@ -49,11 +49,11 @@ pub fn run() {
             if let Err(error) = &daemon {
                 tracing::warn!(%error, "could not reach apexd at startup");
             }
-            if let Some(config) = app.config().app.windows.first().cloned() {
-                tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
-                    .initialization_script_for_all_frames(commands::browser::PROBE)
-                    .build()?;
-            }
+            let config =
+                app.config().app.windows.first().cloned().ok_or("no window is configured")?;
+            tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
+                .initialization_script_for_all_frames(commands::browser::PROBE)
+                .build()?;
             #[cfg(target_os = "macos")]
             menu::install(app.handle())?;
             tray::install(app.handle())?;
