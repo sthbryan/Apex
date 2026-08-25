@@ -186,6 +186,10 @@ pub fn make_repo(root: &std::path::Path) {
 }
 
 impl Harness {
+    pub fn api_dir(&self) -> PathBuf {
+        ApexPaths::rooted_at(&std::env::temp_dir().join("apex-test-home")).api_dir(self.project)
+    }
+
     pub async fn start() -> Self {
         Self::begin(false).await
     }

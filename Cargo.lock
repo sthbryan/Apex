@@ -219,6 +219,7 @@ dependencies = [
  "bytes",
  "directories",
  "percent-encoding",
+ "reqwest",
  "serde",
  "serde_json",
  "tempfile",

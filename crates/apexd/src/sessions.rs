@@ -18,6 +18,7 @@ use tokio::sync::watch;
 use uuid::Uuid;
 
 use crate::services::acp::AcpRegistry;
+use crate::services::api::ApiService;
 use crate::services::browsers::BrowsersService;
 use crate::services::sessions::SessionRegistry;
 use crate::services::{
@@ -63,6 +64,7 @@ pub struct SessionManager {
     projects: ProjectsService,
     tasks: TasksService,
     browsers: BrowsersService,
+    api: ApiService,
     metrics: MetricsService,
     registry: Arc<SessionRegistry>,
     acp: Arc<AcpRegistry>,
@@ -126,6 +128,7 @@ impl SessionManager {
             projects,
             tasks,
             browsers,
+            api: ApiService::new(),
             metrics,
             registry,
             acp,
@@ -786,6 +789,17 @@ impl SessionManager {
 
     pub async fn browser_page(&self, project: Uuid) -> String {
         self.browsers.page(project).await
+    }
+
+    pub async fn api_send(
+        &self,
+        project: Uuid,
+        name: &str,
+        environment: Option<&str>,
+    ) -> Result<apex_proto::ApiRun> {
+        let root = self.paths.api_dir(project);
+        apex_core::api::ensure(&root)?;
+        self.api.send(&root, name, environment).await
     }
 
     pub async fn browser_logs(&self, project: Uuid) -> Result<String> {

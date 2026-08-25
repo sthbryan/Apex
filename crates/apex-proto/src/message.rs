@@ -645,6 +645,13 @@ pub enum Command {
         #[ts(type = "string")]
         project: Uuid,
     },
+    ApiSend {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+        #[serde(default)]
+        environment: Option<String>,
+    },
     BrowserLogs {
         #[ts(type = "string")]
         project: Uuid,
@@ -1006,8 +1013,27 @@ pub enum Reply {
     Wrote { revision: String },
     Metrics { snapshot: MetricsSnapshot },
     Acp { snapshot: AcpSnapshot },
+    ApiRun { run: ApiRun },
     Daemon { report: DaemonReport },
     Done,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ApiRun {
+    pub name: String,
+    pub method: String,
+    pub url: String,
+    pub status: u16,
+    #[ts(type = "number")]
+    pub millis: u64,
+    #[ts(type = "number")]
+    pub at: i64,
+    pub headers: Vec<(String, String)>,
+    pub body: String,
+    pub truncated: bool,
+    #[ts(type = "number")]
+    pub size: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

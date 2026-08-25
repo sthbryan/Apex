@@ -252,6 +252,12 @@ async fn execute(
         Command::BrowserPage { project } => {
             Ok(Reply::Text { text: manager.browser_page(project).await })
         }
+        Command::ApiSend { project, name, environment } => Ok(Reply::ApiRun {
+            run: manager
+                .api_send(project, &name, environment.as_deref())
+                .await
+                .map_err(not_found_error)?,
+        }),
         Command::BrowserLogs { project } => {
             Ok(Reply::Text { text: manager.browser_logs(project).await.map_err(internal_error)? })
         }
@@ -486,6 +492,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::BrowserReport { .. }
             | Command::BrowserForget { .. }
             | Command::BrowserPage { .. }
+            | Command::ApiSend { .. }
             | Command::BrowserLogs { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }
