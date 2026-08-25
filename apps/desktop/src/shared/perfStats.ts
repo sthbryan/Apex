@@ -37,6 +37,8 @@ export function startPerfStats(): () => void {
       }
       const stats = new Stats();
       stats.showPanel(0);
+      stats.dom.style.top = "auto";
+      stats.dom.style.bottom = "0";
       document.body.appendChild(stats.dom);
 
       let frame = requestAnimationFrame(function tick() {
