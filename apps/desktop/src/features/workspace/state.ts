@@ -167,9 +167,6 @@ function same(left: PaneView, right: PaneView): boolean {
   if (left.type === "panel" && right.type === "panel") {
     return left.panel === right.panel;
   }
-  if (left.type === "browser" && right.type === "browser") {
-    return left.name || right.name ? left.name === right.name : left.url === right.url;
-  }
   if (left.type === "race" && right.type === "race") {
     return left.run === right.run;
   }
@@ -408,9 +405,15 @@ function pruneTab(tab: Tab, liveSessionIds: Set<string>): Tab | null {
   return { ...tab, root, activeLeafId };
 }
 
+const RETIRED_VIEWS = ["browser"];
+
+function retired(view: PaneView): boolean {
+  return RETIRED_VIEWS.includes((view as { type: string }).type);
+}
+
 function pruneNode(node: PaneNode, liveSessionIds: Set<string>): PaneNode | null {
   if (node.kind === "leaf") {
-    if (node.view.type === "browser") {
+    if (retired(node.view)) {
       return null;
     }
     const session = referencedSession(node);

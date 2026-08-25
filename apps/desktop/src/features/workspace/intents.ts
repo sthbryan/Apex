@@ -1,4 +1,5 @@
-import { openWeb } from "@/features/browser/state";
+import { closeAside } from "@/app/layout/state";
+import { openWeb, showingBrowser } from "@/features/browser/state";
 import { onCloseView, onOpenView, sessions } from "@/features/sessions/state";
 import { viewLanding } from "@/features/settings/agentMode";
 import { closeViews, openQuietly } from "@/features/workspace/state";
@@ -36,11 +37,9 @@ export function startViewIntents(): () => void {
         closeViews((view) => view.type === "file" && view.path === target.path);
         break;
       case "url":
-        closeViews(
-          (view) =>
-            view.type === "browser" &&
-            (target.name ? view.name === target.name : view.url === target.url),
-        );
+        if (showingBrowser()) {
+          closeAside();
+        }
         break;
     }
   });

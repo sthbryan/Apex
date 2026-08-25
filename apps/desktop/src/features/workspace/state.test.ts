@@ -62,6 +62,10 @@ import {
 import type { PaneNode, PaneView } from "./tree";
 import { leaf, leaves, splitLeaf, stack } from "./tree";
 
+function retiredView(): PaneView {
+  return { type: "browser", url: "http://localhost:3000" } as unknown as PaneView;
+}
+
 beforeEach(() => {
   tabs.value = [];
   activeTabId.value = null;
@@ -145,7 +149,7 @@ describe("serializeLayout and restoreLayout", () => {
 
   it("drops browser panes saved by an older layout", () => {
     const kept = leaf({ type: "session", sessionId: "a" });
-    const gone = leaf({ type: "browser", url: "http://localhost:3000" });
+    const gone = leaf(retiredView());
     tabs.value = [{ id: "t1", root: stack([kept, gone], "row"), activeLeafId: gone.id }];
     activeTabId.value = "t1";
     const raw = serializeLayout();
@@ -157,7 +161,7 @@ describe("serializeLayout and restoreLayout", () => {
   });
 
   it("drops a tab that only held a browser pane", () => {
-    const root = leaf({ type: "browser", url: "http://localhost:3000" });
+    const root = leaf(retiredView());
     tabs.value = [{ id: "t1", root, activeLeafId: root.id }];
     activeTabId.value = "t1";
     const raw = serializeLayout();

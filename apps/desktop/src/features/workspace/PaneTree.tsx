@@ -67,20 +67,8 @@ export function PaneTree({ tabId, node, activeLeafId, tabActive }: Props) {
 }
 
 function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused: boolean }) {
-  const [hosts, setHosts] = useState<PaneHosts>({
-    lead: null,
-    title: null,
-    sub: null,
-    controls: null,
-  });
-  const own = node.view.type === "browser";
+  const [hosts, setHosts] = useState<PaneHosts>({ sub: null, controls: null });
 
-  const holdLead = useCallback((el: HTMLElement | null) => {
-    setHosts((current) => ({ ...current, lead: el }));
-  }, []);
-  const holdTitle = useCallback((el: HTMLElement | null) => {
-    setHosts((current) => ({ ...current, title: el }));
-  }, []);
   const holdSub = useCallback((el: HTMLElement | null) => {
     setHosts((current) => ({ ...current, sub: el }));
   }, []);
@@ -92,7 +80,6 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
     <Pane
       scroll={false}
       tabIndex={-1}
-      wide={own}
       class={cn(
         "group h-full w-full overflow-hidden border transition-colors",
         focused ? "pane-focused border-border" : "border-transparent",
@@ -107,26 +94,16 @@ function PaneLeaf({ tabId, node, focused }: { tabId: string; node: Leaf; focused
         openMenu(event, paneMenu(tabId, node));
       }}
       lead={
-        own ? (
-          <span ref={holdLead} class="flex flex-none items-center gap-0.5" />
-        ) : (
-          <Icon
-            name={paneIcon(node.view)}
-            size={12}
-            class={cn("shrink-0", focused ? "text-accent" : "text-faint")}
-          />
-        )
+        <Icon
+          name={paneIcon(node.view)}
+          size={12}
+          class={cn("shrink-0", focused ? "text-accent" : "text-faint")}
+        />
       }
-      title={
-        own ? (
-          <span ref={holdTitle} class="flex min-w-0 flex-1 items-center" />
-        ) : (
-          paneTitle(node.view, allSessions.value)
-        )
-      }
+      title={paneTitle(node.view, allSessions.value)}
       sub={
         <>
-          {own ? null : paneSubtitle(node.view)}
+          {paneSubtitle(node.view)}
           <span ref={holdSub} class="contents" />
         </>
       }

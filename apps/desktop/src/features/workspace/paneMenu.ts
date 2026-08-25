@@ -13,7 +13,7 @@ export function paneMenu(tabId: string, leaf: Leaf): MenuEntry[] {
   const split = (currentTab?.root.kind ?? "leaf") === "split";
   const panel = leaf.view.type === "panel" && leaf.view.panel in DOCK_PANELS;
   const swapable = Boolean(currentTab && siblingOf(currentTab.root, leaf.id));
-  const splittable = leaf.view.type === "session" || leaf.view.type === "browser";
+  const splittable = leaf.view.type === "session";
   const entries: MenuEntry[] = [];
 
   if (splittable) {

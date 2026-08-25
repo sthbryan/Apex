@@ -153,10 +153,6 @@ export async function splitWithShellAt(
   if (!tab || !pane) {
     return;
   }
-  if (pane.view.type === "browser") {
-    splitLeafWithView(tabId, leafId, { type: "browser", url: pane.view.url }, direction);
-    return;
-  }
   const seedId = pane.view.type === "session" ? pane.view.sessionId : null;
   const beside = seedId ? sessions.value.find((candidate) => candidate.id === seedId) : null;
   const created = await createSession(

@@ -6,12 +6,7 @@ import { PaneControls, PaneSlots, PaneSub } from "@/features/workspace/slots";
 import { render } from "@/test/render";
 
 function Leaf({ renders }: { renders: { count: number } }) {
-  const [hosts, setHosts] = useState<PaneHosts>({
-    lead: null,
-    title: null,
-    sub: null,
-    controls: null,
-  });
+  const [hosts, setHosts] = useState<PaneHosts>({ sub: null, controls: null });
   const holdSub = useCallback((el: HTMLElement | null) => {
     setHosts((current) => ({ ...current, sub: el }));
   }, []);

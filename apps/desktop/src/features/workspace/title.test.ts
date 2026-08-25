@@ -32,17 +32,6 @@ describe("paneTitle", () => {
     expect(paneTitle({ type: "panel", panel: "unknown" }, [])).toBe("unknown");
   });
 
-  it("returns host for browser url", () => {
-    expect(paneTitle({ type: "browser", url: "https://example.com:3000/path?q=1" }, [])).toBe(
-      "example.com:3000",
-    );
-    expect(paneTitle({ type: "browser", url: "https://example.com" }, [])).toBe("example.com");
-  });
-
-  it("falls back to url when it cannot be parsed", () => {
-    expect(paneTitle({ type: "browser", url: "not a url" }, [])).toBe("not a url");
-  });
-
   it("returns translated race title", () => {
     expect(paneTitle({ type: "race", run: "x" }, [])).toBe("Races");
   });
@@ -66,7 +55,6 @@ describe("paneIcon", () => {
     expect(
       paneIcon({ type: "diff", target: { type: "project" }, path: "a.ts", commit: null }),
     ).toBe("branch");
-    expect(paneIcon({ type: "browser", url: "https://x.com" })).toBe("globe");
     expect(paneIcon({ type: "race", run: "x" })).toBe("swap");
     expect(paneIcon({ type: "session", sessionId: "x" })).toBe("sessions");
   });
@@ -91,8 +79,7 @@ describe("paneSubtitle", () => {
     ).toBe("abc");
   });
 
-  it("returns null for browser and session", () => {
-    expect(paneSubtitle({ type: "browser", url: "https://x.com" })).toBeNull();
+  it("returns null for a session", () => {
     expect(paneSubtitle({ type: "session", sessionId: "x" })).toBeNull();
   });
 });
