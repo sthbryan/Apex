@@ -78,13 +78,8 @@ pub async fn browser_report(
     project: Uuid,
     pane: String,
     url: String,
-    name: Option<String>,
 ) -> Answer<()> {
-    state
-        .daemon()?
-        .request(Command::BrowserReport { project, pane, url, name })
-        .await
-        .map_err(failed)?;
+    state.daemon()?.request(Command::BrowserReport { project, pane, url }).await.map_err(failed)?;
     Ok(())
 }
 

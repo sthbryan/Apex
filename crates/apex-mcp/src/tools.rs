@@ -233,35 +233,24 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
-        name: "apex_browser_list",
+        name: "apex_browser_page",
         group: ToolGroup::Browser,
-        description: "List the browser panes open on this project: address, the name each one \
-                      was given, and which one the person is using.",
+        description: "Report the address the browser is showing right now.",
         schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_browser_console",
         group: ToolGroup::Browser,
-        description: "Read the console output and errors a browser pane has produced since \
-                      the page loaded. Without a pane it reads the one in use.",
-        schema: || {
-            json!({ "type": "object", "properties": { "pane": {
-                        "type": "string",
-                        "description": "Name or address of the pane, when the project has several"
-                    } } })
-        },
+        description: "Read the console output and errors the browser has produced since the \
+                      page loaded.",
+        schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_browser_shot",
         group: ToolGroup::Browser,
-        description: "Take a picture of what a browser pane is showing and answer with the \
-                      path of the png file. Without a pane it shoots the one in use.",
-        schema: || {
-            json!({ "type": "object", "properties": { "pane": {
-                        "type": "string",
-                        "description": "Name or address of the pane, when the project has several"
-                    } } })
-        },
+        description: "Take a picture of what the browser is showing and answer with the path \
+                      of the png file.",
+        schema: || json!({ "type": "object", "properties": {} }),
     },
     Tool {
         name: "apex_worktree_info",
@@ -333,13 +322,9 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
-        "apex_browser_list" => Ok(Command::BrowserList { project: caller.project }),
-        "apex_browser_console" => {
-            Ok(Command::BrowserLogs { project: caller.project, pane: text("pane") })
-        }
-        "apex_browser_shot" => {
-            Ok(Command::BrowserShot { project: caller.project, pane: text("pane") })
-        }
+        "apex_browser_page" => Ok(Command::BrowserPage { project: caller.project }),
+        "apex_browser_console" => Ok(Command::BrowserLogs { project: caller.project }),
+        "apex_browser_shot" => Ok(Command::BrowserShot { project: caller.project }),
         "apex_agents_list" => Ok(Command::ListAgents),
         "apex_session_tell" => Ok(Command::SessionTell {
             id: session_id(&text("session"))?,

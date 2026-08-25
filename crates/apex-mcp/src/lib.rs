@@ -119,7 +119,7 @@ async fn call<D: Daemon>(daemon: &mut D, caller: &Caller, params: &Value) -> Res
         other => format!("Unexpected answer from the daemon: {other:?}"),
     };
 
-    Ok(if matches!(name, "apex_browser_list" | "apex_browser_console") {
+    Ok(if matches!(name, "apex_browser_page" | "apex_browser_console") {
         format!("{UNTRUSTED}\n\n{text}")
     } else {
         text

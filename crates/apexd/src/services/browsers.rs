@@ -8,7 +8,6 @@ use uuid::Uuid;
 struct Pane {
     project: Uuid,
     url: String,
-    name: Option<String>,
     seen: u64,
 }
 
@@ -26,7 +25,7 @@ impl BrowsersService {
         Self::default()
     }
 
-    pub async fn report(&self, project: Uuid, pane: String, url: String, name: Option<String>) {
+    pub async fn report(&self, project: Uuid, pane: String, url: String) {
         let seen = {
             let mut clock = self.clock.lock().await;
             *clock += 1;
@@ -36,7 +35,6 @@ impl BrowsersService {
         let held = panes.entry(pane).or_default();
         held.project = project;
         held.url = url;
-        held.name = name;
         held.seen = seen;
     }
 
@@ -44,46 +42,20 @@ impl BrowsersService {
         self.panes.lock().await.remove(pane);
     }
 
-    pub async fn resolve(&self, project: Uuid, name: Option<&str>) -> Result<String, String> {
+    pub async fn showing(&self, project: Uuid) -> Result<(), String> {
         let panes = self.panes.lock().await;
-        let mine = panes.iter().filter(|(_, pane)| pane.project == project);
-        let wanted: Vec<(&String, &Pane)> = match name {
-            Some(name) => mine.filter(|(_, pane)| answers_to(pane, name)).collect(),
-            None => mine.collect(),
-        };
-        if let Some((label, _)) = wanted.iter().max_by_key(|(_, pane)| pane.seen) {
-            return Ok((*label).clone());
+        if panes.values().any(|pane| pane.project == project) {
+            return Ok(());
         }
-        let Some(name) = name else {
-            return Err("no browser pane is open right now".into());
-        };
-        let known: Vec<String> = panes
-            .values()
-            .filter(|pane| pane.project == project)
-            .map(|pane| pane.name.clone().unwrap_or_else(|| pane.url.clone()))
-            .collect();
-        if known.is_empty() {
-            return Err(format!("no browser pane is called {name}"));
-        }
-        Err(format!("no browser pane is called {name}, only {}", known.join(", ")))
+        Err("no browser is open right now".into())
     }
 
-    pub async fn list(&self, project: Uuid) -> String {
+    pub async fn page(&self, project: Uuid) -> String {
         let panes = self.panes.lock().await;
-        let mut mine: Vec<&Pane> = panes.values().filter(|pane| pane.project == project).collect();
-        if mine.is_empty() {
-            return "No browser pane is open on this project.".into();
+        match panes.values().filter(|pane| pane.project == project).max_by_key(|pane| pane.seen) {
+            Some(pane) => format!("The browser is showing {}.", pane.url),
+            None => "No browser is open on this project.".into(),
         }
-        mine.sort_by_key(|pane| std::cmp::Reverse(pane.seen));
-        mine.iter()
-            .enumerate()
-            .map(|(index, pane)| {
-                let name = pane.name.as_deref().unwrap_or("no name");
-                let mark = if index == 0 { ", in use" } else { "" };
-                format!("- {} ({name}{mark})", pane.url)
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
     }
 
     pub async fn expect(&self, request: Uuid) -> oneshot::Receiver<Result<String, String>> {
@@ -101,11 +73,6 @@ impl BrowsersService {
     pub async fn give_up(&self, request: Uuid) {
         self.waiting.lock().await.remove(&request);
     }
-}
-
-fn answers_to(pane: &Pane, name: &str) -> bool {
-    pane.name.as_deref() == Some(name)
-        || pane.url.trim_end_matches('/') == name.trim_end_matches('/')
 }
 
 #[derive(serde::Deserialize)]
@@ -138,51 +105,50 @@ pub fn describe_logs(taken: &Snapshot) -> String {
 mod tests {
     use super::*;
 
-    async fn panes() -> (BrowsersService, Uuid) {
+    async fn showing() -> (BrowsersService, Uuid) {
         let browsers = BrowsersService::new();
         let project = Uuid::new_v4();
-        browsers
-            .report(
-                project,
-                "browser-1".into(),
-                "http://localhost:6006".into(),
-                Some("book".into()),
-            )
-            .await;
-        browsers.report(project, "browser-2".into(), "http://localhost:5173".into(), None).await;
+        browsers.report(project, "browser".into(), "http://localhost:6006".into()).await;
         (browsers, project)
     }
 
     #[tokio::test]
-    async fn a_pane_answers_to_its_name_or_its_address() {
-        let (browsers, project) = panes().await;
-        assert_eq!(browsers.resolve(project, Some("book")).await, Ok("browser-1".into()));
-        assert_eq!(
-            browsers.resolve(project, Some("http://localhost:5173/")).await,
-            Ok("browser-2".into())
-        );
-        assert_eq!(browsers.resolve(project, None).await, Ok("browser-2".into()));
+    async fn the_page_is_the_address_the_browser_holds() {
+        let (browsers, project) = showing().await;
+        assert!(browsers.page(project).await.contains("http://localhost:6006"));
+
+        browsers.report(project, "browser".into(), "http://localhost:5173".into()).await;
+        let page = browsers.page(project).await;
+        assert!(page.contains("http://localhost:5173"));
+        assert!(!page.contains("6006"));
     }
 
     #[tokio::test]
-    async fn asking_for_a_stranger_says_what_is_open() {
-        let (browsers, project) = panes().await;
-        let complaint = browsers.resolve(project, Some("mailpit")).await.expect_err("no pane");
-        assert!(complaint.contains("book"));
-        assert!(complaint.contains("http://localhost:5173"));
+    async fn a_shut_browser_has_no_page_and_answers_nothing() {
+        let (browsers, project) = showing().await;
+        assert_eq!(browsers.showing(project).await, Ok(()));
+
+        browsers.forget("browser").await;
+        assert_eq!(browsers.page(project).await, "No browser is open on this project.");
+        assert!(browsers.showing(project).await.is_err());
     }
 
     #[tokio::test]
-    async fn the_listing_puts_the_pane_in_use_on_top() {
-        let (browsers, project) = panes().await;
-        let listing = browsers.list(project).await;
-        let lines: Vec<&str> = listing.lines().collect();
-        assert!(lines[0].contains("http://localhost:5173"));
-        assert!(lines[0].contains("in use"));
-        assert!(lines[1].contains("book"));
+    async fn a_remount_that_beats_its_own_cleanup_still_reads_the_new_page() {
+        let (browsers, project) = showing().await;
+        browsers.report(project, "browser-2".into(), "http://localhost:5173".into()).await;
+        assert!(browsers.page(project).await.contains("http://localhost:5173"));
 
-        browsers.forget("browser-1").await;
-        browsers.forget("browser-2").await;
-        assert_eq!(browsers.list(project).await, "No browser pane is open on this project.");
+        browsers.forget("browser").await;
+        assert!(browsers.page(project).await.contains("http://localhost:5173"));
+    }
+
+    #[tokio::test]
+    async fn another_project_browser_is_not_mine() {
+        let (browsers, project) = showing().await;
+        let other = Uuid::new_v4();
+        assert!(browsers.showing(other).await.is_err());
+        assert_eq!(browsers.page(other).await, "No browser is open on this project.");
+        assert_eq!(browsers.showing(project).await, Ok(()));
     }
 }

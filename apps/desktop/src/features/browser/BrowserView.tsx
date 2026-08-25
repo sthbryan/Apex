@@ -31,12 +31,7 @@ function report(url: string): void {
   if (!project) {
     return;
   }
-  void invoke("browser_report", {
-    project,
-    pane: BROWSER_PANE,
-    url,
-    name: null,
-  }).catch(complain);
+  void invoke("browser_report", { project, pane: BROWSER_PANE, url }).catch(complain);
 }
 
 function boxOf(node: HTMLElement) {

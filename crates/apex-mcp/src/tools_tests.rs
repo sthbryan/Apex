@@ -134,7 +134,7 @@ fn the_preview_tool_says_where_to_write_the_page() {
 }
 
 #[test]
-fn a_named_pane_travels_with_the_view_and_the_reads() {
+fn a_named_pane_travels_with_the_view() {
     let me = caller(session("claude", None));
     let opening = json!({ "kind": "url", "url": "http://localhost:6006", "name": "storybook" });
     assert!(matches!(
@@ -142,12 +142,25 @@ fn a_named_pane_travels_with_the_view_and_the_reads() {
         Command::OpenView { target: ViewTarget::Url { name: Some(name), .. }, .. }
             if name == "storybook"
     ));
+}
+
+#[test]
+fn the_browser_reads_take_no_arguments() {
+    let me = caller(session("claude", None));
     assert!(matches!(
         command_for(&me, "apex_browser_shot", &json!({ "pane": "storybook" })).expect("command"),
-        Command::BrowserShot { pane: Some(pane), .. } if pane == "storybook"
+        Command::BrowserShot { .. }
     ));
     assert!(matches!(
         command_for(&me, "apex_browser_console", &json!({})).expect("command"),
-        Command::BrowserLogs { pane: None, .. }
+        Command::BrowserLogs { .. }
     ));
+    assert!(matches!(
+        command_for(&me, "apex_browser_page", &json!({})).expect("command"),
+        Command::BrowserPage { .. }
+    ));
+    for tool in TOOLS.iter().filter(|tool| tool.name.starts_with("apex_browser_")) {
+        let schema = (tool.schema)();
+        assert!(schema["properties"].as_object().expect("properties").is_empty(), "{}", tool.name);
+    }
 }

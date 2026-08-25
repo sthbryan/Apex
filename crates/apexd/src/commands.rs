@@ -241,20 +241,20 @@ async fn execute(
             text: manager.transcript(id, tail as usize, plain).await.map_err(not_found_error)?,
         }),
         Command::ListEditors => Ok(Reply::Editors { editors: manager.list_editors().await }),
-        Command::BrowserReport { project, pane, url, name } => {
-            manager.browser_report(project, pane, url, name).await;
+        Command::BrowserReport { project, pane, url } => {
+            manager.browser_report(project, pane, url).await;
             Ok(Reply::Done)
         }
         Command::BrowserForget { pane } => {
             manager.browser_forget(&pane).await;
             Ok(Reply::Done)
         }
-        Command::BrowserList { project } => {
-            Ok(Reply::Text { text: manager.browser_list(project).await })
+        Command::BrowserPage { project } => {
+            Ok(Reply::Text { text: manager.browser_page(project).await })
         }
-        Command::BrowserLogs { project, pane } => Ok(Reply::Text {
-            text: manager.browser_logs(project, pane.as_deref()).await.map_err(internal_error)?,
-        }),
+        Command::BrowserLogs { project } => {
+            Ok(Reply::Text { text: manager.browser_logs(project).await.map_err(internal_error)? })
+        }
         Command::UrlOpen { url } => {
             manager.open_url(&url).map_err(not_found_error)?;
             Ok(Reply::Done)
@@ -311,9 +311,9 @@ async fn execute(
             manager.open_view(asked_by, target).await.map_err(not_found_error)?;
             Ok(Reply::Done)
         }
-        Command::BrowserShot { project, pane } => Ok(Reply::Text {
-            text: manager.browser_shot(project, pane.as_deref()).await.map_err(internal_error)?,
-        }),
+        Command::BrowserShot { project } => {
+            Ok(Reply::Text { text: manager.browser_shot(project).await.map_err(internal_error)? })
+        }
         Command::ShotDone { request, path, error } => {
             manager.pane_answered(request, path, error).await;
             Ok(Reply::Done)
@@ -485,7 +485,7 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::UrlOpen { .. }
             | Command::BrowserReport { .. }
             | Command::BrowserForget { .. }
-            | Command::BrowserList { .. }
+            | Command::BrowserPage { .. }
             | Command::BrowserLogs { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }

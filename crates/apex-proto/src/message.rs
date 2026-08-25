@@ -637,27 +637,21 @@ pub enum Command {
         project: Uuid,
         pane: String,
         url: String,
-        #[serde(default)]
-        name: Option<String>,
     },
     BrowserForget {
         pane: String,
     },
-    BrowserList {
+    BrowserPage {
         #[ts(type = "string")]
         project: Uuid,
     },
     BrowserLogs {
         #[ts(type = "string")]
         project: Uuid,
-        #[serde(default)]
-        pane: Option<String>,
     },
     BrowserShot {
         #[ts(type = "string")]
         project: Uuid,
-        #[serde(default)]
-        pane: Option<String>,
     },
     ShotDone {
         #[ts(type = "string")]
@@ -1075,12 +1069,10 @@ pub enum Event {
         asked_by: Uuid,
     },
     AskShot {
-        pane: String,
         #[ts(type = "string")]
         request: Uuid,
     },
     AskPage {
-        pane: String,
         #[ts(type = "string")]
         request: Uuid,
     },
