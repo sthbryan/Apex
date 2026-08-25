@@ -1,4 +1,6 @@
 mod client;
+#[cfg(test)]
+mod client_tests;
 mod commands;
 #[cfg(target_os = "macos")]
 mod menu;

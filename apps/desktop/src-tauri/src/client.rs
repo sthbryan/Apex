@@ -6,8 +6,9 @@ use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
 use apex_proto::{
-    ClientMessage, Command, CommandOutcome, Connection, ConnectionReader, ConnectionWriter, Event,
-    Frame, Hello, PROTOCOL_VERSION, Reply, RequestId, ServerMessage, connect_unix,
+    ClientMessage, Command, CommandOutcome, Connection, ConnectionReader, ConnectionWriter,
+    ErrorCode, Event, Frame, Hello, PROTOCOL_VERSION, Reply, RequestId, ServerMessage,
+    connect_unix,
 };
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tokio::sync::{Mutex, oneshot};
@@ -35,12 +36,27 @@ impl DaemonClient {
         let mut replaced = false;
         loop {
             ensure_running(socket).await?;
-            let (connection, daemon_version) = shake_hands(socket).await?;
-            if replaced || daemon_version == APP_VERSION {
-                return Ok(Self::adopt(connection, daemon_version));
+            match shake_hands(socket).await {
+                Ok((connection, daemon_version)) => {
+                    if replaced || daemon_version == APP_VERSION {
+                        return Ok(Self::adopt(connection, daemon_version));
+                    }
+                    tracing::info!(
+                        daemon = %daemon_version,
+                        app = APP_VERSION,
+                        "replacing the stale apexd"
+                    );
+                    retire(socket, connection).await?;
+                }
+                Err(error) => {
+                    let Some(skew) = error.downcast_ref::<VersionSkew>().filter(|_| !replaced)
+                    else {
+                        return Err(error);
+                    };
+                    tracing::info!(speaks = skew.speaks, "retiring an apexd we cannot talk to");
+                    retire_stranger(socket, skew.speaks).await?;
+                }
             }
-            tracing::info!(daemon = %daemon_version, app = APP_VERSION, "replacing the stale apexd");
-            retire(socket, connection).await?;
             replaced = true;
         }
     }
@@ -162,12 +178,56 @@ async fn shake_hands(socket: &Path) -> Result<(Connection, String)> {
     let daemon_version = match frame.parse_control::<ServerMessage>()? {
         ServerMessage::Welcome(welcome) => welcome.daemon_version,
         ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. } => {
+            if error.code == ErrorCode::UnsupportedVersion
+                && let Some(speaks) = spoken_version(&error.message)
+            {
+                return Err(VersionSkew { speaks }.into());
+            }
             bail!("apexd rejected the handshake: {error}")
         }
         other => bail!("unexpected handshake reply: {other:?}"),
     };
 
     Ok((connection, daemon_version))
+}
+
+#[derive(Debug)]
+pub(crate) struct VersionSkew {
+    pub speaks: u32,
+}
+
+impl std::fmt::Display for VersionSkew {
+    fn fmt(&self, out: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(out, "apexd speaks protocol v{}, this app speaks v{PROTOCOL_VERSION}", self.speaks)
+    }
+}
+
+impl std::error::Error for VersionSkew {}
+
+pub(crate) fn spoken_version(message: &str) -> Option<u32> {
+    message
+        .split_whitespace()
+        .find_map(|word| word.strip_prefix('v'))
+        .and_then(|rest| rest.trim_end_matches(',').parse().ok())
+}
+
+async fn retire_stranger(socket: &Path, speaks: u32) -> Result<()> {
+    let mut connection = connect_unix(socket)
+        .await
+        .with_context(|| format!("reconnecting to the stale apexd on {}", socket.display()))?;
+
+    connection
+        .send_control(&ClientMessage::Hello(Hello {
+            protocol_version: speaks,
+            client_name: "apex-desktop".into(),
+            identity: None,
+            probe: false,
+        }))
+        .await
+        .context("greeting the stale apexd in its own protocol")?;
+
+    let _ = connection.recv().await;
+    retire(socket, connection).await
 }
 
 async fn retire(socket: &Path, mut connection: Connection) -> Result<()> {
