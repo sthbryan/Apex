@@ -124,3 +124,30 @@ async fn refuses_to_serve_what_is_outside_the_folder() {
 
     assert!(failure.contains("secret.txt"), "{failure}");
 }
+
+#[tokio::test]
+async fn stops_serving_once_the_session_is_closed() {
+    let harness = Harness::start().await;
+    let mut client = harness.client().await;
+    let session = a_session(&mut client, &harness).await;
+
+    let dir = harness.root.path().join(".apex").join("preview");
+    std::fs::create_dir_all(&dir).expect("folder");
+    std::fs::write(dir.join("index.html"), "<h1>hola</h1>").expect("page");
+
+    let reply = client
+        .request(Command::Preview { asked_by: session, path: "index.html".into(), name: None })
+        .await;
+    let Reply::Text { text: url } = reply else { panic!("expected a url, got {reply:?}") };
+    assert!(fetch(&url).await.starts_with("HTTP/1.1 200 OK"));
+
+    client
+        .request(Command::SessionClose {
+            id: session,
+            worktree: apex_proto::WorktreeDisposal::Keep,
+        })
+        .await;
+
+    let gone = fetch(&url).await;
+    assert!(gone.starts_with("HTTP/1.1 404 Not Found"), "{gone}");
+}

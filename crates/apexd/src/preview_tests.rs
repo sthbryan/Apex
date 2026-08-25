@@ -3,6 +3,8 @@ use std::path::Path;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
+use uuid::Uuid;
+
 use super::{PreviewServer, find_file, split_target};
 
 #[test]
@@ -57,9 +59,9 @@ fn refuses_to_leave_the_folder() {
     assert_eq!(find_file(&root, "missing.html"), None);
 }
 
-async fn ask(port: u16, request: &str) -> String {
+async fn ask(port: u16, request: impl AsRef<str>) -> String {
     let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
-    stream.write_all(request.as_bytes()).await.unwrap();
+    stream.write_all(request.as_ref().as_bytes()).await.unwrap();
     stream.flush().await.unwrap();
     let mut answer = String::new();
     stream.read_to_string(&mut answer).await.unwrap();
@@ -68,7 +70,7 @@ async fn ask(port: u16, request: &str) -> String {
 
 async fn serving(root: &Path) -> (std::sync::Arc<PreviewServer>, String) {
     let server = PreviewServer::start().await.unwrap();
-    let token = server.issue(root).await;
+    let token = server.issue(root, Uuid::new_v4()).await;
     (server, token)
 }
 
@@ -94,8 +96,34 @@ async fn serves_the_artifact_the_agent_left() {
 async fn hands_the_same_token_back_for_the_same_folder() {
     let home = tempfile::tempdir().unwrap();
     let (server, token) = serving(home.path()).await;
-    assert_eq!(server.issue(home.path()).await, token);
-    assert_ne!(server.issue(&home.path().join("other")).await, token);
+    assert_eq!(server.issue(home.path(), Uuid::new_v4()).await, token);
+    assert_ne!(server.issue(&home.path().join("other"), Uuid::new_v4()).await, token);
+}
+
+#[tokio::test]
+async fn keeps_serving_until_the_last_session_is_gone() {
+    let home = tempfile::tempdir().unwrap();
+    std::fs::write(home.path().join("index.html"), "<h1>hola</h1>").unwrap();
+    let server = PreviewServer::start().await.unwrap();
+    let mine = Uuid::new_v4();
+    let yours = Uuid::new_v4();
+    let token = server.issue(home.path(), mine).await;
+    assert_eq!(server.issue(home.path(), yours).await, token);
+
+    let ask = || {
+        ask(
+            server.port(),
+            format!("GET /{token}/ HTTP/1.1\r\nHost: 127.0.0.1:{}\r\n\r\n", server.port()),
+        )
+    };
+
+    server.revoke(mine).await;
+    let alive = ask().await;
+    assert!(alive.starts_with("HTTP/1.1 200 OK"), "{alive}");
+
+    server.revoke(yours).await;
+    let gone = ask().await;
+    assert!(gone.starts_with("HTTP/1.1 404 Not Found"), "{gone}");
 }
 
 #[tokio::test]

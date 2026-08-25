@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -16,7 +16,12 @@ const INDEX: &str = "index.html";
 const IN_PATH: &AsciiSet =
     &CONTROLS.add(b' ').add(b'"').add(b'#').add(b'<').add(b'>').add(b'?').add(b'%').add(b'`');
 
-type Roots = Arc<Mutex<HashMap<String, PathBuf>>>;
+struct Served {
+    dir: PathBuf,
+    owners: HashSet<Uuid>,
+}
+
+type Roots = Arc<Mutex<HashMap<String, Served>>>;
 
 pub struct PreviewServer {
     port: u16,
@@ -50,14 +55,29 @@ impl PreviewServer {
         self.port
     }
 
-    pub async fn issue(&self, dir: &Path) -> String {
+    pub async fn issue(&self, dir: &Path, owner: Uuid) -> String {
         let mut roots = self.roots.lock().await;
-        if let Some((token, _)) = roots.iter().find(|(_, served)| served.as_path() == dir) {
-            return token.clone();
+        if let Some((token, served)) =
+            roots.iter_mut().find(|(_, served)| served.dir.as_path() == dir)
+        {
+            let token = token.clone();
+            served.owners.insert(owner);
+            return token;
         }
         let token = Uuid::new_v4().to_string();
-        roots.insert(token.clone(), dir.to_path_buf());
+        roots.insert(
+            token.clone(),
+            Served { dir: dir.to_path_buf(), owners: HashSet::from([owner]) },
+        );
         token
+    }
+
+    pub async fn revoke(&self, owner: Uuid) {
+        let mut roots = self.roots.lock().await;
+        for served in roots.values_mut() {
+            served.owners.remove(&owner);
+        }
+        roots.retain(|_, served| !served.owners.is_empty());
     }
 
     pub fn url(&self, token: &str, file: &str) -> String {
@@ -78,7 +98,8 @@ impl PreviewServer {
         let Some((token, wanted)) = split_target(&request.target) else {
             return send(stream, "404 Not Found", &[], head_only).await;
         };
-        let Some(root) = self.roots.lock().await.get(&token).cloned() else {
+        let Some(root) = self.roots.lock().await.get(&token).map(|served| served.dir.clone())
+        else {
             return send(stream, "404 Not Found", &[], head_only).await;
         };
         let Some(file) = find_file(&root, &wanted) else {

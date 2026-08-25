@@ -398,7 +398,7 @@ impl SessionManager {
             .get_or_try_init(crate::preview::PreviewServer::start)
             .await
             .context("could not open the preview port")?;
-        let url = server.url(&server.issue(&dir).await, wanted);
+        let url = server.url(&server.issue(&dir, asked_by).await, wanted);
         self.registry.announce(Event::OpenView {
             target: apex_proto::ViewTarget::Url { url: url.clone(), name },
             asked_by,
@@ -517,6 +517,9 @@ impl SessionManager {
     }
 
     pub async fn close(&self, id: Uuid, disposal: WorktreeDisposal) -> Result<()> {
+        if let Some(server) = self.preview.get() {
+            server.revoke(id).await;
+        }
         if self.acp.get(id).await.is_some() {
             return self.acp.close(id).await;
         }
