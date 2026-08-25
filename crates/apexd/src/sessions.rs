@@ -93,6 +93,7 @@ impl SessionManager {
             Arc::clone(&resolver),
             Arc::clone(&store),
             base_env.clone(),
+            paths.clone(),
             events.clone(),
         ));
         let files = FilesService::new(Arc::clone(&store), Arc::clone(&resolver));

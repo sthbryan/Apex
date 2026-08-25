@@ -221,6 +221,28 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_request",
+        group: ToolGroup::Api,
+        description: "Send a saved http request and answer with what came back. Requests live \
+                      as toml files in the folder named by APEX_API_DIR, one file per request, \
+                      and you call this with the file name. Write the file first if the request \
+                      is not saved yet, and put addresses and tokens in an environment instead \
+                      of in the request.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                    "name": { "type": "string", "description": "Name of the saved request" },
+                    "environment": {
+                        "type": "string",
+                        "description": "Environment whose variables fill the request"
+                    }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_browser_page",
         group: ToolGroup::Browser,
         description: "Report the address the browser is showing right now.",
@@ -307,6 +329,11 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
+        "apex_request" => Ok(Command::ApiSend {
+            project: caller.project,
+            name: text("name").context("name is required")?,
+            environment: text("environment"),
+        }),
         "apex_browser_page" => Ok(Command::BrowserPage { project: caller.project }),
         "apex_browser_console" => Ok(Command::BrowserLogs { project: caller.project }),
         "apex_browser_shot" => Ok(Command::BrowserShot { project: caller.project }),
@@ -468,3 +495,12 @@ pub fn describe_worktree(caller: &Caller) -> String {
 #[cfg(test)]
 #[path = "tools_tests.rs"]
 mod tests;
+
+pub fn describe_run(run: &apex_proto::ApiRun) -> String {
+    let head = format!("{} {} answered {} in {}ms", run.method, run.url, run.status, run.millis);
+    if run.body.is_empty() {
+        return format!("{head} with no body.");
+    }
+    let tail = if run.truncated { "\n\nThe body was cut short." } else { "" };
+    format!("{head}.\n\n{}{tail}", run.body)
+}

@@ -2,7 +2,7 @@ import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 import type { ToolGroup } from "@/bindings/ToolGroup";
 
-export const OPTIONAL_GROUPS = ["observation", "orchestration", "views", "browser"] as const;
+export const OPTIONAL_GROUPS = ["observation", "orchestration", "views", "browser", "api"] as const;
 
 export type OptionalGroup = (typeof OPTIONAL_GROUPS)[number];
 

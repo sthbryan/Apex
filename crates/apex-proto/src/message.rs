@@ -22,12 +22,13 @@ pub enum ToolGroup {
     Lifecycle,
     Views,
     Browser,
+    Api,
     Worktree,
 }
 
 impl ToolGroup {
     pub const OPTIONAL: &'static [Self] =
-        &[Self::Observation, Self::Orchestration, Self::Views, Self::Browser];
+        &[Self::Observation, Self::Orchestration, Self::Views, Self::Browser, Self::Api];
 
     pub fn is_optional(self) -> bool {
         Self::OPTIONAL.contains(&self)

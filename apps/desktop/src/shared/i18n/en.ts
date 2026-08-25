@@ -194,6 +194,8 @@ export const en = {
     toolViewsSub: "ask Apex to show a session, a URL or a diff",
     toolBrowser: "Use the browser",
     toolBrowserSub: "show a page, read the address and the console, take a shot",
+    toolApi: "Call your APIs",
+    toolApiSub: "send a saved request and read the answer",
     closing: "When you close Apex",
     closingHint: "Quit for good, or leave Apex running behind its tray icon.",
     closingQuit: "Quit",

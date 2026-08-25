@@ -195,6 +195,8 @@ export const es: Messages = {
     toolViewsSub: "pedirle a Apex que muestre una sesión, una URL o un diff",
     toolBrowser: "Usar el navegador",
     toolBrowserSub: "mostrar una página, leer la dirección y la consola, sacar una captura",
+    toolApi: "Llamar a tus APIs",
+    toolApiSub: "mandar un pedido guardado y leer la respuesta",
     closing: "Al cerrar Apex",
     closingHint: "Salir del todo, o dejar Apex corriendo detrás de su icono en la barra.",
     closingQuit: "Salir",

@@ -486,6 +486,7 @@ pub struct AcpRegistry {
     resolver: Arc<Mutex<BinaryResolver>>,
     store: Arc<Mutex<Store>>,
     base_env: std::collections::BTreeMap<String, String>,
+    paths: apex_core::ApexPaths,
     sessions: Arc<RwLock<std::collections::HashMap<Uuid, Arc<AcpSession>>>>,
     events: broadcast::Sender<Event>,
 }
@@ -496,6 +497,7 @@ impl AcpRegistry {
         resolver: Arc<Mutex<BinaryResolver>>,
         store: Arc<Mutex<Store>>,
         base_env: std::collections::BTreeMap<String, String>,
+        paths: apex_core::ApexPaths,
         events: broadcast::Sender<Event>,
     ) -> Self {
         Self {
@@ -505,6 +507,7 @@ impl AcpRegistry {
             resolver,
             store,
             base_env,
+            paths,
             sessions: Arc::new(RwLock::new(std::collections::HashMap::new())),
             events,
         }
@@ -622,6 +625,7 @@ impl AcpRegistry {
             "APEX_PREVIEW_DIR".to_owned(),
             apex_core::preview::dir(cwd).display().to_string(),
         ));
+        env.push(("APEX_API_DIR".to_owned(), self.paths.api_dir(project).display().to_string()));
         let agent =
             Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay)
                 .await?;

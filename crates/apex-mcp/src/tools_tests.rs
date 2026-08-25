@@ -167,3 +167,51 @@ fn the_browser_reads_take_no_arguments() {
         assert!(schema["properties"].as_object().expect("properties").is_empty(), "{}", tool.name);
     }
 }
+
+#[test]
+fn a_request_carries_its_name_and_environment() {
+    let me = caller(session("claude", None));
+    assert!(matches!(
+        command_for(&me, "apex_request", &json!({ "name": "create user" })).expect("command"),
+        Command::ApiSend { name, environment: None, .. } if name == "create user"
+    ));
+    assert!(matches!(
+        command_for(&me, "apex_request", &json!({ "name": "me", "environment": "local" }))
+            .expect("command"),
+        Command::ApiSend { environment: Some(env), .. } if env == "local"
+    ));
+    assert!(command_for(&me, "apex_request", &json!({})).is_err());
+}
+
+#[test]
+fn the_request_tool_says_where_the_requests_live() {
+    let told = TOOLS.iter().find(|tool| tool.name == "apex_request").expect("tool");
+    assert!(told.description.contains("APEX_API_DIR"), "{}", told.description);
+    assert_eq!(told.group, apex_proto::ToolGroup::Api);
+}
+
+#[test]
+fn a_run_reads_as_status_timing_and_body() {
+    let run = apex_proto::ApiRun {
+        name: "create user".into(),
+        method: "POST".into(),
+        url: "http://localhost:3000/users".into(),
+        status: 201,
+        millis: 12,
+        at: 0,
+        headers: Vec::new(),
+        body: "{\"id\":7}".into(),
+        truncated: false,
+        size: 8,
+    };
+    let told = describe_run(&run);
+    assert!(told.contains("POST http://localhost:3000/users answered 201 in 12ms"), "{told}");
+    assert!(told.contains("{\"id\":7}"), "{told}");
+    assert!(!told.contains("cut short"), "{told}");
+
+    let empty = apex_proto::ApiRun { body: String::new(), ..run.clone() };
+    assert!(describe_run(&empty).contains("with no body"));
+
+    let cut = apex_proto::ApiRun { truncated: true, ..run };
+    assert!(describe_run(&cut).contains("cut short"));
+}

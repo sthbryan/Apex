@@ -471,6 +471,7 @@ const TOOL_COPY = {
   orchestration: ["settings.toolOrchestration", "settings.toolOrchestrationSub"],
   views: ["settings.toolViews", "settings.toolViewsSub"],
   browser: ["settings.toolBrowser", "settings.toolBrowserSub"],
+  api: ["settings.toolApi", "settings.toolApiSub"],
 } as const;
 
 export function toolsSection(): Section {

@@ -103,12 +103,3 @@ fn now() -> i64 {
         .map(|since| since.as_secs() as i64)
         .unwrap_or_default()
 }
-
-pub fn describe(run: &ApiRun) -> String {
-    let head = format!("{} {} answered {} in {}ms", run.method, run.url, run.status, run.millis);
-    if run.body.is_empty() {
-        return format!("{head} with no body.");
-    }
-    let tail = if run.truncated { "\n\nThe body was cut short." } else { "" };
-    format!("{head}.\n\n{}{tail}", run.body)
-}
