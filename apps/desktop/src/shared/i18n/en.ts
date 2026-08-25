@@ -31,6 +31,9 @@ export const en = {
     dropHeader: "Drop this header",
     body: "Body",
     cut: "cut short",
+    noHeaders: "None yet.",
+    bodyHint: "Empty",
+    response: "Response",
   },
   aside: {
     resize: "Resize the side panel",

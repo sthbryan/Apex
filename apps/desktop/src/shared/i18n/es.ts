@@ -33,6 +33,9 @@ export const es: Messages = {
     dropHeader: "Sacar este header",
     body: "Cuerpo",
     cut: "recortado",
+    noHeaders: "Todavía ninguno.",
+    bodyHint: "Vacío",
+    response: "Respuesta",
   },
   aside: {
     resize: "Cambiar el ancho del panel lateral",

@@ -1,4 +1,4 @@
-import { Button, Pane, Select } from "@apex/ui";
+import { Button, Pane, SectionLabel, Select } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
@@ -31,6 +31,10 @@ import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
+const BOX =
+  "min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
+const LINE = `h-(--apex-h-md) ${BOX}`;
+
 const TONES = {
   ok: "text-state-done",
   warn: "text-state-working",
@@ -39,7 +43,6 @@ const TONES = {
 
 export function ApiPanel() {
   const project = activeProjectId.value;
-  const [naming, setNaming] = useState(false);
   const [wanted, setWanted] = useState("");
 
   useEffect(() => {
@@ -47,19 +50,22 @@ export function ApiPanel() {
   }, [project]);
 
   if (!project) {
-    return <p class="p-3 text-faint">{t("files.noProject")}</p>;
+    return <p class="p-3 text-faint text-sm">{t("files.noProject")}</p>;
   }
 
   const request = draft.value;
   const run = last.value;
+  const name = chosen.value;
   const unsaved = dirty();
+  const headers = Object.entries(request.headers);
 
-  const keep = (name: string) => {
-    void saveRequest(name.trim())
-      .then(() => {
-        setNaming(false);
-        setWanted("");
-      })
+  const keep = (as: string) => {
+    const trimmed = as.trim();
+    if (!trimmed) {
+      return;
+    }
+    void saveRequest(trimmed)
+      .then(() => setWanted(""))
       .catch(complain);
   };
 
@@ -74,154 +80,162 @@ export function ApiPanel() {
           class="min-w-0 flex-1"
           label={t("api.request")}
           placeholder={t("api.pickRequest")}
-          value={chosen.value ?? ""}
-          options={names.value.map((name) => ({ value: name, label: name }))}
-          onChange={(name) => void openRequest(name).catch(complain)}
+          value={name ?? ""}
+          options={names.value.map((saved) => ({ value: saved, label: saved }))}
+          onChange={(picked) => void openRequest(picked).catch(complain)}
         />
       }
       controls={
         <>
           <Step icon="plus" hint={t("api.new")} onPick={startNew} />
-          {chosen.value && (
+          {name && (
             <Step
               icon="close"
               hint={t("api.remove")}
-              onPick={() => void removeRequest(chosen.value ?? "").catch(complain)}
+              onPick={() => void removeRequest(name).catch(complain)}
             />
           )}
         </>
       }
     >
-      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-2">
-        <div class="flex gap-1">
-          <Select
-            class="w-28 shrink-0"
-            label={t("api.method")}
-            value={request.method}
-            options={METHODS.map((method) => ({ value: method, label: method }))}
-            onChange={(method) => edit({ method })}
-          />
+      <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pt-3 pb-4">
+        <div class="flex gap-1.5">
+          <span class="shrink-0" style="--ui-select-width: 88px">
+            <Select
+              label={t("api.method")}
+              value={request.method}
+              options={METHODS.map((method) => ({ value: method, label: method }))}
+              onChange={(method) => edit({ method })}
+            />
+          </span>
           <input
             value={request.url}
+            spellcheck={false}
             placeholder="https://{{host}}/users"
             onInput={(event) => edit({ url: event.currentTarget.value })}
-            class="min-w-0 flex-1 rounded border border-border bg-raised px-2 py-1 font-mono text-xs"
+            class={cn(LINE, "flex-1 font-mono text-xs")}
           />
         </div>
 
-        <div class="flex items-center gap-1">
+        <div class="flex gap-1.5">
           <Select
             class="min-w-0 flex-1"
             label={t("api.environment")}
             placeholder={t("api.noEnvironment")}
             value={environment.value ?? ""}
-            options={environments.value.map((name) => ({ value: name, label: name }))}
+            options={environments.value.map((found) => ({ value: found, label: found }))}
             onChange={setEnvironment}
           />
-          {naming || !chosen.value ? (
-            <div class="flex shrink-0 items-center gap-1">
+          {name ? (
+            <Button
+              size="md"
+              variant={unsaved ? "ghost" : "subtle"}
+              disabled={!unsaved}
+              onClick={() => keep(name)}
+            >
+              {t("api.save")}
+            </Button>
+          ) : (
+            <>
               <input
                 value={wanted}
                 placeholder={t("api.name")}
                 onInput={(event) => setWanted(event.currentTarget.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && wanted.trim()) {
-                    keep(wanted);
-                  }
-                }}
-                class="w-24 rounded border border-border bg-raised px-2 py-1 text-xs"
+                onKeyDown={(event) => event.key === "Enter" && keep(wanted)}
+                class={cn(LINE, "w-24 shrink-0")}
               />
-              <Button size="xs" disabled={!wanted.trim()} onClick={() => keep(wanted)}>
+              <Button size="md" disabled={!wanted.trim()} onClick={() => keep(wanted)}>
                 {t("api.save")}
               </Button>
-            </div>
-          ) : (
-            <Button
-              size="xs"
-              variant={unsaved ? "primary" : "subtle"}
-              onClick={() => keep(chosen.value ?? "")}
-            >
-              {t("api.save")}
-            </Button>
+            </>
           )}
           <Button
-            size="xs"
+            size="md"
             variant="primary"
-            disabled={!chosen.value || sending.value}
+            disabled={!name || sending.value}
             onClick={() => void sendRequest()}
           >
             {sending.value ? t("api.sending") : t("api.send")}
           </Button>
         </div>
 
-        <Headers headers={request.headers} />
+        <section class="flex flex-col gap-1.5">
+          <SectionLabel
+            flush
+            count={headers.length || undefined}
+            action={
+              <Step icon="plus" hint={t("api.addHeader")} onPick={() => setHeader("header", "")} />
+            }
+          >
+            {t("api.headers")}
+          </SectionLabel>
+          {headers.length === 0 ? (
+            <p class="px-0.5 text-faint text-xs">{t("api.noHeaders")}</p>
+          ) : (
+            headers.map(([key, value]) => (
+              <div key={key} class="flex gap-1.5">
+                <input
+                  value={key}
+                  spellcheck={false}
+                  onBlur={(event) => setHeader(event.currentTarget.value.trim(), value, key)}
+                  class={cn(LINE, "w-2/5 font-mono text-xs")}
+                />
+                <input
+                  value={value}
+                  spellcheck={false}
+                  onInput={(event) => setHeader(key, event.currentTarget.value)}
+                  class={cn(LINE, "flex-1 font-mono text-xs")}
+                />
+                <Step icon="close" hint={t("api.dropHeader")} onPick={() => dropHeader(key)} />
+              </div>
+            ))
+          )}
+        </section>
 
-        <label class="flex flex-col gap-1">
-          <span class="text-faint text-xs">{t("api.body")}</span>
+        <section class="flex flex-col gap-1.5">
+          <SectionLabel flush>{t("api.body")}</SectionLabel>
           <textarea
-            rows={5}
+            rows={6}
             value={request.body ?? ""}
+            spellcheck={false}
+            placeholder={t("api.bodyHint")}
             onInput={(event) => edit({ body: event.currentTarget.value || null })}
-            class="w-full resize-y rounded border border-border bg-raised px-2 py-1 font-mono text-xs"
+            class={cn(BOX, "w-full resize-y py-1.5 font-mono text-xs leading-relaxed")}
           />
-        </label>
+        </section>
 
         {trouble.value && (
-          <p class="rounded border border-state-failed px-2 py-1 text-state-failed text-xs">
+          <p class="rounded-sm border border-state-failed px-2 py-1.5 text-state-failed text-xs">
             {trouble.value}
           </p>
         )}
 
         {run && (
-          <div class="flex min-h-0 flex-col gap-1">
-            <div class="flex items-center gap-2 text-xs">
-              <span class={cn("font-mono", TONES[tone(run.status)])}>{run.status}</span>
-              <span class="text-faint">{run.millis}ms</span>
-              <span class="text-faint">{run.size}B</span>
-              {run.truncated && <span class="text-state-working">{t("api.cut")}</span>}
-            </div>
-            <pre class="max-h-64 overflow-auto rounded border border-border bg-raised p-2 font-mono text-xs">
+          <section class="flex flex-col gap-1.5">
+            <SectionLabel
+              flush
+              action={
+                <span class="flex items-center gap-2 font-mono text-xs">
+                  <span class={TONES[tone(run.status)]}>{run.status}</span>
+                  <span class="text-faint">{run.millis}ms</span>
+                  <span class="text-faint">{bytes(run.size)}</span>
+                </span>
+              }
+            >
+              {t("api.response")}
+            </SectionLabel>
+            <pre class="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-sm border border-border bg-raised p-2 font-mono text-xs leading-relaxed">
               {shortBody(run)}
             </pre>
-          </div>
+          </section>
         )}
       </div>
     </Pane>
   );
 }
 
-function Headers({ headers }: { headers: Record<string, string> }) {
-  const rows = Object.entries(headers);
-  return (
-    <div class="flex flex-col gap-1">
-      <span class="text-faint text-xs">{t("api.headers")}</span>
-      {rows.map(([key, value]) => (
-        <div key={key} class="flex gap-1">
-          <input
-            value={key}
-            onBlur={(event) => setHeader(event.currentTarget.value.trim(), value, key)}
-            class="w-1/3 min-w-0 rounded border border-border bg-raised px-2 py-1 font-mono text-xs"
-          />
-          <input
-            value={value}
-            onInput={(event) => setHeader(key, event.currentTarget.value)}
-            class="min-w-0 flex-1 rounded border border-border bg-raised px-2 py-1 font-mono text-xs"
-          />
-          <button
-            type="button"
-            title={t("api.dropHeader")}
-            onClick={() => dropHeader(key)}
-            class="flex size-6 shrink-0 items-center justify-center rounded text-faint hover:bg-raised hover:text-text"
-          >
-            <Icon name="close" size={12} />
-          </button>
-        </div>
-      ))}
-      <Button size="xs" variant="subtle" onClick={() => setHeader("new-header", "")}>
-        {t("api.addHeader")}
-      </Button>
-    </div>
-  );
+function bytes(size: number): string {
+  return size < 1024 ? `${size} B` : `${Math.round(size / 1024)} kB`;
 }
 
 function Step({
