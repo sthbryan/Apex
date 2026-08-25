@@ -124,6 +124,8 @@ export const es: Messages = {
     noMatch: "No hay coincidencias.",
     translucent: "Ventana translúcida",
     translucentHint: "El escritorio se ve detrás como un desenfoque suave y el texto sigue nítido.",
+    perfStats: "Medidor de FPS",
+    perfStatsHint: "Overlay solo para dev. Nunca aparece en producción.",
     opacity: "Tinte",
     opacityHint: "Cuánto color de la interfaz se apoya sobre el vidrio.",
     frost: "Vidrio",

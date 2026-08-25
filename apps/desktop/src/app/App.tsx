@@ -32,6 +32,7 @@ import { startViewIntents } from "@/features/workspace/intents";
 import { activeSessionId, startTargetFollow } from "@/features/workspace/state";
 import { connect, platform, status } from "@/shared/daemon";
 import { locale } from "@/shared/i18n";
+import { startPerfStats } from "@/shared/perfStats";
 import { startMetrics } from "@/shared/telemetry";
 import { startThemeWatcher } from "@/shared/theme/mode";
 import { ContextMenu } from "@/shared/ui/ContextMenu";
@@ -77,6 +78,7 @@ export function App() {
     const stopDockWidth = startDockWidth();
     const stopLayoutSaves = startLayoutSaves();
     const stopTargetFollow = startTargetFollow();
+    const stopPerfStats = startPerfStats();
     return () => {
       stopNotifications?.();
       stopMenu?.();
@@ -90,6 +92,7 @@ export function App() {
       stopDockWidth();
       stopLayoutSaves();
       stopTargetFollow();
+      stopPerfStats();
     };
   }, []);
 

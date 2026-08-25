@@ -83,6 +83,7 @@ import { autoUpdate, setAutoUpdate } from "@/features/updates/state";
 import { UpdateAction, UpdateNote } from "@/features/updates/UpdateAction";
 import { agents, complain, daemonVersion, stopDaemon } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
+import { perfStatsEnabled, setPerfStatsEnabled } from "@/shared/perfStats";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -141,6 +142,22 @@ export function lookSection(): Section {
                   label={t("settings.translucent")}
                   checked={translucent.value}
                   onChange={setTranslucent}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(import.meta.env.DEV
+        ? [
+            {
+              id: "perfStats",
+              label: t("settings.perfStats"),
+              hint: t("settings.perfStatsHint"),
+              control: (
+                <Switch
+                  label={t("settings.perfStats")}
+                  checked={perfStatsEnabled.value}
+                  onChange={setPerfStatsEnabled}
                 />
               ),
             },
