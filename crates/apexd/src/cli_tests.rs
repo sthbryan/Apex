@@ -1,6 +1,8 @@
 use apex_proto::{DaemonReport, IDLE_GRACE_NEVER, PROTOCOL_VERSION};
 
-use crate::cli::{Verb, read, spell, spell_report};
+use std::path::{Path, PathBuf};
+
+use crate::cli::{Ask, Verb, app_traces, bundle_of, data_traces, read, spell, spell_report};
 
 fn argv(words: &[&str]) -> Vec<String> {
     words.iter().map(|word| word.to_string()).collect()
@@ -106,4 +108,86 @@ fn durations_drop_the_units_that_are_empty() {
     assert_eq!(spell(90), "1m 30s");
     assert_eq!(spell(3600), "1h");
     assert_eq!(spell(8040), "2h 14m");
+}
+
+#[test]
+fn all_and_keep_settings_pick_the_two_ends() {
+    let Some(Verb::Uninstall { settings, .. }) =
+        read(argv(&["apex", "uninstall", "--all"]).into_iter())
+    else {
+        panic!("expected an uninstall verb");
+    };
+    assert_eq!(settings, Ask::Yes);
+
+    let Some(Verb::Uninstall { settings, .. }) =
+        read(argv(&["apex", "uninstall", "--keep-settings"]).into_iter())
+    else {
+        panic!("expected an uninstall verb");
+    };
+    assert_eq!(settings, Ask::No);
+}
+
+#[test]
+fn uninstall_asks_when_it_was_told_nothing_or_told_both() {
+    for words in [vec!["apex", "uninstall"], vec!["apex", "uninstall", "--all", "--keep-settings"]]
+    {
+        let Some(Verb::Uninstall { settings, confirmed }) = read(argv(&words).into_iter()) else {
+            panic!("expected an uninstall verb");
+        };
+        assert_eq!(settings, Ask::Prompt);
+        assert!(!confirmed);
+    }
+}
+
+#[test]
+fn yes_skips_the_last_word_but_not_the_settings_question() {
+    let Some(Verb::Uninstall { settings, confirmed }) =
+        read(argv(&["apex", "uninstall", "--yes"]).into_iter())
+    else {
+        panic!("expected an uninstall verb");
+    };
+    assert!(confirmed);
+    assert_eq!(settings, Ask::Prompt);
+}
+
+#[test]
+fn a_mac_bundle_is_found_above_the_binary() {
+    let inside = Path::new("/Applications/Apex.app/Contents/Resources/apexd");
+
+    assert_eq!(bundle_of(inside, None), Some(PathBuf::from("/Applications/Apex.app")));
+}
+
+#[test]
+fn an_appimage_wins_over_whatever_is_above_the_binary() {
+    let inside = Path::new("/tmp/.mount_abc/usr/bin/apexd");
+    let image = PathBuf::from("/home/someone/.local/bin/apex-desktop");
+
+    assert_eq!(bundle_of(inside, Some(image.clone())), Some(image));
+}
+
+#[test]
+fn a_plain_build_belongs_to_no_bundle() {
+    assert_eq!(bundle_of(Path::new("/repo/target/debug/apexd"), None), None);
+}
+
+#[test]
+fn the_app_traces_are_only_what_we_actually_found() {
+    let bundle = PathBuf::from("/Applications/Apex.app");
+    let link = PathBuf::from("/home/someone/.local/bin/apex");
+
+    assert_eq!(app_traces(Some(&bundle), Some(&link)), vec![bundle.clone(), link.clone()]);
+    assert_eq!(app_traces(Some(&bundle), None), vec![bundle]);
+    assert!(app_traces(None, None).is_empty());
+}
+
+#[test]
+fn the_data_traces_carry_the_config_folder_and_the_webview_store() {
+    let home = PathBuf::from("/home/someone");
+    let config = home.join(".apex");
+
+    let found = data_traces(&home, &config);
+
+    assert!(found.contains(&config));
+    assert!(found.contains(&home.join("Library/WebKit/com.justcallmebryan.apex")));
+    assert!(found.contains(&home.join(".config/com.justcallmebryan.apex")));
 }
