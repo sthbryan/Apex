@@ -84,6 +84,10 @@ async fn execute(
             Ok(Reply::Done)
         }
         Command::DaemonStatus => Ok(Reply::Daemon { report: manager.daemon_report().await }),
+        Command::Notify { title, body } => {
+            manager.notify(title, body);
+            Ok(Reply::Done)
+        }
         Command::ListAgents => Ok(Reply::Agents { agents: manager.list_agents().await }),
         Command::ListToolGroups => {
             Ok(Reply::ToolGroups { tools_off: manager.tool_groups_off().await })

@@ -15,6 +15,8 @@ usage:
   apex status     report whether the daemon is up, and for how long
   apex start      start the daemon if it is not already up
   apex stop       stop the daemon and every session it holds
+  apex notify <text> [--title <title>]
+                  raise a desktop notice through Apex
   apex daemon     run the daemon here instead of in the background
   apex help       print this
 ";
@@ -27,6 +29,7 @@ pub enum Verb {
     Status,
     Start,
     Stop,
+    Notify { title: Option<String>, body: String },
     Unknown(String),
 }
 
@@ -35,8 +38,10 @@ pub fn requested() -> Option<Verb> {
     let called = args.next().unwrap_or_default();
     let named_apex = Path::new(&called).file_name().is_some_and(|name| name == "apex");
     let word = args.next();
+    let rest: Vec<String> = args.collect();
 
     match word.as_deref() {
+        Some("notify") => Some(notice(&rest)),
         Some("daemon") => None,
         Some("status") => Some(Verb::Status),
         Some("start") => Some(Verb::Start),
@@ -62,7 +67,47 @@ pub async fn run(socket: &Path, verb: Verb) -> Result<i32> {
         Verb::Status => status(socket).await,
         Verb::Start => start(socket).await,
         Verb::Stop => stop(socket).await,
+        Verb::Notify { title, body } => notify(socket, title, body).await,
     }
+}
+
+fn notice(rest: &[String]) -> Verb {
+    let mut title = None;
+    let mut words = Vec::new();
+    let mut taking = rest.iter();
+    while let Some(word) = taking.next() {
+        if word == "--title" {
+            title = taking.next().cloned();
+            continue;
+        }
+        words.push(word.clone());
+    }
+    Verb::Notify { title, body: words.join(" ") }
+}
+
+async fn notify(socket: &Path, title: Option<String>, body: String) -> Result<i32> {
+    if body.trim().is_empty() {
+        eprintln!("apex: notify needs something to say");
+        return Ok(2);
+    }
+
+    let Ok(mut link) = Link::hail(socket, "apex-cli", true).await else {
+        eprintln!("apexd is not running, so nobody heard that");
+        return Ok(1);
+    };
+
+    let listening = match link.request(Command::DaemonStatus).await? {
+        Reply::Daemon { report } => report.clients,
+        _ => 0,
+    };
+
+    link.request(Command::Notify { title, body }).await?;
+
+    if listening == 0 {
+        eprintln!("apexd took it, but Apex is closed so it will not reach your desktop");
+        return Ok(1);
+    }
+    Ok(0)
 }
 
 async fn start(socket: &Path) -> Result<i32> {

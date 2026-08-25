@@ -966,6 +966,10 @@ pub enum Command {
     SetIdleGrace {
         seconds: u32,
     },
+    Notify {
+        title: Option<String>,
+        body: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -1122,6 +1126,7 @@ pub enum NotifyKind {
     Terminal,
     Exited,
     Quiet,
+    Message,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

@@ -520,6 +520,15 @@ impl SessionManager {
         Arc::clone(&self.clients)
     }
 
+    pub fn notify(&self, title: Option<String>, body: String) {
+        self.registry.announce(Event::Notify {
+            session: None,
+            notice: apex_proto::NotifyKind::Message,
+            title,
+            body,
+        });
+    }
+
     pub fn client_count(&self) -> usize {
         self.clients.load(Ordering::SeqCst)
     }
