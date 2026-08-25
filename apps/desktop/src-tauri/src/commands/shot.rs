@@ -139,19 +139,23 @@ fn drain(stream: &windows::Win32::System::Com::IStream, path: &Path) -> Answer<(
 #[cfg(target_os = "linux")]
 fn capture(
     platform: &tauri::webview::PlatformWebview,
-    _bounds: Option<super::browser::Bounds>,
+    bounds: Option<super::browser::Bounds>,
     path: PathBuf,
     done: Done,
 ) {
+    use gtk::prelude::WidgetExt;
     use webkit2gtk::{SnapshotOptions, SnapshotRegion, WebViewExt};
 
-    platform.inner().snapshot(
-        SnapshotRegion::FullDocument,
+    let view = platform.inner();
+    let scale = f64::from(view.scale_factor().max(1));
+
+    view.snapshot(
+        SnapshotRegion::Visible,
         SnapshotOptions::NONE,
         None::<&gtk::gio::Cancellable>,
         move |result| {
             done(match result {
-                Ok(surface) => write_surface(&surface, &path),
+                Ok(surface) => write_surface(&surface, bounds, scale, &path),
                 Err(error) => Err(error.to_string()),
             });
         },
@@ -159,14 +163,41 @@ fn capture(
 }
 
 #[cfg(target_os = "linux")]
-fn write_surface(surface: &gtk::cairo::Surface, path: &Path) -> Answer<()> {
+fn write_surface(
+    surface: &gtk::cairo::Surface,
+    bounds: Option<super::browser::Bounds>,
+    scale: f64,
+    path: &Path,
+) -> Answer<()> {
     use gtk::cairo::ImageSurface;
 
     let image = ImageSurface::try_from(surface.clone())
         .map_err(|_| "the picture could not be read".to_string())?;
+    let cut = bounds.and_then(|area| crop(&image, area, scale));
     let mut bytes = Vec::new();
-    image.write_to_png(&mut bytes).map_err(|error| error.to_string())?;
+    cut.as_ref().unwrap_or(&image).write_to_png(&mut bytes).map_err(|error| error.to_string())?;
     write(path, &bytes)
+}
+
+#[cfg(target_os = "linux")]
+fn crop(
+    image: &gtk::cairo::ImageSurface,
+    area: super::browser::Bounds,
+    scale: f64,
+) -> Option<gtk::cairo::ImageSurface> {
+    use gtk::cairo::{Context, Format, ImageSurface};
+
+    let width = (area.width * scale).round() as i32;
+    let height = (area.height * scale).round() as i32;
+    if width <= 0 || height <= 0 || width > image.width() || height > image.height() {
+        return None;
+    }
+    let cut = ImageSurface::create(Format::ARgb32, width, height).ok()?;
+    let paint = Context::new(&cut).ok()?;
+    paint.set_source_surface(image, -area.x * scale, -area.y * scale).ok()?;
+    paint.paint().ok()?;
+    drop(paint);
+    Some(cut)
 }
 
 #[cfg(not(any(target_os = "macos", windows, target_os = "linux")))]
