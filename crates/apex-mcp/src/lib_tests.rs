@@ -297,8 +297,15 @@ async fn a_group_that_is_off_leaves_the_tool_list() {
     .await;
 
     let names = listed(&answer);
-    assert_eq!(names.len(), TOOLS.len() - 3);
-    assert!(!names.iter().any(|name| name.starts_with("apex_browser_")));
+    let hidden: Vec<&str> = TOOLS
+        .iter()
+        .filter(|tool| tool.group == ToolGroup::Browser)
+        .map(|tool| tool.name)
+        .collect();
+    assert_eq!(names.len(), TOOLS.len() - hidden.len());
+    for name in hidden {
+        assert!(!names.iter().any(|listed| listed == name), "{name}");
+    }
     assert!(names.iter().any(|name| name == "apex_context_read"));
 }
 
