@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import type { FileContents } from "@/bindings/FileContents";
 import { dropBuffer, keepBuffer, readBuffer } from "@/features/files/buffers";
 import { openExternally } from "@/features/files/editors";
-import { isMarkdown, renderMarkdown } from "@/features/files/markdown";
+import { isMarkdown, renderMarkdown, resolveHref } from "@/features/files/markdown";
 import {
   fileName,
   formatSize,
@@ -38,6 +38,7 @@ export function FileView({ path }: { path: string }) {
   const [fit, setFit] = useState<ImageFit>("contain");
   const [shape, setShape] = useState<string | null>(null);
   const ticket = useRef(0);
+  const holder = useRef<HTMLDivElement>(null);
 
   const measure = useCallback((width: number, height: number) => {
     setShape(`${width} × ${height}`);
@@ -82,6 +83,32 @@ export function FileView({ path }: { path: string }) {
   const reading = drawn || (prose && written !== null);
   const writable = contents !== null && text !== null && !reading && !contents.truncated;
   const dirty = buffer !== null && buffer !== saved;
+
+  useEffect(() => {
+    const box = holder.current;
+    if (!box || !projectId || written === null) {
+      return;
+    }
+    let alive = true;
+    for (const image of Array.from(box.querySelectorAll("img"))) {
+      const target = resolveHref(path, image.getAttribute("src") ?? "");
+      if (!target) {
+        continue;
+      }
+      void readFile(projectId, target)
+        .then((found) => {
+          const source =
+            found.image ?? (found.text !== null && isSvg(target) ? svgSource(found.text) : null);
+          if (alive && source) {
+            image.src = source;
+          }
+        })
+        .catch(() => undefined);
+    }
+    return () => {
+      alive = false;
+    };
+  }, [projectId, path, written]);
 
   const edit = (next: string) => {
     if (!projectId) {
@@ -282,7 +309,7 @@ export function FileView({ path }: { path: string }) {
       )}
 
       {prose && written !== null && (
-        <div class="min-h-0 flex-1 overflow-auto">
+        <div ref={holder} class="min-h-0 flex-1 overflow-auto">
           <MarkdownView
             class="animate-fade-in"
             onClick={steerLinks}
