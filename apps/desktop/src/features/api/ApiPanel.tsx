@@ -71,20 +71,11 @@ export function ApiPanel() {
 
   return (
     <Pane
-      wide
       scroll={false}
       class="h-full"
       lead={<Icon name="send" size={12} class="shrink-0 text-faint" />}
-      title={
-        <Select
-          class="min-w-0 flex-1"
-          label={t("api.request")}
-          placeholder={t("api.pickRequest")}
-          value={name ?? ""}
-          options={names.value.map((saved) => ({ value: saved, label: saved }))}
-          onChange={(picked) => void openRequest(picked).catch(complain)}
-        />
-      }
+      title={name ?? t("api.title")}
+      sub={name && unsaved ? t("api.unsaved") : null}
       controls={
         <>
           <Step icon="plus" hint={t("api.new")} onPick={startNew} />
@@ -99,6 +90,15 @@ export function ApiPanel() {
       }
     >
       <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pt-3 pb-4">
+        <Select
+          class="w-full"
+          label={t("api.request")}
+          placeholder={t("api.pickRequest")}
+          value={name ?? ""}
+          options={names.value.map((saved) => ({ value: saved, label: saved }))}
+          onChange={(picked) => void openRequest(picked).catch(complain)}
+        />
+
         <div class="flex gap-1.5">
           <span class="shrink-0" style="--ui-select-width: 88px">
             <Select

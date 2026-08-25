@@ -17,6 +17,8 @@ export const es: Messages = {
   },
   api: {
     open: "Mostrar u ocultar el cliente de API",
+    title: "Cliente de API",
+    unsaved: "sin guardar",
     request: "Pedido",
     pickRequest: "Elegí un pedido",
     new: "Empezar un pedido nuevo",

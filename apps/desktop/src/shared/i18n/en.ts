@@ -15,6 +15,8 @@ export const en = {
   },
   api: {
     open: "Toggle the API client",
+    title: "API client",
+    unsaved: "unsaved",
     request: "Request",
     pickRequest: "Pick a request",
     new: "Start a new request",
