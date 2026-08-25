@@ -375,12 +375,7 @@ impl SessionManager {
         Ok(())
     }
 
-    pub async fn preview(
-        &self,
-        asked_by: Uuid,
-        path: &str,
-        name: Option<String>,
-    ) -> Result<String> {
+    pub async fn preview(&self, asked_by: Uuid, path: &str) -> Result<String> {
         let sessions = self.list_sessions().await;
         let session = sessions
             .iter()
@@ -400,7 +395,7 @@ impl SessionManager {
             .context("could not open the preview port")?;
         let url = server.url(&server.issue(&dir, asked_by).await, wanted);
         self.registry.announce(Event::OpenView {
-            target: apex_proto::ViewTarget::Url { url: url.clone(), name },
+            target: apex_proto::ViewTarget::Url { url: url.clone() },
             asked_by,
         });
         Ok(url)

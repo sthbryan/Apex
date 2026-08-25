@@ -708,8 +708,6 @@ pub enum Command {
         #[ts(type = "string")]
         asked_by: Uuid,
         path: String,
-        #[serde(default)]
-        name: Option<String>,
     },
     SessionTell {
         #[ts(type = "string")]
@@ -1049,8 +1047,6 @@ pub enum ViewTarget {
     },
     Url {
         url: String,
-        #[serde(default)]
-        name: Option<String>,
     },
 }
 

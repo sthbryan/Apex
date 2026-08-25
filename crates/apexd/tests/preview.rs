@@ -70,13 +70,8 @@ async fn serves_the_page_the_agent_left_and_opens_it_in_a_pane() {
     std::fs::create_dir_all(&dir).expect("folder");
     std::fs::write(dir.join("index.html"), "<h1>hola</h1>").expect("page");
 
-    let reply = client
-        .request(Command::Preview {
-            asked_by: session,
-            path: "index.html".into(),
-            name: Some("proto".into()),
-        })
-        .await;
+    let reply =
+        client.request(Command::Preview { asked_by: session, path: "index.html".into() }).await;
     let Reply::Text { text: url } = reply else { panic!("expected a url, got {reply:?}") };
 
     assert_eq!(url, opened(&mut client).await);
@@ -93,11 +88,7 @@ async fn says_where_to_write_when_the_page_is_not_there() {
     let session = a_session(&mut client, &harness).await;
 
     let failure = client
-        .try_request(Command::Preview {
-            asked_by: session,
-            path: "missing.html".into(),
-            name: None,
-        })
+        .try_request(Command::Preview { asked_by: session, path: "missing.html".into() })
         .await
         .expect_err("there is no page");
 
@@ -114,11 +105,7 @@ async fn refuses_to_serve_what_is_outside_the_folder() {
     std::fs::write(harness.root.path().join("secret.txt"), "no").expect("secret");
 
     let failure = client
-        .try_request(Command::Preview {
-            asked_by: session,
-            path: "../secret.txt".into(),
-            name: None,
-        })
+        .try_request(Command::Preview { asked_by: session, path: "../secret.txt".into() })
         .await
         .expect_err("that is not a preview");
 
@@ -135,9 +122,8 @@ async fn stops_serving_once_the_session_is_closed() {
     std::fs::create_dir_all(&dir).expect("folder");
     std::fs::write(dir.join("index.html"), "<h1>hola</h1>").expect("page");
 
-    let reply = client
-        .request(Command::Preview { asked_by: session, path: "index.html".into(), name: None })
-        .await;
+    let reply =
+        client.request(Command::Preview { asked_by: session, path: "index.html".into() }).await;
     let Reply::Text { text: url } = reply else { panic!("expected a url, got {reply:?}") };
     assert!(fetch(&url).await.starts_with("HTTP/1.1 200 OK"));
 

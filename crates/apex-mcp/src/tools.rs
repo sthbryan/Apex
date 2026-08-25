@@ -175,11 +175,7 @@ pub const TOOLS: &[Tool] = &[
                     "kind": { "type": "string", "enum": ["session", "file", "url"] },
                     "session": { "type": "string", "description": "Session id, for kind session" },
                     "path": { "type": "string", "description": "Path in the project, for kind file" },
-                    "url": { "type": "string", "description": "Address, for kind url" },
-                    "name": {
-                        "type": "string",
-                        "description": "Name this pane so you can read it later, for kind url"
-                    }
+                    "url": { "type": "string", "description": "Address, for kind url" }
                 }
             })
         },
@@ -188,7 +184,7 @@ pub const TOOLS: &[Tool] = &[
         name: "apex_close_view",
         group: ToolGroup::Views,
         description: "Ask Apex to close something it opened for the person watching: a session \
-                      pane, a file of this project, or a url.",
+                      pane, a file of this project, or the browser.",
         schema: || {
             json!({
                 "type": "object",
@@ -197,11 +193,7 @@ pub const TOOLS: &[Tool] = &[
                     "kind": { "type": "string", "enum": ["session", "file", "url"] },
                     "session": { "type": "string", "description": "Session id, for kind session" },
                     "path": { "type": "string", "description": "Path in the project, for kind file" },
-                    "url": { "type": "string", "description": "Address, for kind url" },
-                    "name": {
-                        "type": "string",
-                        "description": "Name this pane so you can read it later, for kind url"
-                    }
+                    "url": { "type": "string", "description": "Address, for kind url" }
                 }
             })
         },
@@ -212,9 +204,9 @@ pub const TOOLS: &[Tool] = &[
         description: "Show a page you built. Write the html and everything it loads into the \
                       .apex/preview folder of your working directory, the full path is in \
                       APEX_PREVIEW_DIR, then call this with the name of the file. Apex serves \
-                      that folder on loopback and opens it in a browser pane, where \
-                      apex_browser_console and apex_browser_shot can read it back. Name the \
-                      pane and apex_close_view with that name closes it again.",
+                      that folder on loopback and shows it in the browser, where \
+                      apex_browser_console and apex_browser_shot can read it back. \
+                      apex_close_view with kind url shuts the browser again.",
         schema: || {
             json!({
                 "type": "object",
@@ -223,10 +215,6 @@ pub const TOOLS: &[Tool] = &[
                     "path": {
                         "type": "string",
                         "description": "File to show, relative to the preview folder"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Name this pane so you can read it later"
                     }
                 }
             })
@@ -278,9 +266,7 @@ fn view_target(caller: &Caller, text: &impl Fn(&str) -> Option<String>) -> Resul
             project: caller.project,
             path: text("path").context("path is required")?,
         }),
-        Some("url") => {
-            Ok(ViewTarget::Url { url: text("url").context("url is required")?, name: text("name") })
-        }
+        Some("url") => Ok(ViewTarget::Url { url: text("url").context("url is required")? }),
         other => {
             bail!("{} is not a kind, use session, file or url", other.unwrap_or("nothing"))
         }
@@ -314,7 +300,6 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_preview" => Ok(Command::Preview {
             asked_by: caller.session,
             path: text("path").context("path is required")?,
-            name: text("name"),
         }),
         "apex_open_view" => {
             Ok(Command::OpenView { asked_by: caller.session, target: view_target(caller, &text)? })

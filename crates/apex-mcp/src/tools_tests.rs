@@ -115,12 +115,11 @@ fn opening_and_closing_a_view_share_the_same_target() {
 }
 
 #[test]
-fn a_preview_carries_the_file_and_the_pane_name() {
+fn a_preview_carries_the_file() {
     let me = caller(session("claude", None));
     assert!(matches!(
-        command_for(&me, "apex_preview", &json!({ "path": "index.html", "name": "proto" }))
-            .expect("command"),
-        Command::Preview { path, name: Some(name), .. } if path == "index.html" && name == "proto"
+        command_for(&me, "apex_preview", &json!({ "path": "index.html" })).expect("command"),
+        Command::Preview { path, .. } if path == "index.html"
     ));
     assert!(command_for(&me, "apex_preview", &json!({})).is_err());
 }
@@ -134,14 +133,18 @@ fn the_preview_tool_says_where_to_write_the_page() {
 }
 
 #[test]
-fn a_named_pane_travels_with_the_view() {
+fn the_view_tools_take_no_pane_name() {
     let me = caller(session("claude", None));
     let opening = json!({ "kind": "url", "url": "http://localhost:6006", "name": "storybook" });
     assert!(matches!(
         command_for(&me, "apex_open_view", &opening).expect("command"),
-        Command::OpenView { target: ViewTarget::Url { name: Some(name), .. }, .. }
-            if name == "storybook"
+        Command::OpenView { target: ViewTarget::Url { url }, .. } if url == "http://localhost:6006"
     ));
+    for name in ["apex_open_view", "apex_close_view", "apex_preview"] {
+        let tool = TOOLS.iter().find(|tool| tool.name == name).expect("tool");
+        let schema = (tool.schema)();
+        assert!(schema["properties"].get("name").is_none(), "{name}");
+    }
 }
 
 #[test]
