@@ -75,6 +75,7 @@ export function ResourcesPanel({ open, snapshot, anchor, onClose }: Props) {
               label={t("resources.gpu")}
               value={system.gpu_percent}
               tone={barTone(system.gpu_percent)}
+              detail=""
             />
           )}
           {system.swap_total > 0 && (

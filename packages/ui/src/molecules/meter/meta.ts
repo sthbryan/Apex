@@ -12,5 +12,6 @@ export const meterMeta: ComponentMeta = {
     { name: "memory", props: { label: "RAM", value: 56, display: "18G" } },
     { name: "near limit", props: { label: "Quota", value: 91, tone: "failed" } },
     { name: "with detail", props: { label: "Memory", value: 56, detail: "18.2/32 GB" } },
+    { name: "detail held open", props: { label: "GPU", value: 35, detail: "" } },
   ],
 };
