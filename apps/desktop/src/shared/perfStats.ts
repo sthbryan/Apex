@@ -1,14 +1,39 @@
 import { effect, signal } from "@preact/signals";
 
 const STORAGE_KEY = "apex.perf-stats";
+const WINDOW_MS = 1000;
+const REPORT_MS = 250;
 
 export const perfStatsEnabled = signal(
   import.meta.env.DEV && localStorage.getItem(STORAGE_KEY) === "on",
 );
 
+export const framerate = signal(0);
+export const slowestFrame = signal(0);
+
 export function setPerfStatsEnabled(on: boolean): void {
   perfStatsEnabled.value = on;
   localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
+}
+
+export function keepWindow(durations: number[], window: number): number[] {
+  let total = 0;
+  let from = durations.length;
+  while (from > 0 && total < window) {
+    from -= 1;
+    total += durations[from];
+  }
+  return durations.slice(from);
+}
+
+export function readFrames(durations: number[]): { fps: number; low: number } {
+  const spent = durations.filter((gap) => gap > 0);
+  if (spent.length === 0) {
+    return { fps: 0, low: 0 };
+  }
+  const total = spent.reduce((sum, gap) => sum + gap, 0);
+  const worst = spent.reduce((slowest, gap) => Math.max(slowest, gap), 0);
+  return { fps: Math.round((1000 * spent.length) / total), low: Math.round(1000 / worst) };
 }
 
 export function startPerfStats(): () => void {
@@ -16,46 +41,44 @@ export function startPerfStats(): () => void {
     return () => {};
   }
 
-  let teardown: (() => void) | undefined;
+  let stop: (() => void) | undefined;
 
   const disposeEffect = effect(() => {
-    teardown?.();
-    teardown = undefined;
+    stop?.();
+    stop = undefined;
 
     if (!perfStatsEnabled.value) {
+      framerate.value = 0;
+      slowestFrame.value = 0;
       return;
     }
 
-    let cancelled = false;
-    teardown = () => {
-      cancelled = true;
+    let frame = 0;
+    let last = performance.now();
+    let reported = last;
+    let durations: number[] = [];
+
+    const tick = (now: number) => {
+      durations.push(now - last);
+      last = now;
+
+      if (now - reported >= REPORT_MS) {
+        durations = keepWindow(durations, WINDOW_MS);
+        const { fps, low } = readFrames(durations);
+        framerate.value = fps;
+        slowestFrame.value = low;
+        reported = now;
+      }
+
+      frame = requestAnimationFrame(tick);
     };
 
-    void import("stats.js").then(({ default: Stats }) => {
-      if (cancelled) {
-        return;
-      }
-      const stats = new Stats();
-      stats.showPanel(0);
-      stats.dom.style.top = "auto";
-      stats.dom.style.bottom = "0";
-      document.body.appendChild(stats.dom);
-
-      let frame = requestAnimationFrame(function tick() {
-        stats.begin();
-        stats.end();
-        frame = requestAnimationFrame(tick);
-      });
-
-      teardown = () => {
-        cancelAnimationFrame(frame);
-        stats.dom.remove();
-      };
-    });
+    frame = requestAnimationFrame(tick);
+    stop = () => cancelAnimationFrame(frame);
   });
 
   return () => {
     disposeEffect();
-    teardown?.();
+    stop?.();
   };
 }

@@ -124,7 +124,7 @@ export const en = {
     translucent: "Window translucency",
     translucentHint: "The desktop shows through as a smooth blur while text stays sharp.",
     perfStats: "FPS meter",
-    perfStatsHint: "Dev-only overlay. Never shows in production builds.",
+    perfStatsHint: "Shows frames per second in the status bar. Dev builds only.",
     opacity: "Tint",
     opacityHint: "How much of the interface colour sits on the glass.",
     frost: "Frost",

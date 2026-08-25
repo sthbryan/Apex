@@ -125,7 +125,7 @@ export const es: Messages = {
     translucent: "Ventana translúcida",
     translucentHint: "El escritorio se ve detrás como un desenfoque suave y el texto sigue nítido.",
     perfStats: "Medidor de FPS",
-    perfStatsHint: "Overlay solo para dev. Nunca aparece en producción.",
+    perfStatsHint: "Muestra los cuadros por segundo en la barra de estado. Solo en builds de dev.",
     opacity: "Tinte",
     opacityHint: "Cuánto color de la interfaz se apoya sobre el vidrio.",
     frost: "Vidrio",

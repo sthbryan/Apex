@@ -6,12 +6,14 @@ import { races } from "@/features/race/state";
 import { ResourcesSummary } from "@/features/resources/ResourcesSummary";
 import { UsageStrip } from "@/features/usage/UsageStrip";
 import { t } from "@/shared/i18n";
+import { FpsChip } from "@/shared/ui/FpsChip";
 
 export function StatusBar() {
   return (
     <Bar
       right={
         <>
+          <FpsChip />
           <NotifyChip />
           <ResourcesSummary />
         </>
