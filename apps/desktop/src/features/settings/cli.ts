@@ -35,3 +35,7 @@ async function settle(command: string): Promise<void> {
     cliBusy.value = false;
   }
 }
+
+export function refreshCli(): void {
+  invoke("refresh_cli").catch(() => {});
+}

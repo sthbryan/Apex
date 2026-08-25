@@ -51,4 +51,5 @@ webkit2gtk = "2.0"
 workspace = true
 
 [dev-dependencies]
+filetime = "0.2"
 tempfile.workspace = true

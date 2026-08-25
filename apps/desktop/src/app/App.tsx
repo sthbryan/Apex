@@ -21,6 +21,7 @@ import { focusTerminal } from "@/features/sessions/registry";
 import { sessions } from "@/features/sessions/state";
 import { adoptAgents, applyIdleGrace, enabledAgents } from "@/features/settings/agentMode";
 import { applyAppearance } from "@/features/settings/appearance";
+import { refreshCli } from "@/features/settings/cli";
 import { applyClosing } from "@/features/settings/closing";
 import { Settings } from "@/features/settings/Settings";
 import { loadToolGroups } from "@/features/settings/toolGroups";
@@ -72,6 +73,7 @@ export function App() {
     const stopTheme = startThemeWatcher();
     applyAppearance();
     applyClosing();
+    refreshCli();
     const stopDockWidth = startDockWidth();
     const stopLayoutSaves = startLayoutSaves();
     const stopTargetFollow = startTargetFollow();

@@ -89,6 +89,7 @@ dependencies = [
  "apex-proto",
  "block2",
  "cairo-rs",
+ "filetime",
  "gtk",
  "objc2",
  "objc2-app-kit",

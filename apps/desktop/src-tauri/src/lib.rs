@@ -67,6 +67,7 @@ pub fn run() {
             commands::cli_state,
             commands::link_cli,
             commands::unlink_cli,
+            commands::refresh_cli,
             commands::host_platform,
             commands::set_badge,
             commands::set_window_material,
