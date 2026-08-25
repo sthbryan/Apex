@@ -23,7 +23,7 @@ export function ResourcesSummary() {
       onClose={() => setOpen(false)}
       anchor={
         <StatusPill title={t("resources.title")} onClick={() => setOpen((current) => !current)}>
-          <Icon name="sparkles" size={11} />
+          <Icon name="microchip" size={11} />
           <Bar class="w-9" size="sm" value={cpu} tone={barTone(cpu)} label={t("resources.cpu")} />
           <span class="font-mono tabular-nums">{compactBytes(snapshot.apex.memory)}</span>
         </StatusPill>
