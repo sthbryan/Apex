@@ -85,3 +85,24 @@ async fn a_refused_client_is_never_counted_as_one() {
     tokio::time::sleep(Duration::from_millis(50)).await;
     assert_eq!(harness.counted(), 0);
 }
+
+#[tokio::test]
+async fn knocking_with_the_wrong_protocol_learns_which_one_to_use() {
+    let harness = Harness::start().await;
+
+    let greeted =
+        apexd::link::Link::knock(&harness.socket, "test", true, PROTOCOL_VERSION + 1).await;
+
+    assert!(
+        matches!(greeted, Ok(apexd::link::Greeted::Stranger(spoken)) if spoken == PROTOCOL_VERSION)
+    );
+}
+
+#[tokio::test]
+async fn a_link_that_knows_the_protocol_is_greeted_properly() {
+    let harness = Harness::start().await;
+
+    let greeted = apexd::link::Link::knock(&harness.socket, "test", true, PROTOCOL_VERSION).await;
+
+    assert!(matches!(greeted, Ok(apexd::link::Greeted::Linked(_))));
+}

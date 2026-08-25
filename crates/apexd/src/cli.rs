@@ -6,9 +6,9 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use apex_core::ApexPaths;
 use apex_mcp::Daemon;
-use apex_proto::{Command, DaemonReport, IDLE_GRACE_NEVER, Reply, connect_unix};
+use apex_proto::{Command, DaemonReport, IDLE_GRACE_NEVER, PROTOCOL_VERSION, Reply, connect_unix};
 
-use crate::link::Link;
+use crate::link::{Greeted, Link};
 
 const HELP: &str = "apex - talk to the daemon behind Apex Desktop
 
@@ -164,20 +164,46 @@ async fn start(socket: &Path) -> Result<i32> {
 }
 
 async fn stop(socket: &Path) -> Result<i32> {
-    let Ok(mut link) = Link::hail(socket, "apex-cli", true).await else {
+    if shut_down(socket).await? {
+        println!("apexd is stopping");
+    } else {
         println!("apexd is not running");
-        return Ok(0);
-    };
-
-    link.request(Command::DaemonShutdown).await?;
-    println!("apexd is stopping");
+    }
     Ok(0)
 }
 
+async fn shut_down(socket: &Path) -> Result<bool> {
+    let greeted = match Link::knock(socket, "apex-cli", true, PROTOCOL_VERSION).await {
+        Ok(greeted) => greeted,
+        Err(_) => return Ok(false),
+    };
+
+    let mut link = match greeted {
+        Greeted::Linked(link) => *link,
+        Greeted::Stranger(speaks) => match Link::knock(socket, "apex-cli", true, speaks).await {
+            Ok(Greeted::Linked(link)) => *link,
+            _ => return Ok(false),
+        },
+    };
+
+    link.request(Command::DaemonShutdown).await?;
+    Ok(true)
+}
+
 async fn status(socket: &Path) -> Result<i32> {
-    let Ok(mut link) = Link::hail(socket, "apex-cli", true).await else {
-        println!("apexd is not running");
-        return Ok(1);
+    let mut link = match Link::knock(socket, "apex-cli", true, PROTOCOL_VERSION).await {
+        Ok(Greeted::Linked(link)) => *link,
+        Ok(Greeted::Stranger(speaks)) => {
+            println!(
+                "apexd is running, but it speaks protocol v{speaks} and this one speaks v{PROTOCOL_VERSION}"
+            );
+            println!("run apex stop to retire it, then open Apex again");
+            return Ok(1);
+        }
+        Err(_) => {
+            println!("apexd is not running");
+            return Ok(1);
+        }
     };
 
     let Reply::Daemon { report } = link.request(Command::DaemonStatus).await? else {
@@ -314,9 +340,7 @@ async fn uninstall(socket: &Path, settings: Ask, confirmed: bool) -> Result<i32>
         return Ok(1);
     }
 
-    if let Ok(mut link) = Link::hail(socket, "apex-cli", true).await {
-        let _ = link.request(Command::DaemonShutdown).await;
-    }
+    let _ = shut_down(socket).await;
 
     let mut failed = false;
     for path in &doomed {

@@ -1,8 +1,8 @@
 use anyhow::{Context, Result, bail};
 use apex_mcp::Daemon;
 use apex_proto::{
-    ClientMessage, Command, CommandOutcome, Connection, Frame, Hello, PROTOCOL_VERSION, Reply,
-    RequestId, ServerMessage, connect_unix,
+    ClientMessage, Command, CommandOutcome, Connection, ErrorCode, Frame, Hello, PROTOCOL_VERSION,
+    Reply, RequestId, ServerMessage, connect_unix,
 };
 use std::path::Path;
 
@@ -17,13 +17,22 @@ impl Link {
     }
 
     pub async fn hail(socket: &Path, name: &str, probe: bool) -> Result<Self> {
+        match Self::knock(socket, name, probe, PROTOCOL_VERSION).await? {
+            Greeted::Linked(link) => Ok(*link),
+            Greeted::Stranger(speaks) => {
+                bail!("apexd speaks protocol v{speaks}, this one speaks v{PROTOCOL_VERSION}")
+            }
+        }
+    }
+
+    pub async fn knock(socket: &Path, name: &str, probe: bool, version: u32) -> Result<Greeted> {
         let mut connection = connect_unix(socket)
             .await
             .with_context(|| format!("connecting to {}", socket.display()))?;
 
         connection
             .send_control(&ClientMessage::Hello(Hello {
-                protocol_version: PROTOCOL_VERSION,
+                protocol_version: version,
                 client_name: name.into(),
                 identity: None,
                 probe,
@@ -32,10 +41,32 @@ impl Link {
 
         let welcome = connection.recv().await.context("apexd closed during handshake")??;
         match welcome.parse_control::<ServerMessage>()? {
-            ServerMessage::Welcome(_) => Ok(Self { connection, next: 0 }),
+            ServerMessage::Welcome(_) => {
+                Ok(Greeted::Linked(Box::new(Self { connection, next: 0 })))
+            }
+            ServerMessage::Response { outcome: CommandOutcome::Err { error }, .. }
+                if error.code == ErrorCode::UnsupportedVersion =>
+            {
+                match spoken_version(&error.message) {
+                    Some(speaks) => Ok(Greeted::Stranger(speaks)),
+                    None => bail!("apexd refused the handshake: {error}"),
+                }
+            }
             other => bail!("apexd refused the handshake: {other:?}"),
         }
     }
+}
+
+pub enum Greeted {
+    Linked(Box<Link>),
+    Stranger(u32),
+}
+
+pub fn spoken_version(message: &str) -> Option<u32> {
+    message
+        .split_whitespace()
+        .find_map(|word| word.strip_prefix('v'))
+        .and_then(|rest| rest.trim_end_matches(',').parse().ok())
 }
 
 impl Daemon for Link {
