@@ -1,4 +1,6 @@
 pub mod cli;
+#[cfg(test)]
+mod cli_tests;
 pub mod commands;
 pub mod link;
 pub mod mcp;

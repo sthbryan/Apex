@@ -34,7 +34,11 @@ pub enum Verb {
 }
 
 pub fn requested() -> Option<Verb> {
-    let mut args = std::env::args();
+    read(std::env::args())
+}
+
+pub fn read(args: impl Iterator<Item = String>) -> Option<Verb> {
+    let mut args = args;
     let called = args.next().unwrap_or_default();
     let named_apex = Path::new(&called).file_name().is_some_and(|name| name == "apex");
     let word = args.next();
