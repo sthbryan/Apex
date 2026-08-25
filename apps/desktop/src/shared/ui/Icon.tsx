@@ -20,7 +20,6 @@ import {
   CircleStop,
   Columns2,
   Combine,
-  Computer,
   Cpu,
   Database,
   ExternalLink,
