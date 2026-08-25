@@ -64,6 +64,38 @@ fn killing_an_unknown_pid_reports_failure() {
 }
 
 #[test]
+#[cfg(target_os = "linux")]
+fn threads_do_not_appear_as_separate_processes_in_the_tree() {
+    fn task_ids() -> std::collections::HashSet<u32> {
+        std::fs::read_dir("/proc/self/task")
+            .expect("read /proc/self/task")
+            .filter_map(|entry| entry.ok()?.file_name().to_str()?.parse().ok())
+            .collect()
+    }
+
+    let before = task_ids();
+    let handles: Vec<_> = (0..8)
+        .map(|_| std::thread::spawn(|| std::thread::sleep(std::time::Duration::from_millis(500))))
+        .collect();
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    let new_tids: Vec<u32> = task_ids().difference(&before).copied().collect();
+    assert!(!new_tids.is_empty(), "expected our spawned threads to show up in /proc/self/task");
+
+    let tree = sampler().tree_usage(std::process::id());
+    for handle in handles {
+        let _ = handle.join();
+    }
+
+    for tid in new_tids {
+        assert!(
+            !tree.processes.iter().any(|entry| entry.pid == tid),
+            "thread {tid} leaked into the process tree as its own entry"
+        );
+    }
+}
+
+#[test]
 fn processes_come_sorted_by_memory() {
     let tree = sampler().tree_usage(std::process::id());
     assert!(
