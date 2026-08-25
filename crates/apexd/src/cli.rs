@@ -1,8 +1,11 @@
+use std::os::unix::process::CommandExt;
 use std::path::Path;
+use std::process::Stdio;
+use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use apex_mcp::Daemon;
-use apex_proto::{Command, DaemonReport, IDLE_GRACE_NEVER, Reply};
+use apex_proto::{Command, DaemonReport, IDLE_GRACE_NEVER, Reply, connect_unix};
 
 use crate::link::Link;
 
@@ -10,12 +13,20 @@ const HELP: &str = "apex - talk to the daemon behind Apex Desktop
 
 usage:
   apex status     report whether the daemon is up, and for how long
+  apex start      start the daemon if it is not already up
+  apex stop       stop the daemon and every session it holds
+  apex daemon     run the daemon here instead of in the background
   apex help       print this
 ";
+
+const WAKE_TRIES: u32 = 40;
+const WAKE_PAUSE: Duration = Duration::from_millis(100);
 
 pub enum Verb {
     Help,
     Status,
+    Start,
+    Stop,
     Unknown(String),
 }
 
@@ -26,7 +37,10 @@ pub fn requested() -> Option<Verb> {
     let word = args.next();
 
     match word.as_deref() {
+        Some("daemon") => None,
         Some("status") => Some(Verb::Status),
+        Some("start") => Some(Verb::Start),
+        Some("stop") => Some(Verb::Stop),
         Some("help" | "--help" | "-h") => Some(Verb::Help),
         Some(word) if named_apex => Some(Verb::Unknown(word.to_string())),
         None if named_apex => Some(Verb::Help),
@@ -46,7 +60,47 @@ pub async fn run(socket: &Path, verb: Verb) -> Result<i32> {
             Ok(2)
         }
         Verb::Status => status(socket).await,
+        Verb::Start => start(socket).await,
+        Verb::Stop => stop(socket).await,
     }
+}
+
+async fn start(socket: &Path) -> Result<i32> {
+    if connect_unix(socket).await.is_ok() {
+        println!("apexd is already running");
+        return Ok(0);
+    }
+
+    let binary = std::env::current_exe().context("finding the apexd binary")?;
+    std::process::Command::new(&binary)
+        .arg("daemon")
+        .process_group(0)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .with_context(|| format!("starting {}", binary.display()))?;
+
+    for _ in 0..WAKE_TRIES {
+        tokio::time::sleep(WAKE_PAUSE).await;
+        if connect_unix(socket).await.is_ok() {
+            println!("apexd is up");
+            return Ok(0);
+        }
+    }
+    eprintln!("apexd did not answer on {}", socket.display());
+    Ok(1)
+}
+
+async fn stop(socket: &Path) -> Result<i32> {
+    let Ok(mut link) = Link::hail(socket, "apex-cli", true).await else {
+        println!("apexd is not running");
+        return Ok(0);
+    };
+
+    link.request(Command::DaemonShutdown).await?;
+    println!("apexd is stopping");
+    Ok(0)
 }
 
 async fn status(socket: &Path) -> Result<i32> {
