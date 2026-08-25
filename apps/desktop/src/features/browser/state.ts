@@ -1,9 +1,10 @@
-import { signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
 import { asideOpen, asidePanel, closeAside, openAside } from "@/app/layout/state";
 import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
+import { groupOn } from "@/features/settings/toolGroups";
 import { complain } from "@/shared/daemon";
 
 const LOCAL = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
@@ -68,6 +69,14 @@ function readLast(): string | null {
   } catch {
     return null;
   }
+}
+
+export function startBrowserGuard(): () => void {
+  return effect(() => {
+    if (!groupOn("browser") && showingBrowser()) {
+      closeAside();
+    }
+  });
 }
 
 export type Word =

@@ -27,7 +27,16 @@ vi.mock("@/shared/daemon", () => ({
 import { asideOpen, asidePanel, closeAside } from "@/app/layout/state";
 import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
-import { browserUrl, isLocal, openWeb, pickUrl, readWord, toggleBrowser } from "./state";
+import { toolsOff } from "@/features/settings/toolGroups";
+import {
+  browserUrl,
+  isLocal,
+  openWeb,
+  pickUrl,
+  readWord,
+  startBrowserGuard,
+  toggleBrowser,
+} from "./state";
 
 beforeEach(() => {
   invoke.mockReset();
@@ -35,6 +44,7 @@ beforeEach(() => {
   (browsing as unknown as { value: string }).value = "internal";
   (projectSessions as unknown as { value: unknown[] }).value = [];
   browserUrl.value = null;
+  toolsOff.value = [];
   closeAside();
   localStorage.clear();
 });
@@ -166,5 +176,33 @@ describe("readWord", () => {
     expect(readWord(null)).toBeNull();
     expect(readWord("apex")).toBeNull();
     expect(readWord(42)).toBeNull();
+  });
+});
+
+describe("startBrowserGuard", () => {
+  it("shuts the aside when the browser tools go off", () => {
+    toggleBrowser();
+    expect(asideOpen.value).toBe(true);
+    const stop = startBrowserGuard();
+    toolsOff.value = ["browser"];
+    expect(asideOpen.value).toBe(false);
+    stop();
+  });
+
+  it("leaves the aside alone while the tools are on", () => {
+    const stop = startBrowserGuard();
+    toggleBrowser();
+    expect(asideOpen.value).toBe(true);
+    toolsOff.value = ["views"];
+    expect(asideOpen.value).toBe(true);
+    stop();
+  });
+
+  it("stops minding once it is torn down", () => {
+    const stop = startBrowserGuard();
+    stop();
+    toggleBrowser();
+    toolsOff.value = ["browser"];
+    expect(asideOpen.value).toBe(true);
   });
 });
