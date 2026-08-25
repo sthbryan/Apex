@@ -4,14 +4,33 @@ import { cn } from "@/lib/cn";
 export interface TitleBarProps extends Omit<JSX.IntrinsicElements["header"], "title" | "ref"> {
   title?: ComponentChildren;
   lights?: boolean;
+  onClose?: () => void;
+  onMinimize?: () => void;
+  onMaximize?: () => void;
   actions?: ComponentChildren;
   children?: ComponentChildren;
 }
 
-export function TitleBar({ title, lights = true, actions, class: className, children, ...rest }: TitleBarProps) {
+export function TitleBar({
+  title,
+  lights = true,
+  onClose,
+  onMinimize,
+  onMaximize,
+  actions,
+  class: className,
+  children,
+  ...rest
+}: TitleBarProps) {
   return (
     <header class={cn("ui-title-bar ui-chrome", className as string)} {...rest}>
-      {lights ? <span class="ui-title-bar-lights" aria-hidden="true"><i /><i /><i /></span> : null}
+      {lights ? (
+        <span class="ui-title-bar-lights">
+          <button type="button" aria-label="Close" disabled={!onClose} onClick={onClose} />
+          <button type="button" aria-label="Minimize" disabled={!onMinimize} onClick={onMinimize} />
+          <button type="button" aria-label="Maximize" disabled={!onMaximize} onClick={onMaximize} />
+        </span>
+      ) : null}
       {title ? <div class="ui-title-bar-title">{title}</div> : null}
       {children}
       {actions ? <div class="ui-title-bar-actions">{actions}</div> : null}
