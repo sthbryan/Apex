@@ -74,7 +74,7 @@ export function ApiPanel() {
           class="min-w-0 flex-1"
           label={t("api.request")}
           placeholder={t("api.pickRequest")}
-          value={chosen.value ?? undefined}
+          value={chosen.value ?? ""}
           options={names.value.map((name) => ({ value: name, label: name }))}
           onChange={(name) => void openRequest(name).catch(complain)}
         />
@@ -114,7 +114,7 @@ export function ApiPanel() {
             class="min-w-0 flex-1"
             label={t("api.environment")}
             placeholder={t("api.noEnvironment")}
-            value={environment.value ?? undefined}
+            value={environment.value ?? ""}
             options={environments.value.map((name) => ({ value: name, label: name }))}
             onChange={setEnvironment}
           />

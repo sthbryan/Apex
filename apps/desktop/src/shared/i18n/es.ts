@@ -18,7 +18,7 @@ export const es: Messages = {
   api: {
     open: "Mostrar u ocultar el cliente de API",
     request: "Pedido",
-    pickRequest: "Todavía no hay pedidos",
+    pickRequest: "Elegí un pedido",
     new: "Empezar un pedido nuevo",
     remove: "Borrar este pedido",
     method: "Método",
