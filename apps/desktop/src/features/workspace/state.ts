@@ -414,6 +414,9 @@ function pruneTab(tab: Tab, liveSessionIds: Set<string>): Tab | null {
 
 function pruneNode(node: PaneNode, liveSessionIds: Set<string>): PaneNode | null {
   if (node.kind === "leaf") {
+    if (node.view.type === "browser") {
+      return null;
+    }
     const session = referencedSession(node);
     return session === null || liveSessionIds.has(session) ? node : null;
   }

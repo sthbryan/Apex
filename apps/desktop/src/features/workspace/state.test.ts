@@ -60,7 +60,7 @@ import {
   whenClosingSession,
 } from "./state";
 import type { PaneNode, PaneView } from "./tree";
-import { leaf, splitLeaf } from "./tree";
+import { leaf, leaves, splitLeaf, stack } from "./tree";
 
 beforeEach(() => {
   tabs.value = [];
@@ -140,6 +140,28 @@ describe("serializeLayout and restoreLayout", () => {
     restoreLayout(null, new Set([]));
     expect(tabs.value).toHaveLength(0);
     restoreLayout("not json", new Set([]));
+    expect(tabs.value).toHaveLength(0);
+  });
+
+  it("drops browser panes saved by an older layout", () => {
+    const kept = leaf({ type: "session", sessionId: "a" });
+    const gone = leaf({ type: "browser", url: "http://localhost:3000" });
+    tabs.value = [{ id: "t1", root: stack([kept, gone], "row"), activeLeafId: gone.id }];
+    activeTabId.value = "t1";
+    const raw = serializeLayout();
+    restoreLayout(raw, new Set(["a"]));
+    expect(tabs.value).toHaveLength(1);
+    expect(leaves(tabs.value[0].root)).toHaveLength(1);
+    expect(tabs.value[0].root.kind).toBe("leaf");
+    expect(tabs.value[0].activeLeafId).toBe(kept.id);
+  });
+
+  it("drops a tab that only held a browser pane", () => {
+    const root = leaf({ type: "browser", url: "http://localhost:3000" });
+    tabs.value = [{ id: "t1", root, activeLeafId: root.id }];
+    activeTabId.value = "t1";
+    const raw = serializeLayout();
+    restoreLayout(raw, new Set([]));
     expect(tabs.value).toHaveLength(0);
   });
 
