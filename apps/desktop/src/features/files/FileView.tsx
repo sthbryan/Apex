@@ -22,6 +22,7 @@ import {
 import { TextEditor } from "@/features/files/TextEditor";
 import { activeProject } from "@/features/projects/state";
 import { PaneControls, PaneSub } from "@/features/workspace/slots";
+import { openFile } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -109,6 +110,31 @@ export function FileView({ path }: { path: string }) {
       alive = false;
     };
   }, [projectId, path, written]);
+
+  const steerLinks = useCallback(
+    (event: MouseEvent) => {
+      const link = (event.target as HTMLElement | null)?.closest("a");
+      if (!link) {
+        return;
+      }
+      event.preventDefault();
+      const href = link.getAttribute("href") ?? "";
+      if (/^https?:\/\//i.test(href)) {
+        void invoke("open_url", { url: href }).catch(complain);
+        return;
+      }
+      if (href.startsWith("#")) {
+        const name = decodeURIComponent(href.slice(1));
+        holder.current?.querySelector(`[id="${CSS.escape(name)}"]`)?.scrollIntoView();
+        return;
+      }
+      const target = resolveHref(path, href);
+      if (target) {
+        openFile(target);
+      }
+    },
+    [path],
+  );
 
   const edit = (next: string) => {
     if (!projectId) {
@@ -336,16 +362,4 @@ export function FileView({ path }: { path: string }) {
       )}
     </div>
   );
-}
-
-function steerLinks(event: MouseEvent): void {
-  const link = (event.target as HTMLElement | null)?.closest("a");
-  if (!link) {
-    return;
-  }
-  event.preventDefault();
-  const href = link.getAttribute("href") ?? "";
-  if (/^https?:\/\//i.test(href)) {
-    void invoke("open_url", { url: href }).catch(complain);
-  }
 }

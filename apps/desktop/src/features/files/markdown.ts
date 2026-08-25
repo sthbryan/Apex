@@ -4,6 +4,33 @@ const MAX_RENDER_BYTES = 512 * 1024;
 
 const renderer = new MarkdownIt({ html: false, linkify: true, typographer: false });
 
+renderer.core.ruler.push("apexHeadings", (state) => {
+  const taken = new Set<string>();
+  state.tokens.forEach((token, index) => {
+    if (token.type !== "heading_open") {
+      return;
+    }
+    const inline = state.tokens[index + 1];
+    if (inline?.type !== "inline") {
+      return;
+    }
+    const name = slug(inline.content);
+    if (!name || taken.has(name)) {
+      return;
+    }
+    taken.add(name);
+    token.attrSet("id", name);
+  });
+});
+
+function slug(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N} -]/gu, "")
+    .replace(/ +/g, "-");
+}
+
 export function isMarkdown(path: string): boolean {
   const lower = path.toLowerCase();
   return lower.endsWith(".md") || lower.endsWith(".mdx") || lower.endsWith(".markdown");

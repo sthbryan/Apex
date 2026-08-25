@@ -14,7 +14,7 @@ describe("isMarkdown", () => {
 
 describe("renderMarkdown", () => {
   it("renders the document", () => {
-    expect(renderMarkdown("# Apex\n\nA line.")).toContain("<h1>Apex</h1>");
+    expect(renderMarkdown("# Apex\n\nA line.")).toContain(">Apex</h1>");
   });
 
   it("escapes embedded html instead of running it", () => {
@@ -25,6 +25,16 @@ describe("renderMarkdown", () => {
 
   it("gives up on documents too big to paint", () => {
     expect(renderMarkdown("x".repeat(512 * 1024 + 1))).toBeNull();
+  });
+
+  it("names the headings so a link can reach them", () => {
+    expect(renderMarkdown("## Modo juez")).toContain('id="modo-juez"');
+    expect(renderMarkdown("## Qué falta?")).toContain('id="qué-falta"');
+  });
+
+  it("leaves a repeated heading unnamed instead of stealing the name", () => {
+    const html = renderMarkdown("## Opciones\n\n## Opciones") ?? "";
+    expect(html.match(/id="opciones"/g)).toHaveLength(1);
   });
 });
 
