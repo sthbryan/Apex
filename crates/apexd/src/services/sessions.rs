@@ -390,6 +390,10 @@ impl SessionRegistry {
         spec.env = self.base_env.clone();
         spec.env.extend(profile.env.clone());
         spec.env.insert("APEX_SESSION".to_owned(), record.id.to_string());
+        spec.env.insert(
+            "APEX_PREVIEW_DIR".to_owned(),
+            apex_core::preview::dir(&cwd).display().to_string(),
+        );
         spec.rows = size.rows;
         spec.cols = size.cols;
 

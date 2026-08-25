@@ -618,6 +618,10 @@ impl AcpRegistry {
 
         let mut env: Vec<(String, String)> = self.base_env.clone().into_iter().collect();
         env.extend(profile.env.clone());
+        env.push((
+            "APEX_PREVIEW_DIR".to_owned(),
+            apex_core::preview::dir(cwd).display().to_string(),
+        ));
         let agent =
             Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay)
                 .await?;
