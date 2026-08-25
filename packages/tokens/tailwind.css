@@ -4,7 +4,7 @@
 @theme {
   --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--apex-font-serif);
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --radius-xs: var(--apex-r-xs);
   --radius-sm: var(--apex-r-sm);
