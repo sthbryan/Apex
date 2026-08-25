@@ -52,6 +52,15 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             menu::install(app.handle())?;
             tray::install(app.handle())?;
+            #[cfg(target_os = "linux")]
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.with_webview(|webview| {
+                    use webkit2gtk::{WebContextExt, WebViewExt};
+                    if let Some(context) = webview.inner().context() {
+                        context.set_cache_model(webkit2gtk::CacheModel::DocumentViewer);
+                    }
+                });
+            }
             app.manage(AppState {
                 daemon: std::sync::Mutex::new(daemon.ok()),
                 socket: paths.socket,
