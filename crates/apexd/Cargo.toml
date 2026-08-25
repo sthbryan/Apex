@@ -15,6 +15,7 @@ apex-pty.workspace = true
 apex-quota.workspace = true
 apex-tasks.workspace = true
 url = "2"
+percent-encoding = "2"
 apex-proto.workspace = true
 
 anyhow.workspace = true
