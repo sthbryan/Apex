@@ -62,7 +62,17 @@ fn pick_socket_path(config_dir: &Path) -> PathBuf {
     if preferred.as_os_str().len() <= MAX_SOCKET_PATH_BYTES {
         return preferred;
     }
-    PathBuf::from("/tmp").join(format!("apex-{}", nix_uid())).join("d.sock")
+    let tag = fingerprint(config_dir.as_os_str().as_encoded_bytes());
+    PathBuf::from("/tmp").join(format!("apex-{}-{tag}", nix_uid())).join("d.sock")
+}
+
+fn fingerprint(bytes: &[u8]) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("{hash:016x}")
 }
 
 fn nix_uid() -> String {
@@ -90,5 +100,22 @@ mod tests {
         let paths = ApexPaths::rooted_at(&deep);
         assert!(paths.socket.starts_with("/tmp"));
         assert!(paths.socket.as_os_str().len() <= MAX_SOCKET_PATH_BYTES);
+    }
+
+    #[test]
+    fn two_deep_roots_do_not_land_on_the_same_fallback_socket() {
+        let one = ApexPaths::rooted_at(&PathBuf::from("/Users").join("x".repeat(120)));
+        let other = ApexPaths::rooted_at(&PathBuf::from("/Users").join("y".repeat(120)));
+
+        assert!(one.socket.starts_with("/tmp"));
+        assert!(other.socket.starts_with("/tmp"));
+        assert_ne!(one.socket, other.socket);
+    }
+
+    #[test]
+    fn a_deep_root_keeps_the_same_socket_every_time_it_is_asked() {
+        let deep = PathBuf::from("/Users").join("z".repeat(120));
+
+        assert_eq!(ApexPaths::rooted_at(&deep).socket, ApexPaths::rooted_at(&deep).socket);
     }
 }
