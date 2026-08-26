@@ -3,7 +3,7 @@ import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
 import type { ApiRun } from "@/bindings/ApiRun";
-import { type BodyKind, bodyKind, KINDS } from "@/features/api/body";
+import { type BodyKind, bodyKind, KINDS, laidOut } from "@/features/api/body";
 import { runHeaders, type Shown, shownBody } from "@/features/api/run";
 import {
   brokenJson,
@@ -16,6 +16,7 @@ import {
   fields,
   headers,
   last,
+  layOut,
   loadCollection,
   METHODS,
   names,
@@ -39,13 +40,14 @@ import { paint } from "@/features/files/highlight";
 import { activeProjectId } from "@/features/projects/state";
 import { complain } from "@/shared/daemon";
 import { type MessageKey, t } from "@/shared/i18n";
-import { Icon } from "@/shared/ui/Icon";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 
 type Tab = "params" | "headers" | "body";
 
 const BOX =
   "min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
 const LINE = `h-(--apex-h-md) ${BOX}`;
+const FLOW = "w-full whitespace-pre-wrap break-words font-mono text-xs leading-relaxed";
 
 const TONES = {
   ok: "text-state-done",
@@ -351,6 +353,14 @@ function Body({ kind }: { kind: BodyKind }) {
             onPick={() => setFields([...rows, { key: t("api.rowKey"), value: "" }])}
           />
         )}
+        {kind === "json" && (
+          <Step
+            icon="braces"
+            hint={t("api.layOut")}
+            off={laidOut(draft.value.body ?? "") === null}
+            onPick={layOut}
+          />
+        )}
       </div>
 
       {kind === "none" && <p class="text-faint text-xs">{t("api.noBody")}</p>}
@@ -362,21 +372,47 @@ function Body({ kind }: { kind: BodyKind }) {
           hint={t("api.dropField")}
         />
       )}
-      {(kind === "json" || kind === "text") && (
+      {kind === "text" && (
         <textarea
           rows={8}
           value={draft.value.body ?? ""}
           spellcheck={false}
           placeholder={t("api.bodyHint")}
           onInput={(event) => edit({ body: event.currentTarget.value })}
-          class={cn(
-            BOX,
-            "w-full resize-y py-1.5 font-mono text-xs leading-relaxed",
-            broken && "border-state-failed",
-          )}
+          class={cn(BOX, "w-full resize-y py-1.5 font-mono text-xs leading-relaxed")}
         />
       )}
+      {kind === "json" && <Sheet text={draft.value.body ?? ""} broken={broken !== null} />}
       {broken && <p class="text-state-failed text-xs">{broken}</p>}
+    </div>
+  );
+}
+
+function Sheet({ text, broken }: { text: string; broken: boolean }) {
+  const markup = usePainted({ text, json: !broken });
+
+  return (
+    <div class={cn(BOX, "relative py-1.5", broken && "border-state-failed")}>
+      <pre aria-hidden class={cn(FLOW, "min-h-24 text-text")}>
+        {markup === null ? (
+          <code>{text}</code>
+        ) : (
+          <code dangerouslySetInnerHTML={{ __html: markup }} />
+        )}
+        {"\n"}
+      </pre>
+      <textarea
+        value={text}
+        spellcheck={false}
+        autocapitalize="off"
+        autocomplete="off"
+        placeholder={t("api.bodyHint")}
+        onInput={(event) => edit({ body: event.currentTarget.value })}
+        class={cn(
+          FLOW,
+          "absolute inset-0 resize-none overflow-hidden border-0 bg-transparent px-2 py-1.5 text-transparent caret-text outline-none placeholder:text-faint",
+        )}
+      />
     </div>
   );
 }
@@ -445,17 +481,20 @@ function Step({
   icon,
   hint,
   onPick,
+  off,
 }: {
-  icon: "plus" | "close";
+  icon: IconName;
   hint: string;
   onPick: () => void;
+  off?: boolean;
 }) {
   return (
     <button
       type="button"
       title={hint}
+      disabled={off}
       onClick={onPick}
-      class="flex size-5 shrink-0 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
+      class="flex size-5 shrink-0 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text disabled:pointer-events-none disabled:opacity-40"
     >
       <Icon name={icon} size={12} />
     </button>

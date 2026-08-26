@@ -1,4 +1,5 @@
 import type { ApiRun } from "@/bindings/ApiRun";
+import { laidOut } from "@/features/api/body";
 import type { Pair } from "@/features/api/url";
 
 export interface Shown {
@@ -14,14 +15,6 @@ export function shownBody(run: ApiRun): Shown {
   if (run.truncated) {
     return { text: `${run.body}\n\n...`, json: false };
   }
-  const laid = pretty(run.body);
+  const laid = laidOut(run.body);
   return laid === null ? { text: run.body, json: false } : { text: laid, json: true };
-}
-
-function pretty(text: string): string | null {
-  try {
-    return JSON.stringify(JSON.parse(text), null, 2);
-  } catch {
-    return null;
-  }
 }

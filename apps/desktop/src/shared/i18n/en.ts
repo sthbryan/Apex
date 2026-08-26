@@ -44,6 +44,7 @@ export const en = {
     bodyJson: "JSON",
     bodyText: "Text",
     bodyForm: "Form",
+    layOut: "Lay the JSON out",
     noBody: "This request sends no body.",
     addField: "Add a field",
     dropField: "Drop this field",

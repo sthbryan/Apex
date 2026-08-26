@@ -28,6 +28,7 @@ import {
   fields,
   headers,
   last,
+  layOut,
   loadCollection,
   names,
   openRequest,
@@ -152,6 +153,22 @@ describe("fields", () => {
     setFields([{ key: "a", value: "1" }]);
     expect(draft.value.body).toBe("a=1");
     expect(fields()).toEqual([{ key: "a", value: "1" }]);
+  });
+});
+
+describe("layOut", () => {
+  it("lays the body out in place", () => {
+    setKind("json");
+    edit({ body: '{"a":1}' });
+    layOut();
+    expect(draft.value.body).toBe('{\n  "a": 1\n}');
+  });
+
+  it("leaves a body it cannot parse alone", () => {
+    setKind("json");
+    edit({ body: '{"id": {{userId}}}' });
+    layOut();
+    expect(draft.value.body).toBe('{"id": {{userId}}}');
   });
 });
 

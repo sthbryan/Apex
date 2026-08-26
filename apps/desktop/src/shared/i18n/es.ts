@@ -46,6 +46,7 @@ export const es: Messages = {
     bodyJson: "JSON",
     bodyText: "Texto",
     bodyForm: "Form",
+    layOut: "Acomodar el JSON",
     noBody: "Este pedido no manda cuerpo.",
     addField: "Agregar un campo",
     dropField: "Sacar este campo",

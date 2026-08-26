@@ -38,6 +38,14 @@ export function withBodyKind(request: ApiRequest, kind: BodyKind): ApiRequest {
   return { ...request, headers, body: request.body ?? "" };
 }
 
+export function laidOut(body: string): string | null {
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2);
+  } catch {
+    return null;
+  }
+}
+
 export function jsonTrouble(body: string): string | null {
   if (body.trim() === "") {
     return null;

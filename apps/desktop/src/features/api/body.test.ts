@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ApiRequest } from "@/bindings/ApiRequest";
 
-import { bodyKind, jsonTrouble, withBodyKind } from "./body";
+import { bodyKind, jsonTrouble, laidOut, withBodyKind } from "./body";
 
 function request(over: Partial<ApiRequest> = {}): ApiRequest {
   return { method: "POST", url: "https://api.dev", headers: {}, body: null, ...over };
@@ -90,6 +90,16 @@ describe("withBodyKind", () => {
     const was = request({ body: "{}", headers: { "Content-Type": "application/json" } });
     withBodyKind(was, "none");
     expect(was.headers).toEqual({ "Content-Type": "application/json" });
+  });
+});
+
+describe("laidOut", () => {
+  it("lays a one line body out over several", () => {
+    expect(laidOut('{"a":1}')).toBe('{\n  "a": 1\n}');
+  });
+
+  it("gives back nothing when the body will not parse", () => {
+    expect(laidOut('{"id": {{userId}}}')).toBe(null);
   });
 });
 

@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { ApiRequest } from "@/bindings/ApiRequest";
 import type { ApiRun } from "@/bindings/ApiRun";
-import { type BodyKind, bodyKind, jsonTrouble, withBodyKind } from "@/features/api/body";
+import { type BodyKind, bodyKind, jsonTrouble, laidOut, withBodyKind } from "@/features/api/body";
 import {
   type Pair,
   readPairs,
@@ -163,6 +163,13 @@ export function fields(): Pair[] {
 
 export function setFields(pairs: Pair[]): void {
   edit({ body: writePairs(pairs) });
+}
+
+export function layOut(): void {
+  const laid = laidOut(draft.value.body ?? "");
+  if (laid !== null) {
+    edit({ body: laid });
+  }
 }
 
 export function setKind(kind: BodyKind): void {
