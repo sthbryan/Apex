@@ -1,9 +1,10 @@
+import type { ComponentChildren } from "preact";
 import { useEffect, useId, useRef, useState } from "preact/hooks";
 import { cn } from "@/lib/cn";
 
 export interface SelectOption {
   value: string;
-  label: string;
+  label: ComponentChildren;
 }
 
 export interface SelectProps {
