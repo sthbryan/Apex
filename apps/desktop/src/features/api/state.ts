@@ -3,8 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { ApiRequest } from "@/bindings/ApiRequest";
 import type { ApiRun } from "@/bindings/ApiRun";
+import { bodyKind, jsonTrouble } from "@/features/api/body";
 import { activeProjectId } from "@/features/projects/state";
 import { complain } from "@/shared/daemon";
+import { t } from "@/shared/i18n";
 
 export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 
@@ -90,6 +92,11 @@ export async function sendRequest(): Promise<void> {
   if (!project || !name || sending.value) {
     return;
   }
+  const broken = brokenJson();
+  if (broken !== null) {
+    trouble.value = t("api.badJson", { why: broken });
+    return;
+  }
   sending.value = true;
   trouble.value = null;
   try {
@@ -107,6 +114,11 @@ export async function sendRequest(): Promise<void> {
   } finally {
     sending.value = false;
   }
+}
+
+export function brokenJson(): string | null {
+  const request = draft.value;
+  return bodyKind(request) === "json" ? jsonTrouble(request.body ?? "") : null;
 }
 
 export function startNew(): void {

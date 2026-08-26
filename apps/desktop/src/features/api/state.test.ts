@@ -18,6 +18,7 @@ vi.mock("@/shared/daemon", () => ({
 import { activeProjectId } from "@/features/projects/state";
 import {
   blank,
+  brokenJson,
   chosen,
   dirty,
   draft,
@@ -30,6 +31,7 @@ import {
   names,
   openRequest,
   saved,
+  sending,
   sendRequest,
   setEnvironment,
   setHeader,
@@ -166,6 +168,38 @@ describe("sendRequest", () => {
   it("does nothing without a request chosen", async () => {
     await sendRequest();
     expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("holds back a json body that will not parse", async () => {
+    chosen.value = "me";
+    saved.value = blank();
+    draft.value = { ...blank(), headers: { "Content-Type": "application/json" }, body: '{"a":}' };
+    await sendRequest();
+    expect(invoke).not.toHaveBeenCalled();
+    expect(trouble.value).toContain("JSON");
+    expect(sending.value).toBe(false);
+  });
+
+  it("sends a text body that is not json without a word", async () => {
+    chosen.value = "me";
+    saved.value = blank();
+    draft.value = { ...blank(), headers: { "Content-Type": "text/plain" }, body: "hello" };
+    invoke.mockResolvedValue(RUN);
+    await sendRequest();
+    expect(invoke).toHaveBeenCalled();
+    expect(trouble.value).toBeNull();
+  });
+});
+
+describe("brokenJson", () => {
+  it("says nothing about a body that is not json", () => {
+    draft.value = { ...blank(), headers: { "Content-Type": "text/plain" }, body: "{" };
+    expect(brokenJson()).toBe(null);
+  });
+
+  it("points at the json that will not parse", () => {
+    draft.value = { ...blank(), headers: { "Content-Type": "application/json" }, body: "{" };
+    expect(brokenJson()).not.toBe(null);
   });
 });
 

@@ -35,6 +35,7 @@ export const en = {
     cut: "cut short",
     noHeaders: "None yet.",
     bodyHint: "Empty",
+    badJson: "The body is not valid JSON: {why}",
     response: "Response",
   },
   aside: {

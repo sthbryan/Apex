@@ -37,6 +37,7 @@ export const es: Messages = {
     cut: "recortado",
     noHeaders: "Todavía ninguno.",
     bodyHint: "Vacío",
+    badJson: "El cuerpo no es JSON válido: {why}",
     response: "Respuesta",
   },
   aside: {
