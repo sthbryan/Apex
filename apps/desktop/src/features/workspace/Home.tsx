@@ -123,7 +123,7 @@ export function Home() {
         value={task}
         onInput={(event) => setTask(event.currentTarget.value)}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && event.shiftKey) {
+          if (event.key === "Enter" && !event.shiftKey && !event.isComposing && ready) {
             start(event);
           }
         }}
