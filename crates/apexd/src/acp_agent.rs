@@ -162,25 +162,35 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
     let paths = ApexPaths::discover()?;
     let agent_dir = paths.agent_dir();
     let set = ProviderSet::load(&paths.providers_dir())?;
-    let picked = choice::read(&agent_dir)
-        .context("nothing has been chosen yet, run apex agent once or set it in Apex")?;
-    let provider = set
-        .get(&picked.provider)
-        .with_context(|| format!("there is no provider called {}", picked.provider))?;
+    let picked = choice::read(&agent_dir).context(
+        "no provider is set up yet: open Settings, Our agent, put in a key and pick a model",
+    )?;
+    let provider = set.get(&picked.provider).with_context(|| {
+        format!("{} is not a provider any more, pick another one in Settings", picked.provider)
+    })?;
 
     let held = match key::find(provider)? {
         Some(found) => found.key,
         None if provider.keyless => String::new(),
-        None => bail!("{} has no key yet", provider.name),
+        None => {
+            bail!("{} has no key yet: open Settings, Our agent, and put one in", provider.label)
+        }
     };
 
     let wire = provider.dial(&held)?;
+    let listing = model::list(&wire).await.unwrap_or_default();
+    if !listing.is_empty() && !listing.iter().any(|one| one.id == picked.model) {
+        bail!(
+            "{} does not have a model called {}, pick another one in Settings",
+            provider.label,
+            picked.model
+        )
+    }
     let kept = settings::read(&agent_dir);
     let window = match kept.window_for(&picked.model).or_else(|| window::guess(&picked.model)) {
         Some(window) => Some(window),
         None => listed(&wire, &picked.model).await,
     };
-    let listing = model::list(&wire).await.unwrap_or_default();
 
     let mut kit = Kit::new(&cwd);
     kit.plugs(Servers::connect(&plugged(params.get("mcpServers")), &our_names()).await);
