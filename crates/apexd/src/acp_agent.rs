@@ -5,9 +5,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use anyhow::{Context, Result, anyhow, bail};
 use apex_agent::chat::{Chat, Surface};
 use apex_agent::choice;
+use apex_agent::mcp::{Servers, Wanted};
 use apex_agent::mode::Mode;
 use apex_agent::tools::todo::Todo;
-use apex_agent::tools::{Call, Done, Kit, sketch};
+use apex_agent::tools::{Call, Done, Kit, our_names, sketch};
 use apex_agent::{ProviderSet, key, model, preamble, settings, window};
 use apex_core::ApexPaths;
 use serde_json::{Value, json};
@@ -181,7 +182,10 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
     };
     let listing = model::list(&wire).await.unwrap_or_default();
 
-    let mut chat = Chat::new(wire.brain(&picked.model), Kit::new(&cwd), preamble::read(&agent_dir));
+    let mut kit = Kit::new(&cwd);
+    kit.plugs(Servers::connect(&plugged(params.get("mcpServers")), &our_names()).await);
+
+    let mut chat = Chat::new(wire.brain(&picked.model), kit, preamble::read(&agent_dir));
     chat.holds(window);
 
     let id = format!("apex-{}", rooms.next.fetch_add(1, Ordering::Relaxed));
@@ -255,6 +259,13 @@ async fn room(rooms: &Arc<Rooms>, session: &str) -> Result<Held> {
         .get(session)
         .cloned()
         .with_context(|| format!("there is no session called {session}"))
+}
+
+pub fn plugged(offered: Option<&Value>) -> Vec<Wanted> {
+    let Some(listed) = offered.and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    listed.iter().filter_map(|one| serde_json::from_value::<Wanted>(one.clone()).ok()).collect()
 }
 
 pub fn spoken(prompt: Option<&Value>) -> String {

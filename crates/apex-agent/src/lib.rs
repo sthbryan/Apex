@@ -3,6 +3,7 @@ pub mod chat;
 pub mod choice;
 pub mod key;
 pub mod log;
+pub mod mcp;
 pub mod mode;
 pub mod model;
 pub mod preamble;

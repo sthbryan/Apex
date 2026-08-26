@@ -64,3 +64,27 @@ fn an_answer_that_makes_no_sense_comes_back_as_no_answer() {
     assert_eq!(chose(&json!({ "outcome": {} })), None);
     assert_eq!(chose(&json!({ "outcome": { "outcome": "selected" } })), None);
 }
+
+#[test]
+fn the_servers_the_client_offers_are_read_out_of_the_call() {
+    let offered = json!([
+        { "type": "stdio", "name": "apex", "command": "/opt/apex/apexd", "args": ["mcp"], "env": [] }
+    ]);
+    let plugged = plugged(Some(&offered));
+    assert_eq!(plugged.len(), 1);
+}
+
+#[test]
+fn a_client_that_offers_nothing_plugs_in_nothing() {
+    assert!(plugged(None).is_empty());
+    assert!(plugged(Some(&json!([]))).is_empty());
+}
+
+#[test]
+fn a_server_we_cannot_read_is_skipped_and_the_rest_still_plug_in() {
+    let offered = json!([
+        { "type": "smoke-signals", "name": "odd" },
+        { "type": "stdio", "name": "apex", "command": "/opt/apex/apexd" }
+    ]);
+    assert_eq!(plugged(Some(&offered)).len(), 1);
+}

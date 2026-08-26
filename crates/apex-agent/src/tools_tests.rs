@@ -417,3 +417,15 @@ fn a_kit_starts_out_yolo() {
     let dir = root();
     assert_eq!(Kit::new(dir.path()).mode(), apex_agent_mode::Mode::Auto);
 }
+
+#[test]
+fn the_names_we_own_match_what_the_kit_offers() {
+    let dir = root();
+    let names: Vec<String> =
+        Kit::new(dir.path()).offered().into_iter().map(|one| one.name).collect();
+    let mut ours = our_names();
+    ours.sort();
+    let mut offered = names;
+    offered.sort();
+    assert_eq!(offered, ours);
+}

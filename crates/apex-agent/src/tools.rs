@@ -14,6 +14,7 @@ use std::sync::Mutex;
 
 use anyhow::{Result, anyhow, bail};
 
+use crate::mcp::Servers;
 use crate::mode::Mode;
 use rig_core::completion::ToolDefinition;
 use serde_json::Value;
@@ -48,6 +49,7 @@ pub struct Kit {
     seen: Mutex<HashSet<PathBuf>>,
     todo: Mutex<Vec<todo::Todo>>,
     mode: Mutex<Mode>,
+    servers: Servers,
 }
 
 impl Kit {
@@ -58,6 +60,7 @@ impl Kit {
             seen: Mutex::default(),
             todo: Mutex::default(),
             mode: Mutex::default(),
+            servers: Servers::default(),
         }
     }
 
@@ -85,6 +88,10 @@ impl Kit {
         &self.root
     }
 
+    pub fn plugs(&mut self, servers: Servers) {
+        self.servers = servers;
+    }
+
     pub fn works_in(&self, mode: Mode) {
         if let Ok(mut held) = self.mode.lock() {
             *held = mode;
@@ -108,11 +115,28 @@ impl Kit {
             todo::offered(),
             ask::offered(),
         ];
-        every.into_iter().filter(|tool| mode.allows(&tool.name)).collect()
+        let mut offered: Vec<ToolDefinition> =
+            every.into_iter().filter(|tool| mode.allows(&tool.name)).collect();
+        if mode == Mode::Auto {
+            offered.extend(self.servers.offered());
+        }
+        offered
     }
 
     pub async fn run(&self, call: &Call) -> Done {
         let mode = self.mode();
+        if self.servers.holds(&call.name) {
+            if mode != Mode::Auto {
+                return Done::Failed(format!(
+                    "{} comes from a plugged in server and only runs in auto mode",
+                    call.name
+                ));
+            }
+            return match self.servers.run(&call.name, &call.args).await {
+                Ok(said) => Done::Said(said),
+                Err(cause) => Done::Failed(format!("{cause:#}")),
+            };
+        }
         if !mode.allows(&call.name) {
             return Done::Failed(format!("{} is not open in {} mode", call.name, mode.as_str()));
         }
@@ -150,6 +174,13 @@ pub fn within(root: &Path, path: &str) -> Result<PathBuf> {
         bail!("{path} is outside this project")
     }
     Ok(real)
+}
+
+pub const OURS: &[&str] =
+    &["read", "search", "find", "write", "edit", "bash", "fetch", "todo", "ask"];
+
+pub fn our_names() -> Vec<String> {
+    OURS.iter().map(|name| (*name).to_owned()).collect()
 }
 
 pub fn sketch(call: &Call) -> String {
