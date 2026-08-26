@@ -15,6 +15,15 @@ vi.mock("@/shared/daemon", () => ({
   complain: () => {},
 }));
 
+const changed = new Set<(event: { project: string; name: string }) => void>();
+
+vi.mock("@/features/sessions/state", () => ({
+  onApiChanged: (handler: (event: { project: string; name: string }) => void) => {
+    changed.add(handler);
+    return () => changed.delete(handler);
+  },
+}));
+
 import { activeProjectId } from "@/features/projects/state";
 import {
   blank,
@@ -46,6 +55,7 @@ import {
   setHeaders,
   setKind,
   setParams,
+  startCollection,
   startEnvironment,
   startNew,
   tone,
@@ -67,6 +77,7 @@ const RUN = {
 };
 
 beforeEach(() => {
+  changed.clear();
   invoke.mockReset();
   localStorage.clear();
   (activeProjectId as unknown as { value: string | null }).value = "p1";
@@ -299,6 +310,74 @@ describe("environments", () => {
     });
     await removeEnvironment("staging");
     expect(environment.value).toBe("local");
+  });
+});
+
+describe("startCollection", () => {
+  it("reads the collection again when the daemon says it changed", async () => {
+    invoke.mockResolvedValue({ requests: ["a"], environments: [] });
+    const stop = startCollection();
+    await Promise.resolve();
+    invoke.mockResolvedValue({ requests: ["a", "b"], environments: [] });
+    for (const handler of changed) {
+      handler({ project: "p1", name: "b" });
+    }
+    await Promise.resolve();
+    expect(names.value).toEqual(["a", "b"]);
+    stop();
+  });
+
+  it("leaves another project alone", async () => {
+    invoke.mockResolvedValue({ requests: ["a"], environments: [] });
+    const stop = startCollection();
+    await Promise.resolve();
+    invoke.mockClear();
+    for (const handler of changed) {
+      handler({ project: "other", name: "b" });
+    }
+    expect(invoke).not.toHaveBeenCalled();
+    stop();
+  });
+
+  it("reads the open request again when that is the one that changed", async () => {
+    const fresh = { method: "POST", url: "http://x/new", headers: {}, body: null };
+    invoke.mockImplementation((name: string) =>
+      name === "api_read"
+        ? Promise.resolve({ request: fresh, last: null })
+        : Promise.resolve({ requests: ["b"], environments: [] }),
+    );
+    chosen.value = "b";
+    saved.value = blank();
+    draft.value = blank();
+    const stop = startCollection();
+    for (const handler of changed) {
+      handler({ project: "p1", name: "b" });
+    }
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draft.value).toEqual(fresh);
+    stop();
+  });
+
+  it("leaves an edited request alone rather than losing the edit", async () => {
+    invoke.mockImplementation(() => Promise.resolve({ requests: ["b"], environments: [] }));
+    chosen.value = "b";
+    saved.value = blank();
+    draft.value = { ...blank(), url: "http://mine" };
+    const stop = startCollection();
+    for (const handler of changed) {
+      handler({ project: "p1", name: "b" });
+    }
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draft.value.url).toBe("http://mine");
+    stop();
+  });
+
+  it("stops listening once it is done", async () => {
+    invoke.mockResolvedValue({ requests: [], environments: [] });
+    startCollection()();
+    expect(changed.size).toBe(0);
   });
 });
 

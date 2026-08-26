@@ -20,7 +20,6 @@ import {
   headers,
   last,
   layOut,
-  loadCollection,
   METHODS,
   names,
   openEnvironment,
@@ -38,6 +37,7 @@ import {
   setKind,
   setParams,
   setVariables,
+  startCollection,
   startEnvironment,
   startNew,
   tone,
@@ -76,9 +76,7 @@ export function ApiPanel() {
   const [wanted, setWanted] = useState("");
   const [tab, setTab] = useState<Tab>("params");
 
-  useEffect(() => {
-    void loadCollection().catch(complain);
-  }, [project]);
+  useEffect(() => startCollection(), [project]);
 
   if (!project) {
     return <p class="p-3 text-faint text-sm">{t("files.noProject")}</p>;

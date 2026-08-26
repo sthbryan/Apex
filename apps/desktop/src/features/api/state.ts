@@ -14,6 +14,7 @@ import {
   writeParams,
 } from "@/features/api/url";
 import { activeProjectId } from "@/features/projects/state";
+import { onApiChanged } from "@/features/sessions/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 
@@ -239,7 +240,15 @@ export function setEnvironment(name: string | null): void {
 
 export function startCollection(): () => void {
   void loadCollection().catch(complain);
-  return () => {};
+  return onApiChanged((event) => {
+    if (event.project !== activeProjectId.value) {
+      return;
+    }
+    void loadCollection().catch(complain);
+    if (event.name === chosen.value && !dirty()) {
+      void openRequest(event.name).catch(() => startNew());
+    }
+  });
 }
 
 function readEnvironment(): string | null {

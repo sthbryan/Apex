@@ -127,6 +127,17 @@ export function onAskShot(
   };
 }
 
+const apiHandlers = new Set<(event: Extract<Event, { type: "api_changed" }>) => void>();
+
+export function onApiChanged(
+  handler: (event: Extract<Event, { type: "api_changed" }>) => void,
+): () => void {
+  apiHandlers.add(handler);
+  return () => {
+    apiHandlers.delete(handler);
+  };
+}
+
 const closeHandlers = new Set<(event: Extract<Event, { type: "close_view" }>) => void>();
 
 export function onCloseView(
@@ -189,6 +200,11 @@ function applyEvent(event: Event): void {
       break;
     case "session_closed":
       forgetSession(event.id);
+      break;
+    case "api_changed":
+      for (const handler of apiHandlers) {
+        handler(event);
+      }
       break;
     case "notify":
       for (const handler of noticeHandlers) {
