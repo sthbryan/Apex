@@ -9,6 +9,16 @@
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--apex-state-blocked) 8%, transparent);
   }
 
+  .ui-approval-card[data-settled] {
+    border-color: var(--apex-border);
+    box-shadow: none;
+  }
+
+  .ui-approval-card[data-settled] .ui-approval-card-lead,
+  .ui-approval-card[data-settled] .ui-approval-card-question {
+    color: var(--apex-muted);
+  }
+
   .ui-approval-card-head {
     @apply flex items-center gap-2;
   }
@@ -33,6 +43,6 @@
   }
 
   .ui-approval-card-actions {
-    @apply flex items-center gap-2;
+    @apply flex flex-wrap items-center gap-2;
   }
 }
