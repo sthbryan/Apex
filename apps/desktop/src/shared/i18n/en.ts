@@ -489,7 +489,7 @@ export const en = {
     unstage: "Unstage this file",
     stageAll: "Stage everything here",
     unstageAll: "Unstage everything here",
-    messagePlaceholder: "Commit message… (⌘↵)",
+    messagePlaceholder: "Commit message… (⇧↵)",
     commit: "Commit",
     onBranch: "{count} staged on {branch}",
     committed: "Committed as {commit}.",

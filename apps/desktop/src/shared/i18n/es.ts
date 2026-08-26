@@ -490,7 +490,7 @@ export const es: Messages = {
     unstage: "Sacar este archivo del stage",
     stageAll: "Poner todo esto en stage",
     unstageAll: "Sacar todo esto del stage",
-    messagePlaceholder: "Mensaje del commit… (⌘↵)",
+    messagePlaceholder: "Mensaje del commit… (⇧↵)",
     commit: "Commitear",
     onBranch: "{count} en stage sobre {branch}",
     committed: "Commiteado como {commit}.",

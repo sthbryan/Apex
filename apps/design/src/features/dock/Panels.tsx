@@ -104,7 +104,7 @@ function GitPanel() {
       </div>
       <CommitBox
         class="dock-flush"
-        placeholder="Commit message… (⌘↵)"
+        placeholder="Commit message… (⇧↵)"
         hint={committed.value ?? `${staged.length} staged on ${BRANCH.name}`}
         submitDisabled={staged.length === 0}
         onSubmit={() => committed.value = `Committed as ${Math.random().toString(16).slice(2, 9)}`}

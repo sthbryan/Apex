@@ -50,7 +50,7 @@ export function CommitBox({
         value={value}
         onInput={onInput}
         onKeyDown={(event: JSX.TargetedKeyboardEvent<HTMLTextAreaElement>) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+          if (event.key === "Enter" && event.shiftKey) {
             submit(event);
           }
         }}
