@@ -5,6 +5,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+apex-core.workspace = true
+
 anyhow.workspace = true
 rig-core.workspace = true
 serde.workspace = true
@@ -14,4 +16,5 @@ toml.workspace = true
 workspace = true
 
 [dev-dependencies]
+keyring-core.workspace = true
 tempfile.workspace = true
