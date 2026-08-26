@@ -7,7 +7,9 @@ pub mod mode;
 pub mod model;
 pub mod preamble;
 pub mod provider;
+pub mod settings;
 pub mod tools;
+pub mod window;
 
 pub use brain::Brain;
 pub use chat::{Chat, Spent, Surface};
@@ -17,4 +19,5 @@ pub use log::{Head, Log};
 pub use mode::Mode;
 pub use model::Model;
 pub use provider::{Provider, ProviderKind, ProviderSet, Wire};
+pub use settings::Settings;
 pub use tools::{Call, Done, Kit, sketch};

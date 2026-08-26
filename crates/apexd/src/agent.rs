@@ -5,9 +5,10 @@ use apex_agent::chat::{Chat, Spent, Surface};
 use apex_agent::choice::{self, Choice};
 use apex_agent::log::{self, Head, Kept, Log};
 use apex_agent::mode::Mode;
+use apex_agent::settings::{self, Settings};
 use apex_agent::tools::todo::Todo;
 use apex_agent::tools::{Call, Done, Kit, sketch};
-use apex_agent::{ProviderSet, key, preamble};
+use apex_agent::{ProviderSet, key, model, preamble, window};
 use apex_core::ApexPaths;
 use tokio::io::{AsyncBufReadExt, BufReader, Lines, Stdin};
 
@@ -101,9 +102,16 @@ pub async fn run(run: Run) -> Result<i32> {
         }
     };
 
-    let brain = provider.dial(&key)?.brain(&picked.model);
+    let wire = provider.dial(&key)?;
+    let kept = settings::read(&agent_dir);
+    let window = match kept.window_for(&picked.model).or_else(|| window::guess(&picked.model)) {
+        Some(window) => Some(window),
+        None => listed_window(&wire, &picked.model).await,
+    };
+    let brain = wire.brain(&picked.model);
     let mut chat = Chat::new(brain, Kit::new(&here), preamble::read(&agent_dir));
     chat.works_in(mode);
+    chat.holds(window);
     choice::write(&agent_dir, &picked)?;
 
     let carried = match picked_up {
@@ -127,7 +135,7 @@ pub async fn run(run: Run) -> Result<i32> {
         }
     };
 
-    talk(&mut chat, &picked, &here, carried).await
+    talk(&mut chat, &picked, &here, carried, &kept).await
 }
 
 pub fn pick(run: &Run, last: Option<&Choice>) -> Result<Choice, String> {
@@ -147,11 +155,17 @@ pub fn pick(run: &Run, last: Option<&Choice>) -> Result<Choice, String> {
     }
 }
 
+async fn listed_window(wire: &apex_agent::Wire, model: &str) -> Option<u32> {
+    let listed = model::list(wire).await.ok()?;
+    listed.into_iter().find(|one| one.id == model)?.context
+}
+
 async fn talk(
     chat: &mut Chat,
     picked: &Choice,
     here: &std::path::Path,
     carried: Option<usize>,
+    kept: &Settings,
 ) -> Result<i32> {
     let tty = std::io::stdout().is_terminal();
     println!(
@@ -167,6 +181,7 @@ async fn talk(
     println!("/help for the few commands there are");
 
     let mut ink = Ink::new(tty);
+    let mut warned = false;
     loop {
         let Some(line) = ink.line("› ").await? else {
             break;
@@ -194,12 +209,19 @@ async fn talk(
         }
 
         match chat.turn(said, &mut ink).await {
-            Ok(()) => ink.ended(chat.spent()),
+            Ok(()) => ink.ended(chat.spent(), chat.how_full()),
             Err(cause) => {
-                ink.ended(chat.spent());
+                ink.ended(chat.spent(), chat.how_full());
                 eprintln!("apex: {cause:#}");
             }
         }
+
+        let full = chat.how_full();
+        let over = crowded(full, kept.warns_at());
+        if over && !warned {
+            println!("the window is {}% full, /compact when you want room", full.unwrap_or(0));
+        }
+        warned = over;
     }
     Ok(0)
 }
@@ -245,13 +267,13 @@ impl Ink {
         }
     }
 
-    fn ended(&mut self, spent: Spent) {
+    fn ended(&mut self, spent: Spent, full: Option<u8>) {
         self.plain();
         if self.wrote {
             println!();
         }
         if self.tty {
-            println!("{DIM}{} tokens so far{PLAIN}", spent.total());
+            println!("{DIM}{}{PLAIN}", spell_spent(spent, full));
         }
         std::io::stdout().flush().ok();
     }
@@ -348,6 +370,20 @@ pub fn spell_sessions(kept: &[Kept], here: &std::path::Path) -> String {
         ));
     }
     lines
+}
+
+pub fn spell_spent(spent: Spent, full: Option<u8>) -> String {
+    match full {
+        Some(full) => format!("{} tokens so far, window {full}% full", spent.total()),
+        None => format!("{} tokens so far", spent.total()),
+    }
+}
+
+pub fn crowded(full: Option<u8>, warn_at: Option<u8>) -> bool {
+    match (full, warn_at) {
+        (Some(full), Some(at)) => full >= at,
+        _ => false,
+    }
 }
 
 fn spell_messages(messages: usize) -> String {

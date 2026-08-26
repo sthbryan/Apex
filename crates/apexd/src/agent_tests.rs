@@ -178,3 +178,38 @@ fn one_message_is_not_called_messages() {
     assert_eq!(spell_messages(1), "1 message");
     assert_eq!(spell_messages(6), "6 messages");
 }
+
+#[test]
+fn a_window_past_the_line_counts_as_crowded() {
+    assert!(crowded(Some(50), Some(50)));
+    assert!(crowded(Some(90), Some(50)));
+}
+
+#[test]
+fn a_window_short_of_the_line_is_not_crowded() {
+    assert!(!crowded(Some(49), Some(50)));
+    assert!(!crowded(Some(0), Some(50)));
+}
+
+#[test]
+fn with_the_warning_turned_off_nothing_is_ever_crowded() {
+    assert!(!crowded(Some(99), None));
+}
+
+#[test]
+fn with_no_window_known_nothing_is_ever_crowded() {
+    assert!(!crowded(None, Some(50)));
+    assert!(!crowded(None, None));
+}
+
+#[test]
+fn the_running_total_says_how_full_the_window_is_when_it_knows() {
+    let spent = Spent { sent: 100, back: 20 };
+    assert_eq!(spell_spent(spent, Some(40)), "120 tokens so far, window 40% full");
+}
+
+#[test]
+fn the_running_total_stays_quiet_about_a_window_it_does_not_know() {
+    let spent = Spent { sent: 100, back: 20 };
+    assert_eq!(spell_spent(spent, None), "120 tokens so far");
+}

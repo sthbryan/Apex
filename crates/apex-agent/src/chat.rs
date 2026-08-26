@@ -11,6 +11,7 @@ use crate::log::Log;
 use crate::mode::Mode;
 use crate::tools::todo::Todo;
 use crate::tools::{Call, Done, Kit, ask};
+use crate::window;
 
 const MOST_ROUNDS: usize = 40;
 
@@ -62,6 +63,8 @@ pub struct Chat {
     brain: Arc<Brain>,
     kit: Kit,
     log: Option<Log>,
+    window: Option<u32>,
+    filled: u64,
     preamble: String,
     history: Vec<Message>,
     spent: Spent,
@@ -73,10 +76,28 @@ impl Chat {
             brain: Arc::new(brain),
             kit,
             log: None,
+            window: None,
+            filled: 0,
             preamble: preamble.into(),
             history: Vec::new(),
             spent: Spent::default(),
         }
+    }
+
+    pub fn holds(&mut self, window: Option<u32>) {
+        self.window = window;
+    }
+
+    pub fn window(&self) -> Option<u32> {
+        self.window
+    }
+
+    pub fn filled(&self) -> u64 {
+        self.filled
+    }
+
+    pub fn how_full(&self) -> Option<u8> {
+        window::how_full(self.filled, self.window)
     }
 
     pub fn keeps(&mut self, log: Log) {
@@ -148,7 +169,10 @@ impl Chat {
                 StreamedAssistantContent::ReasoningDelta { reasoning, .. } => {
                     surface.thought(&reasoning);
                 }
-                StreamedAssistantContent::Final(ending) => self.spent.add(&ending.usage),
+                StreamedAssistantContent::Final(ending) => {
+                    self.filled = ending.usage.input_tokens + ending.usage.output_tokens;
+                    self.spent.add(&ending.usage);
+                }
                 _ => {}
             }
         }
