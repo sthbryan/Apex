@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { ApiRequest } from "@/bindings/ApiRequest";
 import type { ApiRun } from "@/bindings/ApiRun";
+import type { ApiVariable } from "@/bindings/ApiVariable";
 import { type BodyKind, bodyKind, jsonTrouble, laidOut, withBodyKind } from "@/features/api/body";
 import {
   type Pair,
@@ -29,6 +30,8 @@ export const last = signal<ApiRun | null>(null);
 export const environment = signal<string | null>(readEnvironment());
 export const sending = signal(false);
 export const trouble = signal<string | null>(null);
+export const editing = signal<string | null>(null);
+export const variables = signal<ApiVariable[]>([]);
 
 export function blank(): ApiRequest {
   return { method: "GET", url: "", headers: {}, body: null };
@@ -174,6 +177,53 @@ export function layOut(): void {
 
 export function setKind(kind: BodyKind): void {
   draft.value = withBodyKind(draft.value, kind);
+}
+
+export async function openEnvironment(name: string): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  variables.value = await invoke<ApiVariable[]>("api_env_read", { project, name });
+  editing.value = name;
+}
+
+export function startEnvironment(): void {
+  editing.value = "";
+  variables.value = [];
+}
+
+export function closeEnvironment(): void {
+  editing.value = null;
+  variables.value = [];
+}
+
+export async function saveEnvironment(name: string): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  await invoke("api_env_write", { project, name, variables: variables.value });
+  closeEnvironment();
+  await loadCollection();
+  setEnvironment(name);
+}
+
+export async function removeEnvironment(name: string): Promise<void> {
+  const project = activeProjectId.value;
+  if (!project) {
+    return;
+  }
+  await invoke("api_env_remove", { project, name });
+  closeEnvironment();
+  if (environment.value === name) {
+    setEnvironment(null);
+  }
+  await loadCollection();
+}
+
+export function setVariables(list: ApiVariable[]): void {
+  variables.value = list;
 }
 
 export function setEnvironment(name: string | null): void {

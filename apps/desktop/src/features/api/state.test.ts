@@ -20,9 +20,11 @@ import {
   blank,
   brokenJson,
   chosen,
+  closeEnvironment,
   dirty,
   draft,
   edit,
+  editing,
   environment,
   environments,
   fields,
@@ -31,9 +33,12 @@ import {
   layOut,
   loadCollection,
   names,
+  openEnvironment,
   openRequest,
   params,
+  removeEnvironment,
   saved,
+  saveEnvironment,
   sending,
   sendRequest,
   setEnvironment,
@@ -41,9 +46,11 @@ import {
   setHeaders,
   setKind,
   setParams,
+  startEnvironment,
   startNew,
   tone,
   trouble,
+  variables,
 } from "./state";
 
 const RUN = {
@@ -64,6 +71,7 @@ beforeEach(() => {
   localStorage.clear();
   (activeProjectId as unknown as { value: string | null }).value = "p1";
   startNew();
+  closeEnvironment();
   names.value = [];
   environments.value = [];
   environment.value = null;
@@ -242,6 +250,55 @@ describe("sendRequest", () => {
     await sendRequest();
     expect(invoke).toHaveBeenCalled();
     expect(trouble.value).toBeNull();
+  });
+});
+
+describe("environments", () => {
+  it("reads the variables of the one it opens", async () => {
+    invoke.mockResolvedValue([{ name: "host", value: "api.dev", secret: false }]);
+    await openEnvironment("staging");
+    expect(editing.value).toBe("staging");
+    expect(variables.value).toEqual([{ name: "host", value: "api.dev", secret: false }]);
+  });
+
+  it("starts a new one with nothing in it", () => {
+    variables.value = [{ name: "host", value: "api.dev", secret: false }];
+    startEnvironment();
+    expect(editing.value).toBe("");
+    expect(variables.value).toEqual([]);
+  });
+
+  it("picks the environment it just saved", async () => {
+    variables.value = [{ name: "host", value: "api.dev", secret: false }];
+    invoke.mockResolvedValueOnce(undefined).mockResolvedValueOnce({
+      requests: [],
+      environments: ["staging"],
+    });
+    await saveEnvironment("staging");
+    expect(invoke.mock.calls[0][0]).toBe("api_env_write");
+    expect(environment.value).toBe("staging");
+    expect(editing.value).toBe(null);
+  });
+
+  it("stops using the one it deletes", async () => {
+    setEnvironment("staging");
+    invoke.mockResolvedValueOnce(undefined).mockResolvedValueOnce({
+      requests: [],
+      environments: [],
+    });
+    await removeEnvironment("staging");
+    expect(environment.value).toBe(null);
+    expect(editing.value).toBe(null);
+  });
+
+  it("keeps using another one when it deletes the one beside it", async () => {
+    setEnvironment("local");
+    invoke.mockResolvedValueOnce(undefined).mockResolvedValueOnce({
+      requests: [],
+      environments: ["local"],
+    });
+    await removeEnvironment("staging");
+    expect(environment.value).toBe("local");
   });
 });
 

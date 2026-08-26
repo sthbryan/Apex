@@ -3,14 +3,17 @@ import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
 import type { ApiRun } from "@/bindings/ApiRun";
+import type { ApiVariable } from "@/bindings/ApiVariable";
 import { type BodyKind, bodyKind, KINDS, laidOut } from "@/features/api/body";
 import { runHeaders, type Shown, shownBody } from "@/features/api/run";
 import {
   brokenJson,
   chosen,
+  closeEnvironment,
   dirty,
   draft,
   edit,
+  editing,
   environment,
   environments,
   fields,
@@ -20,9 +23,12 @@ import {
   loadCollection,
   METHODS,
   names,
+  openEnvironment,
   openRequest,
   params,
+  removeEnvironment,
   removeRequest,
+  saveEnvironment,
   saveRequest,
   sending,
   sendRequest,
@@ -31,9 +37,12 @@ import {
   setHeaders,
   setKind,
   setParams,
+  setVariables,
+  startEnvironment,
   startNew,
   tone,
   trouble,
+  variables,
 } from "@/features/api/state";
 import type { Pair } from "@/features/api/url";
 import { paint } from "@/features/files/highlight";
@@ -158,6 +167,20 @@ export function ApiPanel() {
             options={environments.value.map((found) => ({ value: found, label: found }))}
             onChange={setEnvironment}
           />
+          <Step
+            icon="pencil"
+            hint={t("api.editEnvironment")}
+            onPick={() => {
+              const open = environment.value;
+              if (editing.value !== null) {
+                closeEnvironment();
+              } else if (open) {
+                void openEnvironment(open).catch(complain);
+              } else {
+                startEnvironment();
+              }
+            }}
+          />
           {name ? (
             <Button
               size="md"
@@ -190,6 +213,8 @@ export function ApiPanel() {
             {sending.value ? t("api.sending") : t("api.send")}
           </Button>
         </div>
+
+        {editing.value !== null && <Stage />}
 
         <section class="flex min-w-0 flex-col gap-1.5">
           <div class="flex items-center justify-between gap-1.5">
@@ -244,6 +269,98 @@ export function ApiPanel() {
         {run && <Answer run={run} />}
       </div>
     </Pane>
+  );
+}
+
+function Stage() {
+  const held = editing.value ?? "";
+  const [named, setNamed] = useState(held);
+  const rows = variables.value;
+  const name = held || named.trim();
+
+  const swap = (at: number, one: ApiVariable) =>
+    setVariables(rows.map((was, i) => (i === at ? one : was)));
+
+  return (
+    <section class="flex min-w-0 flex-col gap-1.5 rounded-sm border border-border p-2">
+      <div class="flex items-center justify-between gap-1.5">
+        {held ? (
+          <span class="min-w-0 flex-1 truncate font-medium text-sm text-text">{held}</span>
+        ) : (
+          <input
+            value={named}
+            spellcheck={false}
+            placeholder={t("api.environmentName")}
+            onInput={(event) => setNamed(event.currentTarget.value)}
+            class={cn(LINE, "min-w-0 flex-1")}
+          />
+        )}
+        <Step
+          icon="plus"
+          hint={t("api.addVariable")}
+          onPick={() =>
+            setVariables([...rows, { name: t("api.rowKey"), value: "", secret: false }])
+          }
+        />
+        <Step icon="close" hint={t("api.closeEnvironment")} onPick={closeEnvironment} />
+      </div>
+
+      {rows.length === 0 ? (
+        <p class="text-faint text-xs">{t("api.noVariables")}</p>
+      ) : (
+        rows.map((one, at) => (
+          <div key={at} class="flex items-center gap-1.5">
+            <input
+              value={one.name}
+              spellcheck={false}
+              placeholder={t("api.rowKey")}
+              onBlur={(event) => swap(at, { ...one, name: event.currentTarget.value.trim() })}
+              class={cn(LINE, "w-2/5 font-mono text-xs")}
+            />
+            <input
+              value={one.value}
+              spellcheck={false}
+              type={one.secret ? "password" : "text"}
+              placeholder={one.secret ? t("api.kept") : t("api.rowValue")}
+              onInput={(event) => swap(at, { ...one, value: event.currentTarget.value })}
+              class={cn(LINE, "flex-1 font-mono text-xs")}
+            />
+            <Step
+              icon="secret"
+              on={one.secret}
+              hint={t("api.secret")}
+              onPick={() => swap(at, { ...one, secret: !one.secret })}
+            />
+            <Step
+              icon="close"
+              hint={t("api.dropVariable")}
+              onPick={() => setVariables(rows.filter((_, i) => i !== at))}
+            />
+          </div>
+        ))
+      )}
+
+      <div class="flex items-center gap-1.5">
+        <Button
+          size="md"
+          variant="primary"
+          disabled={!name}
+          onClick={() => void saveEnvironment(name).catch(complain)}
+        >
+          {t("api.save")}
+        </Button>
+        {held && (
+          <Button
+            size="md"
+            variant="ghost"
+            onClick={() => void removeEnvironment(held).catch(complain)}
+          >
+            {t("api.remove")}
+          </Button>
+        )}
+        <p class="min-w-0 flex-1 text-right text-faint text-xs">{t("api.secretHint")}</p>
+      </div>
+    </section>
   );
 }
 
@@ -482,11 +599,13 @@ function Step({
   hint,
   onPick,
   off,
+  on,
 }: {
   icon: IconName;
   hint: string;
   onPick: () => void;
   off?: boolean;
+  on?: boolean;
 }) {
   return (
     <button
@@ -494,7 +613,11 @@ function Step({
       title={hint}
       disabled={off}
       onClick={onPick}
-      class="flex size-5 shrink-0 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text disabled:pointer-events-none disabled:opacity-40"
+      aria-pressed={on}
+      class={cn(
+        "flex size-5 shrink-0 items-center justify-center rounded transition-colors hover:bg-raised hover:text-text disabled:pointer-events-none disabled:opacity-40",
+        on ? "text-accent" : "text-faint",
+      )}
     >
       <Icon name={icon} size={12} />
     </button>
