@@ -1,4 +1,4 @@
-use apex_proto::{ApiRequest, ApiRun, Command, Reply};
+use apex_proto::{ApiRequest, ApiRun, ApiVariable, Command, Reply};
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -75,4 +75,41 @@ pub async fn api_send(
         Reply::ApiRun { run } => Ok(run),
         other => Err(format!("unexpected reply: {other:?}")),
     }
+}
+
+#[tauri::command]
+pub async fn api_env_read(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    name: String,
+) -> Answer<Vec<ApiVariable>> {
+    match state.daemon()?.request(Command::ApiEnvRead { project, name }).await.map_err(failed)? {
+        Reply::ApiEnvironment { variables } => Ok(variables),
+        other => Err(format!("unexpected reply: {other:?}")),
+    }
+}
+
+#[tauri::command]
+pub async fn api_env_write(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    name: String,
+    variables: Vec<ApiVariable>,
+) -> Answer<()> {
+    state
+        .daemon()?
+        .request(Command::ApiEnvWrite { project, name, variables })
+        .await
+        .map_err(failed)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn api_env_remove(
+    state: tauri::State<'_, AppState>,
+    project: Uuid,
+    name: String,
+) -> Answer<()> {
+    state.daemon()?.request(Command::ApiEnvRemove { project, name }).await.map_err(failed)?;
+    Ok(())
 }

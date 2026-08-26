@@ -268,6 +268,17 @@ async fn execute(
             manager.api_remove(project, &name).map_err(not_found_error)?;
             Ok(Reply::Done)
         }
+        Command::ApiEnvRead { project, name } => Ok(Reply::ApiEnvironment {
+            variables: manager.api_env_read(project, &name).map_err(not_found_error)?,
+        }),
+        Command::ApiEnvWrite { project, name, variables } => {
+            manager.api_env_write(project, &name, &variables).map_err(write_error)?;
+            Ok(Reply::Done)
+        }
+        Command::ApiEnvRemove { project, name } => {
+            manager.api_env_remove(project, &name).map_err(not_found_error)?;
+            Ok(Reply::Done)
+        }
         Command::ApiSend { project, name, environment } => Ok(Reply::ApiRun {
             run: manager
                 .api_send(project, &name, environment.as_deref())
@@ -513,6 +524,9 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::ApiRead { .. }
             | Command::ApiWrite { .. }
             | Command::ApiRemove { .. }
+            | Command::ApiEnvRead { .. }
+            | Command::ApiEnvWrite { .. }
+            | Command::ApiEnvRemove { .. }
             | Command::BrowserLogs { .. }
             | Command::GitRead { .. }
             | Command::GitDiff { .. }

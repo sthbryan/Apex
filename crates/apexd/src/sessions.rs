@@ -821,6 +821,25 @@ impl SessionManager {
         apex_core::api::remove(&self.paths.api_dir(project), name)
     }
 
+    pub fn api_env_read(&self, project: Uuid, name: &str) -> Result<Vec<apex_proto::ApiVariable>> {
+        apex_core::api::read_environment(&self.paths.api_dir(project), name)
+    }
+
+    pub fn api_env_write(
+        &self,
+        project: Uuid,
+        name: &str,
+        variables: &[apex_proto::ApiVariable],
+    ) -> Result<()> {
+        let root = self.paths.api_dir(project);
+        apex_core::api::ensure(&root)?;
+        apex_core::api::write_environment(&root, name, variables)
+    }
+
+    pub fn api_env_remove(&self, project: Uuid, name: &str) -> Result<()> {
+        apex_core::api::remove_environment(&self.paths.api_dir(project), name)
+    }
+
     pub async fn api_send(
         &self,
         project: Uuid,
