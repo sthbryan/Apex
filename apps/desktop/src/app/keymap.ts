@@ -103,5 +103,5 @@ export const SHORTCUTS: Shortcut[] = [
   { id: "split-down", keys: ["⌘", "⇧", "D"], label: "shortcuts.splitDown", group: "panes" },
   { id: "cycle-layout", keys: ["⌘", "⇧", "L"], label: "shortcuts.cycleLayout", group: "panes" },
   { id: "close-pane", keys: ["⌘", "W"], label: "shortcuts.closePane", group: "panes" },
-  { id: "start", keys: ["⌘", "⏎"], label: "shortcuts.start", group: "session" },
+  { id: "start", keys: ["⇧", "⏎"], label: "shortcuts.start", group: "session" },
 ];

@@ -556,7 +556,7 @@ export const es: Messages = {
     title: "Inicio",
     tagline: "Dirigí un equipo de agentes, no una pared de terminales.",
     task: "Tarea",
-    startHint: "Arrancala, o apretá Comando Enter",
+    startHint: "Arrancala, o apretá Shift Enter",
     placeholder: "Preguntá, delegá o arrancá una tarea…",
     racePlaceholder: "La tarea que corre cada agente, cada uno en su worktree…",
     modeRaceHint: "Corre la tarea en cada agente que marques",
