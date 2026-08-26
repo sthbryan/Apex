@@ -31,7 +31,8 @@
   .ui-title-bar-lights button:nth-child(3) { background-color: #28c840; }
 
   .ui-title-bar-title {
-    @apply min-w-0 flex-1 truncate text-center font-medium text-muted select-none;
+    @apply absolute inset-x-0 mx-auto min-w-0 truncate text-center font-medium text-muted select-none;
+    max-width: 46%;
     pointer-events: none;
   }
 
@@ -44,7 +45,7 @@
   }
 
   .ui-title-bar-actions {
-    @apply flex flex-none items-center gap-1;
+    @apply ml-auto flex flex-none items-center gap-1;
   }
 
   @media (max-width: 640px) {
@@ -59,7 +60,9 @@
       @apply size-2.5;
     }
     .ui-title-bar-title {
-      @apply text-sm;
+      @apply static min-w-0 flex-1 text-sm;
+      margin-inline: 0;
+      max-width: none;
       text-align: left;
     }
   }
