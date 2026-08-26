@@ -184,10 +184,70 @@ fn a_request_carries_its_name_and_environment() {
 }
 
 #[test]
-fn the_request_tool_says_where_the_requests_live() {
+fn the_request_tool_sends_you_to_the_write_tool_and_not_to_a_folder() {
     let told = TOOLS.iter().find(|tool| tool.name == "apex_request").expect("tool");
-    assert!(told.description.contains("APEX_API_DIR"), "{}", told.description);
+    assert!(told.description.contains("apex_api_write"), "{}", told.description);
+    assert!(!told.description.contains("APEX_API_DIR"), "{}", told.description);
     assert_eq!(told.group, apex_proto::ToolGroup::Api);
+}
+
+#[test]
+fn every_api_tool_shares_the_group_that_can_be_turned_off() {
+    let named: Vec<&str> = TOOLS
+        .iter()
+        .filter(|tool| tool.group == apex_proto::ToolGroup::Api)
+        .map(|t| t.name)
+        .collect();
+    assert_eq!(named, vec!["apex_api_list", "apex_api_read", "apex_api_write", "apex_request"]);
+}
+
+#[test]
+fn writing_a_request_takes_the_headers_as_they_come() {
+    let me = caller(session("claude", None));
+    let asked = json!({
+        "name": "create user",
+        "url": "https://{{host}}/users",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" },
+        "body": "{}"
+    });
+    let Command::ApiWrite { name, request, .. } =
+        command_for(&me, "apex_api_write", &asked).expect("command")
+    else {
+        panic!("not a write")
+    };
+    assert_eq!(name, "create user");
+    assert_eq!(request.method, "POST");
+    assert_eq!(request.headers["Content-Type"], "application/json");
+    assert_eq!(request.body.as_deref(), Some("{}"));
+}
+
+#[test]
+fn a_written_request_without_a_verb_is_a_get() {
+    let me = caller(session("claude", None));
+    let asked = json!({ "name": "ping", "url": "http://localhost:3000/health" });
+    let Command::ApiWrite { request, .. } =
+        command_for(&me, "apex_api_write", &asked).expect("command")
+    else {
+        panic!("not a write")
+    };
+    assert_eq!(request.method, "GET");
+    assert!(request.headers.is_empty());
+    assert_eq!(request.body, None);
+}
+
+#[test]
+fn a_header_that_is_not_a_string_is_refused() {
+    let me = caller(session("claude", None));
+    let asked = json!({ "name": "ping", "url": "http://x", "headers": { "Accept": 7 } });
+    let trouble = command_for(&me, "apex_api_write", &asked).expect_err("a number header");
+    assert!(trouble.to_string().contains("Accept"), "{trouble}");
+}
+
+#[test]
+fn a_written_request_needs_a_url() {
+    let me = caller(session("claude", None));
+    assert!(command_for(&me, "apex_api_write", &json!({ "name": "ping" })).is_err());
 }
 
 #[test]

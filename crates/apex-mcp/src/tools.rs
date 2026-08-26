@@ -221,13 +221,58 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_api_list",
+        group: ToolGroup::Api,
+        description: "List the saved http requests and the environments of this project.",
+        schema: || json!({ "type": "object", "properties": {} }),
+    },
+    Tool {
+        name: "apex_api_read",
+        group: ToolGroup::Api,
+        description: "Read a saved http request without sending it.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                    "name": { "type": "string", "description": "Name of the saved request" }
+                }
+            })
+        },
+    },
+    Tool {
+        name: "apex_api_write",
+        group: ToolGroup::Api,
+        description: "Save an http request under a name, writing over the one that was there. \
+                      Put addresses and tokens in an environment and mention them as {{name}} \
+                      instead of writing them into the request.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["name", "url"],
+                "properties": {
+                    "name": { "type": "string", "description": "Name to save it under" },
+                    "url": {
+                        "type": "string",
+                        "description": "Address to call, where {{name}} stands for a variable"
+                    },
+                    "method": { "type": "string", "description": "Verb, GET when left out" },
+                    "headers": {
+                        "type": "object",
+                        "description": "Headers to send, as names and values",
+                        "additionalProperties": { "type": "string" }
+                    },
+                    "body": { "type": "string", "description": "Body to send" }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_request",
         group: ToolGroup::Api,
-        description: "Send a saved http request and answer with what came back. Requests live \
-                      as toml files in the folder named by APEX_API_DIR, one file per request, \
-                      and you call this with the file name. Write the file first if the request \
-                      is not saved yet, and put addresses and tokens in an environment instead \
-                      of in the request.",
+        description: "Send a saved http request and answer with what came back. Save it with \
+                      apex_api_write first if it is not saved yet, and put addresses and tokens \
+                      in an environment instead of in the request.",
         schema: || {
             json!({
                 "type": "object",
@@ -329,6 +374,21 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
+        "apex_api_list" => Ok(Command::ApiList { project: caller.project }),
+        "apex_api_read" => Ok(Command::ApiRead {
+            project: caller.project,
+            name: text("name").context("name is required")?,
+        }),
+        "apex_api_write" => Ok(Command::ApiWrite {
+            project: caller.project,
+            name: text("name").context("name is required")?,
+            request: apex_proto::ApiRequest {
+                method: text("method").unwrap_or_else(|| "GET".to_owned()),
+                url: text("url").context("url is required")?,
+                headers: headers_of(arguments)?,
+                body: text("body"),
+            },
+        }),
         "apex_request" => Ok(Command::ApiSend {
             project: caller.project,
             name: text("name").context("name is required")?,
@@ -495,6 +555,41 @@ pub fn describe_worktree(caller: &Caller) -> String {
 #[cfg(test)]
 #[path = "tools_tests.rs"]
 mod tests;
+
+fn headers_of(arguments: &Value) -> Result<std::collections::BTreeMap<String, String>> {
+    let Some(given) = arguments.get("headers") else {
+        return Ok(std::collections::BTreeMap::new());
+    };
+    let table = given.as_object().context("headers must be names and values")?;
+    table
+        .iter()
+        .map(|(key, value)| {
+            let text =
+                value.as_str().with_context(|| format!("the {key} header must be a string"))?;
+            Ok((key.clone(), text.to_owned()))
+        })
+        .collect()
+}
+
+pub fn describe_collection(requests: &[String], environments: &[String]) -> String {
+    let list = |what: &str, names: &[String]| match names {
+        [] => format!("No {what} yet."),
+        _ => format!("{what}: {}", names.join(", ")),
+    };
+    format!("{}\n{}", list("requests", requests), list("environments", environments))
+}
+
+pub fn describe_request(request: &apex_proto::ApiRequest) -> String {
+    let mut lines = vec![format!("{} {}", request.method, request.url)];
+    for (key, value) in &request.headers {
+        lines.push(format!("{key}: {value}"));
+    }
+    if let Some(body) = &request.body {
+        lines.push(String::new());
+        lines.push(body.clone());
+    }
+    lines.join("\n")
+}
 
 pub fn describe_run(run: &apex_proto::ApiRun) -> String {
     let head = format!("{} {} answered {} in {}ms", run.method, run.url, run.status, run.millis);

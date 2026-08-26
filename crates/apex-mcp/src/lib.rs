@@ -116,6 +116,10 @@ async fn call<D: Daemon>(daemon: &mut D, caller: &Caller, params: &Value) -> Res
         Reply::Session { session } => tools::describe_spawn(&session),
         Reply::Spawned { sessions } => tools::describe_broadcast(&sessions),
         Reply::ApiRun { run } => tools::describe_run(&run),
+        Reply::ApiCollection { requests, environments } => {
+            tools::describe_collection(&requests, &environments)
+        }
+        Reply::ApiRequest { request, .. } => tools::describe_request(&request),
         Reply::Done => "Done.".to_owned(),
         other => format!("Unexpected answer from the daemon: {other:?}"),
     };

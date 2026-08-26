@@ -1207,6 +1207,11 @@ pub enum Event {
         id: Uuid,
         commands: Vec<AcpCommand>,
     },
+    ApiChanged {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+    },
     Notify {
         #[ts(type = "string | null")]
         session: Option<Uuid>,
