@@ -791,9 +791,9 @@ impl SessionManager {
         self.browsers.page(project).await
     }
 
-    pub fn api_list(&self, project: Uuid) -> (Vec<String>, Vec<String>) {
+    pub fn api_list(&self, project: Uuid) -> (Vec<apex_proto::ApiEntry>, Vec<String>) {
         let root = self.paths.api_dir(project);
-        (apex_core::api::requests(&root), apex_core::api::environments(&root))
+        (apex_core::api::entries(&root), apex_core::api::environments(&root))
     }
 
     pub fn api_read(

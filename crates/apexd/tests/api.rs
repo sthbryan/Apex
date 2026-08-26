@@ -197,7 +197,12 @@ async fn the_collection_lists_what_is_saved_and_reads_one_back() {
     let Reply::ApiCollection { requests, environments } = reply else {
         panic!("expected a collection, got {reply:?}")
     };
-    assert_eq!(requests, vec!["alpha".to_owned(), "zeta".to_owned()]);
+    assert_eq!(
+        requests.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(),
+        vec!["alpha", "zeta"]
+    );
+    assert_eq!(requests[0].method, "POST");
+    assert_eq!(requests[1].method, "GET");
     assert_eq!(environments, vec!["local".to_owned()]);
 
     let reply =

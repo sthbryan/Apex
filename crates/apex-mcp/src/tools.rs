@@ -571,12 +571,14 @@ fn headers_of(arguments: &Value) -> Result<std::collections::BTreeMap<String, St
         .collect()
 }
 
-pub fn describe_collection(requests: &[String], environments: &[String]) -> String {
+pub fn describe_collection(requests: &[apex_proto::ApiEntry], environments: &[String]) -> String {
+    let named: Vec<String> =
+        requests.iter().map(|entry| format!("{} ({})", entry.name, entry.method)).collect();
     let list = |what: &str, names: &[String]| match names {
         [] => format!("No {what} yet."),
         _ => format!("{what}: {}", names.join(", ")),
     };
-    format!("{}\n{}", list("requests", requests), list("environments", environments))
+    format!("{}\n{}", list("requests", &named), list("environments", environments))
 }
 
 pub fn describe_request(request: &apex_proto::ApiRequest) -> String {

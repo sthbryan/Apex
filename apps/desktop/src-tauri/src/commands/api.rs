@@ -1,4 +1,4 @@
-use apex_proto::{ApiRequest, ApiRun, ApiVariable, Command, Reply};
+use apex_proto::{ApiEntry, ApiRequest, ApiRun, ApiVariable, Command, Reply};
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -6,7 +6,7 @@ use crate::state::{Answer, AppState, failed};
 
 #[derive(Serialize)]
 pub struct Collection {
-    requests: Vec<String>,
+    requests: Vec<ApiEntry>,
     environments: Vec<String>,
 }
 
