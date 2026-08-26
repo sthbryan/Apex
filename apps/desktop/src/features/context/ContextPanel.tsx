@@ -133,7 +133,7 @@ function Editor({ entryKey, onDone }: { entryKey: string; onDone: () => void }) 
           setDirty(true);
         }}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+          if (event.key === "Enter" && event.shiftKey) {
             event.preventDefault();
             save();
           }
@@ -153,6 +153,7 @@ function Editor({ entryKey, onDone }: { entryKey: string; onDone: () => void }) 
         </button>
         <button
           type="button"
+          title={t("context.saveHint")}
           disabled={!dirty || !key.trim()}
           onClick={save}
           class="shrink-0 rounded border border-border px-2 py-0.5 text-muted transition-colors enabled:hover:bg-raised enabled:hover:text-text disabled:opacity-40"

@@ -351,6 +351,7 @@ export const en = {
     keyPlaceholder: "Name, like architecture or decisions",
     bodyPlaceholder: "Markdown every agent on this project can read…",
     save: "Save",
+    saveHint: "Save it, or press Shift Enter",
     close: "Close",
     saving: "Saving…",
     unsaved: "Unsaved",

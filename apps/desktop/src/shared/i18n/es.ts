@@ -352,6 +352,7 @@ export const es: Messages = {
     keyPlaceholder: "Nombre, como arquitectura o decisiones",
     bodyPlaceholder: "Markdown que puede leer cualquier agente del proyecto…",
     save: "Guardar",
+    saveHint: "Guardala, o apretá Shift Enter",
     close: "Cerrar",
     saving: "Guardando…",
     unsaved: "Sin guardar",
