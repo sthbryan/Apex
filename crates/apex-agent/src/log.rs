@@ -41,6 +41,10 @@ impl Log {
         Ok(log)
     }
 
+    pub fn reopen(agent_dir: &Path, id: &str) -> Self {
+        Self { path: agent_dir.join(format!("{id}.jsonl")) }
+    }
+
     pub fn wrote(&self, message: &Message) {
         if let Err(cause) = self.append(&Line::Turn { message: message.clone() }) {
             tracing::warn!(%cause, "could not write the conversation down");

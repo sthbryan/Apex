@@ -306,3 +306,37 @@ fn no_mode_asked_for_is_no_mode_named() {
 fn a_mode_flag_with_nothing_after_it_says_what_is_missing() {
     assert_eq!(agent(&["--mode"]).wrong.as_deref(), Some("--mode needs a name"));
 }
+
+#[test]
+fn resume_with_no_name_means_the_newest_one() {
+    assert_eq!(agent(&["--resume"]).resume, Some(None));
+}
+
+#[test]
+fn resume_takes_the_name_after_it_when_there_is_one() {
+    assert_eq!(agent(&["--resume", "20260826-1"]).resume, Some(Some("20260826-1".to_owned())));
+}
+
+#[test]
+fn resume_does_not_swallow_the_flag_after_it() {
+    let run = agent(&["--resume", "--mode", "plan"]);
+    assert_eq!(run.resume, Some(None));
+    assert_eq!(run.mode.as_deref(), Some("plan"));
+    assert_eq!(run.wrong, None);
+}
+
+#[test]
+fn listing_the_conversations_is_a_flag_of_its_own() {
+    assert!(agent(&["--list"]).list);
+    assert!(agent(&["-l"]).list);
+    assert!(!agent(&[]).list);
+}
+
+#[test]
+fn a_provider_and_a_resume_can_be_asked_for_together() {
+    let run = agent(&["-r", "one", "-p", "groq", "-m", "kimi-k2"]);
+    assert_eq!(run.resume, Some(Some("one".to_owned())));
+    assert_eq!(run.provider.as_deref(), Some("groq"));
+    assert_eq!(run.model.as_deref(), Some("kimi-k2"));
+    assert_eq!(run.wrong, None);
+}

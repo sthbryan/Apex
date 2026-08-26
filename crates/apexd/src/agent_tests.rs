@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use super::*;
 
 fn asked(provider: Option<&str>, model: Option<&str>) -> Run {
@@ -5,6 +7,8 @@ fn asked(provider: Option<&str>, model: Option<&str>) -> Run {
         provider: provider.map(str::to_owned),
         model: model.map(str::to_owned),
         mode: None,
+        resume: None,
+        list: false,
         wrong: None,
     }
 }
@@ -91,4 +95,86 @@ fn words_are_taken_as_the_answer_and_not_as_a_number() {
 #[test]
 fn an_open_question_has_no_options_to_pick_from() {
     assert_eq!(chosen("1", &[]), None);
+}
+
+fn kept(id: &str, cwd: &str, turns: usize, title: &str) -> Kept {
+    Kept {
+        head: Head {
+            id: id.to_owned(),
+            provider: "openai".to_owned(),
+            model: "gpt-5".to_owned(),
+            cwd: cwd.to_owned(),
+            at: 0,
+        },
+        title: title.to_owned(),
+        turns,
+    }
+}
+
+#[test]
+fn asking_for_a_conversation_by_name_finds_it() {
+    let all = vec![kept("one", "/here", 1, "uno"), kept("two", "/there", 1, "dos")];
+    let found = wanted(&all, Some("two"), Path::new("/here")).expect("found");
+    assert_eq!(found.head.id, "two");
+}
+
+#[test]
+fn asking_for_a_name_nobody_has_finds_nothing() {
+    let all = vec![kept("one", "/here", 1, "uno")];
+    assert!(wanted(&all, Some("nope"), Path::new("/here")).is_none());
+}
+
+#[test]
+fn asking_for_no_name_takes_the_newest_one_in_this_folder() {
+    let all = vec![
+        kept("newest-elsewhere", "/there", 1, "dos"),
+        kept("newest-here", "/here", 1, "uno"),
+        kept("older-here", "/here", 1, "cero"),
+    ];
+    let found = wanted(&all, None, Path::new("/here")).expect("found");
+    assert_eq!(found.head.id, "newest-here");
+}
+
+#[test]
+fn a_folder_with_nothing_said_in_it_finds_nothing() {
+    let all = vec![kept("one", "/there", 1, "uno")];
+    assert!(wanted(&all, None, Path::new("/here")).is_none());
+}
+
+#[test]
+fn a_listing_lines_up_and_counts_the_turns() {
+    let all = vec![kept("one", "/here", 1, "uno"), kept("longer-id", "/here", 3, "dos")];
+    let spelled = spell_sessions(&all, Path::new("/here"));
+    assert_eq!(spelled, "one          1 turn  uno\nlonger-id   3 turns  dos\n");
+}
+
+#[test]
+fn a_conversation_from_another_folder_says_which_one() {
+    let all = vec![kept("one", "/there", 2, "uno")];
+    let spelled = spell_sessions(&all, Path::new("/here"));
+    assert!(spelled.contains("(/there)"));
+}
+
+#[test]
+fn a_conversation_from_this_folder_does_not_repeat_the_folder() {
+    let all = vec![kept("one", "/here", 2, "uno")];
+    assert!(!spell_sessions(&all, Path::new("/here")).contains("/here)"));
+}
+
+#[test]
+fn nothing_kept_spells_nothing() {
+    assert_eq!(spell_sessions(&[], Path::new("/here")), "");
+}
+
+#[test]
+fn one_turn_is_not_called_turns() {
+    assert_eq!(spell_turns(1), "1 turn");
+    assert_eq!(spell_turns(0), "0 turns");
+    assert_eq!(spell_turns(4), "4 turns");
+}
+
+#[test]
+fn one_message_is_not_called_messages() {
+    assert_eq!(spell_messages(1), "1 message");
+    assert_eq!(spell_messages(6), "6 messages");
 }

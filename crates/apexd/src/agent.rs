@@ -3,7 +3,7 @@ use std::io::{IsTerminal, Write};
 use anyhow::{Context, Result};
 use apex_agent::chat::{Chat, Spent, Surface};
 use apex_agent::choice::{self, Choice};
-use apex_agent::log::{self, Head, Log};
+use apex_agent::log::{self, Head, Kept, Log};
 use apex_agent::mode::Mode;
 use apex_agent::tools::todo::Todo;
 use apex_agent::tools::{Call, Done, Kit, sketch};
@@ -30,6 +30,32 @@ pub async fn run(run: Run) -> Result<i32> {
     let paths = ApexPaths::discover()?;
     let set = ProviderSet::load(&paths.providers_dir())?;
     let agent_dir = paths.agent_dir();
+    let here = std::env::current_dir().context("finding where you are")?;
+
+    if run.list {
+        let kept = log::list(&agent_dir);
+        match kept.is_empty() {
+            true => println!("no conversations yet"),
+            false => print!("{}", spell_sessions(&kept, &here)),
+        }
+        return Ok(0);
+    }
+
+    let picked_up = match &run.resume {
+        Some(which) => {
+            let kept = log::list(&agent_dir);
+            let Some(found) = wanted(&kept, which.as_deref(), &here) else {
+                match which {
+                    Some(id) => eprintln!("apex: there is no conversation called {id}"),
+                    None => eprintln!("apex: nothing was said in this folder yet"),
+                }
+                eprintln!("apex: run apex agent --list to see them");
+                return Ok(2);
+            };
+            Some(log::open(&agent_dir, &found.head.id)?)
+        }
+        None => None,
+    };
 
     let mode = match run.mode.as_deref().map(str::trim) {
         Some(name) => match Mode::parse(name) {
@@ -42,7 +68,14 @@ pub async fn run(run: Run) -> Result<i32> {
         None => Mode::default(),
     };
 
-    let picked = match pick(&run, choice::read(&agent_dir).as_ref()) {
+    let before = match &picked_up {
+        Some((head, _)) => {
+            Some(Choice { provider: head.provider.clone(), model: head.model.clone() })
+        }
+        None => choice::read(&agent_dir),
+    };
+
+    let picked = match pick(&run, before.as_ref()) {
         Ok(picked) => picked,
         Err(complaint) => {
             eprintln!("apex: {complaint}");
@@ -68,23 +101,33 @@ pub async fn run(run: Run) -> Result<i32> {
         }
     };
 
-    let here = std::env::current_dir().context("finding where you are")?;
     let brain = provider.dial(&key)?.brain(&picked.model);
     let mut chat = Chat::new(brain, Kit::new(&here), preamble::read(&agent_dir));
     chat.works_in(mode);
     choice::write(&agent_dir, &picked)?;
 
-    let now = chrono::Local::now();
-    let head = Head {
-        id: log::newest_id(now),
-        provider: picked.provider.clone(),
-        model: picked.model.clone(),
-        cwd: here.display().to_string(),
-        at: now.timestamp(),
+    let carried = match picked_up {
+        Some((head, messages)) => {
+            let turns = messages.len();
+            chat.picks_up(messages);
+            chat.keeps(Log::reopen(&agent_dir, &head.id));
+            Some(turns)
+        }
+        None => {
+            let now = chrono::Local::now();
+            let head = Head {
+                id: log::newest_id(now),
+                provider: picked.provider.clone(),
+                model: picked.model.clone(),
+                cwd: here.display().to_string(),
+                at: now.timestamp(),
+            };
+            chat.keeps(Log::start(&agent_dir, &head)?);
+            None
+        }
     };
-    chat.keeps(Log::start(&agent_dir, &head)?);
 
-    talk(&mut chat, &picked).await
+    talk(&mut chat, &picked, &here, carried).await
 }
 
 pub fn pick(run: &Run, last: Option<&Choice>) -> Result<Choice, String> {
@@ -104,9 +147,13 @@ pub fn pick(run: &Run, last: Option<&Choice>) -> Result<Choice, String> {
     }
 }
 
-async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
+async fn talk(
+    chat: &mut Chat,
+    picked: &Choice,
+    here: &std::path::Path,
+    carried: Option<usize>,
+) -> Result<i32> {
     let tty = std::io::stdout().is_terminal();
-    let here = std::env::current_dir().context("finding where you are")?;
     println!(
         "{} on {} in {}, {} mode",
         picked.model,
@@ -114,6 +161,9 @@ async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
         here.display(),
         chat.mode().as_str()
     );
+    if let Some(turns) = carried {
+        println!("picked up where it was left, {} back", spell_messages(turns));
+    }
     println!("/help for the few commands there are");
 
     let mut ink = Ink::new(tty);
@@ -268,6 +318,49 @@ impl Surface for Ink {
         print!("{text}");
         std::io::stdout().flush().ok();
         self.wrote = true;
+    }
+}
+
+pub fn wanted<'a>(
+    kept: &'a [Kept],
+    which: Option<&str>,
+    here: &std::path::Path,
+) -> Option<&'a Kept> {
+    match which {
+        Some(id) => kept.iter().find(|one| one.head.id == id),
+        None => kept.iter().find(|one| one.head.cwd == here.display().to_string()),
+    }
+}
+
+pub fn spell_sessions(kept: &[Kept], here: &std::path::Path) -> String {
+    let widest = kept.iter().map(|one| one.head.id.len()).max().unwrap_or(0);
+    let mut lines = String::new();
+    for one in kept {
+        let elsewhere = match one.head.cwd == here.display().to_string() {
+            true => String::new(),
+            false => format!("  ({})", one.head.cwd),
+        };
+        lines.push_str(&format!(
+            "{:widest$}  {:>8}  {}{elsewhere}\n",
+            one.head.id,
+            spell_turns(one.turns),
+            one.title
+        ));
+    }
+    lines
+}
+
+fn spell_messages(messages: usize) -> String {
+    match messages {
+        1 => "1 message".to_owned(),
+        many => format!("{many} messages"),
+    }
+}
+
+fn spell_turns(turns: usize) -> String {
+    match turns {
+        1 => "1 turn".to_owned(),
+        many => format!("{many} turns"),
     }
 }
 

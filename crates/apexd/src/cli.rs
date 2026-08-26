@@ -21,6 +21,10 @@ usage:
   apex agent [--provider <name>] [--model <name>] [--mode <mode>]
                   talk to a coding agent here, in this folder
                   modes: auto (the default), plan, chat
+  apex agent --resume [id]
+                  pick up where a conversation left off
+  apex agent --list
+                  list the conversations there are
   apex auth       list the providers and which of them hold a key
   apex auth add <provider>
                   type a key once and keep it in the OS keychain
@@ -48,6 +52,8 @@ pub struct Run {
     pub provider: Option<String>,
     pub model: Option<String>,
     pub mode: Option<String>,
+    pub resume: Option<Option<String>>,
+    pub list: bool,
     pub wrong: Option<String>,
 }
 
@@ -122,26 +128,43 @@ pub async fn run(socket: &Path, verb: Verb) -> Result<i32> {
 
 fn session(rest: &[String]) -> Run {
     let mut run = Run::default();
-    let mut words = rest.iter();
-    while let Some(word) = words.next() {
-        let taken = |word: Option<&String>| {
-            word.map(|word| word.trim()).filter(|word| !word.is_empty()).map(str::to_owned)
-        };
-        match word.as_str() {
-            "--provider" | "-p" => match taken(words.next()) {
-                Some(name) => run.provider = Some(name),
+    let mut at = 0;
+    while at < rest.len() {
+        let word = rest[at].as_str();
+        let value = rest.get(at + 1).map(|word| word.trim()).filter(|word| !word.is_empty());
+        let plain = value.filter(|word| !word.starts_with('-'));
+        match word {
+            "--provider" | "-p" => match value {
+                Some(name) => {
+                    run.provider = Some(name.to_owned());
+                    at += 1;
+                }
                 None => run.wrong = Some("--provider needs a name".to_owned()),
             },
-            "--model" | "-m" => match taken(words.next()) {
-                Some(name) => run.model = Some(name),
+            "--model" | "-m" => match value {
+                Some(name) => {
+                    run.model = Some(name.to_owned());
+                    at += 1;
+                }
                 None => run.wrong = Some("--model needs a name".to_owned()),
             },
-            "--mode" => match taken(words.next()) {
-                Some(name) => run.mode = Some(name),
+            "--mode" => match value {
+                Some(name) => {
+                    run.mode = Some(name.to_owned());
+                    at += 1;
+                }
                 None => run.wrong = Some("--mode needs a name".to_owned()),
             },
+            "--resume" | "-r" => {
+                run.resume = Some(plain.map(str::to_owned));
+                if plain.is_some() {
+                    at += 1;
+                }
+            }
+            "--list" | "-l" => run.list = true,
             other => run.wrong = Some(format!("agent does not know {other}")),
         }
+        at += 1;
     }
     run
 }
