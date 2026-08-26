@@ -28,7 +28,7 @@ import { asideOpen, asidePanel, closeAside } from "@/app/layout/state";
 import { projectSessions } from "@/features/projects/state";
 import { browsing } from "@/features/settings/browsing";
 import { toolsOff } from "@/features/settings/toolGroups";
-import { browserUrl, isLocal, openWeb, pickUrl, readWord, toggleBrowser } from "./state";
+import { browserUrl, isLocal, lastUrl, openWeb, pickUrl, readWord, toggleBrowser } from "./state";
 
 beforeEach(() => {
   invoke.mockReset();
@@ -87,28 +87,33 @@ describe("openWeb", () => {
 });
 
 describe("pickUrl", () => {
-  it("prefers a running local server", () => {
-    expect(pickUrl([null, "http://localhost:5173"], "http://localhost:9999")).toBe(
-      "http://localhost:5173",
-    );
-  });
-
-  it("falls back to the last url when nothing is running", () => {
-    expect(pickUrl([null], "http://localhost:9999")).toBe("http://localhost:9999");
-  });
-
-  it("ignores a remembered url that is no longer local", () => {
-    expect(pickUrl([], "https://example.com")).toBe("http://localhost:3000");
+  it("takes the first running local server", () => {
+    expect(pickUrl([null, "http://localhost:5173"])).toBe("http://localhost:5173");
   });
 
   it("skips running sessions that are not local", () => {
-    expect(pickUrl(["https://example.com", "http://127.0.0.1:8080"], null)).toBe(
-      "http://127.0.0.1:8080",
-    );
+    expect(pickUrl(["https://example.com", "http://127.0.0.1:8080"])).toBe("http://127.0.0.1:8080");
   });
 
-  it("lands on the default with nothing to go on", () => {
-    expect(pickUrl([], null)).toBe("http://localhost:3000");
+  it("finds nothing rather than guessing a port", () => {
+    expect(pickUrl([])).toBe(null);
+    expect(pickUrl([null])).toBe(null);
+  });
+});
+
+describe("lastUrl", () => {
+  it("offers back the page it was left on", () => {
+    openWeb("http://localhost:7000");
+    expect(lastUrl()).toBe("http://localhost:7000");
+  });
+
+  it("offers nothing when there is nothing remembered", () => {
+    expect(lastUrl()).toBe(null);
+  });
+
+  it("forgets a remembered address that is no longer local", () => {
+    localStorage.setItem("apex.browser.url", "https://example.com");
+    expect(lastUrl()).toBe(null);
   });
 });
 
@@ -136,12 +141,20 @@ describe("toggleBrowser", () => {
     expect(browserUrl.value).toBe("http://localhost:7000");
   });
 
-  it("reopens where the last run left it after a restart", () => {
+  it("opens on nothing after a restart instead of loading a dead page", () => {
     openWeb("http://localhost:7000");
     browserUrl.value = null;
     closeAside();
     toggleBrowser();
-    expect(browserUrl.value).toBe("http://localhost:7000");
+    expect(asideOpen.value).toBe(true);
+    expect(browserUrl.value).toBeNull();
+    expect(lastUrl()).toBe("http://localhost:7000");
+  });
+
+  it("opens on nothing with no server and nothing remembered", () => {
+    toggleBrowser();
+    expect(asideOpen.value).toBe(true);
+    expect(browserUrl.value).toBeNull();
   });
 });
 

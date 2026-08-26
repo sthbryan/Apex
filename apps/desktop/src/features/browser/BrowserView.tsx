@@ -9,7 +9,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import { browserUrl, openWeb, readWord, type Word } from "@/features/browser/state";
+import { browserUrl, lastUrl, openWeb, readWord, type Word } from "@/features/browser/state";
 import { activeProjectId } from "@/features/projects/state";
 import { onAskPage, onAskShot } from "@/features/sessions/state";
 import { dragging } from "@/features/workspace/state";
@@ -41,9 +41,10 @@ function boxOf(node: HTMLElement) {
 
 export function BrowserView() {
   const url = browserUrl.value ?? "";
+  const offered = url || lastUrl() || "";
   const frame = useRef<HTMLIFrameElement>(null);
   const [here, setHere] = useState(url);
-  const [draft, setDraft] = useState(url);
+  const [draft, setDraft] = useState(offered);
   const [logs, setLogs] = useState<Entry[]>([]);
   const [failures, setFailures] = useState(0);
   const [drawer, setDrawer] = useState(false);
@@ -51,7 +52,7 @@ export function BrowserView() {
 
   useEffect(() => {
     setHere(url);
-    setDraft(url);
+    setDraft(url || lastUrl() || "");
     setLogs([]);
     setFailures(0);
   }, [url]);
@@ -158,7 +159,7 @@ export function BrowserView() {
           }}
           onBlur={() => {
             editing.current = false;
-            setDraft(here);
+            setDraft(here || lastUrl() || "");
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -177,6 +178,9 @@ export function BrowserView() {
             icon="external"
             hint={t("browser.external")}
             onPick={() => {
+              if (!here) {
+                return;
+              }
               void invoke("open_url", { url: here }).catch(complain);
             }}
           />
@@ -213,14 +217,21 @@ export function BrowserView() {
           </>
         }
       >
-        <iframe
-          ref={frame}
-          title={here}
-          src={url}
-          class="size-full border-0 bg-white"
-          style={dragging.value ? { pointerEvents: "none" } : undefined}
-          sandbox="allow-scripts allow-forms allow-same-origin"
-        />
+        {url === "" ? (
+          <div class="flex size-full flex-col items-center justify-center gap-1 p-6 text-center">
+            <p class="text-muted text-sm">{t("browser.nothing")}</p>
+            <p class="text-faint text-xs">{t("browser.nothingHint")}</p>
+          </div>
+        ) : (
+          <iframe
+            ref={frame}
+            title={here}
+            src={url}
+            class="size-full border-0 bg-white"
+            style={dragging.value ? { pointerEvents: "none" } : undefined}
+            sandbox="allow-scripts allow-forms allow-same-origin"
+          />
+        )}
       </KitBrowserView>
     </Pane>
   );

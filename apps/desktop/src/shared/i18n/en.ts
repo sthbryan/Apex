@@ -298,8 +298,10 @@ export const en = {
     groups: {
       navigation: "Navigation",
       panes: "Panes",
+      session: "Sessions",
     },
     shortcuts: "Show keyboard shortcuts",
+    start: "Start what the composer holds",
     palette: "Open the command palette",
     finder: "Find a file",
     settings: "Open settings",
@@ -362,6 +364,8 @@ export const en = {
     external: "Open in the system browser",
     console: "Console",
     clear: "Clear",
+    nothing: "Nothing is loaded.",
+    nothingHint: "Type an address above, or start a session that serves one.",
     quiet: "Nothing logged yet.",
   },
   tasks: {

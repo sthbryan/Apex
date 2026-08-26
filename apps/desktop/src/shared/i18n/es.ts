@@ -299,8 +299,10 @@ export const es: Messages = {
     groups: {
       navigation: "Navegación",
       panes: "Paneles",
+      session: "Sesiones",
     },
     shortcuts: "Ver atajos de teclado",
+    start: "Arrancar lo que tiene el compositor",
     palette: "Abrir la paleta de comandos",
     finder: "Buscar un archivo",
     settings: "Abrir preferencias",
@@ -363,6 +365,8 @@ export const es: Messages = {
     external: "Abrir en el navegador del sistema",
     console: "Consola",
     clear: "Limpiar",
+    nothing: "No hay nada cargado.",
+    nothingHint: "Escribí una dirección arriba, o arrancá una sesión que sirva una.",
     quiet: "Todavía no hay nada.",
   },
   tasks: {

@@ -8,7 +8,6 @@ import { complain } from "@/shared/daemon";
 
 const LOCAL = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
 const LAST_URL = "apex.browser.url";
-const FALLBACK = "http://localhost:3000";
 
 export const browserUrl = signal<string | null>(null);
 
@@ -37,12 +36,13 @@ export function openWeb(url: string): void {
   void invoke("open_url", { url }).catch(complain);
 }
 
-export function pickUrl(running: (string | null)[], last: string | null): string {
-  const live = running.find((url) => url !== null && isLocal(url));
-  if (live) {
-    return live;
-  }
-  return last && isLocal(last) ? last : FALLBACK;
+export function pickUrl(running: (string | null)[]): string | null {
+  return running.find((url) => url !== null && isLocal(url)) ?? null;
+}
+
+export function lastUrl(): string | null {
+  const last = readLast();
+  return last && isLocal(last) ? last : null;
 }
 
 export function showingBrowser(): boolean {
@@ -58,8 +58,12 @@ export function toggleBrowser(): void {
     openAside("browser");
     return;
   }
-  const running = projectSessions.value.map((session) => session.url);
-  showBrowser(pickUrl(running, readLast()));
+  const live = pickUrl(projectSessions.value.map((session) => session.url));
+  if (live) {
+    showBrowser(live);
+    return;
+  }
+  openAside("browser");
 }
 
 function readLast(): string | null {
