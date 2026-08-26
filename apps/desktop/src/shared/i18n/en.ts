@@ -235,6 +235,14 @@ export const en = {
     agentSplitsSpareOption: "{panes} in the spare one",
     agentNoAcp: "{agent} does not speak ACP, so Apex can only drive it as a terminal.",
     agentEnabled: "Offer {agent} when starting a session",
+    agentRuns: "Apex runs {model} on {provider}",
+    agentNothingYet:
+      "Nothing set up yet. Pick a provider below, put in its key and choose a model.",
+    agentInUse: "in use",
+    agentModelWait: "asking for the models…",
+    keyEnvWins:
+      "The key comes from {name} in your environment, and that one wins over anything kept here.",
+    keyChecking: "Checking…",
     groupAgent: "Our agent",
     groupAgentSub: "Providers, keys and the model Apex uses when it runs the agent itself",
     keyKept: "key kept in the OS keychain",

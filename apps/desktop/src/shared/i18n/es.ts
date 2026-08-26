@@ -236,6 +236,13 @@ export const es: Messages = {
     agentSplitsSpareOption: "{panes} en la aparte",
     agentNoAcp: "{agent} no habla ACP, así que Apex solo puede manejarlo como terminal.",
     agentEnabled: "Ofrecer {agent} al abrir una sesión",
+    agentRuns: "Apex corre {model} en {provider}",
+    agentNothingYet:
+      "Todavía no hay nada. Elegí un provider acá abajo, poné su clave y elegí un modelo.",
+    agentInUse: "en uso",
+    agentModelWait: "pidiendo los modelos…",
+    keyEnvWins: "La clave viene de {name} en tu entorno, y esa le gana a cualquiera guardada acá.",
+    keyChecking: "Probando…",
     groupAgent: "Nuestro agente",
     groupAgentSub: "Providers, claves y el modelo que usa Apex cuando corre el agente propio",
     keyKept: "clave guardada en el llavero del sistema",
