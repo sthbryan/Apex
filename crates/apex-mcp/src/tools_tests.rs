@@ -198,7 +198,10 @@ fn every_api_tool_shares_the_group_that_can_be_turned_off() {
         .filter(|tool| tool.group == apex_proto::ToolGroup::Api)
         .map(|t| t.name)
         .collect();
-    assert_eq!(named, vec!["apex_api_list", "apex_api_read", "apex_api_write", "apex_request"]);
+    assert_eq!(
+        named,
+        vec!["apex_api_list", "apex_api_read", "apex_api_write", "apex_api_remove", "apex_request"]
+    );
 }
 
 #[test]
@@ -242,6 +245,14 @@ fn a_header_that_is_not_a_string_is_refused() {
     let asked = json!({ "name": "ping", "url": "http://x", "headers": { "Accept": 7 } });
     let trouble = command_for(&me, "apex_api_write", &asked).expect_err("a number header");
     assert!(trouble.to_string().contains("Accept"), "{trouble}");
+}
+
+#[test]
+fn removing_names_the_request_it_takes_away() {
+    let me = caller(session("claude", None));
+    let command = command_for(&me, "apex_api_remove", &json!({ "name": "ping" })).expect("command");
+    assert!(matches!(command, Command::ApiRemove { name, .. } if name == "ping"));
+    assert!(command_for(&me, "apex_api_remove", &json!({})).is_err());
 }
 
 #[test]

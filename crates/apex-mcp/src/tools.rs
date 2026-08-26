@@ -268,6 +268,21 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
+        name: "apex_api_remove",
+        group: ToolGroup::Api,
+        description: "Delete a saved http request. It is gone for good, so ask before deleting \
+                      one you did not save yourself.",
+        schema: || {
+            json!({
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                    "name": { "type": "string", "description": "Name of the request to delete" }
+                }
+            })
+        },
+    },
+    Tool {
         name: "apex_request",
         group: ToolGroup::Api,
         description: "Send a saved http request and answer with what came back. Save it with \
@@ -388,6 +403,10 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
                 headers: headers_of(arguments)?,
                 body: text("body"),
             },
+        }),
+        "apex_api_remove" => Ok(Command::ApiRemove {
+            project: caller.project,
+            name: text("name").context("name is required")?,
         }),
         "apex_request" => Ok(Command::ApiSend {
             project: caller.project,
