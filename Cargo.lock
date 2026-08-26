@@ -65,6 +65,7 @@ version = "0.10.0"
 dependencies = [
  "anyhow",
  "apex-core",
+ "chrono",
  "futures-util",
  "globset",
  "ignore",
@@ -77,7 +78,9 @@ dependencies = [
  "tempfile",
  "tokio",
  "toml 1.1.4+spec-1.1.0",
+ "tracing",
  "url",
+ "uuid",
 ]
 
 [[package]]
@@ -243,6 +246,7 @@ dependencies = [
  "apex-tasks",
  "async-trait",
  "bytes",
+ "chrono",
  "directories",
  "percent-encoding",
  "reqwest",

@@ -7,6 +7,7 @@ use rig_core::message::{AssistantContent, ToolResultContent, UserContent};
 use rig_core::streaming::StreamedAssistantContent;
 
 use crate::brain::Brain;
+use crate::log::Log;
 use crate::mode::Mode;
 use crate::tools::todo::Todo;
 use crate::tools::{Call, Done, Kit, ask};
@@ -60,6 +61,7 @@ impl Spent {
 pub struct Chat {
     brain: Arc<Brain>,
     kit: Kit,
+    log: Option<Log>,
     preamble: String,
     history: Vec<Message>,
     spent: Spent,
@@ -70,10 +72,19 @@ impl Chat {
         Self {
             brain: Arc::new(brain),
             kit,
+            log: None,
             preamble: preamble.into(),
             history: Vec::new(),
             spent: Spent::default(),
         }
+    }
+
+    pub fn keeps(&mut self, log: Log) {
+        self.log = Some(log);
+    }
+
+    pub fn picks_up(&mut self, messages: Vec<Message>) {
+        self.history = messages;
     }
 
     pub fn works_in(&mut self, mode: Mode) {
@@ -93,13 +104,13 @@ impl Chat {
     }
 
     pub async fn turn(&mut self, said: &str, surface: &mut impl Surface) -> Result<()> {
-        self.history.push(Message::user(said));
+        self.remember(Message::user(said));
 
         for round in 0..MOST_ROUNDS {
             let choice = self.round(surface).await?;
             let calls = wanted(&choice);
             if !said_nothing(&choice) {
-                self.history.push(Message::Assistant { id: None, content: choice });
+                self.remember(Message::Assistant { id: None, content: choice });
             }
             if calls.is_empty() {
                 return Ok(());
@@ -108,11 +119,18 @@ impl Chat {
                 break;
             }
             let answers = self.serve(&calls, surface).await;
-            self.history.push(Message::User { content: answers });
+            self.remember(Message::User { content: answers });
         }
 
         surface.noted(&format!("stopped after {MOST_ROUNDS} rounds of tools"));
         Ok(())
+    }
+
+    fn remember(&mut self, message: Message) {
+        if let Some(log) = &self.log {
+            log.wrote(&message);
+        }
+        self.history.push(message);
     }
 
     async fn round(&mut self, surface: &mut impl Surface) -> Result<Vec<AssistantContent>> {

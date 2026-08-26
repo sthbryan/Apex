@@ -3,6 +3,7 @@ use std::io::{IsTerminal, Write};
 use anyhow::{Context, Result};
 use apex_agent::chat::{Chat, Spent, Surface};
 use apex_agent::choice::{self, Choice};
+use apex_agent::log::{self, Head, Log};
 use apex_agent::mode::Mode;
 use apex_agent::tools::todo::Todo;
 use apex_agent::tools::{Call, Done, Kit, sketch};
@@ -72,6 +73,16 @@ pub async fn run(run: Run) -> Result<i32> {
     let mut chat = Chat::new(brain, Kit::new(&here), preamble::read(&agent_dir));
     chat.works_in(mode);
     choice::write(&agent_dir, &picked)?;
+
+    let now = chrono::Local::now();
+    let head = Head {
+        id: log::newest_id(now),
+        provider: picked.provider.clone(),
+        model: picked.model.clone(),
+        cwd: here.display().to_string(),
+        at: now.timestamp(),
+    };
+    chat.keeps(Log::start(&agent_dir, &head)?);
 
     talk(&mut chat, &picked).await
 }

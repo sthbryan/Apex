@@ -22,6 +22,7 @@ reqwest.workspace = true
 apex-proto.workspace = true
 
 anyhow.workspace = true
+chrono.workspace = true
 directories.workspace = true
 bytes.workspace = true
 serde.workspace = true
