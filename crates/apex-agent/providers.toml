@@ -1,0 +1,87 @@
+[[provider]]
+name = "openai"
+label = "OpenAI"
+kind = "openai"
+env = "OPENAI_API_KEY"
+
+[[provider]]
+name = "anthropic"
+label = "Anthropic"
+kind = "anthropic"
+env = "ANTHROPIC_API_KEY"
+
+[[provider]]
+name = "gemini"
+label = "Google Gemini"
+kind = "gemini"
+env = "GEMINI_API_KEY"
+
+[[provider]]
+name = "openrouter"
+label = "OpenRouter"
+kind = "compatible"
+base_url = "https://openrouter.ai/api/v1"
+env = "OPENROUTER_API_KEY"
+
+[[provider]]
+name = "xai"
+label = "xAI"
+kind = "compatible"
+base_url = "https://api.x.ai/v1"
+env = "XAI_API_KEY"
+
+[[provider]]
+name = "groq"
+label = "Groq"
+kind = "compatible"
+base_url = "https://api.groq.com/openai/v1"
+env = "GROQ_API_KEY"
+
+[[provider]]
+name = "deepseek"
+label = "DeepSeek"
+kind = "compatible"
+base_url = "https://api.deepseek.com/v1"
+env = "DEEPSEEK_API_KEY"
+
+[[provider]]
+name = "mistral"
+label = "Mistral"
+kind = "compatible"
+base_url = "https://api.mistral.ai/v1"
+env = "MISTRAL_API_KEY"
+
+[[provider]]
+name = "moonshot"
+label = "Moonshot"
+kind = "compatible"
+base_url = "https://api.moonshot.ai/v1"
+env = "MOONSHOT_API_KEY"
+
+[[provider]]
+name = "together"
+label = "Together"
+kind = "compatible"
+base_url = "https://api.together.xyz/v1"
+env = "TOGETHER_API_KEY"
+
+[[provider]]
+name = "zai"
+label = "Z.ai"
+kind = "compatible"
+base_url = "https://api.z.ai/api/paas/v4"
+env = "ZAI_API_KEY"
+
+[[provider]]
+name = "ollama"
+label = "Ollama"
+kind = "compatible"
+base_url = "http://localhost:11434/v1"
+keyless = true
+
+[[provider]]
+name = "lmstudio"
+label = "LM Studio"
+kind = "compatible"
+base_url = "http://localhost:1234/v1"
+keyless = true
