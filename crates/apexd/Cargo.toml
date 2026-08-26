@@ -10,12 +10,14 @@ apex-git.workspace = true
 apex-mcp.workspace = true
 apex-metrics.workspace = true
 apex-acp.workspace = true
+apex-agent.workspace = true
 async-trait.workspace = true
 apex-pty.workspace = true
 apex-quota.workspace = true
 apex-tasks.workspace = true
 url = "2"
 percent-encoding = "2"
+rpassword = "7"
 reqwest.workspace = true
 apex-proto.workspace = true
 

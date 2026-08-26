@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod cli;
 #[cfg(test)]
 mod cli_tests;

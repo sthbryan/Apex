@@ -2,7 +2,7 @@ use apex_proto::{DaemonReport, IDLE_GRACE_NEVER, PROTOCOL_VERSION};
 
 use std::path::{Path, PathBuf};
 
-use crate::cli::{Ask, Verb, app_traces, bundle_of, data_traces, read, spell, spell_report};
+use crate::cli::{Ask, Auth, Verb, app_traces, bundle_of, data_traces, read, spell, spell_report};
 
 fn argv(words: &[&str]) -> Vec<String> {
     words.iter().map(|word| word.to_string()).collect()
@@ -190,4 +190,57 @@ fn the_data_traces_carry_the_config_folder_and_the_webview_store() {
     assert!(found.contains(&config));
     assert!(found.contains(&home.join("Library/WebKit/com.justcallmebryan.apex")));
     assert!(found.contains(&home.join(".config/com.justcallmebryan.apex")));
+}
+
+fn auth(words: &[&str]) -> Auth {
+    let mut all = vec!["/usr/local/bin/apex", "auth"];
+    all.extend_from_slice(words);
+    match read(argv(&all).into_iter()) {
+        Some(Verb::Auth(auth)) => auth,
+        _ => panic!("that was not an auth verb"),
+    }
+}
+
+#[test]
+fn a_bare_auth_lists_what_is_held() {
+    assert_eq!(auth(&[]), Auth::List);
+    assert_eq!(auth(&["list"]), Auth::List);
+}
+
+#[test]
+fn auth_add_takes_the_provider_after_it() {
+    assert_eq!(auth(&["add", "openai"]), Auth::Add("openai".to_owned()));
+}
+
+#[test]
+fn auth_forgets_a_key_under_either_word() {
+    assert_eq!(auth(&["rm", "openai"]), Auth::Remove("openai".to_owned()));
+    assert_eq!(auth(&["remove", "openai"]), Auth::Remove("openai".to_owned()));
+}
+
+#[test]
+fn auth_models_takes_the_provider_after_it() {
+    assert_eq!(auth(&["models", "groq"]), Auth::Models("groq".to_owned()));
+}
+
+#[test]
+fn auth_without_a_provider_says_which_one_is_missing() {
+    assert_eq!(auth(&["add"]), Auth::Wrong("auth add needs a provider".to_owned()));
+    assert_eq!(auth(&["rm"]), Auth::Wrong("auth rm needs a provider".to_owned()));
+    assert_eq!(auth(&["models"]), Auth::Wrong("auth models needs a provider".to_owned()));
+}
+
+#[test]
+fn a_blank_provider_name_counts_as_none_at_all() {
+    assert_eq!(auth(&["add", "   "]), Auth::Wrong("auth add needs a provider".to_owned()));
+}
+
+#[test]
+fn an_auth_word_nobody_knows_is_refused_by_name() {
+    assert_eq!(auth(&["sniff"]), Auth::Wrong("there is no auth sniff".to_owned()));
+}
+
+#[test]
+fn a_provider_name_is_taken_without_its_spaces() {
+    assert_eq!(auth(&["add", " openai "]), Auth::Add("openai".to_owned()));
 }

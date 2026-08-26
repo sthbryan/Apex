@@ -18,6 +18,13 @@ usage:
   apex stop       stop the daemon and every session it holds
   apex notify <text> [--title <title>]
                   raise a desktop notice through Apex
+  apex auth       list the providers and which of them hold a key
+  apex auth add <provider>
+                  type a key once and keep it in the OS keychain
+  apex auth rm <provider>
+                  forget the key kept for a provider
+  apex auth models <provider>
+                  list the models a provider says it has
   apex uninstall  stop the daemon and remove Apex from this machine
   apex daemon     run the daemon here instead of in the background
   apex help       print this
@@ -33,12 +40,22 @@ pub enum Ask {
     Prompt,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Auth {
+    List,
+    Add(String),
+    Remove(String),
+    Models(String),
+    Wrong(String),
+}
+
 pub enum Verb {
     Help,
     Status,
     Start,
     Stop,
     Notify { title: Option<String>, body: String },
+    Auth(Auth),
     Uninstall { settings: Ask, confirmed: bool },
     Unknown(String),
 }
@@ -56,6 +73,7 @@ pub fn read(args: impl Iterator<Item = String>) -> Option<Verb> {
 
     match word.as_deref() {
         Some("notify") => Some(notice(&rest)),
+        Some("auth") => Some(Verb::Auth(credentials(&rest))),
         Some("uninstall") => Some(removal(&rest)),
         Some("daemon") => None,
         Some("status") => Some(Verb::Status),
@@ -83,7 +101,22 @@ pub async fn run(socket: &Path, verb: Verb) -> Result<i32> {
         Verb::Start => start(socket).await,
         Verb::Stop => stop(socket).await,
         Verb::Notify { title, body } => notify(socket, title, body).await,
+        Verb::Auth(auth) => crate::auth::run(auth).await,
         Verb::Uninstall { settings, confirmed } => uninstall(socket, settings, confirmed).await,
+    }
+}
+
+fn credentials(rest: &[String]) -> Auth {
+    let name = rest.get(1).map(|name| name.trim()).filter(|name| !name.is_empty());
+    match (rest.first().map(String::as_str), name) {
+        (None | Some("list"), _) => Auth::List,
+        (Some("add"), Some(name)) => Auth::Add(name.to_owned()),
+        (Some("rm" | "remove"), Some(name)) => Auth::Remove(name.to_owned()),
+        (Some("models"), Some(name)) => Auth::Models(name.to_owned()),
+        (Some(word @ ("add" | "rm" | "remove" | "models")), None) => {
+            Auth::Wrong(format!("auth {word} needs a provider"))
+        }
+        (Some(word), _) => Auth::Wrong(format!("there is no auth {word}")),
     }
 }
 

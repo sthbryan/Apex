@@ -9,6 +9,7 @@ license = "MIT"
 
 [workspace.dependencies]
 apex-acp = { path = "crates/apex-acp" }
+apex-agent = { path = "crates/apex-agent" }
 apex-core = { path = "crates/apex-core" }
 apex-git = { path = "crates/apex-git" }
 apex-proto = { path = "crates/apex-proto" }
