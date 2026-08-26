@@ -2,12 +2,14 @@ import { Button, Pane, SectionLabel, Segmented, Select } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
+import type { ApiEntry } from "@/bindings/ApiEntry";
 import type { ApiRun } from "@/bindings/ApiRun";
 import type { ApiVariable } from "@/bindings/ApiVariable";
 import { type BodyKind, bodyKind, KINDS, laidOut } from "@/features/api/body";
 import { runHeaders, type Shown, shownBody } from "@/features/api/run";
 import {
   brokenJson,
+  catalog,
   chosen,
   closeEnvironment,
   dirty,
@@ -21,7 +23,6 @@ import {
   last,
   layOut,
   METHODS,
-  names,
   openEnvironment,
   openRequest,
   params,
@@ -57,6 +58,14 @@ const BOX =
   "min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
 const LINE = `h-(--apex-h-md) ${BOX}`;
 const FLOW = "w-full whitespace-pre-wrap break-words font-mono text-xs leading-relaxed";
+
+const VERBS: Record<string, string> = {
+  GET: "text-state-done",
+  POST: "text-state-working",
+  PUT: "text-state-working",
+  PATCH: "text-state-working",
+  DELETE: "text-state-failed",
+} as const;
 
 const TONES = {
   ok: "text-state-done",
@@ -134,7 +143,10 @@ export function ApiPanel() {
           label={t("api.request")}
           placeholder={t("api.pickRequest")}
           value={name ?? ""}
-          options={names.value.map((saved) => ({ value: saved, label: saved }))}
+          options={catalog.value.map((entry) => ({
+            value: entry.name,
+            label: <Verb entry={entry} />,
+          }))}
           onChange={(picked) => void openRequest(picked).catch(complain)}
         />
 
@@ -575,6 +587,22 @@ function Rows({
         </div>
       ))}
     </>
+  );
+}
+
+function Verb({ entry }: { entry: ApiEntry }) {
+  return (
+    <span class="flex min-w-0 items-center gap-2">
+      <span
+        class={cn(
+          "w-10 shrink-0 font-mono text-[10px] uppercase",
+          VERBS[entry.method] ?? "text-faint",
+        )}
+      >
+        {entry.method}
+      </span>
+      <span class="min-w-0 truncate">{entry.name}</span>
+    </span>
   );
 }
 

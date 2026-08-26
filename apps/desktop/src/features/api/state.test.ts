@@ -28,6 +28,7 @@ import { activeProjectId } from "@/features/projects/state";
 import {
   blank,
   brokenJson,
+  catalog,
   chosen,
   closeEnvironment,
   dirty,
@@ -41,7 +42,6 @@ import {
   last,
   layOut,
   loadCollection,
-  names,
   openEnvironment,
   openRequest,
   params,
@@ -83,16 +83,19 @@ beforeEach(() => {
   (activeProjectId as unknown as { value: string | null }).value = "p1";
   startNew();
   closeEnvironment();
-  names.value = [];
+  catalog.value = [];
   environments.value = [];
   environment.value = null;
 });
 
 describe("loadCollection", () => {
-  it("keeps the names and the environments", async () => {
-    invoke.mockResolvedValue({ requests: ["a", "b"], environments: ["local"] });
+  it("keeps the requests with their verbs and the environments", async () => {
+    invoke.mockResolvedValue({
+      requests: [{ name: "a", method: "GET" }],
+      environments: ["local"],
+    });
     await loadCollection();
-    expect(names.value).toEqual(["a", "b"]);
+    expect(catalog.value).toEqual([{ name: "a", method: "GET" }]);
     expect(environments.value).toEqual(["local"]);
   });
 
@@ -105,10 +108,10 @@ describe("loadCollection", () => {
 
   it("asks for nothing without a project", async () => {
     (activeProjectId as unknown as { value: string | null }).value = null;
-    names.value = ["stale"];
+    catalog.value = [{ name: "stale", method: "GET" }];
     await loadCollection();
     expect(invoke).not.toHaveBeenCalled();
-    expect(names.value).toEqual([]);
+    expect(catalog.value).toEqual([]);
   });
 });
 
@@ -315,20 +318,26 @@ describe("environments", () => {
 
 describe("startCollection", () => {
   it("reads the collection again when the daemon says it changed", async () => {
-    invoke.mockResolvedValue({ requests: ["a"], environments: [] });
+    invoke.mockResolvedValue({ requests: [{ name: "a", method: "GET" }], environments: [] });
     const stop = startCollection();
     await Promise.resolve();
-    invoke.mockResolvedValue({ requests: ["a", "b"], environments: [] });
+    invoke.mockResolvedValue({
+      requests: [
+        { name: "a", method: "GET" },
+        { name: "b", method: "POST" },
+      ],
+      environments: [],
+    });
     for (const handler of changed) {
       handler({ project: "p1", name: "b" });
     }
     await Promise.resolve();
-    expect(names.value).toEqual(["a", "b"]);
+    expect(catalog.value.map((entry) => entry.name)).toEqual(["a", "b"]);
     stop();
   });
 
   it("leaves another project alone", async () => {
-    invoke.mockResolvedValue({ requests: ["a"], environments: [] });
+    invoke.mockResolvedValue({ requests: [{ name: "a", method: "GET" }], environments: [] });
     const stop = startCollection();
     await Promise.resolve();
     invoke.mockClear();
@@ -344,7 +353,7 @@ describe("startCollection", () => {
     invoke.mockImplementation((name: string) =>
       name === "api_read"
         ? Promise.resolve({ request: fresh, last: null })
-        : Promise.resolve({ requests: ["b"], environments: [] }),
+        : Promise.resolve({ requests: [{ name: "b", method: "GET" }], environments: [] }),
     );
     chosen.value = "b";
     saved.value = blank();
@@ -360,7 +369,9 @@ describe("startCollection", () => {
   });
 
   it("leaves an edited request alone rather than losing the edit", async () => {
-    invoke.mockImplementation(() => Promise.resolve({ requests: ["b"], environments: [] }));
+    invoke.mockImplementation(() =>
+      Promise.resolve({ requests: [{ name: "b", method: "GET" }], environments: [] }),
+    );
     chosen.value = "b";
     saved.value = blank();
     draft.value = { ...blank(), url: "http://mine" };

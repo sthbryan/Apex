@@ -1,6 +1,7 @@
 import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
 
+import type { ApiEntry } from "@/bindings/ApiEntry";
 import type { ApiRequest } from "@/bindings/ApiRequest";
 import type { ApiRun } from "@/bindings/ApiRun";
 import type { ApiVariable } from "@/bindings/ApiVariable";
@@ -22,7 +23,7 @@ export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTION
 
 const LAST_ENV = "apex.api.environment";
 
-export const names = signal<string[]>([]);
+export const catalog = signal<ApiEntry[]>([]);
 export const environments = signal<string[]>([]);
 export const chosen = signal<string | null>(null);
 export const draft = signal<ApiRequest>(blank());
@@ -45,14 +46,14 @@ export function dirty(): boolean {
 export async function loadCollection(): Promise<void> {
   const project = activeProjectId.value;
   if (!project) {
-    names.value = [];
+    catalog.value = [];
     environments.value = [];
     return;
   }
-  const found = await invoke<{ requests: string[]; environments: string[] }>("api_list", {
+  const found = await invoke<{ requests: ApiEntry[]; environments: string[] }>("api_list", {
     project,
   });
-  names.value = found.requests;
+  catalog.value = found.requests;
   environments.value = found.environments;
   if (environment.value && !found.environments.includes(environment.value)) {
     setEnvironment(found.environments[0] ?? null);
