@@ -2,7 +2,9 @@ use apex_proto::{DaemonReport, IDLE_GRACE_NEVER, PROTOCOL_VERSION};
 
 use std::path::{Path, PathBuf};
 
-use crate::cli::{Ask, Auth, Verb, app_traces, bundle_of, data_traces, read, spell, spell_report};
+use crate::cli::{
+    Ask, Auth, Run, Verb, app_traces, bundle_of, data_traces, read, spell, spell_report,
+};
 
 fn argv(words: &[&str]) -> Vec<String> {
     words.iter().map(|word| word.to_string()).collect()
@@ -243,4 +245,49 @@ fn an_auth_word_nobody_knows_is_refused_by_name() {
 #[test]
 fn a_provider_name_is_taken_without_its_spaces() {
     assert_eq!(auth(&["add", " openai "]), Auth::Add("openai".to_owned()));
+}
+
+fn agent(words: &[&str]) -> Run {
+    let mut all = vec!["/usr/local/bin/apex", "agent"];
+    all.extend_from_slice(words);
+    match read(argv(&all).into_iter()) {
+        Some(Verb::Agent(run)) => run,
+        _ => panic!("that was not an agent verb"),
+    }
+}
+
+#[test]
+fn a_bare_agent_takes_no_choice_and_makes_no_fuss() {
+    assert_eq!(agent(&[]), Run::default());
+}
+
+#[test]
+fn the_agent_takes_a_provider_and_a_model() {
+    let run = agent(&["--provider", "openai", "--model", "gpt-5"]);
+    assert_eq!(run.provider.as_deref(), Some("openai"));
+    assert_eq!(run.model.as_deref(), Some("gpt-5"));
+    assert_eq!(run.wrong, None);
+}
+
+#[test]
+fn the_short_flags_mean_the_same_thing() {
+    let run = agent(&["-p", "groq", "-m", "kimi-k2"]);
+    assert_eq!(run.provider.as_deref(), Some("groq"));
+    assert_eq!(run.model.as_deref(), Some("kimi-k2"));
+}
+
+#[test]
+fn a_flag_with_nothing_after_it_says_what_is_missing() {
+    assert_eq!(agent(&["--provider"]).wrong.as_deref(), Some("--provider needs a name"));
+    assert_eq!(agent(&["--model"]).wrong.as_deref(), Some("--model needs a name"));
+}
+
+#[test]
+fn a_flag_nobody_knows_is_refused_by_name() {
+    assert_eq!(agent(&["--loud"]).wrong.as_deref(), Some("agent does not know --loud"));
+}
+
+#[test]
+fn the_names_are_taken_without_their_spaces() {
+    assert_eq!(agent(&["-p", " openai "]).provider.as_deref(), Some("openai"));
 }

@@ -18,6 +18,8 @@ usage:
   apex stop       stop the daemon and every session it holds
   apex notify <text> [--title <title>]
                   raise a desktop notice through Apex
+  apex agent [--provider <name>] [--model <name>]
+                  talk to a coding agent here, in this folder
   apex auth       list the providers and which of them hold a key
   apex auth add <provider>
                   type a key once and keep it in the OS keychain
@@ -40,6 +42,13 @@ pub enum Ask {
     Prompt,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Run {
+    pub provider: Option<String>,
+    pub model: Option<String>,
+    pub wrong: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Auth {
     List,
@@ -56,6 +65,7 @@ pub enum Verb {
     Stop,
     Notify { title: Option<String>, body: String },
     Auth(Auth),
+    Agent(Run),
     Uninstall { settings: Ask, confirmed: bool },
     Unknown(String),
 }
@@ -74,6 +84,7 @@ pub fn read(args: impl Iterator<Item = String>) -> Option<Verb> {
     match word.as_deref() {
         Some("notify") => Some(notice(&rest)),
         Some("auth") => Some(Verb::Auth(credentials(&rest))),
+        Some("agent") => Some(Verb::Agent(session(&rest))),
         Some("uninstall") => Some(removal(&rest)),
         Some("daemon") => None,
         Some("status") => Some(Verb::Status),
@@ -102,8 +113,31 @@ pub async fn run(socket: &Path, verb: Verb) -> Result<i32> {
         Verb::Stop => stop(socket).await,
         Verb::Notify { title, body } => notify(socket, title, body).await,
         Verb::Auth(auth) => crate::auth::run(auth).await,
+        Verb::Agent(run) => crate::agent::run(run).await,
         Verb::Uninstall { settings, confirmed } => uninstall(socket, settings, confirmed).await,
     }
+}
+
+fn session(rest: &[String]) -> Run {
+    let mut run = Run::default();
+    let mut words = rest.iter();
+    while let Some(word) = words.next() {
+        let taken = |word: Option<&String>| {
+            word.map(|word| word.trim()).filter(|word| !word.is_empty()).map(str::to_owned)
+        };
+        match word.as_str() {
+            "--provider" | "-p" => match taken(words.next()) {
+                Some(name) => run.provider = Some(name),
+                None => run.wrong = Some("--provider needs a name".to_owned()),
+            },
+            "--model" | "-m" => match taken(words.next()) {
+                Some(name) => run.model = Some(name),
+                None => run.wrong = Some("--model needs a name".to_owned()),
+            },
+            other => run.wrong = Some(format!("agent does not know {other}")),
+        }
+    }
+    run
 }
 
 fn credentials(rest: &[String]) -> Auth {

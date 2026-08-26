@@ -1,0 +1,172 @@
+use std::io::{IsTerminal, Write};
+
+use anyhow::{Context, Result};
+use apex_agent::chat::{Chat, Spent, Surface};
+use apex_agent::choice::{self, Choice};
+use apex_agent::{ProviderSet, key, preamble};
+use apex_core::ApexPaths;
+use tokio::io::{AsyncBufReadExt, BufReader};
+
+use crate::cli::Run;
+
+const DIM: &str = "\x1b[2m";
+const PLAIN: &str = "\x1b[0m";
+
+const HELP: &str = "  /help   print this
+  /exit   leave the agent
+";
+
+pub async fn run(run: Run) -> Result<i32> {
+    if let Some(wrong) = run.wrong {
+        eprintln!("apex: {wrong}");
+        return Ok(2);
+    }
+
+    let paths = ApexPaths::discover()?;
+    let set = ProviderSet::load(&paths.providers_dir())?;
+    let agent_dir = paths.agent_dir();
+
+    let picked = match pick(&run, choice::read(&agent_dir).as_ref()) {
+        Ok(picked) => picked,
+        Err(complaint) => {
+            eprintln!("apex: {complaint}");
+            return Ok(2);
+        }
+    };
+
+    let Some(provider) = set.get(&picked.provider) else {
+        eprintln!("apex: there is no provider called {}", picked.provider);
+        eprintln!("apex: known ones are {}", crate::auth::spell_names(&set));
+        return Ok(2);
+    };
+
+    let key = match key::find(provider)? {
+        Some(held) => held.key,
+        None if provider.keyless => String::new(),
+        None => {
+            eprintln!(
+                "apex: {} has no key yet, run apex auth add {}",
+                provider.name, provider.name
+            );
+            return Ok(2);
+        }
+    };
+
+    let brain = provider.dial(&key)?.brain(&picked.model);
+    let mut chat = Chat::new(brain, preamble::read(&agent_dir));
+    choice::write(&agent_dir, &picked)?;
+
+    talk(&mut chat, &picked).await
+}
+
+pub fn pick(run: &Run, last: Option<&Choice>) -> Result<Choice, String> {
+    let provider = run.provider.clone().or_else(|| last.map(|last| last.provider.clone()));
+    let Some(provider) = provider else {
+        return Err("apex agent needs a provider, try --provider openai --model gpt-5".to_owned());
+    };
+    let model = run
+        .model
+        .clone()
+        .or_else(|| last.filter(|last| last.provider == provider).map(|last| last.model.clone()));
+    match model {
+        Some(model) => Ok(Choice { provider, model }),
+        None => {
+            Err(format!("{provider} needs a model, run apex auth models {provider} to see them"))
+        }
+    }
+}
+
+async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
+    let tty = std::io::stdout().is_terminal();
+    let here = std::env::current_dir().context("finding where you are")?;
+    println!("{} on {} in {}", picked.model, picked.provider, here.display());
+    println!("/help for the few commands there are");
+
+    let mut lines = BufReader::new(tokio::io::stdin()).lines();
+    loop {
+        if tty {
+            print!("\n› ");
+            std::io::stdout().flush().ok();
+        }
+        let Some(line) = lines.next_line().await? else {
+            break;
+        };
+        let said = line.trim();
+        if said.is_empty() {
+            continue;
+        }
+        if said == "/exit" || said == "/quit" {
+            break;
+        }
+        if said == "/help" {
+            print!("{HELP}");
+            continue;
+        }
+
+        let mut ink = Ink::new(tty);
+        match chat.turn(said, &mut ink).await {
+            Ok(()) => ink.ended(chat.spent()),
+            Err(cause) => {
+                ink.ended(chat.spent());
+                eprintln!("apex: {cause:#}");
+            }
+        }
+    }
+    Ok(0)
+}
+
+struct Ink {
+    tty: bool,
+    thinking: bool,
+    wrote: bool,
+}
+
+impl Ink {
+    fn new(tty: bool) -> Self {
+        Self { tty, thinking: false, wrote: false }
+    }
+
+    fn plain(&mut self) {
+        if self.thinking {
+            print!("{PLAIN}");
+            self.thinking = false;
+        }
+    }
+
+    fn ended(&mut self, spent: Spent) {
+        self.plain();
+        if self.wrote {
+            println!();
+        }
+        if self.tty {
+            println!("{DIM}{} tokens so far{PLAIN}", spent.total());
+        }
+        std::io::stdout().flush().ok();
+    }
+}
+
+impl Surface for Ink {
+    fn said(&mut self, text: &str) {
+        self.plain();
+        print!("{text}");
+        std::io::stdout().flush().ok();
+        self.wrote = true;
+    }
+
+    fn thought(&mut self, text: &str) {
+        if !self.tty {
+            return;
+        }
+        if !self.thinking {
+            print!("{DIM}");
+            self.thinking = true;
+        }
+        print!("{text}");
+        std::io::stdout().flush().ok();
+        self.wrote = true;
+    }
+}
+
+#[cfg(test)]
+#[path = "agent_tests.rs"]
+mod tests;
