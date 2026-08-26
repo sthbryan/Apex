@@ -10,6 +10,16 @@ export interface AgentIconGlyph {
 }
 
 export const AGENT_GLYPHS = {
+  apex: {
+    label: "Apex",
+    paths: [
+      {
+        d: "M12 4.5 19.5 12 12 19.5 4.5 12Z M12 6.3 17.7 12 12 17.7 6.3 12Z M12 10.15 13.85 12 12 13.85 10.15 12Z",
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+      },
+    ],
+  },
   antigravity: {
     label: "Antigravity",
     paths: [
