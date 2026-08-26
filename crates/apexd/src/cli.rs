@@ -18,8 +18,9 @@ usage:
   apex stop       stop the daemon and every session it holds
   apex notify <text> [--title <title>]
                   raise a desktop notice through Apex
-  apex agent [--provider <name>] [--model <name>]
+  apex agent [--provider <name>] [--model <name>] [--mode <mode>]
                   talk to a coding agent here, in this folder
+                  modes: auto (the default), plan, chat
   apex auth       list the providers and which of them hold a key
   apex auth add <provider>
                   type a key once and keep it in the OS keychain
@@ -46,6 +47,7 @@ pub enum Ask {
 pub struct Run {
     pub provider: Option<String>,
     pub model: Option<String>,
+    pub mode: Option<String>,
     pub wrong: Option<String>,
 }
 
@@ -133,6 +135,10 @@ fn session(rest: &[String]) -> Run {
             "--model" | "-m" => match taken(words.next()) {
                 Some(name) => run.model = Some(name),
                 None => run.wrong = Some("--model needs a name".to_owned()),
+            },
+            "--mode" => match taken(words.next()) {
+                Some(name) => run.mode = Some(name),
+                None => run.wrong = Some("--mode needs a name".to_owned()),
             },
             other => run.wrong = Some(format!("agent does not know {other}")),
         }

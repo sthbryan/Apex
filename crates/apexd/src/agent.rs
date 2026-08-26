@@ -3,6 +3,7 @@ use std::io::{IsTerminal, Write};
 use anyhow::{Context, Result};
 use apex_agent::chat::{Chat, Spent, Surface};
 use apex_agent::choice::{self, Choice};
+use apex_agent::mode::Mode;
 use apex_agent::tools::todo::Todo;
 use apex_agent::tools::{Call, Done, Kit, sketch};
 use apex_agent::{ProviderSet, key, preamble};
@@ -14,8 +15,9 @@ use crate::cli::Run;
 const DIM: &str = "\x1b[2m";
 const PLAIN: &str = "\x1b[0m";
 
-const HELP: &str = "  /help   print this
-  /exit   leave the agent
+const HELP: &str = "  /help          print this
+  /mode <name>   switch to auto, plan or chat
+  /exit          leave the agent
 ";
 
 pub async fn run(run: Run) -> Result<i32> {
@@ -27,6 +29,17 @@ pub async fn run(run: Run) -> Result<i32> {
     let paths = ApexPaths::discover()?;
     let set = ProviderSet::load(&paths.providers_dir())?;
     let agent_dir = paths.agent_dir();
+
+    let mode = match run.mode.as_deref().map(str::trim) {
+        Some(name) => match Mode::parse(name) {
+            Some(mode) => mode,
+            None => {
+                eprintln!("apex: there is no {name} mode, only auto, plan and chat");
+                return Ok(2);
+            }
+        },
+        None => Mode::default(),
+    };
 
     let picked = match pick(&run, choice::read(&agent_dir).as_ref()) {
         Ok(picked) => picked,
@@ -57,6 +70,7 @@ pub async fn run(run: Run) -> Result<i32> {
     let here = std::env::current_dir().context("finding where you are")?;
     let brain = provider.dial(&key)?.brain(&picked.model);
     let mut chat = Chat::new(brain, Kit::new(&here), preamble::read(&agent_dir));
+    chat.works_in(mode);
     choice::write(&agent_dir, &picked)?;
 
     talk(&mut chat, &picked).await
@@ -82,7 +96,13 @@ pub fn pick(run: &Run, last: Option<&Choice>) -> Result<Choice, String> {
 async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
     let tty = std::io::stdout().is_terminal();
     let here = std::env::current_dir().context("finding where you are")?;
-    println!("{} on {} in {}", picked.model, picked.provider, here.display());
+    println!(
+        "{} on {} in {}, {} mode",
+        picked.model,
+        picked.provider,
+        here.display(),
+        chat.mode().as_str()
+    );
     println!("/help for the few commands there are");
 
     let mut ink = Ink::new(tty);
@@ -99,6 +119,16 @@ async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
         }
         if said == "/help" {
             print!("{HELP}");
+            continue;
+        }
+        if let Some(asked) = said.strip_prefix("/mode") {
+            match Mode::parse(asked) {
+                Some(mode) => {
+                    chat.works_in(mode);
+                    println!("{} mode", mode.as_str());
+                }
+                None => println!("{} mode, switch with auto, plan or chat", chat.mode().as_str()),
+            }
             continue;
         }
 

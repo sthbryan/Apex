@@ -291,3 +291,18 @@ fn a_flag_nobody_knows_is_refused_by_name() {
 fn the_names_are_taken_without_their_spaces() {
     assert_eq!(agent(&["-p", " openai "]).provider.as_deref(), Some("openai"));
 }
+
+#[test]
+fn the_agent_takes_a_mode() {
+    assert_eq!(agent(&["--mode", "plan"]).mode.as_deref(), Some("plan"));
+}
+
+#[test]
+fn no_mode_asked_for_is_no_mode_named() {
+    assert_eq!(agent(&[]).mode, None);
+}
+
+#[test]
+fn a_mode_flag_with_nothing_after_it_says_what_is_missing() {
+    assert_eq!(agent(&["--mode"]).wrong.as_deref(), Some("--mode needs a name"));
+}

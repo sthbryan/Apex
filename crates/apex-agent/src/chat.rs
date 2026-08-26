@@ -7,6 +7,7 @@ use rig_core::message::{AssistantContent, ToolResultContent, UserContent};
 use rig_core::streaming::StreamedAssistantContent;
 
 use crate::brain::Brain;
+use crate::mode::Mode;
 use crate::tools::todo::Todo;
 use crate::tools::{Call, Done, Kit, ask};
 
@@ -75,6 +76,14 @@ impl Chat {
         }
     }
 
+    pub fn works_in(&mut self, mode: Mode) {
+        self.kit.works_in(mode);
+    }
+
+    pub fn mode(&self) -> Mode {
+        self.kit.mode()
+    }
+
     pub fn spent(&self) -> Spent {
         self.spent
     }
@@ -109,7 +118,7 @@ impl Chat {
     async fn round(&mut self, surface: &mut impl Surface) -> Result<Vec<AssistantContent>> {
         let (prior, prompt) = split(&self.history);
         let mut stream = CompletionRequestBuilder::new(Arc::clone(&self.brain), prompt)
-            .preamble(self.preamble.clone())
+            .preamble(told(&self.preamble, self.kit.mode()))
             .messages(prior)
             .tools(self.kit.offered())
             .stream()
@@ -147,6 +156,14 @@ impl Chat {
             ));
         }
         answers
+    }
+}
+
+fn told(preamble: &str, mode: Mode) -> String {
+    let hint = mode.hint();
+    match hint.is_empty() {
+        true => preamble.to_owned(),
+        false => format!("{}\n\n{hint}\n", preamble.trim_end()),
     }
 }
 

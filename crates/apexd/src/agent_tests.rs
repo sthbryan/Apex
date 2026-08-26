@@ -1,7 +1,12 @@
 use super::*;
 
 fn asked(provider: Option<&str>, model: Option<&str>) -> Run {
-    Run { provider: provider.map(str::to_owned), model: model.map(str::to_owned), wrong: None }
+    Run {
+        provider: provider.map(str::to_owned),
+        model: model.map(str::to_owned),
+        mode: None,
+        wrong: None,
+    }
 }
 
 fn last(provider: &str, model: &str) -> Choice {

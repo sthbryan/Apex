@@ -84,3 +84,26 @@ fn a_tool_that_failed_goes_back_marked_as_failed() {
     assert_eq!(spell(&Done::Said("todo bien".to_owned())), "todo bien");
     assert_eq!(spell(&Done::Failed("no existe".to_owned())), "failed: no existe");
 }
+
+#[test]
+fn yolo_mode_says_nothing_extra_to_the_model() {
+    assert_eq!(told("be brief", Mode::Auto), "be brief");
+}
+
+#[test]
+fn a_quiet_mode_is_spelled_out_after_the_preamble() {
+    let spelled = told("be brief", Mode::Chat);
+    assert!(spelled.starts_with("be brief"));
+    assert!(spelled.contains("chat mode"));
+}
+
+#[test]
+fn plan_mode_tells_the_model_not_to_carry_it_out() {
+    assert!(told("be brief", Mode::Plan).contains("do not carry it out"));
+}
+
+#[test]
+fn the_preamble_and_the_mode_do_not_run_together() {
+    let spelled = told("be brief\n\n", Mode::Chat);
+    assert!(spelled.starts_with("be brief\n\nYou are in"));
+}

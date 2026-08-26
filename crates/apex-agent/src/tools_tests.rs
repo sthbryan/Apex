@@ -1,4 +1,5 @@
 use super::*;
+use crate::mode as apex_agent_mode;
 
 fn root() -> tempfile::TempDir {
     let dir = tempfile::tempdir().expect("dir");
@@ -367,4 +368,52 @@ async fn the_kit_refuses_to_answer_a_question_meant_for_a_person() {
     let done = ran(&kit, "ask", serde_json::json!({ "question": "cual?" })).await;
     assert!(!done.went_well());
     assert!(done.text().contains("answered by the person"));
+}
+
+#[test]
+fn a_quiet_mode_offers_fewer_tools() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    kit.works_in(apex_agent_mode::Mode::Chat);
+    let names: Vec<String> = kit.offered().into_iter().map(|one| one.name).collect();
+    assert!(names.contains(&"read".to_owned()));
+    assert!(!names.contains(&"write".to_owned()));
+    assert!(!names.contains(&"bash".to_owned()));
+}
+
+#[test]
+fn plan_mode_offers_the_list_and_no_hands() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    kit.works_in(apex_agent_mode::Mode::Plan);
+    let names: Vec<String> = kit.offered().into_iter().map(|one| one.name).collect();
+    assert!(names.contains(&"todo".to_owned()));
+    assert!(!names.contains(&"edit".to_owned()));
+}
+
+#[tokio::test]
+async fn a_tool_the_mode_shut_out_is_refused_even_if_the_model_asks_anyway() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    kit.works_in(apex_agent_mode::Mode::Chat);
+    let done =
+        ran(&kit, "write", serde_json::json!({ "path": "src/new.rs", "content": "x" })).await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("not open in chat mode"));
+    assert!(!dir.path().join("src/new.rs").exists());
+}
+
+#[tokio::test]
+async fn a_tool_the_mode_allows_still_runs() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    kit.works_in(apex_agent_mode::Mode::Chat);
+    let done = ran(&kit, "read", serde_json::json!({ "path": "src/one.rs" })).await;
+    assert!(done.went_well(), "{}", done.text());
+}
+
+#[test]
+fn a_kit_starts_out_yolo() {
+    let dir = root();
+    assert_eq!(Kit::new(dir.path()).mode(), apex_agent_mode::Mode::Auto);
 }

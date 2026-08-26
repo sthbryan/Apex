@@ -13,6 +13,8 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
 
 use anyhow::{Result, anyhow, bail};
+
+use crate::mode::Mode;
 use rig_core::completion::ToolDefinition;
 use serde_json::Value;
 
@@ -45,6 +47,7 @@ pub struct Kit {
     root: PathBuf,
     seen: Mutex<HashSet<PathBuf>>,
     todo: Mutex<Vec<todo::Todo>>,
+    mode: Mutex<Mode>,
 }
 
 impl Kit {
@@ -54,6 +57,7 @@ impl Kit {
             root: root.canonicalize().unwrap_or_else(|_| root.to_path_buf()),
             seen: Mutex::default(),
             todo: Mutex::default(),
+            mode: Mutex::default(),
         }
     }
 
@@ -81,8 +85,19 @@ impl Kit {
         &self.root
     }
 
+    pub fn works_in(&self, mode: Mode) {
+        if let Ok(mut held) = self.mode.lock() {
+            *held = mode;
+        }
+    }
+
+    pub fn mode(&self) -> Mode {
+        self.mode.lock().map(|held| *held).unwrap_or_default()
+    }
+
     pub fn offered(&self) -> Vec<ToolDefinition> {
-        vec![
+        let mode = self.mode();
+        let every = vec![
             read::offered(),
             search::offered(),
             find::offered(),
@@ -92,10 +107,15 @@ impl Kit {
             fetch::offered(),
             todo::offered(),
             ask::offered(),
-        ]
+        ];
+        every.into_iter().filter(|tool| mode.allows(&tool.name)).collect()
     }
 
     pub async fn run(&self, call: &Call) -> Done {
+        let mode = self.mode();
+        if !mode.allows(&call.name) {
+            return Done::Failed(format!("{} is not open in {} mode", call.name, mode.as_str()));
+        }
         let done = match call.name.as_str() {
             "read" => read::run(self, &call.args).await,
             "search" => search::run(&self.root, &call.args).await,
