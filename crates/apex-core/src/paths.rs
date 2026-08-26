@@ -39,6 +39,10 @@ impl ApexPaths {
         self.config_dir.join("agents")
     }
 
+    pub fn agent_dir(&self) -> PathBuf {
+        self.config_dir.join("agent")
+    }
+
     pub fn providers_dir(&self) -> PathBuf {
         self.config_dir.join("providers")
     }

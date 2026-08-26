@@ -2,6 +2,7 @@ pub mod brain;
 pub mod chat;
 pub mod key;
 pub mod model;
+pub mod preamble;
 pub mod provider;
 
 pub use brain::Brain;
