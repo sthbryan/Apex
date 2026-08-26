@@ -126,7 +126,7 @@ fn the_kit_offers_the_tools_it_can_run() {
     let dir = root();
     let names: Vec<String> =
         Kit::new(dir.path()).offered().into_iter().map(|one| one.name).collect();
-    assert_eq!(names, vec!["read", "search", "find", "write", "edit", "bash"]);
+    assert_eq!(names, vec!["read", "search", "find", "write", "edit", "bash", "fetch"]);
 }
 
 #[test]

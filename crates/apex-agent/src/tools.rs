@@ -1,5 +1,6 @@
 mod bash;
 mod edit;
+mod fetch;
 mod find;
 mod read;
 mod search;
@@ -74,6 +75,7 @@ impl Kit {
             write::offered(),
             edit::offered(),
             bash::offered(),
+            fetch::offered(),
         ]
     }
 
@@ -85,6 +87,7 @@ impl Kit {
             "write" => write::run(self, &call.args).await,
             "edit" => edit::run(self, &call.args).await,
             "bash" => bash::run(self, &call.args).await,
+            "fetch" => fetch::run(&call.args).await,
             other => Err(anyhow!("there is no tool called {other}")),
         };
         match done {
@@ -115,6 +118,7 @@ pub fn sketch(call: &Call) -> String {
     let key = match call.name.as_str() {
         "read" | "write" | "edit" => "path",
         "bash" => "command",
+        "fetch" => "url",
         "search" => "pattern",
         "find" => "glob",
         _ => "",

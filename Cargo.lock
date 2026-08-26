@@ -70,12 +70,14 @@ dependencies = [
  "ignore",
  "keyring-core",
  "regex",
+ "reqwest",
  "rig-core",
  "serde",
  "serde_json",
  "tempfile",
  "tokio",
  "toml 1.1.4+spec-1.1.0",
+ "url",
 ]
 
 [[package]]
