@@ -25,7 +25,12 @@ describe("readPairs", () => {
 
 describe("writePairs", () => {
   it("drops a pair that has no key", () => {
-    expect(writePairs([{ key: "", value: "1" }, { key: "b", value: "2" }])).toBe("b=2");
+    expect(
+      writePairs([
+        { key: "", value: "1" },
+        { key: "b", value: "2" },
+      ]),
+    ).toBe("b=2");
   });
 
   it("writes a bare key when the value is empty", () => {
@@ -33,7 +38,12 @@ describe("writePairs", () => {
   });
 
   it("joins the pairs with an ampersand", () => {
-    expect(writePairs([{ key: "a", value: "1" }, { key: "b", value: "2" }])).toBe("a=1&b=2");
+    expect(
+      writePairs([
+        { key: "a", value: "1" },
+        { key: "b", value: "2" },
+      ]),
+    ).toBe("a=1&b=2");
   });
 });
 

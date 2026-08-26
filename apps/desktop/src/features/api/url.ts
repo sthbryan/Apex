@@ -41,3 +41,13 @@ function cut(url: string): { base: string; query: string; hash: string } {
     ? { base: head, query: "", hash }
     : { base: head.slice(0, mark), query: head.slice(mark + 1), hash };
 }
+
+export function record(pairs: Pair[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const pair of pairs) {
+    if (pair.key !== "") {
+      out[pair.key] = pair.value;
+    }
+  }
+  return out;
+}

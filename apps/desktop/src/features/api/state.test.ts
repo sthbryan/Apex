@@ -22,19 +22,24 @@ import {
   chosen,
   dirty,
   draft,
-  dropHeader,
   edit,
   environment,
   environments,
+  fields,
+  headers,
   last,
   loadCollection,
   names,
   openRequest,
+  params,
   saved,
   sending,
   sendRequest,
   setEnvironment,
-  setHeader,
+  setFields,
+  setHeaders,
+  setKind,
+  setParams,
   shortBody,
   startNew,
   tone,
@@ -117,19 +122,52 @@ describe("dirty", () => {
 });
 
 describe("headers", () => {
-  it("adds, renames and drops", () => {
-    setHeader("Accept", "application/json");
-    expect(draft.value.headers).toEqual({ Accept: "application/json" });
-    setHeader("accept", "application/json", "Accept");
-    expect(draft.value.headers).toEqual({ accept: "application/json" });
-    dropHeader("accept");
-    expect(draft.value.headers).toEqual({});
+  it("reads the rows back in the order they were written", () => {
+    setHeaders([
+      { key: "Accept", value: "application/json" },
+      { key: "X-Trace", value: "1" },
+    ]);
+    expect(headers()).toEqual([
+      { key: "Accept", value: "application/json" },
+      { key: "X-Trace", value: "1" },
+    ]);
   });
 
-  it("an emptied name takes the row away", () => {
-    setHeader("Accept", "text/plain");
-    setHeader("", "text/plain", "Accept");
+  it("leaves out a row that has no name", () => {
+    setHeaders([{ key: "", value: "text/plain" }]);
     expect(draft.value.headers).toEqual({});
+  });
+});
+
+describe("params", () => {
+  it("writes the rows into the url and reads them back", () => {
+    edit({ url: "https://{{host}}/users" });
+    setParams([{ key: "tag", value: "{{tag}}" }]);
+    expect(draft.value.url).toBe("https://{{host}}/users?tag={{tag}}");
+    expect(params()).toEqual([{ key: "tag", value: "{{tag}}" }]);
+  });
+});
+
+describe("fields", () => {
+  it("writes the rows into the body and reads them back", () => {
+    setFields([{ key: "a", value: "1" }]);
+    expect(draft.value.body).toBe("a=1");
+    expect(fields()).toEqual([{ key: "a", value: "1" }]);
+  });
+});
+
+describe("setKind", () => {
+  it("sets the content type the kind asks for", () => {
+    setKind("json");
+    expect(draft.value.headers).toEqual({ "Content-Type": "application/json" });
+    expect(draft.value.body).toBe("");
+  });
+
+  it("takes the body and its header away again", () => {
+    setKind("json");
+    setKind("none");
+    expect(draft.value.headers).toEqual({});
+    expect(draft.value.body).toBe(null);
   });
 });
 

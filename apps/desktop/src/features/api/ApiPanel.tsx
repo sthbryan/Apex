@@ -1,35 +1,45 @@
-import { Button, Pane, SectionLabel, Select } from "@apex/ui";
+import { Button, Pane, SectionLabel, Segmented, Select } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
+import { type BodyKind, bodyKind, KINDS } from "@/features/api/body";
 import {
+  brokenJson,
   chosen,
   dirty,
   draft,
-  dropHeader,
   edit,
   environment,
   environments,
+  fields,
+  headers,
   last,
   loadCollection,
   METHODS,
   names,
   openRequest,
+  params,
   removeRequest,
   saveRequest,
   sending,
   sendRequest,
   setEnvironment,
-  setHeader,
+  setFields,
+  setHeaders,
+  setKind,
+  setParams,
   shortBody,
   startNew,
   tone,
   trouble,
 } from "@/features/api/state";
+import type { Pair } from "@/features/api/url";
 import { activeProjectId } from "@/features/projects/state";
 import { complain } from "@/shared/daemon";
-import { t } from "@/shared/i18n";
+import { type MessageKey, t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
+
+type Tab = "params" | "headers" | "body";
 
 const BOX =
   "min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
@@ -41,9 +51,17 @@ const TONES = {
   bad: "text-state-failed",
 } as const;
 
+const KIND_LABELS: Record<BodyKind, MessageKey> = {
+  none: "api.bodyNone",
+  json: "api.bodyJson",
+  text: "api.bodyText",
+  form: "api.bodyForm",
+} as const;
+
 export function ApiPanel() {
   const project = activeProjectId.value;
   const [wanted, setWanted] = useState("");
+  const [tab, setTab] = useState<Tab>("params");
 
   useEffect(() => {
     void loadCollection().catch(complain);
@@ -57,7 +75,9 @@ export function ApiPanel() {
   const run = last.value;
   const name = chosen.value;
   const unsaved = dirty();
-  const headers = Object.entries(request.headers);
+  const query = params();
+  const sent = headers();
+  const kind = bodyKind(request);
 
   const keep = (as: string) => {
     const trimmed = as.trim();
@@ -67,6 +87,14 @@ export function ApiPanel() {
     void saveRequest(trimmed)
       .then(() => setWanted(""))
       .catch(complain);
+  };
+
+  const add = () => {
+    if (tab === "params") {
+      setParams([...query, { key: t("api.rowKey"), value: "" }]);
+    } else {
+      setHeaders([...sent, { key: t("api.rowKey"), value: "" }]);
+    }
   };
 
   return (
@@ -159,49 +187,48 @@ export function ApiPanel() {
           </Button>
         </div>
 
-        <section class="flex flex-col gap-1.5">
-          <SectionLabel
-            flush
-            count={headers.length || undefined}
-            action={
-              <Step icon="plus" hint={t("api.addHeader")} onPick={() => setHeader("header", "")} />
-            }
-          >
-            {t("api.headers")}
-          </SectionLabel>
-          {headers.length === 0 ? (
-            <p class="text-faint text-xs">{t("api.noHeaders")}</p>
-          ) : (
-            headers.map(([key, value]) => (
-              <div key={key} class="flex items-center gap-1.5">
-                <input
-                  value={key}
-                  spellcheck={false}
-                  onBlur={(event) => setHeader(event.currentTarget.value.trim(), value, key)}
-                  class={cn(LINE, "w-2/5 font-mono text-xs")}
-                />
-                <input
-                  value={value}
-                  spellcheck={false}
-                  onInput={(event) => setHeader(key, event.currentTarget.value)}
-                  class={cn(LINE, "flex-1 font-mono text-xs")}
-                />
-                <Step icon="close" hint={t("api.dropHeader")} onPick={() => dropHeader(key)} />
-              </div>
-            ))
-          )}
-        </section>
+        <section class="flex min-w-0 flex-col gap-1.5">
+          <div class="flex items-center justify-between gap-1.5">
+            <Segmented
+              class="min-w-0"
+              label={t("api.section")}
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: "params", label: <Tally text={t("api.params")} count={query.length} /> },
+                { value: "headers", label: <Tally text={t("api.headers")} count={sent.length} /> },
+                {
+                  value: "body",
+                  label: <Tally text={t("api.body")} note={t(KIND_LABELS[kind])} />,
+                },
+              ]}
+            />
+            {tab !== "body" && (
+              <Step
+                icon="plus"
+                hint={tab === "params" ? t("api.addParam") : t("api.addHeader")}
+                onPick={add}
+              />
+            )}
+          </div>
 
-        <section class="flex flex-col gap-1.5">
-          <SectionLabel flush>{t("api.body")}</SectionLabel>
-          <textarea
-            rows={6}
-            value={request.body ?? ""}
-            spellcheck={false}
-            placeholder={t("api.bodyHint")}
-            onInput={(event) => edit({ body: event.currentTarget.value || null })}
-            class={cn(BOX, "w-full resize-y py-1.5 font-mono text-xs leading-relaxed")}
-          />
+          {tab === "params" && (
+            <Rows
+              pairs={query}
+              onChange={setParams}
+              empty={t("api.noParams")}
+              hint={t("api.dropParam")}
+            />
+          )}
+          {tab === "headers" && (
+            <Rows
+              pairs={sent}
+              onChange={setHeaders}
+              empty={t("api.noHeaders")}
+              hint={t("api.dropHeader")}
+            />
+          )}
+          {tab === "body" && <Body kind={kind} />}
         </section>
 
         {trouble.value && (
@@ -231,6 +258,114 @@ export function ApiPanel() {
         )}
       </div>
     </Pane>
+  );
+}
+
+function Body({ kind }: { kind: BodyKind }) {
+  const rows = fields();
+  const broken = brokenJson();
+
+  return (
+    <div class="flex min-w-0 flex-col gap-1.5">
+      <div class="flex items-center justify-between gap-1.5">
+        <Segmented
+          size="sm"
+          class="min-w-0"
+          label={t("api.bodyKind")}
+          value={kind}
+          onChange={setKind}
+          options={KINDS.map((one) => ({ value: one, label: t(KIND_LABELS[one]) }))}
+        />
+        {kind === "form" && (
+          <Step
+            icon="plus"
+            hint={t("api.addField")}
+            onPick={() => setFields([...rows, { key: t("api.rowKey"), value: "" }])}
+          />
+        )}
+      </div>
+
+      {kind === "none" && <p class="text-faint text-xs">{t("api.noBody")}</p>}
+      {kind === "form" && (
+        <Rows
+          pairs={rows}
+          onChange={setFields}
+          empty={t("api.noFields")}
+          hint={t("api.dropField")}
+        />
+      )}
+      {(kind === "json" || kind === "text") && (
+        <textarea
+          rows={8}
+          value={draft.value.body ?? ""}
+          spellcheck={false}
+          placeholder={t("api.bodyHint")}
+          onInput={(event) => edit({ body: event.currentTarget.value })}
+          class={cn(
+            BOX,
+            "w-full resize-y py-1.5 font-mono text-xs leading-relaxed",
+            broken && "border-state-failed",
+          )}
+        />
+      )}
+      {broken && <p class="text-state-failed text-xs">{broken}</p>}
+    </div>
+  );
+}
+
+function Rows({
+  pairs,
+  onChange,
+  empty,
+  hint,
+}: {
+  pairs: Pair[];
+  onChange: (pairs: Pair[]) => void;
+  empty: string;
+  hint: string;
+}) {
+  if (pairs.length === 0) {
+    return <p class="text-faint text-xs">{empty}</p>;
+  }
+
+  const swap = (at: number, pair: Pair) => onChange(pairs.map((was, i) => (i === at ? pair : was)));
+
+  return (
+    <>
+      {pairs.map((pair, at) => (
+        <div key={at} class="flex items-center gap-1.5">
+          <input
+            value={pair.key}
+            spellcheck={false}
+            placeholder={t("api.rowKey")}
+            onBlur={(event) => swap(at, { ...pair, key: event.currentTarget.value.trim() })}
+            class={cn(LINE, "w-2/5 font-mono text-xs")}
+          />
+          <input
+            value={pair.value}
+            spellcheck={false}
+            placeholder={t("api.rowValue")}
+            onInput={(event) => swap(at, { ...pair, value: event.currentTarget.value })}
+            class={cn(LINE, "flex-1 font-mono text-xs")}
+          />
+          <Step
+            icon="close"
+            hint={hint}
+            onPick={() => onChange(pairs.filter((_, i) => i !== at))}
+          />
+        </div>
+      ))}
+    </>
+  );
+}
+
+function Tally({ text, count, note }: { text: string; count?: number; note?: string }) {
+  return (
+    <span class="flex items-center gap-1">
+      {text}
+      {count ? <span class="text-faint">{count}</span> : null}
+      {note ? <span class="text-faint">{note}</span> : null}
+    </span>
   );
 }
 

@@ -25,7 +25,9 @@ describe("bodyKind", () => {
 
   it("ignores the charset that trails the type", () => {
     expect(
-      bodyKind(request({ body: "{}", headers: { "Content-Type": "application/json; charset=utf-8" } })),
+      bodyKind(
+        request({ body: "{}", headers: { "Content-Type": "application/json; charset=utf-8" } }),
+      ),
     ).toBe("json");
   });
 
@@ -44,7 +46,9 @@ describe("bodyKind", () => {
   });
 
   it("falls back to text for a type it does not handle", () => {
-    expect(bodyKind(request({ body: "<x/>", headers: { "Content-Type": "text/xml" } }))).toBe("text");
+    expect(bodyKind(request({ body: "<x/>", headers: { "Content-Type": "text/xml" } }))).toBe(
+      "text",
+    );
   });
 });
 
@@ -68,7 +72,10 @@ describe("withBodyKind", () => {
   });
 
   it("takes the body and its header away for none", () => {
-    const was = request({ body: "{}", headers: { "Content-Type": "application/json", Accept: "*/*" } });
+    const was = request({
+      body: "{}",
+      headers: { "Content-Type": "application/json", Accept: "*/*" },
+    });
     const now = withBodyKind(was, "none");
     expect(now.body).toBe(null);
     expect(now.headers).toEqual({ Accept: "*/*" });

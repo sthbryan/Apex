@@ -3,7 +3,15 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { ApiRequest } from "@/bindings/ApiRequest";
 import type { ApiRun } from "@/bindings/ApiRun";
-import { bodyKind, jsonTrouble } from "@/features/api/body";
+import { type BodyKind, bodyKind, jsonTrouble, withBodyKind } from "@/features/api/body";
+import {
+  type Pair,
+  readPairs,
+  readParams,
+  record,
+  writePairs,
+  writeParams,
+} from "@/features/api/url";
 import { activeProjectId } from "@/features/projects/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
@@ -133,23 +141,32 @@ export function edit(change: Partial<ApiRequest>): void {
   draft.value = { ...draft.value, ...change };
 }
 
-export function setHeader(key: string, value: string, was?: string): void {
-  const headers = { ...draft.value.headers };
-  if (was !== undefined && was !== key) {
-    delete headers[was];
-  }
-  if (key === "") {
-    delete headers[was ?? key];
-  } else {
-    headers[key] = value;
-  }
-  edit({ headers });
+export function params(): Pair[] {
+  return readParams(draft.value.url);
 }
 
-export function dropHeader(key: string): void {
-  const headers = { ...draft.value.headers };
-  delete headers[key];
-  edit({ headers });
+export function setParams(pairs: Pair[]): void {
+  edit({ url: writeParams(draft.value.url, pairs) });
+}
+
+export function headers(): Pair[] {
+  return Object.entries(draft.value.headers).map(([key, value]) => ({ key, value }));
+}
+
+export function setHeaders(pairs: Pair[]): void {
+  edit({ headers: record(pairs) });
+}
+
+export function fields(): Pair[] {
+  return readPairs(draft.value.body ?? "");
+}
+
+export function setFields(pairs: Pair[]): void {
+  edit({ body: writePairs(pairs) });
+}
+
+export function setKind(kind: BodyKind): void {
+  draft.value = withBodyKind(draft.value, kind);
 }
 
 export function setEnvironment(name: string | null): void {
