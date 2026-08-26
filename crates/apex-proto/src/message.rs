@@ -118,11 +118,17 @@ pub struct AgentSummary {
     pub agentic: bool,
     pub supports_resume: bool,
     pub speaks_acp: bool,
+    #[serde(default = "yes")]
+    pub speaks_pty: bool,
     pub shares_config: bool,
     #[serde(default)]
     pub mcp_blocked: bool,
     #[serde(default)]
     pub mcp_hint: Option<String>,
+}
+
+fn yes() -> bool {
+    true
 }
 
 impl AgentSummary {

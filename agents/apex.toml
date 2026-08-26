@@ -1,5 +1,6 @@
 name = "apex"
 command = "apexd"
 mode = "acp"
+pty = false
 acp_command = "apexd"
 acp_args = ["agent", "--acp"]

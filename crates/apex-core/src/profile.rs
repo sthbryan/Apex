@@ -109,6 +109,8 @@ pub struct AgentProfile {
     pub mode: AgentMode,
     #[serde(default = "agentic_by_default")]
     pub agentic: bool,
+    #[serde(default = "pty_by_default")]
+    pub pty: bool,
     #[serde(default)]
     pub acp_command: Option<String>,
     #[serde(default)]
@@ -125,6 +127,10 @@ pub struct AgentProfile {
     pub quota: Option<QuotaConfig>,
     #[serde(default)]
     pub notify: Option<NotifyConfig>,
+}
+
+fn pty_by_default() -> bool {
+    true
 }
 
 fn expand_env(raw: &str) -> String {
@@ -249,6 +255,7 @@ impl AgentProfile {
             agentic: self.agentic,
             supports_resume: self.supports_resume(),
             speaks_acp: self.acp_command.is_some(),
+            speaks_pty: self.pty,
             shares_config: matches!(self.mcp, Some(McpDelivery::Flag { merge_from: Some(_), .. })),
             mcp_blocked: false,
             mcp_hint: None,

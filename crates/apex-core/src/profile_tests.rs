@@ -150,3 +150,26 @@ fn apex_shows_as_available_once_the_resolver_knows_where_it_is() {
     assert!(summary.is_available());
     assert!(summary.speaks_acp);
 }
+
+#[test]
+fn apex_never_offers_itself_as_a_terminal() {
+    let set = ProfileSet::builtin().expect("builtin");
+    assert!(!set.get("apex").expect("apex").pty);
+}
+
+#[test]
+fn every_other_agent_still_runs_in_a_terminal_unless_it_says_otherwise() {
+    let set = ProfileSet::builtin().expect("builtin");
+    assert!(set.get("claude").expect("claude").pty);
+    assert!(set.get("shell").expect("shell").pty);
+}
+
+#[test]
+fn what_an_agent_can_speak_reaches_the_summary() {
+    let set = ProfileSet::builtin().expect("builtin");
+    let mut resolver = BinaryResolver::default();
+    resolver.knows("apexd", std::path::PathBuf::from("/opt/apex/apexd"));
+    let ours = set.get("apex").expect("apex").summarize(&mut resolver);
+    assert!(ours.speaks_acp);
+    assert!(!ours.speaks_pty);
+}

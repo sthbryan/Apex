@@ -13,6 +13,7 @@ import {
   ToggleChip,
   Wordmark,
 } from "@apex/ui";
+import cn from "cnfast";
 import type { JSX } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { SHORTCUTS } from "@/app/keymap";
@@ -430,26 +431,25 @@ export function agentsSection(): Section {
                 label={agent.name}
                 sub={t(agent.shares_config ? "settings.sharesContext" : "settings.ownContext")}
                 trail={
-                  <Segmented
-                    size="sm"
-                    label={t("settings.agentMode", { agent: agent.name })}
-                    value={agentModes.value[agent.name] ?? agent.mode}
-                    onChange={(option) => setAgentMode(agent.name, option)}
-                    disabled={!on}
-                    options={(["pty", "acp"] as const).map((option) => ({
-                      value: option,
-                      label: t(`isolation.${option}`),
-                      disabled: option === "acp" && !agent.speaks_acp,
-                      title:
-                        option === "acp" && !agent.speaks_acp
-                          ? t("settings.agentNoAcp", { agent: agent.name })
-                          : undefined,
-                    }))}
-                  />
+                  agent.speaks_acp && agent.speaks_pty ? (
+                    <Segmented
+                      size="sm"
+                      label={t("settings.agentMode", { agent: agent.name })}
+                      value={agentModes.value[agent.name] ?? agent.mode}
+                      onChange={(option) => setAgentMode(agent.name, option)}
+                      disabled={!on}
+                      options={(["pty", "acp"] as const).map((option) => ({
+                        value: option,
+                        label: t(`isolation.${option}`),
+                      }))}
+                    />
+                  ) : (
+                    <span class="text-faint text-xs">{t(`isolation.${agent.mode}`)}</span>
+                  )
                 }
                 actions={
                   <>
-                    {raceUnattended.value && (
+                    {raceUnattended.value && agent.speaks_pty && (
                       <ToggleChip
                         size="sm"
                         pressed={unattendedAgents.value.includes(agent.name)}
@@ -489,7 +489,7 @@ const TOOL_COPY = {
 } as const;
 
 const KEY_BOX =
-  "h-(--apex-h-sm) min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
+  "h-(--apex-h-md) w-full min-w-0 rounded-sm border border-border bg-raised px-2.5 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
 
 export function agentSection(): Section {
   return {
@@ -498,65 +498,118 @@ export function agentSection(): Section {
     sub: t("settings.groupAgentSub"),
     icon: "bot",
     entries: [],
-    panel: (
-      <div class="flex flex-col">
-        {providers.value.map((provider) => (
-          <ProviderRow key={provider.name} provider={provider} />
-        ))}
-      </div>
-    ),
+    panel: <AgentPanel />,
   };
 }
 
-function ProviderRow({ provider }: { provider: ProviderStatus }) {
-  const name = provider.name;
-  const listed = models.value[name] ?? [];
+function AgentPanel() {
   const picked = chosen.value;
-  const here = picked?.provider === provider.name;
-  const working = busy.value === provider.name;
-
-  const wanted = holdsKey(provider);
-  useEffect(() => {
-    if (wanted && (models.value[name] ?? null) === null) {
-      loadModels(name).catch(complain);
-    }
-  }, [name, wanted]);
+  const [open, setOpen] = useState<string | null>(picked?.provider ?? null);
+  const listed = providers.value;
+  const running = listed.find((one) => one.name === picked?.provider);
 
   return (
-    <DataRow
-      dim={!holdsKey(provider)}
-      label={provider.label}
-      sub={spellHeld(provider)}
-      trail={
-        holdsKey(provider) ? (
-          <Select
-            label={t("settings.agentModel", { provider: provider.label })}
-            value={here ? (picked?.model ?? "") : ""}
-            placeholder={t("settings.agentModelNone")}
-            disabled={working || listed.length === 0}
-            onChange={(model) => {
-              if (model) {
-                chooseAgent(provider.name, model).catch(complain);
-              }
-            }}
-            options={listed.map((model) => ({ value: model.id, label: model.label }))}
+    <div class="flex flex-col gap-3">
+      {picked && running ? (
+        <p class="text-sm text-text">
+          {t("settings.agentRuns", { model: picked.model, provider: running.label })}
+        </p>
+      ) : (
+        <p class="text-muted text-sm">{t("settings.agentNothingYet")}</p>
+      )}
+
+      <div class="flex flex-col">
+        {listed.map((provider) => (
+          <ProviderRow
+            key={provider.name}
+            provider={provider}
+            here={picked?.provider === provider.name}
+            open={open === provider.name}
+            onOpen={() => setOpen(open === provider.name ? null : provider.name)}
           />
-        ) : null
-      }
-      actions={
-        provider.keyless ? null : provider.held === "keychain" ? (
-          <Button
-            size="sm"
-            disabled={working}
-            onClick={() => forgetKey(provider.name).catch(complain)}
-          >
-            {t("settings.keyForget")}
-          </Button>
-        ) : (
-          <KeyField provider={provider.name} working={working} />
-        )
-      }
-    />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type RowProps = {
+  provider: ProviderStatus;
+  here: boolean;
+  open: boolean;
+  onOpen: () => void;
+};
+
+function ProviderRow({ provider, here, open, onOpen }: RowProps) {
+  const name = provider.name;
+  const listed = models.value[name] ?? [];
+  const working = busy.value === name;
+  const held = holdsKey(provider);
+
+  useEffect(() => {
+    if (open && held && (models.value[name] ?? null) === null) {
+      loadModels(name).catch(complain);
+    }
+  }, [name, open, held]);
+
+  return (
+    <div
+      class={cn(
+        "border-border border-b border-l-2 pl-2.5 transition-colors",
+        here ? "border-l-accent" : "border-l-transparent",
+      )}
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-expanded={open}
+        class="flex w-full items-center gap-3 py-2.5 pr-1 text-left"
+      >
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-medium text-sm text-text">{provider.label}</span>
+          <span class="block truncate text-faint text-xs">{spellHeld(provider)}</span>
+        </span>
+        {here && <span class="shrink-0 text-accent text-xs">{t("settings.agentInUse")}</span>}
+        <Icon name={open ? "chevron" : "chevronRight"} size={14} class="shrink-0 text-faint" />
+      </button>
+
+      {open && (
+        <div class="flex flex-col gap-2 pb-3 pr-1">
+          {provider.base_url && <p class="text-faint text-xs">{provider.base_url}</p>}
+
+          {provider.held === "environment" ? (
+            <p class="text-muted text-xs">
+              {t("settings.keyEnvWins", { name: provider.env ?? "" })}
+            </p>
+          ) : provider.held === "keychain" ? (
+            <div class="flex">
+              <Button size="sm" disabled={working} onClick={() => forgetKey(name).catch(complain)}>
+                {t("settings.keyForget")}
+              </Button>
+            </div>
+          ) : provider.keyless ? null : (
+            <KeyField provider={name} working={working} />
+          )}
+
+          {held && (
+            <Select
+              label={t("settings.agentModel", { provider: provider.label })}
+              value={here ? (chosen.value?.model ?? "") : ""}
+              placeholder={
+                listed.length === 0 ? t("settings.agentModelWait") : t("settings.agentModelNone")
+              }
+              disabled={working || listed.length === 0}
+              onChange={(model) => {
+                if (model) {
+                  chooseAgent(name, model).catch(complain);
+                }
+              }}
+              options={listed.map((model) => ({ value: model.id, label: model.label }))}
+            />
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -574,7 +627,7 @@ function KeyField({ provider, working }: { provider: string; working: boolean })
   const [key, setKey] = useState("");
   return (
     <form
-      class="flex items-center gap-1"
+      class="flex items-center gap-2"
       onSubmit={(event: Event) => {
         event.preventDefault();
         if (!key.trim()) {
@@ -594,8 +647,8 @@ function KeyField({ provider, working }: { provider: string; working: boolean })
         onInput={(event: JSX.TargetedEvent<HTMLInputElement>) => setKey(event.currentTarget.value)}
         class={KEY_BOX}
       />
-      <Button size="sm" type="submit" disabled={!key.trim() || working}>
-        {t("settings.keyKeep")}
+      <Button size="sm" variant="primary" type="submit" disabled={!key.trim() || working}>
+        {working ? t("settings.keyChecking") : t("settings.keyKeep")}
       </Button>
     </form>
   );
