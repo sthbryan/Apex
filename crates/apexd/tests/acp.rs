@@ -356,3 +356,44 @@ async fn ask(port: u16, token: &str, body: &str) -> String {
     stream.read_to_string(&mut answered).await.expect("read");
     answered
 }
+
+#[tokio::test]
+async fn apex_can_open_a_session_with_its_own_agent() {
+    let home = tempfile::tempdir().expect("home");
+    let paths = apex_core::ApexPaths::rooted_at(home.path());
+    std::fs::create_dir_all(paths.agent_dir()).expect("agent dir");
+    std::fs::write(
+        paths.agent_dir().join("last.toml"),
+        "provider = \"ollama\"\nmodel = \"qwen3\"\n",
+    )
+    .expect("choice");
+
+    let manager = common::manager_at(&paths);
+    let root = tempfile::tempdir().expect("root");
+    let project =
+        manager.open_project(&root.path().display().to_string()).await.expect("project").id;
+
+    let session = manager
+        .create(NewSession {
+            project,
+            agent: "apex".into(),
+            cwd: Some(root.path().display().to_string()),
+            size: TerminalSize::default(),
+            isolation: Isolation::Directory,
+            slug: None,
+            mode: None,
+            parent: None,
+            run: None,
+            unattended: false,
+        })
+        .await
+        .expect("apex opens its own agent");
+
+    assert_eq!(session.mode, apex_proto::AgentMode::Acp);
+    assert_eq!(session.agent, "apex");
+
+    let snapshot = manager.acp_snapshot(session.id).await.expect("snapshot");
+    let modes: Vec<&str> = snapshot.modes.choices.iter().map(|one| one.id.as_str()).collect();
+    assert_eq!(modes, vec!["auto", "plan", "chat"]);
+    assert_eq!(snapshot.modes.chosen.as_deref(), Some("auto"));
+}

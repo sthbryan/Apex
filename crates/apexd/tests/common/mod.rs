@@ -70,10 +70,13 @@ pub fn manager_at(paths: &ApexPaths) -> Arc<SessionManager> {
         env!("CARGO_MANIFEST_DIR")
     );
     profiles.upsert(AgentProfile::parse(&quiet).expect("quiet acp profile"));
-    let resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
+    let mut resolver = BinaryResolver::with_environment(ShellEnvironment::from_search_path(vec![
         PathBuf::from("/bin"),
         PathBuf::from("/usr/bin"),
     ]));
+    if let Some(ourselves) = std::env::var_os("CARGO_BIN_EXE_apexd") {
+        resolver.knows("apexd", PathBuf::from(ourselves));
+    }
     profiles.upsert(
         AgentProfile::parse(
             "name = \"mcp-project\"\n\

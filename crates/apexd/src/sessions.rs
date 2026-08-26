@@ -83,8 +83,9 @@ impl SessionManager {
         resolver: BinaryResolver,
         store: Store,
     ) -> Arc<Self> {
-        let base_env =
+        let mut base_env =
             resolver.environment().map(|environment| environment.env().clone()).unwrap_or_default();
+        base_env.insert("APEX_HOME".to_owned(), paths.home.display().to_string());
         let resolver = Arc::new(Mutex::new(resolver));
         let store = Arc::new(Mutex::new(store));
         let (events, _) = broadcast::channel(EVENT_CHANNEL_DEPTH);
