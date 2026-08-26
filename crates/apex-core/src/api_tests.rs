@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
 use super::{
-    Request, apply, ensure, environment_path, environments, fill, load, remove, request_path,
-    requests, save, secrets, secrets_path, variables,
+    Request, Variable, apply, ensure, environment_path, environments, fill, load, read_environment,
+    remove, remove_environment, request_path, requests, save, secrets, secrets_path, variables,
+    write_environment,
 };
 use crate::ApexPaths;
 
@@ -211,4 +212,135 @@ fn applying_says_which_part_of_the_request_is_missing_a_value() {
     let complaint = format!("{:#}", apply(&saved, &BTreeMap::new()).expect_err("no token"));
     assert!(complaint.contains("Authorization"), "{complaint}");
     assert!(complaint.contains("token"), "{complaint}");
+}
+
+fn plain(name: &str, value: &str) -> Variable {
+    Variable { name: name.into(), value: value.into(), secret: false }
+}
+
+fn hidden(name: &str, value: &str) -> Variable {
+    Variable { name: name.into(), value: value.into(), secret: true }
+}
+
+#[test]
+fn a_written_environment_comes_back_as_it_was_typed() {
+    let dir = root();
+    write_environment(dir.path(), "local", &[plain("host", "localhost:3000")]).expect("write");
+    assert_eq!(
+        read_environment(dir.path(), "local").expect("read"),
+        vec![plain("host", "localhost:3000")]
+    );
+}
+
+#[test]
+fn a_secret_lands_in_the_env_file_and_not_in_the_environment() {
+    let dir = root();
+    write_environment(dir.path(), "staging", &[hidden("token", "sk-live-42")]).expect("write");
+
+    let text = std::fs::read_to_string(environment_path(dir.path(), "staging").expect("path"))
+        .expect("read");
+    assert!(!text.contains("sk-live-42"), "the secret is in {text}");
+    assert!(text.contains("$STAGING_TOKEN"), "{text}");
+    assert_eq!(secrets(dir.path()).get("STAGING_TOKEN").map(String::as_str), Some("sk-live-42"));
+}
+
+#[test]
+fn a_secret_never_comes_back_to_whoever_asks_for_the_environment() {
+    let dir = root();
+    write_environment(dir.path(), "staging", &[hidden("token", "sk-live-42")]).expect("write");
+    assert_eq!(read_environment(dir.path(), "staging").expect("read"), vec![hidden("token", "")]);
+}
+
+#[test]
+fn saving_an_environment_again_leaves_the_secret_it_was_not_given() {
+    let dir = root();
+    write_environment(dir.path(), "staging", &[hidden("token", "sk-live-42")]).expect("write");
+    write_environment(dir.path(), "staging", &[hidden("token", ""), plain("host", "api.dev")])
+        .expect("write again");
+    assert_eq!(secrets(dir.path()).get("STAGING_TOKEN").map(String::as_str), Some("sk-live-42"));
+}
+
+#[test]
+fn a_secret_that_was_never_typed_is_refused() {
+    let dir = root();
+    let trouble = write_environment(dir.path(), "staging", &[hidden("token", "")])
+        .expect_err("a secret with no value");
+    assert!(trouble.to_string().contains("type the secret once"), "{trouble}");
+}
+
+#[test]
+fn the_environments_of_two_stages_keep_their_own_secret() {
+    let dir = root();
+    write_environment(dir.path(), "local", &[hidden("token", "dev-1")]).expect("local");
+    write_environment(dir.path(), "staging", &[hidden("token", "live-2")]).expect("staging");
+    assert_eq!(variables(dir.path(), Some("local")).expect("read")["token"], "dev-1");
+    assert_eq!(variables(dir.path(), Some("staging")).expect("read")["token"], "live-2");
+}
+
+#[test]
+fn a_value_that_starts_with_a_dollar_stays_a_value() {
+    let dir = root();
+    write_environment(dir.path(), "local", &[plain("price", "$5")]).expect("write");
+    assert_eq!(read_environment(dir.path(), "local").expect("read"), vec![plain("price", "$5")]);
+    assert_eq!(variables(dir.path(), Some("local")).expect("read")["price"], "$5");
+}
+
+#[test]
+fn a_secret_with_spaces_survives_the_env_file() {
+    let dir = root();
+    write_environment(dir.path(), "local", &[hidden("greeting", "hola que tal")]).expect("write");
+    assert_eq!(variables(dir.path(), Some("local")).expect("read")["greeting"], "hola que tal");
+}
+
+#[test]
+fn a_secret_keeps_the_space_it_ends_with() {
+    let dir = root();
+    write_environment(dir.path(), "local", &[hidden("pad", "abc ")]).expect("write");
+    assert_eq!(variables(dir.path(), Some("local")).expect("read")["pad"], "abc ");
+}
+
+#[test]
+fn a_secret_cannot_span_lines() {
+    let dir = root();
+    let trouble = write_environment(dir.path(), "local", &[hidden("key", "one\ntwo")])
+        .expect_err("a secret with a newline");
+    assert!(trouble.to_string().contains("cannot span lines"), "{trouble}");
+}
+
+#[test]
+fn writing_a_secret_leaves_the_rest_of_the_env_file_alone() {
+    let dir = root();
+    std::fs::write(secrets_path(dir.path()), "# mine\nOTHER=keep\nLOCAL_TOKEN=old\n")
+        .expect("seed");
+    write_environment(dir.path(), "local", &[hidden("token", "new")]).expect("write");
+
+    let text = std::fs::read_to_string(secrets_path(dir.path())).expect("read");
+    assert!(text.contains("# mine"), "{text}");
+    assert!(text.contains("OTHER=keep"), "{text}");
+    assert!(text.contains("LOCAL_TOKEN=new"), "{text}");
+    assert!(!text.contains("LOCAL_TOKEN=old"), "{text}");
+}
+
+#[test]
+fn a_variable_with_no_name_is_refused() {
+    let dir = root();
+    let trouble =
+        write_environment(dir.path(), "local", &[plain("  ", "x")]).expect_err("a nameless one");
+    assert!(trouble.to_string().contains("needs a name"), "{trouble}");
+}
+
+#[test]
+fn a_removed_environment_leaves_the_list() {
+    let dir = root();
+    write_environment(dir.path(), "local", &[plain("host", "x")]).expect("write");
+    assert_eq!(environments(dir.path()), vec!["local".to_owned()]);
+    remove_environment(dir.path(), "local").expect("remove");
+    assert!(environments(dir.path()).is_empty());
+}
+
+#[test]
+fn removing_an_environment_that_was_never_there_says_so() {
+    let dir = root();
+    let trouble = remove_environment(dir.path(), "ghost").expect_err("no such environment");
+    assert!(trouble.to_string().contains("not a saved environment"), "{trouble}");
 }

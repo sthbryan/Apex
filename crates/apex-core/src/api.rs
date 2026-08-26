@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
-pub use apex_proto::ApiRequest as Request;
+pub use apex_proto::{ApiRequest as Request, ApiVariable as Variable};
 
 pub const REQUESTS: &str = "requests";
 pub const ENVIRONMENTS: &str = "environments";
@@ -66,15 +66,69 @@ pub fn secrets_path(root: &Path) -> PathBuf {
     root.join(SECRETS)
 }
 
+pub fn read_environment(root: &Path, name: &str) -> Result<Vec<Variable>> {
+    let raw = raw_environment(root, name)?;
+    Ok(raw
+        .into_iter()
+        .map(|(name, value)| match value.strip_prefix('$') {
+            Some(literal) if literal.starts_with('$') => {
+                Variable { name, value: literal.to_owned(), secret: false }
+            }
+            Some(_) => Variable { name, value: String::new(), secret: true },
+            None => Variable { name, value, secret: false },
+        })
+        .collect())
+}
+
+pub fn write_environment(root: &Path, name: &str, variables: &[Variable]) -> Result<()> {
+    let path = environment_path(root, name)?;
+    let held = secrets(root);
+    let mut fresh: Vec<(String, String)> = Vec::new();
+    let mut written: BTreeMap<String, String> = BTreeMap::new();
+
+    for variable in variables {
+        let key = key_of(variable.name.trim());
+        if key.is_empty() {
+            bail!("a variable needs a name")
+        }
+        if !variable.secret {
+            written.insert(variable.name.trim().to_owned(), escape(&variable.value));
+            continue;
+        }
+        let held_key = format!("{}_{key}", key_of(name));
+        if variable.value.is_empty() && !held.contains_key(&held_key) {
+            bail!("{} has no value yet, type the secret once", variable.name)
+        }
+        if !variable.value.is_empty() {
+            fresh.push((held_key.clone(), variable.value.clone()));
+        }
+        written.insert(variable.name.trim().to_owned(), format!("${held_key}"));
+    }
+
+    for (key, value) in fresh {
+        keep_secret(root, &key, &value)?;
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    let text = toml::to_string_pretty(&written).context("writing the environment")?;
+    std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))
+}
+
+pub fn remove_environment(root: &Path, name: &str) -> Result<()> {
+    let path = environment_path(root, name)?;
+    if !path.exists() {
+        bail!("{name} is not a saved environment")
+    }
+    std::fs::remove_file(&path).with_context(|| format!("removing {}", path.display()))
+}
+
 pub fn variables(root: &Path, environment: Option<&str>) -> Result<BTreeMap<String, String>> {
     let Some(name) = environment else {
         return Ok(BTreeMap::new());
     };
-    let path = environment_path(root, name)?;
-    let text = std::fs::read_to_string(&path)
-        .with_context(|| format!("{name} is not a saved environment"))?;
-    let raw: BTreeMap<String, String> =
-        toml::from_str(&text).with_context(|| format!("{name} is not readable toml"))?;
+    let raw = raw_environment(root, name)?;
     let held = secrets(root);
     raw.into_iter()
         .map(|(key, value)| {
@@ -129,6 +183,75 @@ pub fn apply(request: &Request, variables: &BTreeMap<String, String>) -> Result<
             .map(|body| fill(body, variables).context("in the body"))
             .transpose()?,
     })
+}
+
+fn raw_environment(root: &Path, name: &str) -> Result<BTreeMap<String, String>> {
+    let path = environment_path(root, name)?;
+    let text = std::fs::read_to_string(&path)
+        .with_context(|| format!("{name} is not a saved environment"))?;
+    toml::from_str(&text).with_context(|| format!("{name} is not readable toml"))
+}
+
+fn key_of(name: &str) -> String {
+    name.chars()
+        .map(
+            |letter| if letter.is_ascii_alphanumeric() { letter.to_ascii_uppercase() } else { '_' },
+        )
+        .collect()
+}
+
+fn escape(value: &str) -> String {
+    if value.starts_with('$') { format!("${value}") } else { value.to_owned() }
+}
+
+fn keep_secret(root: &Path, key: &str, value: &str) -> Result<()> {
+    let quoted = quote(value)?;
+    let path = secrets_path(root);
+    let text = std::fs::read_to_string(&path).unwrap_or_default();
+    let mut lines: Vec<String> = text.lines().map(str::to_owned).collect();
+    let line = format!("{key}={quoted}");
+    match lines.iter().position(|held| read_secret(held).is_some_and(|(held, _)| held == key)) {
+        Some(at) => lines[at] = line,
+        None => lines.push(line),
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    let mut body = lines.join("\n");
+    body.push('\n');
+    std::fs::write(&path, body).with_context(|| format!("writing {}", path.display()))?;
+    lock(&path)
+}
+
+fn quote(value: &str) -> Result<String> {
+    if value.contains(['\n', '\r']) {
+        bail!("a secret cannot span lines")
+    }
+    let plain = !value.is_empty()
+        && !value.contains(char::is_whitespace)
+        && !value.contains('#')
+        && !value.starts_with('"')
+        && !value.starts_with('\'');
+    if plain {
+        return Ok(value.to_owned());
+    }
+    if value.contains('"') {
+        bail!("a secret with spaces cannot also hold a double quote")
+    }
+    Ok(format!("\"{value}\""))
+}
+
+#[cfg(unix)]
+fn lock(path: &Path) -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
+        .with_context(|| format!("locking {}", path.display()))
+}
+
+#[cfg(not(unix))]
+fn lock(_path: &Path) -> Result<()> {
+    Ok(())
 }
 
 fn unwrap(value: &str, held: &BTreeMap<String, String>) -> Result<String> {

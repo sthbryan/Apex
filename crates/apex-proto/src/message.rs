@@ -673,6 +673,22 @@ pub enum Command {
         project: Uuid,
         name: String,
     },
+    ApiEnvRead {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+    },
+    ApiEnvWrite {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+        variables: Vec<ApiVariable>,
+    },
+    ApiEnvRemove {
+        #[ts(type = "string")]
+        project: Uuid,
+        name: String,
+    },
     BrowserLogs {
         #[ts(type = "string")]
         project: Uuid,
@@ -1037,6 +1053,7 @@ pub enum Reply {
     ApiRun { run: ApiRun },
     ApiCollection { requests: Vec<String>, environments: Vec<String> },
     ApiRequest { request: ApiRequest, last: Option<ApiRun> },
+    ApiEnvironment { variables: Vec<ApiVariable> },
     Daemon { report: DaemonReport },
     Done,
 }
@@ -1056,6 +1073,14 @@ pub struct ApiRequest {
 
 fn get() -> String {
     "GET".to_owned()
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ApiVariable {
+    pub name: String,
+    pub value: String,
+    pub secret: bool,
 }
 
 impl Default for ApiRequest {
