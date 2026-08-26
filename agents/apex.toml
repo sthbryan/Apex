@@ -1,0 +1,5 @@
+name = "apex"
+command = "apexd"
+mode = "acp"
+acp_command = "apexd"
+acp_args = ["agent", "--acp"]

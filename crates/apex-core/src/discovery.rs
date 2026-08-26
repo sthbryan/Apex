@@ -103,6 +103,10 @@ impl BinaryResolver {
         self.environment.as_ref()
     }
 
+    pub fn knows(&mut self, command: &str, path: PathBuf) {
+        self.cache.insert(command.to_owned(), Some(path));
+    }
+
     pub fn resolve(&mut self, command: &str) -> Option<PathBuf> {
         if let Some(cached) = self.cache.get(command) {
             return cached.clone();

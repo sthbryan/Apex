@@ -120,3 +120,33 @@ fn a_plain_command_is_left_alone() {
     let profile = AgentProfile::parse("name = \"t\"\ncommand = \"claude\"\n").expect("t");
     assert_eq!(profile.launch_command(), "claude");
 }
+
+#[test]
+fn apex_is_one_of_the_agents_it_can_run() {
+    let set = ProfileSet::builtin().expect("builtin");
+    let ours = set.get("apex").expect("apex");
+    assert_eq!(ours.mode, AgentMode::Acp);
+    assert_eq!(ours.acp_command.as_deref(), Some("apexd"));
+    assert_eq!(ours.acp_args, vec!["agent".to_owned(), "--acp".to_owned()]);
+    assert!(ours.agentic);
+}
+
+#[test]
+fn a_command_the_resolver_is_told_about_needs_no_looking_up() {
+    let mut resolver = BinaryResolver::default();
+    assert_eq!(resolver.resolve("apexd"), None);
+
+    let mut resolver = BinaryResolver::default();
+    resolver.knows("apexd", std::path::PathBuf::from("/opt/apex/apexd"));
+    assert_eq!(resolver.resolve("apexd"), Some(std::path::PathBuf::from("/opt/apex/apexd")));
+}
+
+#[test]
+fn apex_shows_as_available_once_the_resolver_knows_where_it_is() {
+    let set = ProfileSet::builtin().expect("builtin");
+    let mut resolver = BinaryResolver::default();
+    resolver.knows("apexd", std::path::PathBuf::from("/opt/apex/apexd"));
+    let summary = set.get("apex").expect("apex").summarize(&mut resolver);
+    assert!(summary.is_available());
+    assert!(summary.speaks_acp);
+}

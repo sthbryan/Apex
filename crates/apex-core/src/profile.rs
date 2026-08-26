@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::discovery::BinaryResolver;
 
 const BUILTIN_PROFILES: &[(&str, &str)] = &[
+    ("apex", include_str!("../../../agents/apex.toml")),
     ("claude", include_str!("../../../agents/claude.toml")),
     ("codex", include_str!("../../../agents/codex.toml")),
     ("antigravity", include_str!("../../../agents/antigravity.toml")),

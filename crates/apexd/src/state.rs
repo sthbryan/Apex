@@ -5,6 +5,8 @@ use apex_core::{ApexPaths, BinaryResolver, ProfileSet, ShellEnvironment, Store};
 
 use crate::sessions::SessionManager;
 
+pub const OURSELVES: &str = "apexd";
+
 pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
     paths.ensure_dirs()?;
 
@@ -29,12 +31,12 @@ pub async fn bootstrap(paths: &ApexPaths) -> Result<Arc<SessionManager>> {
         "PATH resolved"
     );
 
-    let manager = SessionManager::new(
-        paths.clone(),
-        profiles,
-        BinaryResolver::with_environment(environment),
-        store,
-    );
+    let mut resolver = BinaryResolver::with_environment(environment);
+    if let Ok(ourselves) = std::env::current_exe() {
+        resolver.knows(OURSELVES, ourselves);
+    }
+
+    let manager = SessionManager::new(paths.clone(), profiles, resolver, store);
     let housekeeping = Arc::clone(&manager);
     tokio::spawn(async move { housekeeping.sweep_rejects().await });
     Ok(manager)
