@@ -126,7 +126,7 @@ fn the_kit_offers_the_tools_it_can_run() {
     let dir = root();
     let names: Vec<String> =
         Kit::new(dir.path()).offered().into_iter().map(|one| one.name).collect();
-    assert_eq!(names, vec!["read", "search", "find"]);
+    assert_eq!(names, vec!["read", "search", "find", "write", "edit"]);
 }
 
 #[test]
@@ -176,4 +176,114 @@ fn a_long_sketch_is_cut_so_it_stays_on_one_line() {
 #[test]
 fn a_sketch_never_carries_a_second_line() {
     assert_eq!(sketch(&call("search", serde_json::json!({ "pattern": "uno\ndos" }))), "uno");
+}
+
+async fn ran(kit: &Kit, name: &str, args: Value) -> Done {
+    kit.run(&Call { id: "1".to_owned(), name: name.to_owned(), args }).await
+}
+
+#[tokio::test]
+async fn a_new_file_can_be_written_without_reading_it_first() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done =
+        ran(&kit, "write", serde_json::json!({ "path": "src/new.rs", "content": "fn dos() {}\n" }))
+            .await;
+    assert!(done.went_well(), "{}", done.text());
+    assert!(done.text().contains("wrote src/new.rs"));
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join("src/new.rs")).expect("read"),
+        "fn dos() {}\n"
+    );
+}
+
+#[tokio::test]
+async fn a_file_that_is_already_there_is_not_replaced_unread() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done =
+        ran(&kit, "write", serde_json::json!({ "path": "src/one.rs", "content": "gone\n" })).await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("have not read it"));
+    assert!(std::fs::read_to_string(dir.path().join("src/one.rs")).expect("read").contains("uno"));
+}
+
+#[tokio::test]
+async fn reading_a_file_first_lets_you_replace_it() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    ran(&kit, "read", serde_json::json!({ "path": "src/one.rs" })).await;
+    let done =
+        ran(&kit, "write", serde_json::json!({ "path": "src/one.rs", "content": "fn dos() {}\n" }))
+            .await;
+    assert!(done.went_well(), "{}", done.text());
+    assert!(done.text().contains("replaced src/one.rs"));
+}
+
+#[tokio::test]
+async fn a_file_that_was_never_read_is_not_edited() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done =
+        ran(&kit, "edit", serde_json::json!({ "path": "src/one.rs", "old": "uno", "new": "dos" }))
+            .await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("read it before you change it"));
+}
+
+#[tokio::test]
+async fn a_file_that_was_read_can_be_edited() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    ran(&kit, "read", serde_json::json!({ "path": "src/one.rs" })).await;
+    let done =
+        ran(&kit, "edit", serde_json::json!({ "path": "src/one.rs", "old": "uno", "new": "dos" }))
+            .await;
+    assert!(done.went_well(), "{}", done.text());
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join("src/one.rs")).expect("read"),
+        "fn dos() {}\n"
+    );
+}
+
+#[tokio::test]
+async fn a_file_you_just_wrote_counts_as_read() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    ran(&kit, "write", serde_json::json!({ "path": "src/new.rs", "content": "fn uno() {}\n" }))
+        .await;
+    let done =
+        ran(&kit, "edit", serde_json::json!({ "path": "src/new.rs", "old": "uno", "new": "dos" }))
+            .await;
+    assert!(done.went_well(), "{}", done.text());
+}
+
+#[tokio::test]
+async fn writing_outside_the_project_is_refused() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done =
+        ran(&kit, "write", serde_json::json!({ "path": "../escaped.rs", "content": "x" })).await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("outside this project"));
+}
+
+#[tokio::test]
+async fn a_written_file_makes_the_folders_it_needs() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done =
+        ran(&kit, "write", serde_json::json!({ "path": "a/b/c.rs", "content": "x\n" })).await;
+    assert!(done.went_well(), "{}", done.text());
+    assert!(dir.path().join("a/b/c.rs").exists());
+}
+
+#[test]
+fn a_file_is_only_seen_once_it_has_been_read() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let one = kit.root().join("src/one.rs");
+    assert!(!kit.has_seen(&one));
+    kit.saw(&one);
+    assert!(kit.has_seen(&one));
 }

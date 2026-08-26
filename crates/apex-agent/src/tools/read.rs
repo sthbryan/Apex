@@ -1,11 +1,9 @@
-use std::path::Path;
-
 use anyhow::{Result, bail};
 use rig_core::completion::ToolDefinition;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{asked, shown, within};
+use super::{Kit, asked, shown, within};
 
 const MOST_LINES: usize = 2000;
 const MOST_BYTES: u64 = 400_000;
@@ -36,8 +34,9 @@ pub fn offered() -> ToolDefinition {
     }
 }
 
-pub async fn run(root: &Path, args: &Value) -> Result<String> {
+pub async fn run(kit: &Kit, args: &Value) -> Result<String> {
     let args: Args = asked(args)?;
+    let root = kit.root();
     let path = within(root, &args.path)?;
 
     let facts = tokio::fs::metadata(&path).await?;
@@ -53,6 +52,7 @@ pub async fn run(root: &Path, args: &Value) -> Result<String> {
         bail!("{} looks binary", args.path)
     }
     let text = String::from_utf8(raw)?;
+    kit.saw(&path);
     Ok(cut(&shown(root, &path), &text, args.offset, args.limit))
 }
 

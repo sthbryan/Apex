@@ -1,8 +1,12 @@
+mod edit;
 mod find;
 mod read;
 mod search;
+mod write;
 
+use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
+use std::sync::Mutex;
 
 use anyhow::{Result, anyhow, bail};
 use rig_core::completion::ToolDefinition;
@@ -35,12 +39,26 @@ impl Done {
 
 pub struct Kit {
     root: PathBuf,
+    seen: Mutex<HashSet<PathBuf>>,
 }
 
 impl Kit {
     pub fn new(root: impl AsRef<Path>) -> Self {
         let root = root.as_ref();
-        Self { root: root.canonicalize().unwrap_or_else(|_| root.to_path_buf()) }
+        Self {
+            root: root.canonicalize().unwrap_or_else(|_| root.to_path_buf()),
+            seen: Mutex::default(),
+        }
+    }
+
+    pub fn saw(&self, path: &Path) {
+        if let Ok(mut seen) = self.seen.lock() {
+            seen.insert(path.to_path_buf());
+        }
+    }
+
+    pub fn has_seen(&self, path: &Path) -> bool {
+        self.seen.lock().is_ok_and(|seen| seen.contains(path))
     }
 
     pub fn root(&self) -> &Path {
@@ -48,14 +66,16 @@ impl Kit {
     }
 
     pub fn offered(&self) -> Vec<ToolDefinition> {
-        vec![read::offered(), search::offered(), find::offered()]
+        vec![read::offered(), search::offered(), find::offered(), write::offered(), edit::offered()]
     }
 
     pub async fn run(&self, call: &Call) -> Done {
         let done = match call.name.as_str() {
-            "read" => read::run(&self.root, &call.args).await,
+            "read" => read::run(self, &call.args).await,
             "search" => search::run(&self.root, &call.args).await,
             "find" => find::run(&self.root, &call.args).await,
+            "write" => write::run(self, &call.args).await,
+            "edit" => edit::run(self, &call.args).await,
             other => Err(anyhow!("there is no tool called {other}")),
         };
         match done {
@@ -84,7 +104,7 @@ pub fn within(root: &Path, path: &str) -> Result<PathBuf> {
 
 pub fn sketch(call: &Call) -> String {
     let key = match call.name.as_str() {
-        "read" => "path",
+        "read" | "write" | "edit" => "path",
         "search" => "pattern",
         "find" => "glob",
         _ => "",
