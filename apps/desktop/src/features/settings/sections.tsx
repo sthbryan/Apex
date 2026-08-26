@@ -13,7 +13,10 @@ import {
   ToggleChip,
   Wordmark,
 } from "@apex/ui";
+import type { JSX } from "preact";
+import { useEffect, useState } from "preact/hooks";
 import { SHORTCUTS } from "@/app/keymap";
+import type { ProviderStatus } from "@/bindings/ProviderStatus";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
 import {
@@ -73,6 +76,17 @@ import {
   VEIL_AREAS,
 } from "@/features/settings/constants";
 import { DockOrder } from "@/features/settings/DockOrder";
+import {
+  busy,
+  chooseAgent,
+  chosen,
+  forgetKey,
+  holdsKey,
+  keepKey,
+  loadModels,
+  models,
+  providers,
+} from "@/features/settings/providers";
 import {
   groupOn,
   OPTIONAL_GROUPS,
@@ -473,6 +487,119 @@ const TOOL_COPY = {
   browser: ["settings.toolBrowser", "settings.toolBrowserSub"],
   api: ["settings.toolApi", "settings.toolApiSub"],
 } as const;
+
+const KEY_BOX =
+  "h-(--apex-h-sm) min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
+
+export function agentSection(): Section {
+  return {
+    id: "agent",
+    label: t("settings.groupAgent"),
+    sub: t("settings.groupAgentSub"),
+    icon: "bot",
+    entries: [],
+    panel: (
+      <div class="flex flex-col">
+        {providers.value.map((provider) => (
+          <ProviderRow key={provider.name} provider={provider} />
+        ))}
+      </div>
+    ),
+  };
+}
+
+function ProviderRow({ provider }: { provider: ProviderStatus }) {
+  const name = provider.name;
+  const listed = models.value[name] ?? [];
+  const picked = chosen.value;
+  const here = picked?.provider === provider.name;
+  const working = busy.value === provider.name;
+
+  const wanted = holdsKey(provider);
+  useEffect(() => {
+    if (wanted && (models.value[name] ?? null) === null) {
+      loadModels(name).catch(complain);
+    }
+  }, [name, wanted]);
+
+  return (
+    <DataRow
+      dim={!holdsKey(provider)}
+      label={provider.label}
+      sub={spellHeld(provider)}
+      trail={
+        holdsKey(provider) ? (
+          <Select
+            label={t("settings.agentModel", { provider: provider.label })}
+            value={here ? (picked?.model ?? "") : ""}
+            placeholder={t("settings.agentModelNone")}
+            disabled={working || listed.length === 0}
+            onChange={(model) => {
+              if (model) {
+                chooseAgent(provider.name, model).catch(complain);
+              }
+            }}
+            options={listed.map((model) => ({ value: model.id, label: model.label }))}
+          />
+        ) : null
+      }
+      actions={
+        provider.keyless ? null : provider.held === "keychain" ? (
+          <Button
+            size="sm"
+            disabled={working}
+            onClick={() => forgetKey(provider.name).catch(complain)}
+          >
+            {t("settings.keyForget")}
+          </Button>
+        ) : (
+          <KeyField provider={provider.name} working={working} />
+        )
+      }
+    />
+  );
+}
+
+function spellHeld(provider: ProviderStatus): string {
+  if (provider.held === "keychain") {
+    return t("settings.keyKept");
+  }
+  if (provider.held === "environment") {
+    return t("settings.keyFromEnv", { name: provider.env ?? "" });
+  }
+  return provider.keyless ? t("settings.keyNotNeeded") : t("settings.keyMissing");
+}
+
+function KeyField({ provider, working }: { provider: string; working: boolean }) {
+  const [key, setKey] = useState("");
+  return (
+    <form
+      class="flex items-center gap-1"
+      onSubmit={(event: Event) => {
+        event.preventDefault();
+        if (!key.trim()) {
+          return;
+        }
+        keepKey(provider, key.trim())
+          .then(() => setKey(""))
+          .catch(complain);
+      }}
+    >
+      <input
+        type="password"
+        value={key}
+        spellcheck={false}
+        aria-label={t("settings.keyFor", { provider })}
+        placeholder={t("settings.keyPlaceholder")}
+        onInput={(event: JSX.TargetedEvent<HTMLInputElement>) => setKey(event.currentTarget.value)}
+        class={KEY_BOX}
+      />
+      <Button size="sm" type="submit" disabled={!key.trim() || working}>
+        {t("settings.keyKeep")}
+      </Button>
+    </form>
+  );
+}
 
 export function toolsSection(): Section {
   return {

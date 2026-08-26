@@ -252,6 +252,25 @@ async fn execute(
         Command::BrowserPage { project } => {
             Ok(Reply::Text { text: manager.browser_page(project).await })
         }
+        Command::ProvidersList => {
+            Ok(Reply::Providers { providers: manager.providers().map_err(internal_error)? })
+        }
+        Command::ProviderKeep { provider, key } => {
+            manager.provider_keep(&provider, &key).await.map_err(write_error)?;
+            Ok(Reply::Done)
+        }
+        Command::ProviderForget { provider } => {
+            manager.provider_forget(&provider).map_err(write_error)?;
+            Ok(Reply::Done)
+        }
+        Command::ProviderModels { provider } => Ok(Reply::AgentModels {
+            models: manager.provider_models(&provider).await.map_err(internal_error)?,
+        }),
+        Command::AgentChosen => Ok(Reply::AgentChoice { choice: manager.agent_chosen() }),
+        Command::AgentChoose { provider, model } => {
+            manager.agent_choose(&provider, &model).map_err(write_error)?;
+            Ok(Reply::Done)
+        }
         Command::ApiList { project } => {
             let (requests, environments) = manager.api_list(project);
             Ok(Reply::ApiCollection { requests, environments })
@@ -520,6 +539,12 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::BrowserForget { .. }
             | Command::BrowserPage { .. }
             | Command::ApiSend { .. }
+            | Command::ProvidersList
+            | Command::ProviderKeep { .. }
+            | Command::ProviderForget { .. }
+            | Command::ProviderModels { .. }
+            | Command::AgentChosen
+            | Command::AgentChoose { .. }
             | Command::ApiList { .. }
             | Command::ApiRead { .. }
             | Command::ApiWrite { .. }

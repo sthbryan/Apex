@@ -653,6 +653,22 @@ pub enum Command {
         #[serde(default)]
         environment: Option<String>,
     },
+    ProvidersList,
+    ProviderKeep {
+        provider: String,
+        key: String,
+    },
+    ProviderForget {
+        provider: String,
+    },
+    ProviderModels {
+        provider: String,
+    },
+    AgentChosen,
+    AgentChoose {
+        provider: String,
+        model: String,
+    },
     ApiList {
         #[ts(type = "string")]
         project: Uuid,
@@ -1050,12 +1066,49 @@ pub enum Reply {
     Wrote { revision: String },
     Metrics { snapshot: MetricsSnapshot },
     Acp { snapshot: AcpSnapshot },
+    Providers { providers: Vec<ProviderStatus> },
+    AgentModels { models: Vec<AgentModel> },
+    AgentChoice { choice: Option<AgentChoice> },
     ApiRun { run: ApiRun },
     ApiCollection { requests: Vec<ApiEntry>, environments: Vec<String> },
     ApiRequest { request: ApiRequest, last: Option<ApiRun> },
     ApiEnvironment { variables: Vec<ApiVariable> },
     Daemon { report: DaemonReport },
     Done,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "snake_case")]
+pub enum KeyFrom {
+    Keychain,
+    Environment,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ProviderStatus {
+    pub name: String,
+    pub label: String,
+    pub base_url: Option<String>,
+    pub env: Option<String>,
+    pub keyless: bool,
+    pub held: Option<KeyFrom>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AgentModel {
+    pub id: String,
+    pub label: String,
+    pub context: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AgentChoice {
+    pub provider: String,
+    pub model: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

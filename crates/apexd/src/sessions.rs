@@ -1281,3 +1281,80 @@ fn home_directory() -> PathBuf {
         .map(|dirs| dirs.home_dir().to_path_buf())
         .unwrap_or_else(|| PathBuf::from("/"))
 }
+
+impl SessionManager {
+    pub fn providers(&self) -> anyhow::Result<Vec<apex_proto::ProviderStatus>> {
+        let set = apex_agent::ProviderSet::load(&self.paths.providers_dir())?;
+        let mut listed = Vec::new();
+        for provider in set.iter() {
+            listed.push(apex_proto::ProviderStatus {
+                name: provider.name.clone(),
+                label: provider.label.clone(),
+                base_url: provider.base_url.clone(),
+                env: provider.env.clone(),
+                keyless: provider.keyless,
+                held: apex_agent::key::find(provider)?.map(|found| match found.from {
+                    apex_agent::key::Source::Keychain => apex_proto::KeyFrom::Keychain,
+                    apex_agent::key::Source::Environment => apex_proto::KeyFrom::Environment,
+                }),
+            });
+        }
+        Ok(listed)
+    }
+
+    pub async fn provider_keep(&self, provider: &str, key: &str) -> anyhow::Result<()> {
+        let found = self.provider(provider)?;
+        apex_agent::model::list(&found.dial(key)?).await?;
+        apex_agent::key::keep(&found.name, key)
+    }
+
+    pub fn provider_forget(&self, provider: &str) -> anyhow::Result<()> {
+        apex_agent::key::forget(&self.provider(provider)?.name)
+    }
+
+    pub async fn provider_models(
+        &self,
+        provider: &str,
+    ) -> anyhow::Result<Vec<apex_proto::AgentModel>> {
+        let found = self.provider(provider)?;
+        let held = match apex_agent::key::find(&found)? {
+            Some(found) => found.key,
+            None if found.keyless => String::new(),
+            None => anyhow::bail!("{} has no key yet", found.name),
+        };
+        Ok(apex_agent::model::list(&found.dial(&held)?)
+            .await?
+            .into_iter()
+            .map(|one| apex_proto::AgentModel {
+                id: one.id,
+                label: one.label,
+                context: one.context,
+            })
+            .collect())
+    }
+
+    pub fn agent_chosen(&self) -> Option<apex_proto::AgentChoice> {
+        apex_agent::choice::read(&self.paths.agent_dir()).map(|choice| apex_proto::AgentChoice {
+            provider: choice.provider,
+            model: choice.model,
+        })
+    }
+
+    pub fn agent_choose(&self, provider: &str, model: &str) -> anyhow::Result<()> {
+        let found = self.provider(provider)?;
+        if model.trim().is_empty() {
+            anyhow::bail!("that needs a model")
+        }
+        apex_agent::choice::write(
+            &self.paths.agent_dir(),
+            &apex_agent::Choice { provider: found.name, model: model.trim().to_owned() },
+        )
+    }
+
+    fn provider(&self, provider: &str) -> anyhow::Result<apex_agent::Provider> {
+        apex_agent::ProviderSet::load(&self.paths.providers_dir())?
+            .get(provider)
+            .cloned()
+            .ok_or_else(|| anyhow::anyhow!("there is no provider called {provider}"))
+    }
+}

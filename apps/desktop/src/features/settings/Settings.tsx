@@ -4,8 +4,10 @@ import { useEffect, useState } from "preact/hooks";
 import { closePage, page, settingsSection } from "@/app/view";
 import { loadCli } from "@/features/settings/cli";
 import type { Section } from "@/features/settings/constants";
+import { startProviders } from "@/features/settings/providers";
 import {
   aboutSection,
+  agentSection,
   agentsSection,
   daemonSection,
   lookSection,
@@ -28,6 +30,7 @@ export function Settings() {
   useEffect(() => {
     if (page.value === "settings") {
       void loadCli();
+      startProviders();
     }
   }, [page.value]);
 
@@ -35,6 +38,7 @@ export function Settings() {
     lookSection(),
     spaceSection(),
     agentsSection(),
+    agentSection(),
     toolsSection(),
     daemonSection(),
     shortcutsSection(),
