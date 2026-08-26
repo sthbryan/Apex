@@ -126,7 +126,7 @@ fn the_kit_offers_the_tools_it_can_run() {
     let dir = root();
     let names: Vec<String> =
         Kit::new(dir.path()).offered().into_iter().map(|one| one.name).collect();
-    assert_eq!(names, vec!["read", "search", "find", "write", "edit"]);
+    assert_eq!(names, vec!["read", "search", "find", "write", "edit", "bash"]);
 }
 
 #[test]
@@ -286,4 +286,42 @@ fn a_file_is_only_seen_once_it_has_been_read() {
     assert!(!kit.has_seen(&one));
     kit.saw(&one);
     assert!(kit.has_seen(&one));
+}
+
+#[tokio::test]
+async fn a_command_runs_in_the_project_folder() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done = ran(&kit, "bash", serde_json::json!({ "command": "cat src/one.rs" })).await;
+    assert!(done.went_well(), "{}", done.text());
+    assert!(done.text().contains("fn uno"));
+}
+
+#[tokio::test]
+async fn a_command_that_fails_still_comes_back_with_what_it_printed() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done = ran(&kit, "bash", serde_json::json!({ "command": "echo nope >&2; exit 3" })).await;
+    assert!(done.went_well(), "{}", done.text());
+    assert!(done.text().contains("exit 3"));
+    assert!(done.text().contains("nope"));
+}
+
+#[tokio::test]
+async fn a_command_that_hangs_is_given_up_on() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done =
+        ran(&kit, "bash", serde_json::json!({ "command": "sleep 5", "timeout_seconds": 1 })).await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("gave up after 1 seconds"));
+}
+
+#[tokio::test]
+async fn a_command_with_nothing_in_it_is_refused() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done = ran(&kit, "bash", serde_json::json!({ "command": "  " })).await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("needs a command"));
 }

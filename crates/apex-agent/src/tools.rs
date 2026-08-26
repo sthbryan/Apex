@@ -1,3 +1,4 @@
+mod bash;
 mod edit;
 mod find;
 mod read;
@@ -66,7 +67,14 @@ impl Kit {
     }
 
     pub fn offered(&self) -> Vec<ToolDefinition> {
-        vec![read::offered(), search::offered(), find::offered(), write::offered(), edit::offered()]
+        vec![
+            read::offered(),
+            search::offered(),
+            find::offered(),
+            write::offered(),
+            edit::offered(),
+            bash::offered(),
+        ]
     }
 
     pub async fn run(&self, call: &Call) -> Done {
@@ -76,6 +84,7 @@ impl Kit {
             "find" => find::run(&self.root, &call.args).await,
             "write" => write::run(self, &call.args).await,
             "edit" => edit::run(self, &call.args).await,
+            "bash" => bash::run(self, &call.args).await,
             other => Err(anyhow!("there is no tool called {other}")),
         };
         match done {
@@ -105,6 +114,7 @@ pub fn within(root: &Path, path: &str) -> Result<PathBuf> {
 pub fn sketch(call: &Call) -> String {
     let key = match call.name.as_str() {
         "read" | "write" | "edit" => "path",
+        "bash" => "command",
         "search" => "pattern",
         "find" => "glob",
         _ => "",
