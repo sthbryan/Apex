@@ -199,6 +199,7 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
   if (ask.decided) {
     return (
       <ApprovalCard
+        settled
         question={ask.title}
         meta={t("acp.decided", { option: labelOf(ask, ask.decided) })}
         lead={<Icon name="keyboard" size={14} />}
@@ -217,13 +218,15 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
             <Button
               key={option.id}
               size="sm"
-              variant="primary"
+              variant={option.kind === "reject_once" ? "danger" : "primary"}
+              class="max-w-64 truncate"
+              title={option.name || option.id}
               onClick={() => void decide(id, ask.request, option.id)}
             >
               {option.name || option.id}
             </Button>
           ))}
-          <Button size="sm" variant="danger" onClick={() => void decide(id, ask.request, null)}>
+          <Button size="sm" variant="subtle" onClick={() => void decide(id, ask.request, null)}>
             {t("acp.reject")}
           </Button>
         </>
