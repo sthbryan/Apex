@@ -29,6 +29,10 @@ pub async fn run(run: Run) -> Result<i32> {
         return Ok(2);
     }
 
+    if run.acp {
+        return crate::acp_agent::run().await;
+    }
+
     let paths = ApexPaths::discover()?;
     let set = ProviderSet::load(&paths.providers_dir())?;
     let agent_dir = paths.agent_dir();

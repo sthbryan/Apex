@@ -25,6 +25,8 @@ usage:
                   pick up where a conversation left off
   apex agent --list
                   list the conversations there are
+  apex agent --acp
+                  speak the agent client protocol on stdin and stdout
   apex auth       list the providers and which of them hold a key
   apex auth add <provider>
                   type a key once and keep it in the OS keychain
@@ -54,6 +56,7 @@ pub struct Run {
     pub mode: Option<String>,
     pub resume: Option<Option<String>>,
     pub list: bool,
+    pub acp: bool,
     pub wrong: Option<String>,
 }
 
@@ -162,6 +165,7 @@ fn session(rest: &[String]) -> Run {
                 }
             }
             "--list" | "-l" => run.list = true,
+            "--acp" => run.acp = true,
             other => run.wrong = Some(format!("agent does not know {other}")),
         }
         at += 1;

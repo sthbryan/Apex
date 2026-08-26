@@ -340,3 +340,9 @@ fn a_provider_and_a_resume_can_be_asked_for_together() {
     assert_eq!(run.model.as_deref(), Some("kimi-k2"));
     assert_eq!(run.wrong, None);
 }
+
+#[test]
+fn the_agent_can_be_asked_to_speak_the_protocol_instead() {
+    assert!(agent(&["--acp"]).acp);
+    assert!(!agent(&[]).acp);
+}

@@ -9,6 +9,7 @@ fn asked(provider: Option<&str>, model: Option<&str>) -> Run {
         mode: None,
         resume: None,
         list: false,
+        acp: false,
         wrong: None,
     }
 }
@@ -217,4 +218,9 @@ fn the_running_total_stays_quiet_about_a_window_it_does_not_know() {
 #[test]
 fn summing_up_says_how_much_is_left() {
     assert_eq!(spell_summed(240), "summed up in 240 characters, the window is clear again");
+}
+
+#[test]
+fn the_protocol_is_asked_for_by_a_flag_of_its_own() {
+    assert!(!Run::default().acp);
 }

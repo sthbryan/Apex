@@ -1,3 +1,4 @@
+pub mod acp_agent;
 pub mod agent;
 pub mod auth;
 pub mod cli;
