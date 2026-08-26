@@ -221,21 +221,18 @@ pub const TOOLS: &[Tool] = &[
         },
     },
     Tool {
-        name: "apex_api_list",
-        group: ToolGroup::Api,
-        description: "List the saved http requests and the environments of this project.",
-        schema: || json!({ "type": "object", "properties": {} }),
-    },
-    Tool {
         name: "apex_api_read",
         group: ToolGroup::Api,
-        description: "Read a saved http request without sending it.",
+        description: "Read a saved http request without sending it. Called with no name it \
+                      lists every saved request and environment of this project instead.",
         schema: || {
             json!({
                 "type": "object",
-                "required": ["name"],
                 "properties": {
-                    "name": { "type": "string", "description": "Name of the saved request" }
+                    "name": {
+                        "type": "string",
+                        "description": "Request to read, left out to list them all"
+                    }
                 }
             })
         },
@@ -389,10 +386,9 @@ pub fn command_for(caller: &Caller, tool: &str, arguments: &Value) -> Result<Com
         "apex_close_view" => {
             Ok(Command::CloseView { asked_by: caller.session, target: view_target(caller, &text)? })
         }
-        "apex_api_list" => Ok(Command::ApiList { project: caller.project }),
-        "apex_api_read" => Ok(Command::ApiRead {
-            project: caller.project,
-            name: text("name").context("name is required")?,
+        "apex_api_read" => Ok(match text("name") {
+            Some(name) => Command::ApiRead { project: caller.project, name },
+            None => Command::ApiList { project: caller.project },
         }),
         "apex_api_write" => Ok(Command::ApiWrite {
             project: caller.project,
