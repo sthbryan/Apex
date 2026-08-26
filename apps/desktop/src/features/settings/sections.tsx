@@ -650,7 +650,7 @@ export function aboutSection(appVersion: string): Section {
   };
 }
 
-const SHORTCUT_GROUPS = ["navigation", "panes"] as const;
+const SHORTCUT_GROUPS = ["navigation", "panes", "session"] as const;
 
 export function shortcutsSection(): Section {
   return {
