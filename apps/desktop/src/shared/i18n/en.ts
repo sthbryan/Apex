@@ -555,6 +555,7 @@ export const en = {
     title: "Home",
     tagline: "Run a team of AI agents, not a wall of terminals.",
     task: "Task",
+    startHint: "Start it, or press Command Enter",
     placeholder: "Ask, delegate, or start a task…",
     racePlaceholder: "The task every agent runs, each in its own worktree…",
     modeRaceHint: "Run the task across every agent you pick",

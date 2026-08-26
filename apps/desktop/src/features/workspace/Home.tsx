@@ -3,7 +3,6 @@ import {
   Composer,
   DiffStat,
   Dot,
-  KbdGroup,
   ListRow,
   SectionLabel,
   ToggleChip,
@@ -170,13 +169,10 @@ export function Home() {
           </>
         }
         actions={
-          <>
-            <KbdGroup keys={["⌘", "⏎"]} class="mr-1.5 text-faint" />
-            <Button type="submit" variant="primary" disabled={!ready}>
-              <Icon name="send" size={13} />
-              {racing ? t("home.race") : t("home.start")}
-            </Button>
-          </>
+          <Button type="submit" variant="primary" disabled={!ready} title={t("home.startHint")}>
+            <Icon name="send" size={13} />
+            {racing ? t("home.race") : t("home.start")}
+          </Button>
         }
       />
     </Welcome>
