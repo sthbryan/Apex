@@ -1,19 +1,21 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use futures_util::StreamExt;
 use rig_core::completion::{CompletionRequestBuilder, Message, Usage};
 use rig_core::message::{AssistantContent, ToolResultContent, UserContent};
 use rig_core::streaming::StreamedAssistantContent;
 
 use crate::brain::Brain;
-use crate::log::Log;
+use crate::log::{self, Log};
 use crate::mode::Mode;
 use crate::tools::todo::Todo;
 use crate::tools::{Call, Done, Kit, ask};
 use crate::window;
 
 const MOST_ROUNDS: usize = 40;
+
+const SUMMARISE: &str = "Sum this conversation up so it can carry on without the messages above. Keep what was asked, what was decided and why, what was changed and where, and what is still open. Leave out small talk and file contents you already acted on. Write it as notes, not prose.";
 
 pub trait Surface {
     fn said(&mut self, text: &str);
@@ -154,6 +156,31 @@ impl Chat {
         self.history.push(message);
     }
 
+    pub async fn compact(&mut self) -> Result<String> {
+        if self.history.is_empty() {
+            bail!("there is nothing to sum up yet")
+        }
+        let answer =
+            CompletionRequestBuilder::new(Arc::clone(&self.brain), Message::user(SUMMARISE))
+                .preamble(self.preamble.clone())
+                .messages(self.history.clone())
+                .send()
+                .await?;
+
+        self.spent.add(&answer.usage);
+        let summary = spoken(&answer.choice);
+        if summary.trim().is_empty() {
+            bail!("the model summed it up as nothing")
+        }
+
+        if let Some(log) = &self.log {
+            log.compacted(&summary);
+        }
+        self.history = vec![Message::user(log::wrapped(&summary))];
+        self.filled = 0;
+        Ok(summary)
+    }
+
     async fn round(&mut self, surface: &mut impl Surface) -> Result<Vec<AssistantContent>> {
         let (prior, prompt) = split(&self.history);
         let mut stream = CompletionRequestBuilder::new(Arc::clone(&self.brain), prompt)
@@ -246,6 +273,17 @@ fn spell(done: &Done) -> String {
         Done::Said(text) => text.clone(),
         Done::Failed(text) => format!("failed: {text}"),
     }
+}
+
+fn spoken(choice: &[AssistantContent]) -> String {
+    choice
+        .iter()
+        .filter_map(|part| match part {
+            AssistantContent::Text(text) => Some(text.text.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 fn said_nothing(choice: &[AssistantContent]) -> bool {

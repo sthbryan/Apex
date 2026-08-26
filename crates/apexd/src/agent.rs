@@ -19,6 +19,7 @@ const PLAIN: &str = "\x1b[0m";
 
 const HELP: &str = "  /help          print this
   /mode <name>   switch to auto, plan or chat
+  /compact       sum the conversation up and free the window
   /exit          leave the agent
 ";
 
@@ -197,6 +198,11 @@ async fn talk(
             print!("{HELP}");
             continue;
         }
+        if said == "/compact" {
+            squeeze(chat, &mut ink).await;
+            warned = false;
+            continue;
+        }
         if let Some(asked) = said.strip_prefix("/mode") {
             match Mode::parse(asked) {
                 Some(mode) => {
@@ -217,6 +223,12 @@ async fn talk(
         }
 
         let full = chat.how_full();
+        if crowded(full, kept.compacts_at()) {
+            println!("the window is {}% full, summing up", full.unwrap_or(0));
+            squeeze(chat, &mut ink).await;
+            warned = false;
+            continue;
+        }
         let over = crowded(full, kept.warns_at());
         if over && !warned {
             println!("the window is {}% full, /compact when you want room", full.unwrap_or(0));
@@ -377,6 +389,17 @@ pub fn spell_spent(spent: Spent, full: Option<u8>) -> String {
         Some(full) => format!("{} tokens so far, window {full}% full", spent.total()),
         None => format!("{} tokens so far", spent.total()),
     }
+}
+
+async fn squeeze(chat: &mut Chat, ink: &mut Ink) {
+    match chat.compact().await {
+        Ok(summary) => ink.noted(&spell_summed(summary.chars().count())),
+        Err(cause) => eprintln!("apex: could not sum it up: {cause:#}"),
+    }
+}
+
+pub fn spell_summed(letters: usize) -> String {
+    format!("summed up in {letters} characters, the window is clear again")
 }
 
 pub fn crowded(full: Option<u8>, warn_at: Option<u8>) -> bool {

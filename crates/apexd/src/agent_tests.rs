@@ -213,3 +213,8 @@ fn the_running_total_stays_quiet_about_a_window_it_does_not_know() {
     let spent = Spent { sent: 100, back: 20 };
     assert_eq!(spell_spent(spent, None), "120 tokens so far");
 }
+
+#[test]
+fn summing_up_says_how_much_is_left() {
+    assert_eq!(spell_summed(240), "summed up in 240 characters, the window is clear again");
+}

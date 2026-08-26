@@ -132,3 +132,55 @@ fn every_session_gets_a_name_of_its_own() {
     assert_ne!(one, other);
     assert!(one.starts_with(&now.format("%Y%m%d-").to_string()));
 }
+
+#[test]
+fn a_summary_replaces_everything_that_came_before_it() {
+    let dir = tempfile::tempdir().expect("dir");
+    let log = Log::start(dir.path(), &head("one", 10)).expect("start");
+    log.wrote(&Message::user("uno"));
+    log.wrote(&Message::assistant("respuesta"));
+    log.compacted("hablamos de uno");
+    log.wrote(&Message::user("dos"));
+
+    let (_, messages) = open(dir.path(), "one").expect("open");
+    assert_eq!(messages.len(), 2);
+    assert_eq!(messages[1], Message::user("dos"));
+}
+
+#[test]
+fn the_summary_comes_back_marked_as_what_came_before() {
+    let dir = tempfile::tempdir().expect("dir");
+    let log = Log::start(dir.path(), &head("one", 10)).expect("start");
+    log.wrote(&Message::user("uno"));
+    log.compacted("hablamos de uno");
+
+    let (_, messages) = open(dir.path(), "one").expect("open");
+    assert_eq!(messages, vec![Message::user(wrapped("hablamos de uno"))]);
+}
+
+#[test]
+fn nothing_is_lost_from_the_file_when_it_is_summed_up() {
+    let dir = tempfile::tempdir().expect("dir");
+    let log = Log::start(dir.path(), &head("one", 10)).expect("start");
+    log.wrote(&Message::user("uno"));
+    log.compacted("hablamos de uno");
+
+    let raw = std::fs::read_to_string(dir.path().join("one.jsonl")).expect("read");
+    assert!(raw.contains("uno"));
+    assert!(raw.contains("hablamos de uno"));
+}
+
+#[test]
+fn a_summary_is_labelled_so_the_model_knows_what_it_is() {
+    assert_eq!(wrapped("  hicimos esto  "), "Earlier in this conversation:\n\nhicimos esto");
+}
+
+#[test]
+fn a_summed_up_conversation_is_still_titled_by_what_is_left() {
+    let dir = tempfile::tempdir().expect("dir");
+    let log = Log::start(dir.path(), &head("one", 10)).expect("start");
+    log.wrote(&Message::user("lo viejo"));
+    log.compacted("hablamos de lo viejo");
+
+    assert!(list(dir.path())[0].title.starts_with("Earlier in this conversation"));
+}

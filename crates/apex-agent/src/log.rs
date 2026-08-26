@@ -19,6 +19,7 @@ pub struct Head {
 enum Line {
     Head(Head),
     Turn { message: Message },
+    Compacted { summary: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,6 +49,12 @@ impl Log {
     pub fn wrote(&self, message: &Message) {
         if let Err(cause) = self.append(&Line::Turn { message: message.clone() }) {
             tracing::warn!(%cause, "could not write the conversation down");
+        }
+    }
+
+    pub fn compacted(&self, summary: &str) {
+        if let Err(cause) = self.append(&Line::Compacted { summary: summary.to_owned() }) {
+            tracing::warn!(%cause, "could not write the summary down");
         }
     }
 
@@ -81,6 +88,10 @@ pub fn read(raw: &str) -> Result<(Head, Vec<Message>)> {
         match serde_json::from_str::<Line>(line) {
             Ok(Line::Head(found)) => head = Some(found),
             Ok(Line::Turn { message }) => messages.push(message),
+            Ok(Line::Compacted { summary }) => {
+                messages.clear();
+                messages.push(Message::user(wrapped(&summary)));
+            }
             Err(cause) => tracing::warn!(%cause, "skipped a line of the conversation"),
         }
     }
@@ -105,6 +116,10 @@ pub fn list(agent_dir: &Path) -> Vec<Kept> {
         .collect();
     kept.sort_by_key(|one| std::cmp::Reverse(one.head.at));
     kept
+}
+
+pub fn wrapped(summary: &str) -> String {
+    format!("Earlier in this conversation:\n\n{}", summary.trim())
 }
 
 pub fn title(messages: &[Message]) -> String {
