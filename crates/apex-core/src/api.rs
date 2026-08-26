@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
-pub use apex_proto::{ApiRequest as Request, ApiVariable as Variable};
+pub use apex_proto::{ApiEntry as Entry, ApiRequest as Request, ApiVariable as Variable};
 
 pub const REQUESTS: &str = "requests";
 pub const ENVIRONMENTS: &str = "environments";
@@ -19,6 +19,16 @@ pub fn ensure(root: &Path) -> Result<()> {
 
 pub fn requests(root: &Path) -> Vec<String> {
     names(&root.join(REQUESTS))
+}
+
+pub fn entries(root: &Path) -> Vec<Entry> {
+    requests(root)
+        .into_iter()
+        .map(|name| {
+            let method = load(root, &name).map(|request| request.method).unwrap_or_default();
+            Entry { name, method }
+        })
+        .collect()
 }
 
 pub fn environments(root: &Path) -> Vec<String> {

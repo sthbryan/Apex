@@ -1051,7 +1051,7 @@ pub enum Reply {
     Metrics { snapshot: MetricsSnapshot },
     Acp { snapshot: AcpSnapshot },
     ApiRun { run: ApiRun },
-    ApiCollection { requests: Vec<String>, environments: Vec<String> },
+    ApiCollection { requests: Vec<ApiEntry>, environments: Vec<String> },
     ApiRequest { request: ApiRequest, last: Option<ApiRun> },
     ApiEnvironment { variables: Vec<ApiVariable> },
     Daemon { report: DaemonReport },
@@ -1073,6 +1073,13 @@ pub struct ApiRequest {
 
 fn get() -> String {
     "GET".to_owned()
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ApiEntry {
+    pub name: String,
+    pub method: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

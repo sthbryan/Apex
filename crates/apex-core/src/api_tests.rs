@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use super::{
-    Request, Variable, apply, ensure, environment_path, environments, fill, load, read_environment,
-    remove, remove_environment, request_path, requests, save, secrets, secrets_path, variables,
-    write_environment,
+    Request, Variable, apply, ensure, entries, environment_path, environments, fill, load,
+    read_environment, remove, remove_environment, request_path, requests, save, secrets,
+    secrets_path, variables, write_environment,
 };
 use crate::ApexPaths;
 
@@ -343,4 +343,23 @@ fn removing_an_environment_that_was_never_there_says_so() {
     let dir = root();
     let trouble = remove_environment(dir.path(), "ghost").expect_err("no such environment");
     assert!(trouble.to_string().contains("not a saved environment"), "{trouble}");
+}
+
+#[test]
+fn the_listing_carries_the_verb_of_every_request() {
+    let dir = root();
+    save(dir.path(), "create user", &posting()).expect("save");
+    let found = entries(dir.path());
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].name, "create user");
+    assert_eq!(found[0].method, "POST");
+}
+
+#[test]
+fn a_request_that_will_not_parse_still_shows_up_with_no_verb() {
+    let dir = root();
+    std::fs::write(request_path(dir.path(), "broken").expect("path"), "url = [").expect("write");
+    let found = entries(dir.path());
+    assert_eq!(found[0].name, "broken");
+    assert!(found[0].method.is_empty(), "{}", found[0].method);
 }
