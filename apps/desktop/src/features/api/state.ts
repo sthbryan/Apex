@@ -193,10 +193,6 @@ function readEnvironment(): string | null {
   }
 }
 
-export function shortBody(run: ApiRun): string {
-  return run.truncated ? `${run.body}\n\n...` : run.body;
-}
-
 export function tone(status: number): "ok" | "warn" | "bad" {
   if (status < 300) {
     return "ok";

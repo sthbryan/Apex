@@ -2,7 +2,9 @@ import { Button, Pane, SectionLabel, Segmented, Select } from "@apex/ui";
 import cn from "cnfast";
 import { useEffect, useState } from "preact/hooks";
 
+import type { ApiRun } from "@/bindings/ApiRun";
 import { type BodyKind, bodyKind, KINDS } from "@/features/api/body";
+import { runHeaders, type Shown, shownBody } from "@/features/api/run";
 import {
   brokenJson,
   chosen,
@@ -28,12 +30,12 @@ import {
   setHeaders,
   setKind,
   setParams,
-  shortBody,
   startNew,
   tone,
   trouble,
 } from "@/features/api/state";
 import type { Pair } from "@/features/api/url";
+import { paint } from "@/features/files/highlight";
 import { activeProjectId } from "@/features/projects/state";
 import { complain } from "@/shared/daemon";
 import { type MessageKey, t } from "@/shared/i18n";
@@ -237,28 +239,94 @@ export function ApiPanel() {
           </p>
         )}
 
-        {run && (
-          <section class="flex flex-col gap-1.5">
-            <SectionLabel
-              flush
-              action={
-                <span class="flex items-center gap-2 font-mono text-xs">
-                  <span class={TONES[tone(run.status)]}>{run.status}</span>
-                  <span class="text-faint">{run.millis}ms</span>
-                  <span class="text-faint">{bytes(run.size)}</span>
-                </span>
-              }
-            >
-              {t("api.response")}
-            </SectionLabel>
-            <pre class="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-sm border border-border bg-raised p-2 font-mono text-xs leading-relaxed">
-              {shortBody(run)}
-            </pre>
-          </section>
-        )}
+        {run && <Answer run={run} />}
       </div>
     </Pane>
   );
+}
+
+function Answer({ run }: { run: ApiRun }) {
+  const [tab, setTab] = useState<"body" | "headers">("body");
+  const sent = runHeaders(run);
+  const shown = shownBody(run);
+
+  return (
+    <section class="flex min-w-0 flex-col gap-1.5">
+      <SectionLabel
+        flush
+        action={
+          <span class="flex items-center gap-2 font-mono text-xs">
+            <span class={TONES[tone(run.status)]}>{run.status}</span>
+            <span class="text-faint">{run.millis}ms</span>
+            <span class="text-faint">{bytes(run.size)}</span>
+          </span>
+        }
+      >
+        {t("api.response")}
+      </SectionLabel>
+      <Segmented
+        size="sm"
+        class="min-w-0 self-start"
+        label={t("api.response")}
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "body", label: t("api.body") },
+          { value: "headers", label: <Tally text={t("api.headers")} count={sent.length} /> },
+        ]}
+      />
+      {tab === "body" ? (
+        <Answered shown={shown} />
+      ) : (
+        <dl class="flex min-w-0 flex-col gap-1 rounded-sm border border-border bg-raised p-2 font-mono text-xs">
+          {sent.map(({ key, value }) => (
+            <div key={key} class="flex min-w-0 gap-2">
+              <dt class="w-2/5 shrink-0 truncate text-faint" title={key}>
+                {key}
+              </dt>
+              <dd class="min-w-0 flex-1 break-words">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </section>
+  );
+}
+
+function Answered({ shown }: { shown: Shown }) {
+  const markup = usePainted(shown);
+  const box =
+    "max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-sm border border-border bg-raised p-2 font-mono text-xs leading-relaxed";
+
+  if (markup === null) {
+    return <pre class={box}>{shown.text}</pre>;
+  }
+  return (
+    <pre class={box}>
+      <code dangerouslySetInnerHTML={{ __html: markup }} />
+    </pre>
+  );
+}
+
+function usePainted(shown: Shown): string | null {
+  const [ready, setReady] = useState<{ text: string; markup: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!shown.json) {
+      return;
+    }
+    let live = true;
+    void paint("json", shown.text).then((markup) => {
+      if (live) {
+        setReady({ text: shown.text, markup });
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [shown.json, shown.text]);
+
+  return ready?.text === shown.text ? ready.markup : null;
 }
 
 function Body({ kind }: { kind: BodyKind }) {

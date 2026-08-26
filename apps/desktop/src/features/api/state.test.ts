@@ -40,7 +40,6 @@ import {
   setHeaders,
   setKind,
   setParams,
-  shortBody,
   startNew,
   tone,
   trouble,
@@ -242,11 +241,6 @@ describe("brokenJson", () => {
 });
 
 describe("reading a run", () => {
-  it("marks a body that was cut", () => {
-    expect(shortBody(RUN)).toBe("hi");
-    expect(shortBody({ ...RUN, truncated: true })).toBe("hi\n\n...");
-  });
-
   it("tells the status apart", () => {
     expect(tone(200)).toBe("ok");
     expect(tone(301)).toBe("warn");

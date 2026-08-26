@@ -53,7 +53,11 @@ let engine: Promise<typeof import("highlight.js/lib/common")> | null = null;
 
 export async function highlight(path: string, text: string): Promise<string | null> {
   const language = languageFor(path);
-  if (!language || text.length > MAX_HIGHLIGHT_BYTES) {
+  return language === null ? null : paint(language, text);
+}
+
+export async function paint(language: string, text: string): Promise<string | null> {
+  if (text.length > MAX_HIGHLIGHT_BYTES) {
     return null;
   }
 
