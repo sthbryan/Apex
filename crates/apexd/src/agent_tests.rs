@@ -60,3 +60,30 @@ fn a_failure_is_shown_by_its_first_line_only() {
     assert_eq!(first_line("one line"), "one line");
     assert_eq!(first_line(""), "");
 }
+
+fn options() -> Vec<String> {
+    vec!["uno".to_owned(), "dos".to_owned(), "tres".to_owned()]
+}
+
+#[test]
+fn a_number_picks_the_option_at_that_place() {
+    assert_eq!(chosen("2", &options()), Some("dos".to_owned()));
+    assert_eq!(chosen(" 1 ", &options()), Some("uno".to_owned()));
+}
+
+#[test]
+fn a_number_nobody_offered_picks_nothing() {
+    assert_eq!(chosen("0", &options()), None);
+    assert_eq!(chosen("9", &options()), None);
+}
+
+#[test]
+fn words_are_taken_as_the_answer_and_not_as_a_number() {
+    assert_eq!(chosen("dos", &options()), None);
+    assert_eq!(chosen("", &options()), None);
+}
+
+#[test]
+fn an_open_question_has_no_options_to_pick_from() {
+    assert_eq!(chosen("1", &[]), None);
+}

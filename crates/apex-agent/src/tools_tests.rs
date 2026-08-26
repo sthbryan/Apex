@@ -126,7 +126,10 @@ fn the_kit_offers_the_tools_it_can_run() {
     let dir = root();
     let names: Vec<String> =
         Kit::new(dir.path()).offered().into_iter().map(|one| one.name).collect();
-    assert_eq!(names, vec!["read", "search", "find", "write", "edit", "bash", "fetch"]);
+    assert_eq!(
+        names,
+        vec!["read", "search", "find", "write", "edit", "bash", "fetch", "todo", "ask"]
+    );
 }
 
 #[test]
@@ -324,4 +327,44 @@ async fn a_command_with_nothing_in_it_is_refused() {
     let done = ran(&kit, "bash", serde_json::json!({ "command": "  " })).await;
     assert!(!done.went_well());
     assert!(done.text().contains("needs a command"));
+}
+
+#[tokio::test]
+async fn a_list_of_steps_is_kept_for_whoever_draws_it() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    assert!(kit.todo().is_empty());
+    let done = ran(
+        &kit,
+        "todo",
+        serde_json::json!({ "items": [
+        { "content": "uno", "status": "completed" },
+        { "content": "dos", "status": "in_progress" }
+    ] }),
+    )
+    .await;
+    assert!(done.went_well(), "{}", done.text());
+    assert_eq!(kit.todo().len(), 2);
+    assert_eq!(kit.todo()[1].content, "dos");
+}
+
+#[tokio::test]
+async fn a_newer_list_replaces_the_older_one() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    ran(&kit, "todo", serde_json::json!({ "items": [{ "content": "uno", "status": "pending" }] }))
+        .await;
+    ran(&kit, "todo", serde_json::json!({ "items": [{ "content": "dos", "status": "pending" }] }))
+        .await;
+    assert_eq!(kit.todo().len(), 1);
+    assert_eq!(kit.todo()[0].content, "dos");
+}
+
+#[tokio::test]
+async fn the_kit_refuses_to_answer_a_question_meant_for_a_person() {
+    let dir = root();
+    let kit = Kit::new(dir.path());
+    let done = ran(&kit, "ask", serde_json::json!({ "question": "cual?" })).await;
+    assert!(!done.went_well());
+    assert!(done.text().contains("answered by the person"));
 }

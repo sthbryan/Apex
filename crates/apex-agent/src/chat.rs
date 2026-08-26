@@ -7,7 +7,8 @@ use rig_core::message::{AssistantContent, ToolResultContent, UserContent};
 use rig_core::streaming::StreamedAssistantContent;
 
 use crate::brain::Brain;
-use crate::tools::{Call, Done, Kit};
+use crate::tools::todo::Todo;
+use crate::tools::{Call, Done, Kit, ask};
 
 const MOST_ROUNDS: usize = 40;
 
@@ -24,6 +25,17 @@ pub trait Surface {
     }
     fn noted(&mut self, text: &str) {
         let _ = text;
+    }
+    fn planned(&mut self, items: &[Todo]) {
+        let _ = items;
+    }
+    fn asked(
+        &mut self,
+        question: &str,
+        options: &[String],
+    ) -> impl std::future::Future<Output = Option<String>> {
+        let _ = (question, options);
+        std::future::ready(None)
     }
 }
 
@@ -120,8 +132,14 @@ impl Chat {
         let mut answers = Vec::with_capacity(calls.len());
         for call in calls {
             surface.running(call);
-            let done = self.kit.run(call).await;
+            let done = match call.name.as_str() {
+                "ask" => person(call, surface).await,
+                _ => self.kit.run(call).await,
+            };
             surface.ran(call, &done);
+            if call.name == "todo" && done.went_well() {
+                surface.planned(&self.kit.todo());
+            }
             answers.push(UserContent::tool_result(
                 call.id.clone(),
                 call.name.clone(),
@@ -129,6 +147,17 @@ impl Chat {
             ));
         }
         answers
+    }
+}
+
+async fn person(call: &Call, surface: &mut impl Surface) -> Done {
+    let asking = match ask::read(&call.args) {
+        Ok(asking) => asking,
+        Err(cause) => return Done::Failed(format!("{cause:#}")),
+    };
+    match surface.asked(&asking.question, &asking.options).await {
+        Some(answer) => Done::Said(answer),
+        None => Done::Failed("nobody answered".to_owned()),
     }
 }
 

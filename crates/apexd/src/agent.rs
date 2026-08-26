@@ -3,10 +3,11 @@ use std::io::{IsTerminal, Write};
 use anyhow::{Context, Result};
 use apex_agent::chat::{Chat, Spent, Surface};
 use apex_agent::choice::{self, Choice};
+use apex_agent::tools::todo::Todo;
 use apex_agent::tools::{Call, Done, Kit, sketch};
 use apex_agent::{ProviderSet, key, preamble};
 use apex_core::ApexPaths;
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, BufReader, Lines, Stdin};
 
 use crate::cli::Run;
 
@@ -84,13 +85,9 @@ async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
     println!("{} on {} in {}", picked.model, picked.provider, here.display());
     println!("/help for the few commands there are");
 
-    let mut lines = BufReader::new(tokio::io::stdin()).lines();
+    let mut ink = Ink::new(tty);
     loop {
-        if tty {
-            print!("\n› ");
-            std::io::stdout().flush().ok();
-        }
-        let Some(line) = lines.next_line().await? else {
+        let Some(line) = ink.line("› ").await? else {
             break;
         };
         let said = line.trim();
@@ -105,7 +102,6 @@ async fn talk(chat: &mut Chat, picked: &Choice) -> Result<i32> {
             continue;
         }
 
-        let mut ink = Ink::new(tty);
         match chat.turn(said, &mut ink).await {
             Ok(()) => ink.ended(chat.spent()),
             Err(cause) => {
@@ -121,11 +117,26 @@ struct Ink {
     tty: bool,
     thinking: bool,
     wrote: bool,
+    lines: Lines<BufReader<Stdin>>,
 }
 
 impl Ink {
     fn new(tty: bool) -> Self {
-        Self { tty, thinking: false, wrote: false }
+        Self {
+            tty,
+            thinking: false,
+            wrote: false,
+            lines: BufReader::new(tokio::io::stdin()).lines(),
+        }
+    }
+
+    async fn line(&mut self, prompt: &str) -> Result<Option<String>> {
+        self.plain();
+        if self.tty {
+            print!("\n{prompt}");
+            std::io::stdout().flush().ok();
+        }
+        Ok(self.lines.next_line().await?)
     }
 
     fn plain(&mut self) {
@@ -157,6 +168,9 @@ impl Ink {
 
 impl Surface for Ink {
     fn running(&mut self, call: &Call) {
+        if matches!(call.name.as_str(), "todo" | "ask") {
+            return;
+        }
         self.broke();
         println!("{DIM}· {} {}{PLAIN}", call.name, sketch(call));
         std::io::stdout().flush().ok();
@@ -168,6 +182,25 @@ impl Surface for Ink {
         }
         println!("{DIM}  {}{PLAIN}", first_line(done.text()));
         std::io::stdout().flush().ok();
+    }
+
+    fn planned(&mut self, items: &[Todo]) {
+        self.broke();
+        for item in items {
+            println!("{DIM}{} {}{PLAIN}", item.status.mark(), item.content);
+        }
+        std::io::stdout().flush().ok();
+    }
+
+    async fn asked(&mut self, question: &str, options: &[String]) -> Option<String> {
+        self.broke();
+        println!("{question}");
+        for (number, option) in options.iter().enumerate() {
+            println!("  {}. {option}", number + 1);
+        }
+        let said = self.line("» ").await.ok().flatten()?;
+        let said = said.trim().to_owned();
+        Some(chosen(&said, options).unwrap_or(said))
     }
 
     fn noted(&mut self, text: &str) {
@@ -195,6 +228,11 @@ impl Surface for Ink {
         std::io::stdout().flush().ok();
         self.wrote = true;
     }
+}
+
+fn chosen(said: &str, options: &[String]) -> Option<String> {
+    let number: usize = said.trim().parse().ok()?;
+    options.get(number.checked_sub(1)?).cloned()
 }
 
 fn first_line(text: &str) -> &str {

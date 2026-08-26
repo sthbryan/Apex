@@ -1,9 +1,11 @@
+pub mod ask;
 mod bash;
 mod edit;
 mod fetch;
 mod find;
 mod read;
 mod search;
+pub mod todo;
 mod write;
 
 use std::collections::HashSet;
@@ -42,6 +44,7 @@ impl Done {
 pub struct Kit {
     root: PathBuf,
     seen: Mutex<HashSet<PathBuf>>,
+    todo: Mutex<Vec<todo::Todo>>,
 }
 
 impl Kit {
@@ -50,6 +53,7 @@ impl Kit {
         Self {
             root: root.canonicalize().unwrap_or_else(|_| root.to_path_buf()),
             seen: Mutex::default(),
+            todo: Mutex::default(),
         }
     }
 
@@ -61,6 +65,16 @@ impl Kit {
 
     pub fn has_seen(&self, path: &Path) -> bool {
         self.seen.lock().is_ok_and(|seen| seen.contains(path))
+    }
+
+    pub fn plans(&self, items: Vec<todo::Todo>) {
+        if let Ok(mut held) = self.todo.lock() {
+            *held = items;
+        }
+    }
+
+    pub fn todo(&self) -> Vec<todo::Todo> {
+        self.todo.lock().map(|held| held.clone()).unwrap_or_default()
     }
 
     pub fn root(&self) -> &Path {
@@ -76,6 +90,8 @@ impl Kit {
             edit::offered(),
             bash::offered(),
             fetch::offered(),
+            todo::offered(),
+            ask::offered(),
         ]
     }
 
@@ -88,6 +104,8 @@ impl Kit {
             "edit" => edit::run(self, &call.args).await,
             "bash" => bash::run(self, &call.args).await,
             "fetch" => fetch::run(&call.args).await,
+            "todo" => todo::run(self, &call.args).await,
+            "ask" => Err(anyhow!("ask is answered by the person, not by the kit")),
             other => Err(anyhow!("there is no tool called {other}")),
         };
         match done {
@@ -119,6 +137,7 @@ pub fn sketch(call: &Call) -> String {
         "read" | "write" | "edit" => "path",
         "bash" => "command",
         "fetch" => "url",
+        "ask" => "question",
         "search" => "pattern",
         "find" => "glob",
         _ => "",
