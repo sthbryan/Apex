@@ -65,9 +65,11 @@ version = "0.10.0"
 dependencies = [
  "anyhow",
  "apex-core",
+ "futures-util",
  "keyring-core",
  "rig-core",
  "serde",
+ "serde_json",
  "tempfile",
  "toml 1.1.4+spec-1.1.0",
 ]
