@@ -52,6 +52,20 @@ base_url = "https://api.mistral.ai/v1"
 env = "MISTRAL_API_KEY"
 
 [[provider]]
+name = "minimax"
+label = "MiniMax"
+kind = "compatible"
+base_url = "https://api.minimax.io/v1"
+env = "MINIMAX_API_KEY"
+
+[[provider]]
+name = "minimax-cn"
+label = "MiniMax (China)"
+kind = "compatible"
+base_url = "https://api.minimaxi.com/v1"
+env = "MINIMAX_API_KEY"
+
+[[provider]]
 name = "moonshot"
 label = "Moonshot"
 kind = "compatible"

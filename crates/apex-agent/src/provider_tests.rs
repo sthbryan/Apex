@@ -17,6 +17,15 @@ fn the_builtin_list_holds_together() {
 }
 
 #[test]
+fn the_same_provider_can_be_listed_on_two_shores() {
+    let set = ProviderSet::builtin().expect("builtin");
+    let here = set.get("minimax").expect("minimax");
+    let there = set.get("minimax-cn").expect("minimax-cn");
+    assert_ne!(here.base_url, there.base_url);
+    assert_eq!(here.env, there.env);
+}
+
+#[test]
 fn a_local_provider_needs_no_key() {
     let set = ProviderSet::builtin().expect("builtin");
     assert!(set.get("ollama").expect("ollama").keyless);
