@@ -394,8 +394,6 @@ impl SessionRegistry {
             "APEX_PREVIEW_DIR".to_owned(),
             apex_core::preview::dir(&cwd).display().to_string(),
         );
-        spec.env
-            .insert("APEX_API_DIR".to_owned(), self.paths.api_dir(project).display().to_string());
         spec.rows = size.rows;
         spec.cols = size.cols;
 

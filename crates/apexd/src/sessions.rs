@@ -93,7 +93,6 @@ impl SessionManager {
             Arc::clone(&resolver),
             Arc::clone(&store),
             base_env.clone(),
-            paths.clone(),
             events.clone(),
         ));
         let files = FilesService::new(Arc::clone(&store), Arc::clone(&resolver));
@@ -814,11 +813,15 @@ impl SessionManager {
     ) -> Result<()> {
         let root = self.paths.api_dir(project);
         apex_core::api::ensure(&root)?;
-        apex_core::api::save(&root, name, request)
+        apex_core::api::save(&root, name, request)?;
+        self.registry.announce(Event::ApiChanged { project, name: name.to_owned() });
+        Ok(())
     }
 
     pub fn api_remove(&self, project: Uuid, name: &str) -> Result<()> {
-        apex_core::api::remove(&self.paths.api_dir(project), name)
+        apex_core::api::remove(&self.paths.api_dir(project), name)?;
+        self.registry.announce(Event::ApiChanged { project, name: name.to_owned() });
+        Ok(())
     }
 
     pub fn api_env_read(&self, project: Uuid, name: &str) -> Result<Vec<apex_proto::ApiVariable>> {
