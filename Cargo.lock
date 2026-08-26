@@ -66,11 +66,15 @@ dependencies = [
  "anyhow",
  "apex-core",
  "futures-util",
+ "globset",
+ "ignore",
  "keyring-core",
+ "regex",
  "rig-core",
  "serde",
  "serde_json",
  "tempfile",
+ "tokio",
  "toml 1.1.4+spec-1.1.0",
 ]
 

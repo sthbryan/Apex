@@ -3,6 +3,7 @@ use std::io::{IsTerminal, Write};
 use anyhow::{Context, Result};
 use apex_agent::chat::{Chat, Spent, Surface};
 use apex_agent::choice::{self, Choice};
+use apex_agent::tools::{Call, Done, Kit, sketch};
 use apex_agent::{ProviderSet, key, preamble};
 use apex_core::ApexPaths;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -52,8 +53,9 @@ pub async fn run(run: Run) -> Result<i32> {
         }
     };
 
+    let here = std::env::current_dir().context("finding where you are")?;
     let brain = provider.dial(&key)?.brain(&picked.model);
-    let mut chat = Chat::new(brain, preamble::read(&agent_dir));
+    let mut chat = Chat::new(brain, Kit::new(&here), preamble::read(&agent_dir));
     choice::write(&agent_dir, &picked)?;
 
     talk(&mut chat, &picked).await
@@ -133,6 +135,14 @@ impl Ink {
         }
     }
 
+    fn broke(&mut self) {
+        self.plain();
+        if self.wrote {
+            println!();
+            self.wrote = false;
+        }
+    }
+
     fn ended(&mut self, spent: Spent) {
         self.plain();
         if self.wrote {
@@ -146,6 +156,26 @@ impl Ink {
 }
 
 impl Surface for Ink {
+    fn running(&mut self, call: &Call) {
+        self.broke();
+        println!("{DIM}· {} {}{PLAIN}", call.name, sketch(call));
+        std::io::stdout().flush().ok();
+    }
+
+    fn ran(&mut self, _call: &Call, done: &Done) {
+        if done.went_well() {
+            return;
+        }
+        println!("{DIM}  {}{PLAIN}", first_line(done.text()));
+        std::io::stdout().flush().ok();
+    }
+
+    fn noted(&mut self, text: &str) {
+        self.broke();
+        println!("{DIM}{text}{PLAIN}");
+        std::io::stdout().flush().ok();
+    }
+
     fn said(&mut self, text: &str) {
         self.plain();
         print!("{text}");
@@ -165,6 +195,10 @@ impl Surface for Ink {
         std::io::stdout().flush().ok();
         self.wrote = true;
     }
+}
+
+fn first_line(text: &str) -> &str {
+    text.lines().next().unwrap_or_default()
 }
 
 #[cfg(test)]

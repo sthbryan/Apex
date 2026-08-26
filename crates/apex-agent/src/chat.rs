@@ -3,14 +3,26 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures_util::StreamExt;
 use rig_core::completion::{CompletionRequestBuilder, Message, Usage};
-use rig_core::message::AssistantContent;
+use rig_core::message::{AssistantContent, ToolResultContent, UserContent};
 use rig_core::streaming::StreamedAssistantContent;
 
 use crate::brain::Brain;
+use crate::tools::{Call, Done, Kit};
+
+const MOST_ROUNDS: usize = 40;
 
 pub trait Surface {
     fn said(&mut self, text: &str);
     fn thought(&mut self, text: &str) {
+        let _ = text;
+    }
+    fn running(&mut self, call: &Call) {
+        let _ = call;
+    }
+    fn ran(&mut self, call: &Call, done: &Done) {
+        let _ = (call, done);
+    }
+    fn noted(&mut self, text: &str) {
         let _ = text;
     }
 }
@@ -34,15 +46,17 @@ impl Spent {
 
 pub struct Chat {
     brain: Arc<Brain>,
+    kit: Kit,
     preamble: String,
     history: Vec<Message>,
     spent: Spent,
 }
 
 impl Chat {
-    pub fn new(brain: Brain, preamble: impl Into<String>) -> Self {
+    pub fn new(brain: Brain, kit: Kit, preamble: impl Into<String>) -> Self {
         Self {
             brain: Arc::new(brain),
+            kit,
             preamble: preamble.into(),
             history: Vec::new(),
             spent: Spent::default(),
@@ -58,10 +72,34 @@ impl Chat {
     }
 
     pub async fn turn(&mut self, said: &str, surface: &mut impl Surface) -> Result<()> {
-        let asked = Message::user(said);
-        let mut stream = CompletionRequestBuilder::new(Arc::clone(&self.brain), asked.clone())
+        self.history.push(Message::user(said));
+
+        for round in 0..MOST_ROUNDS {
+            let choice = self.round(surface).await?;
+            let calls = wanted(&choice);
+            if !said_nothing(&choice) {
+                self.history.push(Message::Assistant { id: None, content: choice });
+            }
+            if calls.is_empty() {
+                return Ok(());
+            }
+            if round + 1 == MOST_ROUNDS {
+                break;
+            }
+            let answers = self.serve(&calls, surface).await;
+            self.history.push(Message::User { content: answers });
+        }
+
+        surface.noted(&format!("stopped after {MOST_ROUNDS} rounds of tools"));
+        Ok(())
+    }
+
+    async fn round(&mut self, surface: &mut impl Surface) -> Result<Vec<AssistantContent>> {
+        let (prior, prompt) = split(&self.history);
+        let mut stream = CompletionRequestBuilder::new(Arc::clone(&self.brain), prompt)
             .preamble(self.preamble.clone())
-            .messages(self.history.clone())
+            .messages(prior)
+            .tools(self.kit.offered())
             .stream()
             .await?;
 
@@ -75,18 +113,51 @@ impl Chat {
                 _ => {}
             }
         }
+        Ok(std::mem::take(&mut stream.choice))
+    }
 
-        remember(&mut self.history, asked, std::mem::take(&mut stream.choice));
-        Ok(())
+    async fn serve(&self, calls: &[Call], surface: &mut impl Surface) -> Vec<UserContent> {
+        let mut answers = Vec::with_capacity(calls.len());
+        for call in calls {
+            surface.running(call);
+            let done = self.kit.run(call).await;
+            surface.ran(call, &done);
+            answers.push(UserContent::tool_result(
+                call.id.clone(),
+                call.name.clone(),
+                vec![ToolResultContent::text(spell(&done))],
+            ));
+        }
+        answers
     }
 }
 
-fn remember(history: &mut Vec<Message>, asked: Message, choice: Vec<AssistantContent>) {
-    history.push(asked);
-    if said_nothing(&choice) {
-        return;
+fn split(history: &[Message]) -> (Vec<Message>, Message) {
+    match history.split_last() {
+        Some((last, prior)) => (prior.to_vec(), last.clone()),
+        None => (Vec::new(), Message::user("")),
     }
-    history.push(Message::Assistant { id: None, content: choice });
+}
+
+fn wanted(choice: &[AssistantContent]) -> Vec<Call> {
+    choice
+        .iter()
+        .filter_map(|part| match part {
+            AssistantContent::ToolCall(called) => Some(Call {
+                id: called.id.as_str().to_owned(),
+                name: called.function.name.clone(),
+                args: called.function.arguments.clone(),
+            }),
+            _ => None,
+        })
+        .collect()
+}
+
+fn spell(done: &Done) -> String {
+    match done {
+        Done::Said(text) => text.clone(),
+        Done::Failed(text) => format!("failed: {text}"),
+    }
 }
 
 fn said_nothing(choice: &[AssistantContent]) -> bool {

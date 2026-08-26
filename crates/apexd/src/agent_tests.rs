@@ -53,3 +53,10 @@ fn a_provider_with_no_model_anywhere_says_where_to_look() {
     let complaint = pick(&asked(Some("openai"), None), None).expect_err("no model");
     assert!(complaint.contains("openai needs a model"));
 }
+
+#[test]
+fn a_failure_is_shown_by_its_first_line_only() {
+    assert_eq!(first_line("no such file\nbacktrace here"), "no such file");
+    assert_eq!(first_line("one line"), "one line");
+    assert_eq!(first_line(""), "");
+}
