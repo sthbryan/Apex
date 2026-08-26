@@ -46,6 +46,7 @@ import {
   openRequest,
   params,
   removeEnvironment,
+  removeRequest,
   saved,
   saveEnvironment,
   sending,
@@ -313,6 +314,51 @@ describe("environments", () => {
     });
     await removeEnvironment("staging");
     expect(environment.value).toBe("local");
+  });
+});
+
+describe("removeRequest", () => {
+  it("clears the panel when it deletes the one that was open", async () => {
+    chosen.value = "me";
+    draft.value = { ...blank(), url: "http://x" };
+    invoke.mockResolvedValueOnce(undefined).mockResolvedValueOnce({
+      requests: [],
+      environments: [],
+    });
+    await removeRequest("me");
+    expect(invoke.mock.calls[0][0]).toBe("api_remove");
+    expect(chosen.value).toBe(null);
+    expect(draft.value).toEqual(blank());
+  });
+
+  it("leaves the open request alone when it deletes another", async () => {
+    chosen.value = "me";
+    invoke.mockResolvedValueOnce(undefined).mockResolvedValueOnce({
+      requests: [],
+      environments: [],
+    });
+    await removeRequest("other");
+    expect(chosen.value).toBe("me");
+  });
+
+  it("starts fresh when the request it had open is deleted from outside", async () => {
+    chosen.value = "gone";
+    saved.value = blank();
+    draft.value = blank();
+    invoke.mockImplementation((name: string) =>
+      name === "api_read"
+        ? Promise.reject(new Error("gone is not a saved request"))
+        : Promise.resolve({ requests: [], environments: [] }),
+    );
+    const stop = startCollection();
+    for (const handler of changed) {
+      handler({ project: "p1", name: "gone" });
+    }
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(chosen.value).toBe(null);
+    stop();
   });
 });
 

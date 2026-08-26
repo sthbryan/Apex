@@ -84,8 +84,10 @@ export function ApiPanel() {
   const project = activeProjectId.value;
   const [wanted, setWanted] = useState("");
   const [tab, setTab] = useState<Tab>("params");
+  const [sure, setSure] = useState(false);
 
   useEffect(() => startCollection(), [project]);
+  useEffect(() => setSure(false), [chosen.value]);
 
   if (!project) {
     return <p class="p-3 text-faint text-sm">{t("files.noProject")}</p>;
@@ -129,9 +131,16 @@ export function ApiPanel() {
           <Step icon="plus" hint={t("api.new")} onPick={startNew} />
           {name && (
             <Step
-              icon="close"
-              hint={t("api.remove")}
-              onPick={() => void removeRequest(name).catch(complain)}
+              icon="trash"
+              on={sure}
+              hint={sure ? t("api.sure") : t("api.remove")}
+              onPick={() => {
+                if (!sure) {
+                  setSure(true);
+                  return;
+                }
+                void removeRequest(name).catch(complain);
+              }}
             />
           )}
         </>
@@ -285,6 +294,7 @@ export function ApiPanel() {
 function Stage() {
   const held = editing.value ?? "";
   const [named, setNamed] = useState(held);
+  const [sure, setSure] = useState(false);
   const rows = variables.value;
   const name = held || named.trim();
 
@@ -362,10 +372,16 @@ function Stage() {
         {held && (
           <Button
             size="md"
-            variant="ghost"
-            onClick={() => void removeEnvironment(held).catch(complain)}
+            variant={sure ? "danger" : "ghost"}
+            onClick={() => {
+              if (!sure) {
+                setSure(true);
+                return;
+              }
+              void removeEnvironment(held).catch(complain);
+            }}
           >
-            {t("api.remove")}
+            {sure ? t("api.sure") : t("api.remove")}
           </Button>
         )}
         <p class="min-w-0 flex-1 text-right text-faint text-xs">{t("api.secretHint")}</p>
