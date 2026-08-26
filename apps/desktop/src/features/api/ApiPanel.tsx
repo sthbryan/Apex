@@ -138,7 +138,7 @@ export function ApiPanel() {
           onChange={(picked) => void openRequest(picked).catch(complain)}
         />
 
-        <div class="flex gap-1.5">
+        <div class="flex items-center gap-1.5">
           <span class="shrink-0" style="--ui-select-width: 88px">
             <Select
               label={t("api.method")}
@@ -156,7 +156,7 @@ export function ApiPanel() {
           />
         </div>
 
-        <div class="flex gap-1.5">
+        <div class="flex items-center gap-1.5">
           <Select
             class="min-w-0 flex-1"
             label={t("api.environment")}
