@@ -321,15 +321,36 @@ impl Surface for Ink {
         std::io::stdout().flush().ok();
     }
 
-    async fn asked(&mut self, question: &str, options: &[String]) -> Option<String> {
-        self.broke();
-        println!("{question}");
-        for (number, option) in options.iter().enumerate() {
-            println!("  {}. {option}", number + 1);
+    async fn asked(
+        &mut self,
+        group: &str,
+        questions: &[apex_agent::tools::ask::Question],
+    ) -> Vec<Option<String>> {
+        let _ = group;
+        let mut answers = Vec::with_capacity(questions.len());
+        for (number, question) in questions.iter().enumerate() {
+            self.broke();
+            if questions.len() > 1 {
+                println!("{}/{} {}", number + 1, questions.len(), question.question);
+            } else {
+                println!("{}", question.question);
+            }
+            let labels: Vec<String> =
+                question.options.iter().map(|choice| choice.label.clone()).collect();
+            for (slot, choice) in question.options.iter().enumerate() {
+                match &choice.description {
+                    Some(line) => println!("  {}. {} {DIM}{line}{PLAIN}", slot + 1, choice.label),
+                    None => println!("  {}. {}", slot + 1, choice.label),
+                }
+            }
+            let Some(said) = self.line("» ").await.ok().flatten() else {
+                answers.push(None);
+                continue;
+            };
+            let said = said.trim().to_owned();
+            answers.push(Some(chosen(&said, &labels).unwrap_or(said)));
         }
-        let said = self.line("» ").await.ok().flatten()?;
-        let said = said.trim().to_owned();
-        Some(chosen(&said, options).unwrap_or(said))
+        answers
     }
 
     fn noted(&mut self, text: &str) {

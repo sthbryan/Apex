@@ -36,11 +36,11 @@ pub trait Surface {
     }
     fn asked(
         &mut self,
-        question: &str,
-        options: &[String],
-    ) -> impl std::future::Future<Output = Option<String>> {
-        let _ = (question, options);
-        std::future::ready(None)
+        group: &str,
+        questions: &[ask::Question],
+    ) -> impl std::future::Future<Output = Vec<Option<String>>> {
+        let _ = group;
+        std::future::ready(vec![None; questions.len()])
     }
 }
 
@@ -241,9 +241,10 @@ async fn person(call: &Call, surface: &mut impl Surface) -> Done {
         Ok(asking) => asking,
         Err(cause) => return Done::Failed(format!("{cause:#}")),
     };
-    match surface.asked(&asking.question, &asking.options).await {
-        Some(answer) => Done::Said(answer),
-        None => Done::Failed("nobody answered".to_owned()),
+    let answers = surface.asked(&call.id, &asking.questions).await;
+    match answers.iter().any(Option::is_some) {
+        true => Done::Said(ask::spell(&asking.questions, &answers)),
+        false => Done::Failed("nobody answered".to_owned()),
     }
 }
 
