@@ -196,13 +196,18 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
     };
 
     let mut kit = Kit::new(&cwd);
-    kit.plugs(Servers::connect(&plugged(params.get("mcpServers")), &our_names()).await);
+    let servers = Servers::connect(&plugged(params.get("mcpServers")), &our_names()).await;
+    let wiring = spell_wiring(&servers);
+    kit.plugs(servers);
 
     let mut chat = Chat::new(wire.brain(&picked.model), kit, preamble::read(&agent_dir));
     chat.holds(window);
 
     let id = format!("apex-{}", rooms.next.fetch_add(1, Ordering::Relaxed));
     rooms.live.lock().await.insert(id.clone(), Arc::new(Mutex::new(chat)));
+    if let Some(said) = wiring {
+        Voice { side: Arc::clone(side), session: id.clone() }.noted(&said);
+    }
     side.notify(
         "session/update",
         json!({
@@ -292,6 +297,22 @@ async fn ordered(side: &Arc<Side>, held: &Held, session: &str, order: &str) -> R
     let mut voice = Voice { side: Arc::clone(side), session: session.to_owned() };
     voice.noted(&told);
     Ok(json!({ "stopReason": "end_turn" }))
+}
+
+fn spell_wiring(servers: &Servers) -> Option<String> {
+    let reached = servers.names();
+    let troubles = servers.troubles();
+    if reached.is_empty() && troubles.is_empty() {
+        return None;
+    }
+    let mut said = Vec::new();
+    if !reached.is_empty() {
+        said.push(format!("Plugged into {}.", reached.join(", ")));
+    }
+    for trouble in troubles {
+        said.push(format!("Could not plug into {trouble}"));
+    }
+    Some(said.join(" "))
 }
 
 fn spell_orders() -> String {

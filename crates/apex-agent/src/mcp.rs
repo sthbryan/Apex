@@ -89,18 +89,31 @@ impl Server {
 #[derive(Default)]
 pub struct Servers {
     list: Vec<Server>,
+    troubles: Vec<String>,
 }
 
 impl Servers {
     pub async fn connect(wanted: &[Wanted], ours: &[String]) -> Self {
         let mut list = Vec::new();
+        let mut troubles = Vec::new();
         for one in wanted {
             match plug(one, ours).await {
                 Ok(server) => list.push(server),
-                Err(cause) => tracing::warn!(%cause, "could not reach an mcp server"),
+                Err(cause) => {
+                    tracing::warn!(%cause, "could not reach an mcp server");
+                    troubles.push(format!("{}: {cause:#}", named(one)));
+                }
             }
         }
-        Self { list }
+        Self { list, troubles }
+    }
+
+    pub fn names(&self) -> Vec<String> {
+        self.list.iter().map(|server| server.name.clone()).collect()
+    }
+
+    pub fn troubles(&self) -> &[String] {
+        &self.troubles
     }
 
     pub fn offered(&self) -> Vec<ToolDefinition> {
@@ -125,6 +138,12 @@ impl Servers {
 
     pub fn is_empty(&self) -> bool {
         self.list.is_empty()
+    }
+}
+
+fn named(wanted: &Wanted) -> &str {
+    match wanted {
+        Wanted::Stdio { name, .. } | Wanted::Http { name, .. } => name,
     }
 }
 
