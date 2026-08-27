@@ -1,0 +1,94 @@
+@reference "../../theme.css";
+
+@layer components {
+  .ui-question {
+    @apply flex flex-col gap-2 p-3;
+    border-radius: var(--apex-r-md);
+    background-color: var(--apex-overlay);
+    border: 1px solid color-mix(in oklab, var(--apex-accent) 35%, var(--apex-border));
+  }
+
+  .ui-question:focus-visible {
+    @apply outline-none;
+    border-color: var(--apex-focus);
+  }
+
+  .ui-question[data-settled] {
+    @apply gap-0 py-2;
+    border-color: var(--apex-border);
+    background-color: color-mix(in oklab, var(--apex-overlay) 60%, transparent);
+  }
+
+  .ui-question-head {
+    @apply flex items-center gap-3;
+  }
+
+  .ui-question-title {
+    @apply min-w-0 flex-1 font-medium text-md text-text;
+  }
+
+  .ui-question[data-settled] .ui-question-title {
+    @apply truncate font-normal text-muted;
+  }
+
+  .ui-question-answer {
+    @apply shrink-0 font-mono text-2xs text-faint tabular-nums;
+  }
+
+  .ui-question-rows {
+    @apply flex flex-col gap-1;
+  }
+
+  .ui-question-row {
+    @apply flex w-full items-center gap-3 rounded-sm border border-transparent px-2.5 py-1.5 text-left;
+    background-color: color-mix(in oklab, var(--apex-raised) 55%, transparent);
+    transition: background-color var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-question-row:hover {
+    background-color: var(--apex-raised);
+  }
+
+  .ui-question-row[data-picked] {
+    border-color: var(--apex-accent);
+    background-color: color-mix(in oklab, var(--apex-accent) 12%, transparent);
+  }
+
+  .ui-question-row-text {
+    @apply flex min-w-0 flex-1 flex-col;
+  }
+
+  .ui-question-row-label {
+    @apply text-md text-text;
+  }
+
+  .ui-question-row-hint {
+    @apply text-xs text-muted;
+  }
+
+  .ui-question-row-key {
+    @apply flex size-5 shrink-0 items-center justify-center rounded-xs font-mono text-2xs text-faint tabular-nums;
+    background-color: color-mix(in oklab, var(--apex-raised) 80%, transparent);
+  }
+
+  .ui-question-row[data-picked] .ui-question-row-key {
+    @apply text-accent;
+  }
+
+  .ui-question-own {
+    @apply mt-1 h-(--apex-h-lg) w-full rounded-sm border border-border bg-raised px-2.5 text-sm text-text;
+  }
+
+  .ui-question-own::placeholder {
+    color: var(--apex-faint);
+  }
+
+  .ui-question-own:focus {
+    @apply outline-none;
+    border-color: var(--apex-focus);
+  }
+
+  .ui-question-foot {
+    @apply flex items-center justify-end gap-2;
+  }
+}

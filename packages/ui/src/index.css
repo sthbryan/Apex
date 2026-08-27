@@ -40,6 +40,7 @@
 @import "./molecules/tree-row/tree-row.css";
 @import "./organisms/app-window/app-window.css";
 @import "./organisms/approval-card/approval-card.css";
+@import "./organisms/question-card/question-card.css";
 @import "./organisms/browser-view/browser-view.css";
 @import "./organisms/code-view/code-view.css";
 @import "./organisms/command-palette/command-palette.css";
