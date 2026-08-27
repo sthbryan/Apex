@@ -1,4 +1,4 @@
-import { opensUpward } from "@apex/ui";
+import { clippedRoom, opensLeftward, opensUpward } from "@apex/ui";
 import { describe, expect, it } from "vitest";
 
 function trigger(top: number, bottom: number) {
@@ -29,5 +29,52 @@ describe("opensUpward", () => {
 
   it("caps how much room a very long list asks for", () => {
     expect(opensUpward(trigger(300, 330), 200, 800)).toBe(false);
+  });
+});
+
+describe("clippedRoom", () => {
+  function nest(overflow: string, bottom: number) {
+    const outer = document.createElement("div");
+    outer.style.overflowX = overflow;
+    outer.style.overflowY = overflow;
+    outer.getBoundingClientRect = () => ({ bottom }) as DOMRect;
+    const inner = document.createElement("span");
+    outer.appendChild(inner);
+    document.body.appendChild(outer);
+    return inner;
+  }
+
+  it("stops at the first ancestor that clips", () => {
+    expect(clippedRoom(nest("hidden", 500), 800)).toBe(500);
+  });
+
+  it("walks past ancestors that let it through", () => {
+    expect(clippedRoom(nest("visible", 500), 800)).toBe(800);
+  });
+
+  it("never claims more room than the window has", () => {
+    expect(clippedRoom(nest("hidden", 900), 800)).toBe(800);
+  });
+
+  it("falls back when there is nothing to measure", () => {
+    expect(clippedRoom(null, 800)).toBe(800);
+  });
+});
+
+describe("opensLeftward", () => {
+  function trigger(left: number, right: number) {
+    return { getBoundingClientRect: () => ({ left, right }) };
+  }
+
+  it("grows rightward from a trigger on the left", () => {
+    expect(opensLeftward(trigger(10, 150), 900)).toBe(false);
+  });
+
+  it("grows leftward from a trigger on the right", () => {
+    expect(opensLeftward(trigger(750, 890), 900)).toBe(true);
+  });
+
+  it("never flips one it cannot measure", () => {
+    expect(opensLeftward(null, 900)).toBe(false);
   });
 });

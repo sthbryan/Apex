@@ -41,7 +41,14 @@
   }
 
   .ui-select-list {
-    @apply absolute top-full right-0 left-0 mt-1 flex max-h-56 flex-col gap-0.5 overflow-y-auto rounded-sm border border-border p-1;
+    @apply absolute top-full left-0 mt-1 flex max-h-56 flex-col gap-0.5 overflow-y-auto rounded-sm border border-border p-1;
+    min-width: 100%;
+    width: max-content;
+    max-width: min(22rem, 60vw);
+  }
+
+  .ui-select-list[data-left] {
+    @apply right-0 left-auto;
   }
 
   .ui-select-list[data-up] {

@@ -1,7 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useId, useRef, useState } from "preact/hooks";
 import { cn } from "@/lib/cn";
-import { opensUpward } from "@/lib/place";
+import { clippedRoom, opensLeftward, opensUpward } from "@/lib/place";
 
 export interface SelectOption {
   value: string;
@@ -27,6 +27,7 @@ export function Select({
   const list = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
+  const [left, setLeft] = useState(false);
   const [own, setOwn] = useState(options[0]?.value);
   const current = value ?? own;
   const selected = options.findIndex((o) => o.value === current);
@@ -55,7 +56,8 @@ export function Select({
   const start = () => {
     if (disabled) return;
     setActive(selected < 0 ? 0 : selected);
-    setUp(opensUpward(root.current, options.length));
+    setUp(opensUpward(root.current, options.length, clippedRoom(root.current)));
+    setLeft(opensLeftward(root.current));
     setOpen(true);
   };
 
@@ -103,6 +105,7 @@ export function Select({
         <div
           class="ui-select-list"
           data-up={up || undefined}
+          data-left={left || undefined}
           role="listbox"
           aria-label={label}
           aria-activedescendant={`${id}-${active}`}
