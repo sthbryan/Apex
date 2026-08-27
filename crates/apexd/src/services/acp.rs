@@ -494,6 +494,7 @@ pub struct AcpRegistry {
     store: Arc<Mutex<Store>>,
     base_env: std::collections::BTreeMap<String, String>,
     sessions: Arc<RwLock<std::collections::HashMap<Uuid, Arc<AcpSession>>>>,
+    greeting: Arc<RwLock<std::collections::HashMap<Uuid, Shared>>>,
     events: broadcast::Sender<Event>,
 }
 
@@ -513,6 +514,7 @@ impl AcpRegistry {
             store,
             base_env,
             sessions: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            greeting: Arc::new(RwLock::new(std::collections::HashMap::new())),
             events,
         }
     }
@@ -522,6 +524,11 @@ impl AcpRegistry {
         let mut summaries = Vec::with_capacity(sessions.len());
         for session in sessions.values() {
             summaries.push(session.snapshot_summary().await);
+        }
+        for (id, summary) in self.greeting.read().await.iter() {
+            if !sessions.contains_key(id) {
+                summaries.push(summary.lock().await.clone());
+            }
         }
         summaries
     }
@@ -633,6 +640,7 @@ impl AcpRegistry {
             Agent::spawn(&binary.display().to_string(), &profile.acp_args, &env, cwd, relay)
                 .await?;
 
+        self.greeting.write().await.insert(record.id, Arc::clone(&summary));
         let greeting = tokio::time::timeout(HANDSHAKE_PATIENCE, async {
             let hello = agent.initialize().await?;
             let servers =
@@ -642,6 +650,7 @@ impl AcpRegistry {
         })
         .await;
 
+        self.greeting.write().await.remove(&record.id);
         let (opened, auth) = match greeting {
             Ok(Ok(greeted)) => greeted,
             outcome => {

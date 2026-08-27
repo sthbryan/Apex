@@ -1,6 +1,6 @@
 mod common;
 
-use apex_proto::{Isolation, SessionState, TerminalSize};
+use apex_proto::{Connection, Isolation, Listener, SessionState, TerminalSize, UnixTransport};
 use apexd::sessions::NewSession;
 use common::{Harness, wait_for_state};
 
@@ -208,10 +208,14 @@ async fn an_agent_that_takes_its_time_to_greet_does_not_freeze_the_rest() {
         .expect("the slow request");
 
     assert_eq!(client.request(apex_proto::Command::Ping).await, apex_proto::Reply::Pong);
-    assert_eq!(
-        client.request(apex_proto::Command::ListSessions).await,
-        apex_proto::Reply::Sessions { sessions: vec![] }
-    );
+
+    let apex_proto::Reply::Sessions { sessions } =
+        client.request(apex_proto::Command::ListSessions).await
+    else {
+        panic!("the daemon did not answer with sessions")
+    };
+    let greeting: Vec<&str> = sessions.iter().map(|one| one.agent.as_str()).collect();
+    assert_eq!(greeting, vec!["acp-mummy"], "a session still greeting has to be findable");
 }
 
 #[tokio::test]
@@ -375,6 +379,14 @@ async fn apex_can_open_a_session_with_its_own_agent() {
     .expect("choice");
 
     let manager = common::manager_at(&paths);
+    let mut transport = UnixTransport::bind(&paths.socket).expect("bind the daemon socket");
+    let served = manager.clone();
+    tokio::spawn(async move {
+        while let Ok((stream, peer)) = transport.accept().await {
+            tokio::spawn(apexd::session::serve(served.clone(), Connection::new(stream, peer)));
+        }
+    });
+
     let root = tempfile::tempdir().expect("root");
     let project =
         manager.open_project(&root.path().display().to_string()).await.expect("project").id;
@@ -402,4 +414,20 @@ async fn apex_can_open_a_session_with_its_own_agent() {
     let modes: Vec<&str> = snapshot.modes.choices.iter().map(|one| one.id.as_str()).collect();
     assert_eq!(modes, vec!["auto", "plan", "chat"]);
     assert_eq!(snapshot.modes.chosen.as_deref(), Some("auto"));
+
+    let said = snapshot
+        .entries
+        .iter()
+        .filter_map(|entry| match &entry.body {
+            apex_proto::AcpBody::Notice { text } | apex_proto::AcpBody::Agent { text } => {
+                Some(text.as_str())
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(said.contains("Plugged into apex"), "the agent never reached the apex mcp: {said}");
+
+    let commands: Vec<&str> = snapshot.commands.iter().map(|one| one.name.as_str()).collect();
+    assert_eq!(commands, vec!["compact"]);
 }
