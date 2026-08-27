@@ -22,13 +22,17 @@ import {
   choose,
   commands,
   decide,
+  drain,
   entriesOf,
   failure,
   loadTranscript,
   models,
   modes,
   prompt,
+  queue,
+  queuedIn,
   transcripts,
+  unqueue,
 } from "@/features/acp/state";
 import { SplitPatch } from "@/features/git/SplitPatch";
 import { sessions } from "@/features/sessions/state";
@@ -327,12 +331,24 @@ function Reply({ id, working }: { id: string; working: boolean }) {
   const typed = /^\/(\S*)$/.exec(text);
   const matches = typed ? offered.filter((command) => command.name.startsWith(typed[1])) : [];
 
+  const waiting = queuedIn(id);
+
+  useEffect(() => {
+    if (!working && waiting.length > 0) {
+      void drain(id);
+    }
+  }, [id, working, waiting.length]);
+
   const send = () => {
     const body = text.trim();
     if (!body) {
       return;
     }
     setText("");
+    if (working) {
+      queue(id, body);
+      return;
+    }
     void prompt(id, body);
   };
 
@@ -344,6 +360,25 @@ function Reply({ id, working }: { id: string; working: boolean }) {
 
   return (
     <div class="relative shrink-0 border-t border-border">
+      {waiting.length > 0 && (
+        <ul class="flex flex-col gap-1 border-b border-border px-3 py-2">
+          {waiting.map((held, index) => (
+            <li key={`${index}-${held}`} class="flex items-center gap-2 text-2xs text-muted">
+              <span class="shrink-0 text-faint">{t("acp.queued")}</span>
+              <span class="min-w-0 flex-1 truncate">{held}</span>
+              <button
+                type="button"
+                aria-label={t("acp.unqueue")}
+                onClick={() => unqueue(id, index)}
+                class="shrink-0 text-faint hover:text-text"
+              >
+                <Icon name="close" size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {matches.length > 0 && (
         <ul class="absolute right-0 bottom-full left-0 max-h-48 overflow-auto border-t border-border bg-float">
           {matches.map((command, index) => (
@@ -413,7 +448,11 @@ function Reply({ id, working }: { id: string; working: boolean }) {
             <Choices id={id} kind="model" />
             <Choices id={id} kind="mode" />
             <span class="min-w-0 truncate text-faint">
-              {offered.length > 0 ? t("acp.hintCommands") : t("acp.hint")}
+              {working
+                ? t("acp.hintQueue")
+                : offered.length > 0
+                  ? t("acp.hintCommands")
+                  : t("acp.hint")}
             </span>
           </>
         }
@@ -425,7 +464,7 @@ function Reply({ id, working }: { id: string; working: boolean }) {
               </Button>
             )}
             <Button type="submit" size="sm" variant="primary" disabled={!text.trim()}>
-              {t("acp.send")}
+              {working ? t("acp.queueIt") : t("acp.send")}
             </Button>
           </>
         }

@@ -11,6 +11,7 @@ export const commands = signal<Record<string, AcpCommand[]>>({});
 export const models = signal<Record<string, AcpPicker>>({});
 export const modes = signal<Record<string, AcpPicker>>({});
 export const failure = signal<string | null>(null);
+export const queued = signal<Record<string, string[]>>({});
 
 export function entriesOf(id: string): AcpEntry[] {
   return transcripts.value[id] ?? [];
@@ -43,6 +44,32 @@ export function forget(id: string): void {
   if (dropped) {
     commands.value = others;
   }
+  const { [id]: waiting, ...left } = queued.value;
+  if (waiting) {
+    queued.value = left;
+  }
+}
+
+export function queuedIn(id: string): string[] {
+  return queued.value[id] ?? [];
+}
+
+export function queue(id: string, text: string): void {
+  queued.value = { ...queued.value, [id]: [...queuedIn(id), text] };
+}
+
+export function unqueue(id: string, at: number): void {
+  queued.value = { ...queued.value, [id]: queuedIn(id).filter((_, slot) => slot !== at) };
+}
+
+export async function drain(id: string): Promise<void> {
+  const waiting = queuedIn(id);
+  const [next, ...rest] = waiting;
+  if (next === undefined) {
+    return;
+  }
+  queued.value = { ...queued.value, [id]: rest };
+  await prompt(id, next);
 }
 
 export async function loadTranscript(id: string): Promise<void> {
