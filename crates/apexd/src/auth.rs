@@ -92,12 +92,19 @@ async fn models(set: &ProviderSet, name: &str) -> Result<i32> {
     let Some(provider) = found(set, name) else {
         return Ok(2);
     };
-    let Some(held) = key::find(provider)? else {
-        eprintln!("apex: {} has no key yet, run apex auth add {}", provider.name, provider.name);
-        return Ok(2);
+    let held = match key::find(provider)? {
+        Some(held) => held.key,
+        None if provider.keyless => String::new(),
+        None => {
+            eprintln!(
+                "apex: {} has no key yet, run apex auth add {}",
+                provider.name, provider.name
+            );
+            return Ok(2);
+        }
     };
 
-    let listed = model::list(&provider.dial(&held.key)?).await?;
+    let listed = model::list(&provider.dial(&held)?).await?;
     let widest = listed.iter().map(|model| model.id.len()).max().unwrap_or(0);
     for model in listed {
         match model.context {
