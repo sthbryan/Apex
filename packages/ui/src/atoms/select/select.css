@@ -11,6 +11,10 @@
     min-width: var(--ui-select-width, 152px);
   }
 
+  .ui-select[data-size="lg"] .ui-select-trigger {
+    height: var(--apex-h-lg);
+  }
+
   .ui-select-trigger:hover:not(:disabled) {
     border-color: var(--apex-faint);
   }

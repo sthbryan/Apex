@@ -15,11 +15,12 @@ export interface SelectProps {
   placeholder?: string;
   disabled?: boolean;
   onChange?: (value: string) => void;
+  size?: "md" | "lg";
   class?: string;
 }
 
 export function Select({
-  options, label, value, placeholder = "Select…", disabled, onChange, class: className,
+  options, label, value, placeholder = "Select…", disabled, onChange, size, class: className,
 }: SelectProps) {
   const id = useId();
   const root = useRef<HTMLSpanElement>(null);
@@ -79,7 +80,7 @@ export function Select({
   };
 
   return (
-    <span class={cn("ui-select", className)} ref={root}>
+    <span class={cn("ui-select", className)} data-size={size} ref={root}>
       <button
         type="button"
         class="ui-select-trigger"
