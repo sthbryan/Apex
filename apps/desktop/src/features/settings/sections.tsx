@@ -605,7 +605,7 @@ function ProviderDetail({
 
       {trouble && <p class="border-danger border-l-2 py-2 pl-2.5 text-danger text-xs">{trouble}</p>}
 
-      {provider.held !== "environment" && (
+      {(provider.added || provider.held === "keychain") && (
         <Field label={provider.label} hint={t("settings.providerRemoveHint")}>
           <Button
             size="md"
@@ -642,31 +642,37 @@ function KeyRow({
   const [key, setKey] = useState("");
   const working = busy.value === provider.name;
 
-  if (provider.held === "environment") {
-    return (
-      <Field
-        label={t("settings.keyLabel")}
-        hint={t("settings.keyEnvOnly", { name: provider.env ?? "" })}
-      >
-        <span class="text-faint text-sm">{provider.env}</span>
-      </Field>
-    );
+  if (provider.keyless && provider.held === null) {
+    return <Field label={t("settings.keyLabel")} hint={t("settings.keyNotNeeded")} />;
   }
 
   if (provider.held === "keychain") {
     return (
-      <Field label={t("settings.keyLabel")} hint={t("settings.keyKept")}>
+      <Field
+        label={t("settings.keyLabel")}
+        hint={
+          provider.in_env
+            ? t("settings.keyKeptOverEnv", { name: provider.env ?? "" })
+            : t("settings.keyKept")
+        }
+      >
         <span class="text-faint text-sm">{"\u2022".repeat(8)}</span>
       </Field>
     );
   }
 
-  if (provider.keyless) {
-    return <Field label={t("settings.keyLabel")} hint={t("settings.keyNotNeeded")} />;
-  }
+  const borrowed = provider.held === "environment";
 
   return (
-    <Field layout="stacked" label={t("settings.keyLabel")} hint={t("settings.keyMissing")}>
+    <Field
+      layout="stacked"
+      label={t("settings.keyLabel")}
+      hint={
+        borrowed
+          ? t("settings.keyFromLaunch", { name: provider.env ?? "" })
+          : t("settings.keyMissing")
+      }
+    >
       <form
         class="flex items-center gap-2"
         onSubmit={(event: Event) => {

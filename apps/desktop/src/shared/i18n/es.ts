@@ -256,8 +256,10 @@ export const es: Messages = {
     providerRemoveHint: "Borra la clave y saca este provider de la lista",
     modelLabel: "Modelo",
     keyLabel: "Clave",
-    keyEnvOnly: "Viene de {name} en tu entorno. Apex no puede sacar esa, bajala vos en tu shell.",
+    keyFromLaunch:
+      "Apex está tomando prestada {name} del entorno con el que arrancó. Guardá una acá y se usa esa.",
     keyKept: "guardada en el llavero del sistema",
+    keyKeptOverEnv: "guardada en el llavero del sistema, así que {name} queda de lado",
     keyNotNeeded: "este responde sin clave",
     keyMissing: "todavía no hay ninguna guardada",
     keyFor: "clave de {provider}",

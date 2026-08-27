@@ -23,6 +23,7 @@ function provider(over: Partial<ProviderStatus>): ProviderStatus {
     env: "OPENAI_API_KEY",
     keyless: false,
     added: false,
+    in_env: false,
     held: null,
     ...over,
   };
@@ -103,12 +104,28 @@ describe("taking a provider away", () => {
     expect(labels(panel())).toContain("OpenAI");
   });
 
-  it("will not pretend it can remove a key that lives in your shell", () => {
+  it("will not pretend it can remove a key it never kept", () => {
     providers.value = [MINIMAX];
 
     const container = panel();
     expect(labels(container)).not.toContain("MiniMax");
     expect(container.textContent).toContain("MINIMAX_API_KEY");
+  });
+
+  it("offers a key box so a borrowed one can be replaced instead of being a dead end", () => {
+    providers.value = [MINIMAX];
+
+    const container = panel();
+    expect(container.querySelector('input[type="password"]')).not.toBeNull();
+    expect(container.textContent).toContain("borrowing MINIMAX_API_KEY");
+  });
+
+  it("says which variable is being left alone once a key is kept", () => {
+    providers.value = [provider({ held: "keychain", in_env: true })];
+
+    const container = panel();
+    expect(container.querySelector('input[type="password"]')).toBeNull();
+    expect(container.textContent).toContain("OPENAI_API_KEY is left alone");
   });
 });
 

@@ -255,9 +255,10 @@ export const en = {
     providerRemoveHint: "Drops the key and takes this provider off the list",
     modelLabel: "Model",
     keyLabel: "Key",
-    keyEnvOnly:
-      "It comes from {name} in your environment. Apex cannot take that one away, unset it in your shell.",
+    keyFromLaunch:
+      "Apex is borrowing {name} from the environment it was started in. Keep one here and that one is used instead.",
     keyKept: "kept in the OS keychain",
+    keyKeptOverEnv: "kept in the OS keychain, so {name} is left alone",
     keyNotNeeded: "this one answers without a key",
     keyMissing: "nothing kept yet",
     keyFor: "key for {provider}",
