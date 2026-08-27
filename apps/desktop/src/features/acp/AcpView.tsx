@@ -51,7 +51,6 @@ export function AcpView({ id }: { id: string }) {
   const session = sessions.value.find((candidate) => candidate.id === id);
   const working = session?.state === "working";
   const scroll = useRef<HTMLDivElement>(null);
-  const foot = useRef<HTMLDivElement>(null);
   const [stale, setStale] = useState(false);
 
   useEffect(() => {
@@ -72,11 +71,35 @@ export function AcpView({ id }: { id: string }) {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
+  const following = useRef(true);
+  following.current = !stale;
+
+  const toFoot = () => {
+    const el = scroll.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  };
+
   useEffect(() => {
     if (!stale) {
-      foot.current?.scrollIntoView({ block: "end" });
+      toFoot();
     }
   }, [entries.length, stale]);
+
+  useEffect(() => {
+    const el = scroll.current;
+    if (!el || typeof MutationObserver === "undefined") {
+      return;
+    }
+    const watch = new MutationObserver(() => {
+      if (following.current) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+    watch.observe(el, { childList: true, subtree: true, characterData: true });
+    return () => watch.disconnect();
+  }, []);
 
   return (
     <div class="flex h-full flex-col bg-bg">
@@ -86,14 +109,13 @@ export function AcpView({ id }: { id: string }) {
           {entries.map((entry) =>
             entry ? <Entry key={entry.index} id={id} entry={entry} /> : null,
           )}
-          <div ref={foot} />
         </Transcript>
 
         {stale && (
           <button
             type="button"
             onClick={() => {
-              foot.current?.scrollIntoView({ block: "end" });
+              toFoot();
               setStale(false);
             }}
             class="absolute right-3 bottom-2 z-10 flex animate-drop-in items-center gap-1 rounded-full border border-border bg-float px-2 py-1 text-2xs text-faint shadow-lg transition-colors hover:text-text"
