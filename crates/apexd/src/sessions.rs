@@ -1329,14 +1329,17 @@ impl SessionManager {
 
     pub async fn provider_keep(&self, provider: &str, key: &str) -> anyhow::Result<()> {
         let found = self.provider(provider)?;
-        if key.trim().is_empty() && !found.keyless {
+        if !key.trim().is_empty() {
+            apex_agent::model::list(&found.dial(key)?).await.with_context(|| silent(&found))?;
+            return apex_agent::key::keep(&found.name, key);
+        }
+
+        let borrowed = found.key_from_env().unwrap_or_default();
+        if borrowed.is_empty() && !found.keyless {
             anyhow::bail!("{} needs a key", found.label)
         }
-        apex_agent::model::list(&found.dial(key)?).await.with_context(|| silent(&found))?;
-        match key.trim().is_empty() {
-            true => apex_agent::provider::write(&self.paths.providers_dir(), &found),
-            false => apex_agent::key::keep(&found.name, key),
-        }
+        apex_agent::model::list(&found.dial(&borrowed)?).await.with_context(|| silent(&found))?;
+        apex_agent::provider::write(&self.paths.providers_dir(), &found)
     }
 
     pub fn provider_forget(&self, provider: &str) -> anyhow::Result<()> {

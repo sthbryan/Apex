@@ -72,7 +72,7 @@ export async function chooseAgent(provider: string, model: string): Promise<void
 }
 
 export function isSetUp(provider: ProviderStatus): boolean {
-  return provider.held !== null || provider.added;
+  return provider.held === "keychain" || provider.added;
 }
 
 export function slug(name: string): string {

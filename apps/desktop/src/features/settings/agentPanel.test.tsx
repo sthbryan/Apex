@@ -34,6 +34,15 @@ const MINIMAX = provider({
   label: "MiniMax",
   base_url: "https://api.minimax.io/v1",
   env: "MINIMAX_API_KEY",
+  in_env: true,
+  added: true,
+  held: "environment",
+});
+const STRAY = provider({
+  name: "minimax-cn",
+  label: "MiniMax (China)",
+  env: "MINIMAX_API_KEY",
+  in_env: true,
   held: "environment",
 });
 const KEPT = provider({ held: "keychain" });
@@ -73,12 +82,19 @@ beforeEach(() => {
 });
 
 describe("which providers reach the panel", () => {
-  it("counts a key or a file of its own as set up, and nothing else", () => {
-    expect(isSetUp(MINIMAX)).toBe(true);
+  it("counts a kept key or a file of its own as set up, and nothing else", () => {
     expect(isSetUp(KEPT)).toBe(true);
     expect(isSetUp(provider({ added: true }))).toBe(true);
+    expect(isSetUp(MINIMAX)).toBe(true);
     expect(isSetUp(BARE)).toBe(false);
     expect(isSetUp(provider({ keyless: true }))).toBe(false);
+  });
+
+  it("does not adopt a provider just because a variable is lying around", () => {
+    expect(isSetUp(STRAY)).toBe(false);
+
+    providers.value = [STRAY];
+    expect(panel().textContent).toContain("None set up yet");
   });
 
   it("offers only the ones that are set up, and a way to add another", () => {
@@ -104,12 +120,12 @@ describe("taking a provider away", () => {
     expect(labels(panel())).toContain("OpenAI");
   });
 
-  it("will not pretend it can remove a key it never kept", () => {
+  it("offers to drop a provider you added even when its key is borrowed", () => {
     providers.value = [MINIMAX];
 
     const container = panel();
-    expect(labels(container)).not.toContain("MiniMax");
-    expect(container.textContent).toContain("MINIMAX_API_KEY");
+    expect(labels(container)).toContain("MiniMax");
+    expect(container.textContent).toContain("takes this provider off the list");
   });
 
   it("offers a key box so a borrowed one can be replaced instead of being a dead end", () => {

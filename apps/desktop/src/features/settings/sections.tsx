@@ -723,7 +723,8 @@ function AddProvider({
   const one = free.find((entry) => entry.name === which);
   const own = which === OWN;
   const name = own ? slug(label) : which;
-  const wantsKey = own || !one?.keyless;
+  const borrowed = !own && (one?.in_env ?? false);
+  const wantsKey = own || !(one?.keyless || borrowed);
   const ready = own ? name.length > 0 && url.trim().length > 0 : !wantsKey || key.trim().length > 0;
 
   const send = (event: Event) => {
@@ -809,7 +810,14 @@ function AddProvider({
           />
         </Field>
       ) : (
-        <Field label={t("settings.keyLabel")} hint={t("settings.keyNotNeeded")} />
+        <Field
+          label={t("settings.keyLabel")}
+          hint={
+            borrowed
+              ? t("settings.keyWaiting", { name: one?.env ?? "" })
+              : t("settings.keyNotNeeded")
+          }
+        />
       )}
 
       {trouble && <p class="border-danger border-l-2 py-2 pl-2.5 text-danger text-xs">{trouble}</p>}
