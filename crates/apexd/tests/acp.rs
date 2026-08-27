@@ -362,9 +362,15 @@ async fn apex_can_open_a_session_with_its_own_agent() {
     let home = tempfile::tempdir().expect("home");
     let paths = apex_core::ApexPaths::rooted_at(home.path());
     std::fs::create_dir_all(paths.agent_dir()).expect("agent dir");
+    std::fs::create_dir_all(paths.providers_dir()).expect("providers dir");
+    std::fs::write(
+        paths.providers_dir().join("nowhere.toml"),
+        "name = \"nowhere\"\nlabel = \"Nowhere\"\nkind = \"compatible\"\nbase_url = \"http://127.0.0.1:1/v1\"\nkeyless = true\n",
+    )
+    .expect("provider");
     std::fs::write(
         paths.agent_dir().join("last.toml"),
-        "provider = \"ollama\"\nmodel = \"qwen3\"\n",
+        "provider = \"nowhere\"\nmodel = \"whichever\"\n",
     )
     .expect("choice");
 
