@@ -2,8 +2,11 @@ import type { ComponentChildren } from "preact";
 import { cn } from "@/lib/cn";
 import { Button } from "@/atoms/button/Button";
 
+export type ApprovalTone = "permission" | "question";
+
 export interface ApprovalCardProps {
   question: string;
+  tone?: ApprovalTone;
   command?: string;
   meta?: string;
   lead?: ComponentChildren;
@@ -18,6 +21,7 @@ export interface ApprovalCardProps {
 
 export function ApprovalCard({
   question,
+  tone = "permission",
   command,
   meta,
   lead,
@@ -32,6 +36,7 @@ export function ApprovalCard({
   return (
     <section
       class={cn("ui-approval-card", className)}
+      data-tone={tone}
       data-settled={settled || undefined}
       role="group"
       aria-label={question}

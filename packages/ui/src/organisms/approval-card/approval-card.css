@@ -9,6 +9,21 @@
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--apex-state-blocked) 8%, transparent);
   }
 
+  .ui-approval-card[data-tone="question"] {
+    @apply gap-2.5;
+    border-color: var(--apex-border);
+    box-shadow: none;
+  }
+
+  .ui-approval-card[data-tone="question"] .ui-approval-card-lead {
+    color: var(--apex-accent);
+  }
+
+  .ui-approval-card[data-tone="question"] .ui-approval-card-question {
+    @apply font-normal;
+    color: var(--apex-text);
+  }
+
   .ui-approval-card[data-settled] {
     border-color: var(--apex-border);
     box-shadow: none;
@@ -44,5 +59,15 @@
 
   .ui-approval-card-actions {
     @apply flex flex-wrap items-center gap-2;
+  }
+
+  .ui-approval-card[data-tone="question"] .ui-approval-card-actions > .ui-button:hover:not(:disabled) {
+    border-color: var(--apex-accent);
+    color: var(--apex-accent);
+  }
+
+  .ui-approval-card-aside {
+    @apply ml-auto flex shrink-0 items-center gap-2 pl-2;
+    border-left: 1px solid var(--apex-border);
   }
 }

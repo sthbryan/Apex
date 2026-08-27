@@ -418,6 +418,7 @@ export const en = {
     hintCommands: "↵ sends · ⇧↵ new line · / for commands",
     send: "Send",
     stop: "Stop",
+    skip: "Skip",
     reject: "Deny",
     decided: "Answered: {option}",
     model: "Model for this session",

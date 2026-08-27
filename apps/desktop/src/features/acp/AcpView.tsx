@@ -228,13 +228,16 @@ function Diff({ diff }: { diff: AcpDiff }) {
 }
 
 function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
+  const tone = asking(ask) ? "question" : "permission";
+
   if (ask.decided) {
     return (
       <ApprovalCard
         settled
+        tone={tone}
         question={ask.title}
         meta={t("acp.decided", { option: labelOf(ask, ask.decided) })}
-        lead={<Icon name="keyboard" size={14} />}
+        lead={<Icon name={tone === "question" ? "help" : "keyboard"} size={14} />}
         actions={null}
       />
     );
@@ -242,15 +245,16 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
 
   return (
     <ApprovalCard
+      tone={tone}
       question={ask.title}
-      lead={<Icon name="keyboard" size={14} />}
+      lead={<Icon name={tone === "question" ? "help" : "keyboard"} size={14} />}
       actions={
         <>
           {ask.options.map((option) => (
             <Button
               key={option.id}
               size="sm"
-              variant={option.kind === "reject_once" ? "danger" : "primary"}
+              variant={option.kind === "reject_once" ? "danger" : chosenLook(tone)}
               class="max-w-64 truncate"
               title={option.name || option.id}
               onClick={() => void decide(id, ask.request, option.id)}
@@ -258,13 +262,23 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
               {option.name || option.id}
             </Button>
           ))}
-          <Button size="sm" variant="subtle" onClick={() => void decide(id, ask.request, null)}>
-            {t("acp.reject")}
-          </Button>
+          <span class="ui-approval-card-aside">
+            <Button size="sm" variant="subtle" onClick={() => void decide(id, ask.request, null)}>
+              {t(tone === "question" ? "acp.skip" : "acp.reject")}
+            </Button>
+          </span>
         </>
       }
     />
   );
+}
+
+export function asking(ask: AcpPermission): boolean {
+  return ask.options.every((option) => !option.kind.startsWith("allow"));
+}
+
+function chosenLook(tone: "question" | "permission"): "ghost" | "primary" {
+  return tone === "question" ? "ghost" : "primary";
 }
 
 function Working({ since, on }: { since: string | undefined; on: boolean }) {

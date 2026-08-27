@@ -419,6 +419,7 @@ export const es: Messages = {
     hintCommands: "↵ envía · ⇧↵ salto de línea · / para comandos",
     send: "Enviar",
     stop: "Parar",
+    skip: "Saltar",
     reject: "Denegar",
     decided: "Respondido: {option}",
     model: "Modelo de esta sesión",

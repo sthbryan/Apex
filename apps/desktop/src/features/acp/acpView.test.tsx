@@ -1,5 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { spellClock } from "@/features/acp/AcpView";
+import type { AcpPermission } from "@/bindings/AcpPermission";
+import { asking, spellClock } from "@/features/acp/AcpView";
+
+function ask(kinds: string[]): AcpPermission {
+  return {
+    request: 1,
+    title: "well?",
+    decided: null,
+    options: kinds.map((kind, index) => ({ id: `${index}`, name: kind, kind })),
+  };
+}
+
+describe("telling a question from a permission", () => {
+  it("reads anything the agent can allow as a permission", () => {
+    expect(asking(ask(["allow_once", "reject_once"]))).toBe(false);
+    expect(asking(ask(["allow_always", "reject_always"]))).toBe(false);
+  });
+
+  it("reads a set of plain answers as a question", () => {
+    expect(asking(ask(["other", "other", "other"]))).toBe(true);
+  });
+
+  it("still counts a lone refusal among plain answers as a question", () => {
+    expect(asking(ask(["other", "reject_once"]))).toBe(true);
+  });
+});
 
 describe("saying when something arrived", () => {
   const noon = new Date(2026, 7, 26, 12, 30).getTime();
