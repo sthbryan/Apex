@@ -1,4 +1,5 @@
 import type { ComponentChildren, JSX, Ref } from "preact";
+import { useEffect, useState } from "preact/hooks";
 import { cn } from "@/lib/cn";
 import { Spinner } from "@/atoms/spinner/Spinner";
 
@@ -65,6 +66,14 @@ export function ToolCall({
   children,
 }: ToolCallProps) {
   const Head = (onToggle ? "button" : "div") as "button";
+  const [ever, setEver] = useState(Boolean(open));
+
+  useEffect(() => {
+    if (open) {
+      setEver(true);
+    }
+  }, [open]);
+
   return (
     <section class={cn("ui-tool-call", className)} data-status={status} data-open={open || undefined}>
       <Head
@@ -81,7 +90,11 @@ export function ToolCall({
           {detail ? <span class="ui-tool-call-detail">{detail}</span> : null}
         </span>
       </Head>
-      {open && children ? <div class="ui-tool-call-output">{children}</div> : null}
+      {ever && children ? (
+        <div class="ui-tool-call-fold">
+          <div class="ui-tool-call-output">{children}</div>
+        </div>
+      ) : null}
     </section>
   );
 }

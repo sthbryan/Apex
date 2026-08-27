@@ -86,8 +86,28 @@
     @apply font-mono font-normal text-2xs text-muted tabular-nums;
   }
 
+  .ui-tool-call-fold {
+    @apply grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--apex-quick) var(--apex-ease-out);
+  }
+
+  .ui-tool-call[data-open] .ui-tool-call-fold {
+    grid-template-rows: 1fr;
+  }
+
+  .ui-tool-call-fold > * {
+    @apply min-h-0;
+  }
+
   .ui-tool-call-output {
     @apply max-h-52 overflow-auto border-t border-border px-2.5 py-2 font-mono text-2xs whitespace-pre-wrap text-muted;
     background-color: color-mix(in oklab, var(--apex-raised) 55%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-tool-call-fold {
+      transition: none;
+    }
   }
 }
