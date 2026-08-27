@@ -1109,6 +1109,7 @@ pub struct ProviderStatus {
     pub env: Option<String>,
     pub keyless: bool,
     pub added: bool,
+    pub in_env: bool,
     pub held: Option<KeyFrom>,
 }
 

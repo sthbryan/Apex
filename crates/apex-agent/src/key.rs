@@ -24,11 +24,10 @@ pub fn forget(provider: &str) -> Result<()> {
 }
 
 pub fn find(provider: &Provider) -> Result<Option<Kept>> {
-    if let Some(key) = provider.key_from_env() {
-        return Ok(Some(Kept { key, from: Source::Environment }));
+    if let Some(key) = keychain::recall(&account(&provider.name))? {
+        return Ok(Some(Kept { key, from: Source::Keychain }));
     }
-    let kept = keychain::recall(&account(&provider.name))?;
-    Ok(kept.map(|key| Kept { key, from: Source::Keychain }))
+    Ok(provider.key_from_env().map(|key| Kept { key, from: Source::Environment }))
 }
 
 fn account(provider: &str) -> String {

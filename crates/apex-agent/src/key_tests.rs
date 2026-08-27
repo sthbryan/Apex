@@ -35,12 +35,24 @@ fn a_provider_with_no_key_anywhere_finds_nothing() {
 }
 
 #[test]
-fn the_environment_wins_over_what_was_kept() {
+fn a_key_kept_here_wins_over_the_environment() {
     mocked();
     keep("shadowed", "sk-kept").expect("keep");
     let found = find(&provider("shadowed", Some("PATH"))).expect("find").expect("a key");
+    assert_eq!(found.from, Source::Keychain);
+    assert_eq!(found.key, "sk-kept");
+}
+
+#[test]
+fn the_environment_answers_when_nothing_was_kept() {
+    mocked();
+    let found = find(&provider("borrowed", Some("PATH"))).expect("find").expect("a key");
     assert_eq!(found.from, Source::Environment);
-    assert_ne!(found.key, "sk-kept");
+
+    forget("borrowed").expect("forget");
+    keep("borrowed", "sk-kept").expect("keep");
+    let found = find(&provider("borrowed", Some("PATH"))).expect("find").expect("a key");
+    assert_eq!(found.from, Source::Keychain);
 }
 
 #[test]
