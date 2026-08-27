@@ -3,6 +3,7 @@ import {
   Button,
   Composer as KitComposer,
   Message,
+  QuestionCard,
   Select,
   ToolCall,
   type ToolStatus,
@@ -228,16 +229,33 @@ function Diff({ diff }: { diff: AcpDiff }) {
 }
 
 function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
-  const tone = asking(ask) ? "question" : "permission";
+  if (asking(ask)) {
+    return (
+      <QuestionCard
+        question={ask.title}
+        answer={ask.decided ? labelOf(ask, ask.decided) : null}
+        options={ask.options.map((option) => ({
+          id: option.id,
+          label: option.name || option.id,
+        }))}
+        ownLabel={t("acp.own")}
+        ownPlaceholder={t("acp.ownPlaceholder")}
+        skipLabel={t("acp.skip")}
+        submitLabel={t("acp.submit")}
+        answeredLabel={t("acp.answered")}
+        onAnswer={(answer) => void decide(id, ask.request, answer)}
+        onSkip={() => void decide(id, ask.request, null)}
+      />
+    );
+  }
 
   if (ask.decided) {
     return (
       <ApprovalCard
         settled
-        tone={tone}
         question={ask.title}
         meta={t("acp.decided", { option: labelOf(ask, ask.decided) })}
-        lead={<Icon name={tone === "question" ? "help" : "keyboard"} size={14} />}
+        lead={<Icon name="keyboard" size={14} />}
         actions={null}
       />
     );
@@ -245,16 +263,15 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
 
   return (
     <ApprovalCard
-      tone={tone}
       question={ask.title}
-      lead={<Icon name={tone === "question" ? "help" : "keyboard"} size={14} />}
+      lead={<Icon name="keyboard" size={14} />}
       actions={
         <>
           {ask.options.map((option) => (
             <Button
               key={option.id}
               size="sm"
-              variant={option.kind === "reject_once" ? "danger" : chosenLook(tone)}
+              variant={option.kind === "reject_once" ? "danger" : "primary"}
               class="max-w-64 truncate"
               title={option.name || option.id}
               onClick={() => void decide(id, ask.request, option.id)}
@@ -264,7 +281,7 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
           ))}
           <span class="ui-approval-card-aside">
             <Button size="sm" variant="subtle" onClick={() => void decide(id, ask.request, null)}>
-              {t(tone === "question" ? "acp.skip" : "acp.reject")}
+              {t("acp.reject")}
             </Button>
           </span>
         </>
@@ -275,10 +292,6 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
 
 export function asking(ask: AcpPermission): boolean {
   return ask.options.every((option) => !option.kind.startsWith("allow"));
-}
-
-function chosenLook(tone: "question" | "permission"): "ghost" | "primary" {
-  return tone === "question" ? "ghost" : "primary";
 }
 
 function Working({ since, on }: { since: string | undefined; on: boolean }) {
