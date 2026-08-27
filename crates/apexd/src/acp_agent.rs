@@ -155,6 +155,9 @@ async fn told(rooms: &Arc<Rooms>, method: &str, params: Value) {
     }
 }
 
+const OFFERED: &[(&str, &str)] =
+    &[("compact", "sum the conversation up so far and free the window")];
+
 async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<Value> {
     let cwd =
         params.get("cwd").and_then(Value::as_str).context("session/new needs a cwd")?.to_owned();
@@ -200,7 +203,19 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
 
     let id = format!("apex-{}", rooms.next.fetch_add(1, Ordering::Relaxed));
     rooms.live.lock().await.insert(id.clone(), Arc::new(Mutex::new(chat)));
-    let _ = side;
+    side.notify(
+        "session/update",
+        json!({
+            "sessionId": id,
+            "update": {
+                "sessionUpdate": "available_commands_update",
+                "availableCommands": OFFERED
+                    .iter()
+                    .map(|(name, about)| json!({ "name": name, "description": about }))
+                    .collect::<Vec<_>>(),
+            },
+        }),
+    );
 
     Ok(json!({
         "sessionId": id,
@@ -244,6 +259,10 @@ async fn prompted(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result
     let said = spoken(params.get("prompt"));
     let held = room(rooms, &session).await?;
 
+    if let Some(order) = said.trim().strip_prefix('/') {
+        return ordered(side, &held, &session, order.trim()).await;
+    }
+
     let mut voice = Voice { side: Arc::clone(side), session: session.clone() };
     let running = tokio::spawn(async move {
         held.lock().await.turn(&said, &mut voice).await.map_err(|cause| format!("{cause:#}"))
@@ -259,6 +278,29 @@ async fn prompted(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result
         Err(cause) if cause.is_cancelled() => Ok(json!({ "stopReason": "cancelled" })),
         Err(cause) => bail!("the turn fell over: {cause}"),
     }
+}
+
+async fn ordered(side: &Arc<Side>, held: &Held, session: &str, order: &str) -> Result<Value> {
+    let told = match order {
+        "compact" => match held.lock().await.compact().await {
+            Ok(summary) => format!("Compacted. From here on I am working from this:\n\n{summary}"),
+            Err(cause) => format!("Compacting did not work out: {cause:#}"),
+        },
+        "" => spell_orders(),
+        other => format!("There is no /{other}.\n\n{}", spell_orders()),
+    };
+    let mut voice = Voice { side: Arc::clone(side), session: session.to_owned() };
+    voice.noted(&told);
+    Ok(json!({ "stopReason": "end_turn" }))
+}
+
+fn spell_orders() -> String {
+    let listed = OFFERED
+        .iter()
+        .map(|(name, about)| format!("/{name} {about}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("What I take:\n{listed}")
 }
 
 async fn room(rooms: &Arc<Rooms>, session: &str) -> Result<Held> {
