@@ -49,7 +49,7 @@
     @apply size-2 shrink-0 border-r border-b;
     border-color: var(--apex-muted);
     rotate: -45deg;
-    transition: rotate var(--apex-quick) var(--apex-ease);
+    transition: rotate var(--apex-swift) var(--apex-ease);
   }
 
   .ui-tool-call[data-open] .ui-tool-call-chevron {
@@ -89,7 +89,7 @@
   .ui-tool-call-fold {
     @apply grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows var(--apex-quick) var(--apex-ease-out);
+    transition: grid-template-rows var(--apex-swift) var(--apex-ease-out);
   }
 
   .ui-tool-call[data-open] .ui-tool-call-fold {
