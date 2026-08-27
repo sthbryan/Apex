@@ -2,5 +2,5 @@ export { OWN, QuestionCard } from "@/organisms/question-card/QuestionCard";
 export type {
   QuestionCardProps,
   QuestionOption,
-  QuestionStep,
+  QuestionMark,
 } from "@/organisms/question-card/QuestionCard";

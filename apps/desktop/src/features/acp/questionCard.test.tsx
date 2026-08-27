@@ -1,31 +1,34 @@
-import { QuestionCard } from "@apex/ui";
+import { OWN, QuestionCard } from "@apex/ui";
 import { act } from "preact/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
 
 const OPTIONS = [
-  { id: "one", label: "Browser nativo" },
+  { id: "one", label: "Browser nativo", hint: "el plan del webview" },
   { id: "two", label: "Tandas del BYOK" },
 ];
 
 function card(over: Partial<Parameters<typeof QuestionCard>[0]> = {}) {
+  const onPick = vi.fn();
   const onAnswer = vi.fn();
   const onSkip = vi.fn();
+  const onJump = vi.fn();
   const { container } = render(
     <QuestionCard
       question="¿En qué seguimos?"
       options={OPTIONS}
+      onPick={onPick}
       onAnswer={onAnswer}
       onSkip={onSkip}
+      onJump={onJump}
       {...over}
     />,
   );
   const rows = () => Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-row"));
-  const submit = () =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
-      (node) => node.textContent === "Submit",
-    );
-  return { container, rows, submit, onAnswer, onSkip };
+  const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
+  const marks = () =>
+    Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-mark"));
+  return { container, rows, send, marks, onPick, onAnswer, onSkip, onJump };
 }
 
 describe("answering a question", () => {
@@ -36,52 +39,78 @@ describe("answering a question", () => {
       "Tandas del BYOK",
       "Other",
     ]);
-    expect(rows().map((row) => row.querySelector(".ui-question-row-key")?.textContent)).toEqual([
-      "1",
-      "2",
-      "3",
-    ]);
+    expect(rows()[0].querySelector(".ui-question-row-hint")?.textContent).toBe(
+      "el plan del webview",
+    );
   });
 
-  it("will not send until something is picked", () => {
-    const { rows, submit, onAnswer } = card();
-    expect(submit()?.disabled).toBe(true);
-
-    act(() => rows()[0].click());
-    expect(submit()?.disabled).toBe(false);
-
-    act(() => submit()?.click());
-    expect(onAnswer).toHaveBeenCalledWith("one");
-  });
-
-  it("keeps its own answer behind a box you have to fill", () => {
-    const { container, rows, submit, onAnswer } = card();
-    expect(container.querySelector(".ui-question-own")).toBeNull();
-
-    act(() => rows()[2].click());
-    const own = container.querySelector<HTMLInputElement>(".ui-question-own");
-    expect(own).not.toBeNull();
-    expect(submit()?.disabled).toBe(true);
-
-    act(() => {
-      if (own) {
-        own.value = "otra cosa";
-        own.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-    });
-    act(() => submit()?.click());
-    expect(onAnswer).toHaveBeenCalledWith("otra cosa");
+  it("hands the pick up instead of keeping it", () => {
+    const { rows, onPick } = card();
+    act(() => rows()[1].click());
+    expect(onPick).toHaveBeenCalledWith("two");
   });
 
   it("takes a number key for the option that carries it", () => {
-    const { container, submit, onAnswer } = card();
-    const root = container.querySelector<HTMLElement>(".ui-question");
-
+    const { container, onPick } = card();
     act(() => {
-      root?.dispatchEvent(new KeyboardEvent("keydown", { key: "2", bubbles: true }));
+      container
+        .querySelector<HTMLElement>(".ui-question")
+        ?.dispatchEvent(new KeyboardEvent("keydown", { key: "2", bubbles: true }));
     });
-    act(() => submit()?.click());
-    expect(onAnswer).toHaveBeenCalledWith("two");
+    expect(onPick).toHaveBeenCalledWith("two");
+  });
+
+  it("stays clickable so a fast click is never swallowed", () => {
+    const { send, onAnswer } = card();
+    expect(send()?.hasAttribute("disabled")).toBe(false);
+    expect(send()?.getAttribute("aria-disabled")).toBe("true");
+
+    act(() => send()?.click());
+    expect(onAnswer).toHaveBeenCalled();
+  });
+
+  it("sends once something is picked", () => {
+    const { send, onAnswer } = card({ picked: "one" });
+    expect(send()?.getAttribute("aria-disabled")).toBe("false");
+    act(() => send()?.click());
+    expect(onAnswer).toHaveBeenCalled();
+  });
+
+  it("holds an own answer back until the box has something in it", () => {
+    const empty = card({ picked: OWN, own: "  " });
+    expect(empty.send()?.getAttribute("aria-disabled")).toBe("true");
+    expect(empty.container.querySelector(".ui-question-own")).not.toBeNull();
+
+    const filled = card({ picked: OWN, own: "otra cosa" });
+    expect(filled.send()?.getAttribute("aria-disabled")).toBe("false");
+  });
+
+  it("will not send twice while the first answer is on its way", () => {
+    const { send, onAnswer } = card({ picked: "one", sent: true });
+    act(() => send()?.click());
+    act(() => send()?.click());
+    expect(onAnswer).not.toHaveBeenCalled();
+  });
+
+  it("shows the whole set up front and lets you jump", () => {
+    const { marks, onJump } = card({
+      marks: [
+        { label: "una", answered: true, here: false },
+        { label: "otra", answered: false, here: true },
+        { label: "la ultima", answered: false, here: false },
+      ],
+    });
+    expect(marks().map((mark) => mark.textContent)).toEqual(["1", "2", "3"]);
+    expect(marks()[0].dataset.answered).toBe("true");
+    expect(marks()[1].dataset.here).toBe("true");
+
+    act(() => marks()[2].click());
+    expect(onJump).toHaveBeenCalledWith(2);
+  });
+
+  it("keeps the stepper out of the way when there is only one question", () => {
+    const { marks } = card({ marks: [{ label: "una", answered: false, here: true }] });
+    expect(marks()).toHaveLength(0);
   });
 
   it("goes quiet once it has an answer", () => {

@@ -9,9 +9,8 @@
     animation: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
   }
 
-  .ui-question:focus-visible {
-    @apply outline-none;
-    border-color: var(--apex-focus);
+  .ui-question[data-sent] {
+    @apply opacity-60;
   }
 
   .ui-question[data-settled] {
@@ -24,10 +23,38 @@
     @apply flex items-center gap-3;
   }
 
-  .ui-question-step {
-    @apply shrink-0 rounded-xs px-1.5 py-0.5 font-mono text-2xs tabular-nums;
-    color: var(--apex-accent);
-    background-color: color-mix(in oklab, var(--apex-accent) 14%, transparent);
+  .ui-question-marks {
+    @apply flex flex-wrap items-center gap-1;
+  }
+
+  .ui-question-mark {
+    @apply flex size-5 items-center justify-center rounded-xs font-mono text-2xs tabular-nums;
+    color: var(--apex-faint);
+    background-color: color-mix(in oklab, var(--apex-raised) 70%, transparent);
+    transition: color var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-question-mark:hover {
+    color: var(--apex-text);
+  }
+
+  .ui-question-mark[data-answered] {
+    color: var(--apex-text);
+    background-color: color-mix(in oklab, var(--apex-accent) 12%, transparent);
+  }
+
+  .ui-question-mark[data-here] {
+    color: var(--apex-accent-fg);
+    background-color: var(--apex-accent);
+  }
+
+  .ui-question-send {
+    height: var(--apex-h-sm);
+    @apply px-2.5 text-xs;
+  }
+
+  .ui-question-send[aria-disabled="true"] {
+    @apply cursor-not-allowed opacity-45;
   }
 
   .ui-question-dismiss {
