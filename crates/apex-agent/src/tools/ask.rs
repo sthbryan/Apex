@@ -28,7 +28,7 @@ pub struct Asking {
 pub fn offered() -> ToolDefinition {
     ToolDefinition {
         name: "ask".to_owned(),
-        description: "Ask the person one or more questions and wait for their answers. Use it when a choice is theirs to make, not to check work you can check yourself. Ask everything you need in a single call: they answer the whole set at once. Every question needs at least two answers to pick from, each a few words long, with a short line saying what it means."
+        description: "Ask the person one or more questions and wait for their answers. Use it when a choice is theirs to make, not to check work you can check yourself. Put every question you have into the one call: they are answered together as a set. Each question carries the answers to that question, never other questions, and never Yes/No as a single option: one option per answer."
             .to_owned(),
         parameters: json!({
             "type": "object",
@@ -46,7 +46,7 @@ pub fn offered() -> ToolDefinition {
                             },
                             "options": {
                                 "type": "array",
-                                "description": "The answers to offer, at least two.",
+                                "description": "The answers to this question, at least two. Each is one answer the person could give, not another question.",
                                 "minItems": 2,
                                 "items": {
                                     "type": "object",
