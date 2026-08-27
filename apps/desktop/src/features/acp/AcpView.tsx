@@ -25,6 +25,7 @@ import {
   drain,
   entriesOf,
   failure,
+  laidOut,
   loadTranscript,
   models,
   modes,
@@ -72,7 +73,7 @@ export function AcpView({ id }: { id: string }) {
   }, []);
 
   const following = useRef(true);
-  following.current = !stale;
+  following.current = !stale && working;
 
   const toFoot = () => {
     const el = scroll.current;
@@ -106,8 +107,12 @@ export function AcpView({ id }: { id: string }) {
       <div class="relative flex min-h-0 flex-1 flex-col">
         <Transcript elRef={scroll}>
           {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
-          {entries.map((entry) =>
-            entry ? <Entry key={entry.index} id={id} entry={entry} /> : null,
+          {laidOut(entries).map((shown) =>
+            shown.kind === "ask" ? (
+              <Asked key={`ask-${shown.at}`} id={id} asks={shown.asks} />
+            ) : (
+              <Entry key={shown.at} id={id} entry={shown.entry} />
+            ),
           )}
         </Transcript>
 
@@ -186,7 +191,7 @@ function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
     case "tool":
       return <Tool call={body.call} />;
     case "permission":
-      return <Ask id={id} ask={body.ask} />;
+      return <Asked id={id} asks={[body.ask]} />;
   }
 }
 
@@ -254,27 +259,76 @@ function Diff({ diff }: { diff: AcpDiff }) {
   );
 }
 
-function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
-  if (asking(ask)) {
+function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
+  const [given, setGiven] = useState<Record<number, string | null>>({});
+  const [at, setAt] = useState(0);
+
+  if (!asking(asks[0])) {
+    return <Ask id={id} ask={asks[0]} />;
+  }
+
+  const settled = asks.filter((ask) => ask.decided !== null);
+  if (settled.length === asks.length) {
     return (
-      <QuestionCard
-        question={ask.title}
-        answer={ask.decided ? labelOf(ask, ask.decided) : null}
-        options={ask.options.map((option) => ({
-          id: option.id,
-          label: option.name || option.id,
-        }))}
-        ownLabel={t("acp.own")}
-        ownPlaceholder={t("acp.ownPlaceholder")}
-        skipLabel={t("acp.skip")}
-        submitLabel={t("acp.submit")}
-        answeredLabel={t("acp.answered")}
-        onAnswer={(answer) => void decide(id, ask.request, answer)}
-        onSkip={() => void decide(id, ask.request, null)}
-      />
+      <>
+        {asks.map((ask) => (
+          <QuestionCard
+            key={ask.request}
+            question={ask.title}
+            answer={labelOf(ask, ask.decided ?? "")}
+            options={[]}
+            answeredLabel={t("acp.answered")}
+          />
+        ))}
+      </>
     );
   }
 
+  const send = (answers: Record<number, string | null>) => {
+    for (const ask of asks) {
+      void decide(id, ask.request, answers[ask.request] ?? null);
+    }
+  };
+
+  const step = asks[Math.min(at, asks.length - 1)];
+  const last = at >= asks.length - 1;
+
+  const move = (answer: string | null) => {
+    const answers = { ...given, [step.request]: answer };
+    setGiven(answers);
+    if (last) {
+      send(answers);
+      return;
+    }
+    setAt(at + 1);
+  };
+
+  return (
+    <QuestionCard
+      key={step.request}
+      question={step.title}
+      picked={given[step.request] ?? null}
+      step={asks.length > 1 ? { at: at + 1, of: asks.length } : undefined}
+      options={step.options.map((option) => ({
+        id: option.id,
+        label: option.name || option.id,
+        hint: option.about ?? undefined,
+      }))}
+      ownLabel={t("acp.own")}
+      ownPlaceholder={t("acp.ownPlaceholder")}
+      skipLabel={t("acp.skip")}
+      backLabel={t("acp.back")}
+      submitLabel={last ? t("acp.submit") : t("acp.next")}
+      dismissLabel={t("acp.dismissAll")}
+      onAnswer={move}
+      onSkip={() => move(null)}
+      onBack={at > 0 ? () => setAt(at - 1) : undefined}
+      onDismiss={asks.length > 1 ? () => send(given) : undefined}
+    />
+  );
+}
+
+function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
   if (ask.decided) {
     return (
       <ApprovalCard

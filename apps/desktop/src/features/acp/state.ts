@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { AcpCommand } from "@/bindings/AcpCommand";
 import type { AcpEntry } from "@/bindings/AcpEntry";
+import type { AcpPermission } from "@/bindings/AcpPermission";
 import type { AcpPicker } from "@/bindings/AcpPicker";
 import type { AcpSnapshot } from "@/bindings/AcpSnapshot";
 
@@ -12,6 +13,31 @@ export const models = signal<Record<string, AcpPicker>>({});
 export const modes = signal<Record<string, AcpPicker>>({});
 export const failure = signal<string | null>(null);
 export const queued = signal<Record<string, string[]>>({});
+
+export type Shown =
+  | { kind: "entry"; at: number; entry: AcpEntry }
+  | { kind: "ask"; at: number; asks: AcpPermission[] };
+
+export function laidOut(entries: AcpEntry[]): Shown[] {
+  const shown: Shown[] = [];
+  for (const entry of entries) {
+    if (!entry) {
+      continue;
+    }
+    if (entry.body.type !== "permission") {
+      shown.push({ kind: "entry", at: entry.index, entry });
+      continue;
+    }
+    const ask = entry.body.ask;
+    const last = shown[shown.length - 1];
+    if (last?.kind === "ask" && ask.group !== null && last.asks[0].group === ask.group) {
+      last.asks = [...last.asks, ask].sort((one, two) => one.at - two.at);
+      continue;
+    }
+    shown.push({ kind: "ask", at: entry.index, asks: [ask] });
+  }
+  return shown;
+}
 
 export function entriesOf(id: string): AcpEntry[] {
   return transcripts.value[id] ?? [];

@@ -7,7 +7,10 @@ function ask(kinds: string[]): AcpPermission {
     request: 1,
     title: "well?",
     decided: null,
-    options: kinds.map((kind, index) => ({ id: `${index}`, name: kind, kind })),
+    group: null,
+    at: 0,
+    of: 0,
+    options: kinds.map((kind, index) => ({ id: `${index}`, name: kind, about: null, kind })),
   };
 }
 
