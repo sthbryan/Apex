@@ -21,7 +21,7 @@ export function absorb(id: string, entry: AcpEntry): void {
   const next = current.slice();
   const missing = entry.index > next.length;
   for (let slot = next.length; slot < entry.index; slot += 1) {
-    next[slot] = { index: slot, body: { type: "notice", text: "…" } };
+    next[slot] = { index: slot, at: 0, body: { type: "notice", text: "…" } };
   }
   next[entry.index] = entry;
   transcripts.value = { ...transcripts.value, [id]: next };

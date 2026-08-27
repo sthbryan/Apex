@@ -110,16 +110,24 @@ export function AcpView({ id }: { id: string }) {
 
 function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
   const body = entry.body;
+  const clock = <Clock at={entry.at} />;
   switch (body.type) {
     case "user":
       return (
-        <Message from="user" meta={t("acp.you")}>
+        <Message
+          from="user"
+          meta={
+            <>
+              {t("acp.you")} {clock}
+            </>
+          }
+        >
           <span class="whitespace-pre-wrap">{body.text}</span>
         </Message>
       );
     case "agent":
       return (
-        <Message>
+        <Message meta={clock}>
           <span class="whitespace-pre-wrap">{body.text}</span>
         </Message>
       );
@@ -153,6 +161,30 @@ function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
     case "permission":
       return <Ask id={id} ask={body.ask} />;
   }
+}
+
+export function spellClock(at: number, now: number = Date.now()): string {
+  if (!at) {
+    return "";
+  }
+  const when = new Date(at);
+  const same = new Date(now).toDateString() === when.toDateString();
+  const time = when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return same
+    ? time
+    : `${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })} ${time}`;
+}
+
+function Clock({ at }: { at: number }) {
+  const shown = spellClock(at);
+  if (!shown) {
+    return null;
+  }
+  return (
+    <time class="tabular-nums" dateTime={new Date(at).toISOString()}>
+      {shown}
+    </time>
+  );
 }
 
 function Tool({ call }: { call: AcpToolCall }) {

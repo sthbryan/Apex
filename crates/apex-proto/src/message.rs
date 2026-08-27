@@ -502,6 +502,9 @@ pub struct AcpSnapshot {
 #[ts(export)]
 pub struct AcpEntry {
     pub index: u32,
+    #[serde(default)]
+    #[ts(type = "number")]
+    pub at: i64,
     pub body: AcpBody,
 }
 

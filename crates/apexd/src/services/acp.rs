@@ -128,10 +128,17 @@ impl Transcript {
     }
 
     fn push(&mut self, body: AcpBody) -> AcpEntry {
-        let entry = AcpEntry { index: self.entries.len() as u32, body };
+        let entry = AcpEntry { index: self.entries.len() as u32, at: now(), body };
         self.entries.push(entry.clone());
         entry
     }
+}
+
+fn now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|since| since.as_millis() as i64)
+        .unwrap_or_default()
 }
 
 fn convert(call: ToolCall) -> AcpToolCall {
