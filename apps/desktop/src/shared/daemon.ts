@@ -23,10 +23,24 @@ export const notices = signal<Notice[]>([]);
 const NOTICE_LIFETIME = 6000;
 let nextNotice = 0;
 
-export function complain(cause: unknown): void {
+const CODES = [
+  "UnsupportedVersion",
+  "Unauthorized",
+  "MalformedRequest",
+  "NotFound",
+  "Conflict",
+  "Internal",
+];
+
+export function spell(cause: unknown): string {
   const text = cause instanceof Error ? cause.message : String(cause);
+  const at = text.indexOf(": ");
+  return at > 0 && CODES.includes(text.slice(0, at)) ? text.slice(at + 2) : text;
+}
+
+export function complain(cause: unknown): void {
   const id = ++nextNotice;
-  notices.value = [...notices.value.slice(-3), { id, text }];
+  notices.value = [...notices.value.slice(-3), { id, text: spell(cause) }];
   setTimeout(() => hush(id), NOTICE_LIFETIME);
 }
 
