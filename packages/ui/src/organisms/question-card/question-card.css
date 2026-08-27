@@ -6,6 +6,7 @@
     border-radius: var(--apex-r-md);
     background-color: var(--apex-overlay);
     border: 1px solid color-mix(in oklab, var(--apex-accent) 35%, var(--apex-border));
+    animation: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
   }
 
   .ui-question:focus-visible {
@@ -21,6 +22,37 @@
 
   .ui-question-head {
     @apply flex items-center gap-3;
+  }
+
+  .ui-question-step {
+    @apply shrink-0 rounded-xs px-1.5 py-0.5 font-mono text-2xs tabular-nums;
+    color: var(--apex-accent);
+    background-color: color-mix(in oklab, var(--apex-accent) 14%, transparent);
+  }
+
+  .ui-question-dismiss {
+    @apply relative size-4 shrink-0 rounded-xs;
+    color: var(--apex-faint);
+  }
+
+  .ui-question-dismiss:hover {
+    color: var(--apex-text);
+  }
+
+  .ui-question-dismiss::before,
+  .ui-question-dismiss::after {
+    @apply absolute top-1/2 left-1/2 block h-px w-2.5;
+    content: "";
+    background-color: currentcolor;
+    translate: -50% -50%;
+  }
+
+  .ui-question-dismiss::before {
+    rotate: 45deg;
+  }
+
+  .ui-question-dismiss::after {
+    rotate: -45deg;
   }
 
   .ui-question-title {
@@ -90,5 +122,11 @@
 
   .ui-question-foot {
     @apply flex items-center justify-end gap-2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-question {
+      animation: none;
+    }
   }
 }
