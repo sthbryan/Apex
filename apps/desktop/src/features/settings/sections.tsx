@@ -13,10 +13,10 @@ import {
   ToggleChip,
   Wordmark,
 } from "@apex/ui";
-import cn from "cnfast";
 import type { JSX } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { SHORTCUTS } from "@/app/keymap";
+import type { AgentModel } from "@/bindings/AgentModel";
 import type { ProviderStatus } from "@/bindings/ProviderStatus";
 import { installedEditors, preferredEditor, setPreferredEditor } from "@/features/files/editors";
 import { AgentIcon } from "@/features/sessions/AgentIcon";
@@ -78,15 +78,18 @@ import {
 } from "@/features/settings/constants";
 import { DockOrder } from "@/features/settings/DockOrder";
 import {
+  addProvider,
   busy,
   chooseAgent,
   chosen,
-  forgetKey,
-  holdsKey,
+  dropProvider,
+  isSetUp,
   keepKey,
   loadModels,
   models,
   providers,
+  slug,
+  spellContext,
 } from "@/features/settings/providers";
 import {
   groupOn,
@@ -96,7 +99,7 @@ import {
 } from "@/features/settings/toolGroups";
 import { autoUpdate, setAutoUpdate } from "@/features/updates/state";
 import { UpdateAction, UpdateNote } from "@/features/updates/UpdateAction";
-import { agents, complain, daemonVersion, platform, stopDaemon } from "@/shared/daemon";
+import { agents, complain, daemonVersion, platform, spell, stopDaemon } from "@/shared/daemon";
 import { locale, setLocale, t } from "@/shared/i18n";
 import { perfStatsEnabled, setPerfStatsEnabled } from "@/shared/perfStats";
 import { setThemeMode, themeMode } from "@/shared/theme/mode";
@@ -489,7 +492,10 @@ const TOOL_COPY = {
 } as const;
 
 const KEY_BOX =
-  "h-(--apex-h-md) w-full min-w-0 rounded-sm border border-border bg-raised px-2.5 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
+  "h-(--apex-h-lg) w-full min-w-0 rounded-sm border border-border bg-raised px-2.5 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
+
+const OWN = "";
+const MORE = "+";
 
 export function agentSection(): Section {
   return {
@@ -503,153 +509,313 @@ export function agentSection(): Section {
 }
 
 function AgentPanel() {
-  const picked = chosen.value;
-  const [open, setOpen] = useState<string | null>(picked?.provider ?? null);
   const listed = providers.value;
-  const running = listed.find((one) => one.name === picked?.provider);
+  const picked = chosen.value;
+  const ready = listed.filter(isSetUp);
+  const [shown, setShown] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const at = ready.find((one) => one.name === (shown ?? picked?.provider)) ?? ready[0];
+
+  if (adding) {
+    return (
+      <AddProvider
+        free={listed.filter((one) => !isSetUp(one))}
+        onCancel={() => setAdding(false)}
+        onAdded={(name) => {
+          setShown(name);
+          setAdding(false);
+        }}
+      />
+    );
+  }
 
   return (
-    <div class="flex flex-col gap-3">
-      {picked && running ? (
-        <p class="text-sm text-text">
-          {t("settings.agentRuns", { model: picked.model, provider: running.label })}
-        </p>
-      ) : (
-        <p class="text-muted text-sm">{t("settings.agentNothingYet")}</p>
-      )}
-
-      <div class="flex flex-col">
-        {listed.map((provider) => (
-          <ProviderRow
-            key={provider.name}
-            provider={provider}
-            here={picked?.provider === provider.name}
-            open={open === provider.name}
-            onOpen={() => setOpen(open === provider.name ? null : provider.name)}
-          />
-        ))}
-      </div>
+    <div class="flex flex-col">
+      <Field
+        label={t("settings.providerLabel")}
+        hint={ready.length === 0 ? t("settings.providerNone") : undefined}
+      >
+        <Select
+          size="lg"
+          class="w-64"
+          label={t("settings.providerLabel")}
+          value={at?.name ?? MORE}
+          placeholder={t("settings.providerMore")}
+          onChange={(name) => (name === MORE ? setAdding(true) : setShown(name))}
+          options={[
+            ...ready.map((one) => ({ value: one.name, label: one.label })),
+            { value: MORE, label: <span class="text-accent">{t("settings.providerMore")}</span> },
+          ]}
+        />
+      </Field>
+      {at && <ProviderDetail key={at.name} provider={at} onDropped={() => setShown(null)} />}
     </div>
   );
 }
 
-type RowProps = {
+function ProviderDetail({
+  provider,
+  onDropped,
+}: {
   provider: ProviderStatus;
-  here: boolean;
-  open: boolean;
-  onOpen: () => void;
-};
-
-function ProviderRow({ provider, here, open, onOpen }: RowProps) {
+  onDropped: () => void;
+}) {
   const name = provider.name;
-  const listed = models.value[name] ?? [];
+  const listed = models.value[name] ?? null;
   const working = busy.value === name;
-  const held = holdsKey(provider);
+  const picked = chosen.value;
+  const [trouble, setTrouble] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open && held && (models.value[name] ?? null) === null) {
-      loadModels(name).catch(complain);
+    if ((models.value[name] ?? null) === null) {
+      loadModels(name).catch((cause) => setTrouble(spell(cause)));
     }
-  }, [name, open, held]);
+  }, [name]);
 
   return (
-    <div
-      class={cn(
-        "border-border border-b border-l-2 pl-2.5 transition-colors",
-        here ? "border-l-accent" : "border-l-transparent",
+    <>
+      <Field label={t("settings.modelLabel")} hint={provider.base_url ?? undefined}>
+        <Select
+          size="lg"
+          class="w-64"
+          label={t("settings.modelLabel")}
+          value={picked?.provider === name ? picked.model : ""}
+          placeholder={spellWaiting(listed, trouble)}
+          disabled={working || !listed?.length}
+          onChange={(model) => {
+            if (model) {
+              chooseAgent(name, model).catch((cause) => setTrouble(spell(cause)));
+            }
+          }}
+          options={(listed ?? []).map((model) => ({
+            value: model.id,
+            label: (
+              <span class="flex min-w-0 flex-1 items-baseline justify-between gap-3">
+                <span class="truncate">{model.label}</span>
+                {model.context !== null && (
+                  <span class="shrink-0 text-faint text-xs">{spellContext(model.context)}</span>
+                )}
+              </span>
+            ),
+          }))}
+        />
+      </Field>
+
+      <KeyRow provider={provider} onTrouble={setTrouble} />
+
+      {trouble && <p class="border-danger border-l-2 py-2 pl-2.5 text-danger text-xs">{trouble}</p>}
+
+      {provider.held !== "environment" && (
+        <Field label={provider.label} hint={t("settings.providerRemoveHint")}>
+          <Button
+            size="md"
+            variant="danger"
+            disabled={working}
+            onClick={() => {
+              dropProvider(name)
+                .then(onDropped)
+                .catch((cause) => setTrouble(spell(cause)));
+            }}
+          >
+            {t("settings.providerRemove")}
+          </Button>
+        </Field>
       )}
-    >
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-expanded={open}
-        class="flex w-full items-center gap-3 py-2.5 pr-1 text-left"
-      >
-        <span class="min-w-0 flex-1">
-          <span class="block truncate font-medium text-sm text-text">{provider.label}</span>
-          <span class="block truncate text-faint text-xs">{spellHeld(provider)}</span>
-        </span>
-        {here && <span class="shrink-0 text-accent text-xs">{t("settings.agentInUse")}</span>}
-        <Icon name={open ? "chevron" : "chevronRight"} size={14} class="shrink-0 text-faint" />
-      </button>
-
-      {open && (
-        <div class="flex flex-col gap-2 pb-3 pr-1">
-          {provider.base_url && <p class="text-faint text-xs">{provider.base_url}</p>}
-
-          {provider.held === "environment" ? (
-            <p class="text-muted text-xs">
-              {t("settings.keyEnvWins", { name: provider.env ?? "" })}
-            </p>
-          ) : provider.held === "keychain" ? (
-            <div class="flex">
-              <Button size="sm" disabled={working} onClick={() => forgetKey(name).catch(complain)}>
-                {t("settings.keyForget")}
-              </Button>
-            </div>
-          ) : provider.keyless ? null : (
-            <KeyField provider={name} working={working} />
-          )}
-
-          {held && (
-            <Select
-              label={t("settings.agentModel", { provider: provider.label })}
-              value={here ? (chosen.value?.model ?? "") : ""}
-              placeholder={
-                listed.length === 0 ? t("settings.agentModelWait") : t("settings.agentModelNone")
-              }
-              disabled={working || listed.length === 0}
-              onChange={(model) => {
-                if (model) {
-                  chooseAgent(name, model).catch(complain);
-                }
-              }}
-              options={listed.map((model) => ({ value: model.id, label: model.label }))}
-            />
-          )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
-function spellHeld(provider: ProviderStatus): string {
-  if (provider.held === "keychain") {
-    return t("settings.keyKept");
+function spellWaiting(listed: AgentModel[] | null, trouble: string | null): string {
+  if (trouble) {
+    return t("settings.agentModelNothing");
   }
-  if (provider.held === "environment") {
-    return t("settings.keyFromEnv", { name: provider.env ?? "" });
-  }
-  return provider.keyless ? t("settings.keyNotNeeded") : t("settings.keyMissing");
+  return listed === null ? t("settings.agentModelWait") : t("settings.agentModelNone");
 }
 
-function KeyField({ provider, working }: { provider: string; working: boolean }) {
+function KeyRow({
+  provider,
+  onTrouble,
+}: {
+  provider: ProviderStatus;
+  onTrouble: (trouble: string) => void;
+}) {
   const [key, setKey] = useState("");
+  const working = busy.value === provider.name;
+
+  if (provider.held === "environment") {
+    return (
+      <Field
+        label={t("settings.keyLabel")}
+        hint={t("settings.keyEnvOnly", { name: provider.env ?? "" })}
+      >
+        <span class="text-faint text-sm">{provider.env}</span>
+      </Field>
+    );
+  }
+
+  if (provider.held === "keychain") {
+    return (
+      <Field label={t("settings.keyLabel")} hint={t("settings.keyKept")}>
+        <span class="text-faint text-sm">{"\u2022".repeat(8)}</span>
+      </Field>
+    );
+  }
+
+  if (provider.keyless) {
+    return <Field label={t("settings.keyLabel")} hint={t("settings.keyNotNeeded")} />;
+  }
+
   return (
-    <form
-      class="flex items-center gap-2"
-      onSubmit={(event: Event) => {
-        event.preventDefault();
-        if (!key.trim()) {
-          return;
-        }
-        keepKey(provider, key.trim())
-          .then(() => setKey(""))
-          .catch(complain);
-      }}
-    >
-      <input
-        type="password"
-        value={key}
-        spellcheck={false}
-        aria-label={t("settings.keyFor", { provider })}
-        placeholder={t("settings.keyPlaceholder")}
-        onInput={(event: JSX.TargetedEvent<HTMLInputElement>) => setKey(event.currentTarget.value)}
-        class={KEY_BOX}
-      />
-      <Button size="sm" variant="primary" type="submit" disabled={!key.trim() || working}>
-        {working ? t("settings.keyChecking") : t("settings.keyKeep")}
-      </Button>
+    <Field layout="stacked" label={t("settings.keyLabel")} hint={t("settings.keyMissing")}>
+      <form
+        class="flex items-center gap-2"
+        onSubmit={(event: Event) => {
+          event.preventDefault();
+          if (!key.trim()) {
+            return;
+          }
+          keepKey(provider.name, key.trim())
+            .then(() => setKey(""))
+            .catch((cause) => onTrouble(spell(cause)));
+        }}
+      >
+        <input
+          type="password"
+          value={key}
+          spellcheck={false}
+          aria-label={t("settings.keyFor", { provider: provider.label })}
+          placeholder={t("settings.keyPlaceholder")}
+          onInput={(event: JSX.TargetedEvent<HTMLInputElement>) =>
+            setKey(event.currentTarget.value)
+          }
+          class={KEY_BOX}
+        />
+        <Button size="lg" variant="primary" type="submit" disabled={!key.trim() || working}>
+          {working ? t("settings.keyChecking") : t("settings.keyKeep")}
+        </Button>
+      </form>
+    </Field>
+  );
+}
+
+function AddProvider({
+  free,
+  onCancel,
+  onAdded,
+}: {
+  free: ProviderStatus[];
+  onCancel: () => void;
+  onAdded: (name: string) => void;
+}) {
+  const [which, setWhich] = useState(free[0]?.name ?? OWN);
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const [key, setKey] = useState("");
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const [working, setWorking] = useState(false);
+
+  const one = free.find((entry) => entry.name === which);
+  const own = which === OWN;
+  const name = own ? slug(label) : which;
+  const wantsKey = own || !one?.keyless;
+  const ready = own ? name.length > 0 && url.trim().length > 0 : !wantsKey || key.trim().length > 0;
+
+  const send = (event: Event) => {
+    event.preventDefault();
+    setTrouble(null);
+    setWorking(true);
+    const done = own
+      ? addProvider(name, label.trim(), url.trim(), key.trim())
+      : keepKey(which, key.trim());
+    done
+      .then(() => onAdded(name))
+      .catch((cause) => setTrouble(spell(cause)))
+      .finally(() => setWorking(false));
+  };
+
+  return (
+    <form class="flex flex-col" onSubmit={send}>
+      <Field label={t("settings.providerWhich")}>
+        <Select
+          size="lg"
+          class="w-64"
+          label={t("settings.providerWhich")}
+          value={which}
+          onChange={setWhich}
+          options={[
+            ...free.map((entry) => ({ value: entry.name, label: entry.label })),
+            { value: OWN, label: t("settings.providerOwn") },
+          ]}
+        />
+      </Field>
+
+      {own && (
+        <>
+          <Field
+            layout="stacked"
+            label={t("settings.providerName")}
+            hint={name ? t("settings.providerNameHint", { name }) : undefined}
+          >
+            <input
+              value={label}
+              spellcheck={false}
+              aria-label={t("settings.providerName")}
+              placeholder={t("settings.providerNamePlaceholder")}
+              onInput={(event: JSX.TargetedEvent<HTMLInputElement>) =>
+                setLabel(event.currentTarget.value)
+              }
+              class={KEY_BOX}
+            />
+          </Field>
+          <Field layout="stacked" label={t("settings.providerUrl")}>
+            <input
+              value={url}
+              spellcheck={false}
+              aria-label={t("settings.providerUrl")}
+              placeholder="https://gateway.example/v1"
+              onInput={(event: JSX.TargetedEvent<HTMLInputElement>) =>
+                setUrl(event.currentTarget.value)
+              }
+              class={KEY_BOX}
+            />
+          </Field>
+        </>
+      )}
+
+      {!own && one?.base_url && (
+        <Field label={t("settings.providerUrl")}>
+          <span class="text-faint text-sm">{one.base_url}</span>
+        </Field>
+      )}
+
+      {wantsKey ? (
+        <Field layout="stacked" label={t("settings.keyLabel")}>
+          <input
+            type="password"
+            value={key}
+            spellcheck={false}
+            aria-label={t("settings.keyLabel")}
+            placeholder={t("settings.keyPlaceholder")}
+            onInput={(event: JSX.TargetedEvent<HTMLInputElement>) =>
+              setKey(event.currentTarget.value)
+            }
+            class={KEY_BOX}
+          />
+        </Field>
+      ) : (
+        <Field label={t("settings.keyLabel")} hint={t("settings.keyNotNeeded")} />
+      )}
+
+      {trouble && <p class="border-danger border-l-2 py-2 pl-2.5 text-danger text-xs">{trouble}</p>}
+
+      <div class="flex justify-end gap-2 pt-3">
+        <Button size="lg" variant="subtle" type="button" onClick={onCancel}>
+          {t("settings.providerCancel")}
+        </Button>
+        <Button size="lg" variant="primary" type="submit" disabled={!ready || working}>
+          {working ? t("settings.keyChecking") : t("settings.providerAdd")}
+        </Button>
+      </div>
     </form>
   );
 }
