@@ -52,3 +52,15 @@ fn the_folder_is_made_when_it_is_not_there_yet() {
     write(&nested, &choice("openai", "gpt-5")).expect("write");
     assert!(nested.join("last.toml").exists());
 }
+
+#[test]
+fn erasing_the_choice_leaves_nothing_behind_and_does_not_mind_being_asked_twice() {
+    let dir = tempfile::tempdir().expect("dir");
+    write(dir.path(), &Choice { provider: "minimax".to_owned(), model: "M3".to_owned() })
+        .expect("write");
+    assert!(read(dir.path()).is_some());
+
+    erase(dir.path()).expect("erase");
+    assert!(read(dir.path()).is_none());
+    erase(dir.path()).expect("erase again");
+}

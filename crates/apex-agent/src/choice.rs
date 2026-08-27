@@ -28,6 +28,16 @@ pub fn write(agent_dir: &Path, choice: &Choice) -> Result<()> {
         .with_context(|| format!("writing {}", agent_dir.join(LAST).display()))
 }
 
+pub fn erase(agent_dir: &Path) -> Result<()> {
+    match std::fs::remove_file(agent_dir.join(LAST)) {
+        Ok(()) => Ok(()),
+        Err(trouble) if trouble.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(trouble) => {
+            Err(trouble).with_context(|| format!("removing {}", agent_dir.join(LAST).display()))
+        }
+    }
+}
+
 #[cfg(test)]
 #[path = "choice_tests.rs"]
 mod tests;
