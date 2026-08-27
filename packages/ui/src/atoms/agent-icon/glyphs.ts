@@ -14,7 +14,7 @@ export const AGENT_GLYPHS = {
     label: "Apex",
     paths: [
       {
-        d: "M12 4.5 19.5 12 12 19.5 4.5 12Z M12 6.3 17.7 12 12 17.7 6.3 12Z M12 10.15 13.85 12 12 13.85 10.15 12Z",
+        d: "M12 1 23 12 12 23 1 12Z M12 4.56 19.44 12 12 19.44 4.56 12Z M12 9.42 14.58 12 12 14.58 9.42 12Z",
         fillRule: "evenodd",
         clipRule: "evenodd",
       },
