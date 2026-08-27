@@ -429,6 +429,7 @@ export const es: Messages = {
     dismissAll: "Dejarlas todas",
     own: "Otra cosa",
     ownPlaceholder: "Escribí tu propia respuesta",
+    sending: "Mandando…",
     submit: "Mandar",
     answered: "Contestado",
     skip: "Saltar",

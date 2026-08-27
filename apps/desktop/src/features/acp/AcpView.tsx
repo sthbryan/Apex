@@ -3,6 +3,7 @@ import {
   Button,
   Composer as KitComposer,
   Message,
+  OWN,
   QuestionCard,
   Select,
   ToolCall,
@@ -259,16 +260,33 @@ function Diff({ diff }: { diff: AcpDiff }) {
   );
 }
 
+type Draft = { row: string | null; own: string };
+
+const BLANK: Draft = { row: null, own: "" };
+
+function answerOf(draft: Draft | undefined): string | null {
+  if (!draft || draft.row === null) {
+    return null;
+  }
+  if (draft.row !== OWN) {
+    return draft.row;
+  }
+  const typed = draft.own.trim();
+  return typed.length > 0 ? typed : null;
+}
+
 function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
-  const [given, setGiven] = useState<Record<number, string | null>>({});
+  const [drafts, setDrafts] = useState<Record<number, Draft>>({});
   const [at, setAt] = useState(0);
+  const [sent, setSent] = useState(false);
+  const latest = useRef(drafts);
+  latest.current = drafts;
 
   if (!asking(asks[0])) {
     return <Ask id={id} ask={asks[0]} />;
   }
 
-  const settled = asks.filter((ask) => ask.decided !== null);
-  if (settled.length === asks.length) {
+  if (asks.every((ask) => ask.decided !== null)) {
     return (
       <>
         {asks.map((ask) => (
@@ -284,20 +302,29 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
     );
   }
 
-  const send = (answers: Record<number, string | null>) => {
+  const step = asks[Math.min(at, asks.length - 1)];
+  const draft = drafts[step.request] ?? BLANK;
+  const last = at >= asks.length - 1;
+
+  const write = (next: Draft) => {
+    const all = { ...latest.current, [step.request]: next };
+    latest.current = all;
+    setDrafts(all);
+  };
+
+  const send = (held: Record<number, Draft>) => {
+    setSent(true);
+    latest.current = held;
     for (const ask of asks) {
-      void decide(id, ask.request, answers[ask.request] ?? null);
+      void decide(id, ask.request, answerOf(held[ask.request]));
     }
   };
 
-  const step = asks[Math.min(at, asks.length - 1)];
-  const last = at >= asks.length - 1;
-
-  const move = (answer: string | null) => {
-    const answers = { ...given, [step.request]: answer };
-    setGiven(answers);
+  const move = (next: Record<number, Draft>) => {
+    latest.current = next;
+    setDrafts(next);
     if (last) {
-      send(answers);
+      send(next);
       return;
     }
     setAt(at + 1);
@@ -305,10 +332,15 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
 
   return (
     <QuestionCard
-      key={step.request}
       question={step.title}
-      picked={given[step.request] ?? null}
-      step={asks.length > 1 ? { at: at + 1, of: asks.length } : undefined}
+      picked={draft.row}
+      own={draft.own}
+      sent={sent}
+      marks={asks.map((ask, index) => ({
+        label: ask.title,
+        answered: answerOf(drafts[ask.request]) !== null,
+        here: index === at,
+      }))}
       options={step.options.map((option) => ({
         id: option.id,
         label: option.name || option.id,
@@ -319,11 +351,19 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       skipLabel={t("acp.skip")}
       backLabel={t("acp.back")}
       submitLabel={last ? t("acp.submit") : t("acp.next")}
+      sendingLabel={t("acp.sending")}
       dismissLabel={t("acp.dismissAll")}
-      onAnswer={move}
-      onSkip={() => move(null)}
+      onPick={(row) => write({ ...draft, row })}
+      onOwn={(own) => write({ ...draft, own })}
+      onAnswer={() => {
+        if (answerOf(latest.current[step.request]) !== null) {
+          move(latest.current);
+        }
+      }}
+      onSkip={() => move({ ...latest.current, [step.request]: BLANK })}
       onBack={at > 0 ? () => setAt(at - 1) : undefined}
-      onDismiss={asks.length > 1 ? () => send(given) : undefined}
+      onJump={asks.length > 1 ? setAt : undefined}
+      onDismiss={asks.length > 1 ? () => send(drafts) : undefined}
     />
   );
 }

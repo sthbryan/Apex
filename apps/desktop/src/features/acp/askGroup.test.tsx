@@ -45,9 +45,12 @@ function view() {
     Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-foot button")).find(
       (node) => node.textContent === label,
     );
-  const step = () => container.querySelector(".ui-question-step")?.textContent;
+  const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
+  const marks = () =>
+    Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-mark"));
+  const here = () => marks().findIndex((mark) => mark.dataset.here === "true") + 1;
   const title = () => container.querySelector(".ui-question-title")?.textContent;
-  return { container, rows, button, step, title };
+  return { container, rows, button, send, marks, here, title };
 }
 
 beforeEach(() => {
@@ -59,27 +62,28 @@ beforeEach(() => {
 
 describe("a set of questions from one call", () => {
   it("shows one at a time and says which one it is on", () => {
-    const { step, title, rows } = view();
-    expect(step()).toBe("1/3");
+    const { here, title, rows, marks } = view();
+    expect(here()).toBe(1);
     expect(title()).toBe("pregunta 1");
     expect(rows()).toHaveLength(3);
+    expect(marks()).toHaveLength(3);
   });
 
   it("holds every answer back until the last one is in", () => {
-    const { rows, button, step } = view();
+    const { rows, here, send } = view();
 
     act(() => rows()[0].click());
-    act(() => button("Next")?.click());
+    act(() => send()?.click());
     expect(decided()).toEqual([]);
-    expect(step()).toBe("2/3");
+    expect(here()).toBe(2);
 
     act(() => rows()[0].click());
-    act(() => button("Next")?.click());
+    act(() => send()?.click());
     expect(decided()).toEqual([]);
-    expect(step()).toBe("3/3");
+    expect(here()).toBe(3);
 
     act(() => rows()[1].click());
-    act(() => button("Submit")?.click());
+    act(() => send()?.click());
 
     expect(decided()).toEqual([
       ["acp_decide", { id: ID, request: 1, option: "a" }],
@@ -89,29 +93,29 @@ describe("a set of questions from one call", () => {
   });
 
   it("lets you walk back and keeps what you had picked", () => {
-    const { rows, button, step, container } = view();
+    const { rows, here, send, button, container } = view();
 
     act(() => rows()[1].click());
-    act(() => button("Next")?.click());
+    act(() => send()?.click());
     expect(button("Back")).toBeDefined();
 
     act(() => button("Back")?.click());
-    expect(step()).toBe("1/3");
+    expect(here()).toBe(1);
     expect(container.querySelector<HTMLElement>(".ui-question-row[data-picked]")?.textContent).toBe(
       "b2",
     );
   });
 
   it("records a skipped question as no answer and carries on", () => {
-    const { rows, button, step } = view();
+    const { rows, here, send, button } = view();
 
     act(() => button("Skip")?.click());
-    expect(step()).toBe("2/3");
+    expect(here()).toBe(2);
     expect(decided()).toEqual([]);
 
     act(() => button("Skip")?.click());
     act(() => rows()[0].click());
-    act(() => button("Submit")?.click());
+    act(() => send()?.click());
 
     expect(decided()).toEqual([
       ["acp_decide", { id: ID, request: 1, option: null }],
@@ -121,10 +125,10 @@ describe("a set of questions from one call", () => {
   });
 
   it("answers them all with nothing when the set is waved away", () => {
-    const { rows, button, container } = view();
+    const { rows, send, container } = view();
 
     act(() => rows()[0].click());
-    act(() => button("Next")?.click());
+    act(() => send()?.click());
     act(() => container.querySelector<HTMLButtonElement>(".ui-question-dismiss")?.click());
 
     expect(decided()).toEqual([
@@ -132,5 +136,40 @@ describe("a set of questions from one call", () => {
       ["acp_decide", { id: ID, request: 2, option: null }],
       ["acp_decide", { id: ID, request: 3, option: null }],
     ]);
+  });
+});
+
+describe("not letting one answer go out twice", () => {
+  it("takes the pick and the send in the same breath", () => {
+    const { rows, send, here } = view();
+
+    act(() => {
+      rows()[0].click();
+      send()?.click();
+    });
+
+    expect(here()).toBe(2);
+  });
+
+  it("goes quiet after the last answer is on its way", () => {
+    const { rows, send, container } = view();
+
+    for (let step = 0; step < 3; step += 1) {
+      act(() => rows()[0].click());
+      act(() => send()?.click());
+    }
+    expect(decided()).toHaveLength(3);
+
+    act(() => send()?.click());
+    expect(decided()).toHaveLength(3);
+    expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBe("true");
+  });
+
+  it("can jump straight to a question further along", () => {
+    const { marks, here, title } = view();
+
+    act(() => marks()[2].click());
+    expect(here()).toBe(3);
+    expect(title()).toBe("pregunta 3");
   });
 });

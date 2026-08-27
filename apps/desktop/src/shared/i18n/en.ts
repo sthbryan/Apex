@@ -428,6 +428,7 @@ export const en = {
     dismissAll: "Leave them all",
     own: "Other",
     ownPlaceholder: "Type your own answer here",
+    sending: "Sending…",
     submit: "Submit",
     answered: "Answered",
     skip: "Skip",
