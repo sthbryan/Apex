@@ -255,12 +255,20 @@ async fn execute(
         Command::ProvidersList => {
             Ok(Reply::Providers { providers: manager.providers().map_err(internal_error)? })
         }
+        Command::ProviderAdd { name, label, base_url, key } => {
+            manager.provider_add(&name, &label, &base_url, &key).await.map_err(write_error)?;
+            Ok(Reply::Done)
+        }
         Command::ProviderKeep { provider, key } => {
             manager.provider_keep(&provider, &key).await.map_err(write_error)?;
             Ok(Reply::Done)
         }
         Command::ProviderForget { provider } => {
             manager.provider_forget(&provider).map_err(write_error)?;
+            Ok(Reply::Done)
+        }
+        Command::ProviderDrop { provider } => {
+            manager.provider_drop(&provider).map_err(write_error)?;
             Ok(Reply::Done)
         }
         Command::ProviderModels { provider } => Ok(Reply::AgentModels {
@@ -540,8 +548,10 @@ pub fn runs_detached(command: &Command) -> bool {
             | Command::BrowserPage { .. }
             | Command::ApiSend { .. }
             | Command::ProvidersList
+            | Command::ProviderAdd { .. }
             | Command::ProviderKeep { .. }
             | Command::ProviderForget { .. }
+            | Command::ProviderDrop { .. }
             | Command::ProviderModels { .. }
             | Command::AgentChosen
             | Command::AgentChoose { .. }

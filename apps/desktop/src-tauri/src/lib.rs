@@ -151,6 +151,8 @@ pub fn run() {
             commands::keep_provider_key,
             commands::forget_provider_key,
             commands::list_provider_models,
+            commands::add_provider,
+            commands::drop_provider,
             commands::agent_chosen,
             commands::choose_agent,
             commands::api_read,

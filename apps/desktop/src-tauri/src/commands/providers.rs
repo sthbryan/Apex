@@ -11,6 +11,27 @@ pub async fn list_providers(state: tauri::State<'_, AppState>) -> Answer<Vec<Pro
 }
 
 #[tauri::command]
+pub async fn add_provider(
+    state: tauri::State<'_, AppState>,
+    name: String,
+    label: String,
+    base_url: String,
+    key: String,
+) -> Answer<()> {
+    state
+        .daemon()?
+        .request(Command::ProviderAdd { name, label, base_url, key })
+        .await
+        .map_err(failed)
+        .map(|_| ())
+}
+
+#[tauri::command]
+pub async fn drop_provider(state: tauri::State<'_, AppState>, provider: String) -> Answer<()> {
+    state.daemon()?.request(Command::ProviderDrop { provider }).await.map_err(failed).map(|_| ())
+}
+
+#[tauri::command]
 pub async fn keep_provider_key(
     state: tauri::State<'_, AppState>,
     provider: String,

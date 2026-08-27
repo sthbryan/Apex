@@ -660,11 +660,20 @@ pub enum Command {
         environment: Option<String>,
     },
     ProvidersList,
+    ProviderAdd {
+        name: String,
+        label: String,
+        base_url: String,
+        key: String,
+    },
     ProviderKeep {
         provider: String,
         key: String,
     },
     ProviderForget {
+        provider: String,
+    },
+    ProviderDrop {
         provider: String,
     },
     ProviderModels {
@@ -1099,6 +1108,7 @@ pub struct ProviderStatus {
     pub base_url: Option<String>,
     pub env: Option<String>,
     pub keyless: bool,
+    pub added: bool,
     pub held: Option<KeyFrom>,
 }
 

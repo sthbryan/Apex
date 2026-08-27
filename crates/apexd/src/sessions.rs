@@ -1277,6 +1277,13 @@ fn depth_of(sessions: &[SessionSummary], session: &SessionSummary) -> usize {
     depth
 }
 
+fn silent(provider: &apex_agent::Provider) -> String {
+    match &provider.base_url {
+        Some(url) => format!("{} did not answer at {url}", provider.label),
+        None => format!("{} did not answer", provider.label),
+    }
+}
+
 fn home_directory() -> PathBuf {
     directories::UserDirs::new()
         .map(|dirs| dirs.home_dir().to_path_buf())
@@ -1294,6 +1301,7 @@ impl SessionManager {
                 base_url: provider.base_url.clone(),
                 env: provider.env.clone(),
                 keyless: provider.keyless,
+                added: set.was_added(&provider.name),
                 held: apex_agent::key::find(provider)?.map(|found| match found.from {
                     apex_agent::key::Source::Keychain => apex_proto::KeyFrom::Keychain,
                     apex_agent::key::Source::Environment => apex_proto::KeyFrom::Environment,
@@ -1303,14 +1311,51 @@ impl SessionManager {
         Ok(listed)
     }
 
+    pub async fn provider_add(
+        &self,
+        name: &str,
+        label: &str,
+        base_url: &str,
+        key: &str,
+    ) -> anyhow::Result<()> {
+        let provider = apex_agent::Provider::custom(name, label, base_url, key.trim().is_empty())?;
+        apex_agent::model::list(&provider.dial(key)?).await.with_context(|| silent(&provider))?;
+        if !key.trim().is_empty() {
+            apex_agent::key::keep(&provider.name, key)?;
+        }
+        apex_agent::provider::write(&self.paths.providers_dir(), &provider)
+    }
+
     pub async fn provider_keep(&self, provider: &str, key: &str) -> anyhow::Result<()> {
         let found = self.provider(provider)?;
-        apex_agent::model::list(&found.dial(key)?).await?;
-        apex_agent::key::keep(&found.name, key)
+        if key.trim().is_empty() && !found.keyless {
+            anyhow::bail!("{} needs a key", found.label)
+        }
+        apex_agent::model::list(&found.dial(key)?).await.with_context(|| silent(&found))?;
+        match key.trim().is_empty() {
+            true => apex_agent::provider::write(&self.paths.providers_dir(), &found),
+            false => apex_agent::key::keep(&found.name, key),
+        }
     }
 
     pub fn provider_forget(&self, provider: &str) -> anyhow::Result<()> {
-        apex_agent::key::forget(&self.provider(provider)?.name)
+        let found = self.provider(provider)?;
+        apex_agent::key::forget(&found.name)?;
+        self.unchoose(&found.name)
+    }
+
+    pub fn provider_drop(&self, provider: &str) -> anyhow::Result<()> {
+        let found = self.provider(provider)?;
+        apex_agent::provider::erase(&self.paths.providers_dir(), &found.name)?;
+        apex_agent::key::forget(&found.name)?;
+        self.unchoose(&found.name)
+    }
+
+    fn unchoose(&self, provider: &str) -> anyhow::Result<()> {
+        match self.agent_chosen().is_some_and(|choice| choice.provider == provider) {
+            true => apex_agent::choice::erase(&self.paths.agent_dir()),
+            false => Ok(()),
+        }
     }
 
     pub async fn provider_models(
@@ -1324,7 +1369,8 @@ impl SessionManager {
             None => anyhow::bail!("{} has no key yet", found.name),
         };
         Ok(apex_agent::model::list(&found.dial(&held)?)
-            .await?
+            .await
+            .with_context(|| silent(&found))?
             .into_iter()
             .map(|one| apex_proto::AgentModel {
                 id: one.id,
