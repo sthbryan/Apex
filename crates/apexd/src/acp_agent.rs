@@ -434,24 +434,50 @@ impl Surface for Voice {
         }));
     }
 
-    async fn asked(&mut self, question: &str, options: &[String]) -> Option<String> {
-        let offered: Vec<Value> = options
-            .iter()
-            .map(|option| json!({ "optionId": option, "name": option, "kind": "other" }))
-            .collect();
-        let answer = self
-            .side
-            .request(
-                "session/request_permission",
-                json!({
-                    "sessionId": self.session,
-                    "toolCall": { "toolCallId": "ask", "title": question, "kind": "other" },
-                    "options": offered,
-                }),
-            )
-            .await
-            .ok()?;
-        chose(&answer)
+    async fn asked(
+        &mut self,
+        group: &str,
+        questions: &[apex_agent::tools::ask::Question],
+    ) -> Vec<Option<String>> {
+        let of = questions.len() as u32;
+        let waiting = questions.iter().enumerate().map(|(at, question)| {
+            let offered: Vec<Value> = question
+                .options
+                .iter()
+                .map(|choice| {
+                    json!({
+                        "optionId": choice.label,
+                        "name": choice.label,
+                        "description": choice.description,
+                        "kind": "other",
+                    })
+                })
+                .collect();
+            let side = Arc::clone(&self.side);
+            let session = self.session.clone();
+            let title = question.question.clone();
+            let group = group.to_owned();
+            async move {
+                let answer = side
+                    .request(
+                        "session/request_permission",
+                        json!({
+                            "sessionId": session,
+                            "toolCall": {
+                                "toolCallId": group,
+                                "title": title,
+                                "kind": "other",
+                            },
+                            "options": offered,
+                            "apexGroup": { "id": group, "at": at as u32, "of": of },
+                        }),
+                    )
+                    .await
+                    .ok()?;
+                chose(&answer)
+            }
+        });
+        futures_util::future::join_all(waiting).await
     }
 }
 

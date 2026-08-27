@@ -248,6 +248,7 @@ dependencies = [
  "bytes",
  "chrono",
  "directories",
+ "futures-util",
  "percent-encoding",
  "reqwest",
  "rpassword",

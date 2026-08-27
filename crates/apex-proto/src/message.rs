@@ -436,6 +436,8 @@ pub struct AcpToolCall {
 pub struct AcpOption {
     pub id: String,
     pub name: String,
+    #[serde(default)]
+    pub about: Option<String>,
     pub kind: String,
 }
 
@@ -446,6 +448,12 @@ pub struct AcpPermission {
     pub title: String,
     pub options: Vec<AcpOption>,
     pub decided: Option<String>,
+    #[serde(default)]
+    pub group: Option<String>,
+    #[serde(default)]
+    pub at: u32,
+    #[serde(default)]
+    pub of: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

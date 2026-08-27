@@ -323,6 +323,8 @@ pub struct PermissionOption {
     #[serde(default)]
     pub name: String,
     #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
     pub kind: Option<String>,
 }
 
@@ -333,6 +335,16 @@ pub struct PermissionRequest {
     pub tool_call: ToolCall,
     #[serde(default)]
     pub options: Vec<PermissionOption>,
+    #[serde(default)]
+    pub apex_group: Option<AskGroup>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AskGroup {
+    pub id: String,
+    pub at: u32,
+    pub of: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

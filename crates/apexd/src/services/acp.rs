@@ -32,12 +32,25 @@ impl Transcript {
         self.push(AcpBody::Notice { text: text.to_owned() })
     }
 
-    pub fn asked(&mut self, title: &str, options: Vec<AcpOption>) -> (u32, AcpEntry) {
+    pub fn asked(
+        &mut self,
+        title: &str,
+        options: Vec<AcpOption>,
+        group: Option<apex_acp::AskGroup>,
+    ) -> (u32, AcpEntry) {
         self.speaking = None;
         self.thinking = None;
         self.next_request += 1;
         let request = self.next_request;
-        let ask = AcpPermission { request, title: title.to_owned(), options, decided: None };
+        let ask = AcpPermission {
+            request,
+            title: title.to_owned(),
+            options,
+            decided: None,
+            group: group.as_ref().map(|held| held.id.clone()),
+            at: group.as_ref().map_or(0, |held| held.at),
+            of: group.as_ref().map_or(0, |held| held.of),
+        };
         (request, self.push(AcpBody::Permission { ask }))
     }
 
@@ -438,11 +451,13 @@ impl Client for Relay {
             .map(|option| AcpOption {
                 id: option.option_id.clone(),
                 name: option.name.clone(),
+                about: option.description.clone(),
                 kind: option.kind.clone().unwrap_or_else(|| "other".to_owned()),
             })
             .collect();
 
-        let (number, entry) = self.transcript.lock().await.asked(&title, options);
+        let (number, entry) =
+            self.transcript.lock().await.asked(&title, options, request.apex_group.clone());
         self.publish(entry);
 
         let (answer, wait) = oneshot::channel();
