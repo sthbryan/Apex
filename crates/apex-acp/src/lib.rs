@@ -21,19 +21,19 @@ const STDERR_KEPT: usize = 20;
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
 #[async_trait::async_trait]
-pub trait Client: Send + 'static {
-    async fn update(&mut self, session: &str, update: SessionUpdate);
+pub trait Client: Send + Sync + 'static {
+    async fn update(&self, session: &str, update: SessionUpdate);
 
-    async fn permission(&mut self, request: PermissionRequest) -> PermissionOutcome {
+    async fn permission(&self, request: PermissionRequest) -> PermissionOutcome {
         let _ = request;
         PermissionOutcome::Cancelled
     }
 
-    async fn read_file(&mut self, path: &str) -> Result<String> {
+    async fn read_file(&self, path: &str) -> Result<String> {
         bail!("this client cannot read {path}")
     }
 
-    async fn write_file(&mut self, path: &str, content: &str) -> Result<()> {
+    async fn write_file(&self, path: &str, content: &str) -> Result<()> {
         let _ = content;
         bail!("this client cannot write {path}")
     }
@@ -115,11 +115,12 @@ async fn listen<R, C>(
     reader: R,
     outgoing: mpsc::UnboundedSender<String>,
     pending: Pending,
-    mut client: C,
+    client: C,
 ) where
     R: AsyncRead + Unpin + Send + 'static,
     C: Client,
 {
+    let client = Arc::new(client);
     let mut lines = BufReader::new(reader).lines();
     while let Ok(Some(line)) = lines.next_line().await {
         if line.trim().is_empty() {
@@ -136,20 +137,22 @@ async fn listen<R, C>(
 
         match (method, id) {
             (Some(method), Some(id)) => {
-                let answer = answer_request(&mut client, &method, params).await;
-                let body = match answer {
-                    Ok(result) => json!({ "jsonrpc": "2.0", "id": id, "result": result }),
-                    Err(error) => json!({
-                        "jsonrpc": "2.0",
-                        "id": id,
-                        "error": { "code": -32603, "message": format!("{error:#}") },
-                    }),
-                };
-                if outgoing.send(body.to_string()).is_err() {
-                    break;
-                }
+                let asked = Arc::clone(&client);
+                let back = outgoing.clone();
+                tokio::spawn(async move {
+                    let answer = answer_request(asked.as_ref(), &method, params).await;
+                    let body = match answer {
+                        Ok(result) => json!({ "jsonrpc": "2.0", "id": id, "result": result }),
+                        Err(error) => json!({
+                            "jsonrpc": "2.0",
+                            "id": id,
+                            "error": { "code": -32603, "message": format!("{error:#}") },
+                        }),
+                    };
+                    let _ = back.send(body.to_string());
+                });
             }
-            (Some(method), None) => notify_client(&mut client, &method, params).await,
+            (Some(method), None) => notify_client(client.as_ref(), &method, params).await,
             (None, Some(id)) => {
                 let Some(waiting) = take_pending(&pending, &id).await else {
                     continue;
@@ -186,7 +189,7 @@ fn describe(error: &Value) -> String {
         .unwrap_or_else(|| error.to_string())
 }
 
-async fn answer_request<C: Client>(client: &mut C, method: &str, params: Value) -> Result<Value> {
+async fn answer_request<C: Client>(client: &C, method: &str, params: Value) -> Result<Value> {
     match method {
         "session/request_permission" => {
             let request: PermissionRequest = serde_json::from_value(params)?;
@@ -209,7 +212,7 @@ async fn answer_request<C: Client>(client: &mut C, method: &str, params: Value) 
     }
 }
 
-async fn notify_client<C: Client>(client: &mut C, method: &str, params: Value) {
+async fn notify_client<C: Client>(client: &C, method: &str, params: Value) {
     if method != "session/update" {
         return;
     }

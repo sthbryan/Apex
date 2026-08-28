@@ -424,7 +424,7 @@ impl Relay {
 
 #[async_trait::async_trait]
 impl Client for Relay {
-    async fn update(&mut self, _session: &str, update: apex_acp::SessionUpdate) {
+    async fn update(&self, _session: &str, update: apex_acp::SessionUpdate) {
         if let apex_acp::SessionUpdate::AvailableCommandsUpdate { available_commands } = update {
             let offered: Vec<AcpCommand> = available_commands
                 .into_iter()
@@ -439,7 +439,7 @@ impl Client for Relay {
         }
     }
 
-    async fn permission(&mut self, request: PermissionRequest) -> PermissionOutcome {
+    async fn permission(&self, request: PermissionRequest) -> PermissionOutcome {
         let title = request
             .tool_call
             .title
@@ -476,12 +476,12 @@ impl Client for Relay {
         }
     }
 
-    async fn read_file(&mut self, path: &str) -> Result<String> {
+    async fn read_file(&self, path: &str) -> Result<String> {
         let path = self.within_project(path)?;
         Ok(tokio::fs::read_to_string(&path).await?)
     }
 
-    async fn write_file(&mut self, path: &str, content: &str) -> Result<()> {
+    async fn write_file(&self, path: &str, content: &str) -> Result<()> {
         let path = self.within_project(path)?;
         if let Some(parent) = path.parent() {
             tokio::fs::create_dir_all(parent).await?;

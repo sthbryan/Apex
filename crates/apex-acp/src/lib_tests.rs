@@ -4,15 +4,25 @@ use tokio::io::{DuplexStream, duplex};
 struct Recorder {
     updates: mpsc::UnboundedSender<SessionUpdate>,
     choice: Option<String>,
+    held: Option<Arc<Gate>>,
+}
+
+struct Gate {
+    arrived: std::sync::atomic::AtomicUsize,
+    open: tokio::sync::Semaphore,
 }
 
 #[async_trait::async_trait]
 impl Client for Recorder {
-    async fn update(&mut self, _session: &str, update: SessionUpdate) {
+    async fn update(&self, _session: &str, update: SessionUpdate) {
         let _ = self.updates.send(update);
     }
 
-    async fn permission(&mut self, request: PermissionRequest) -> PermissionOutcome {
+    async fn permission(&self, request: PermissionRequest) -> PermissionOutcome {
+        if let Some(gate) = &self.held {
+            gate.arrived.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            let _ = gate.open.acquire().await.expect("the gate");
+        }
         match self
             .choice
             .clone()
@@ -23,7 +33,7 @@ impl Client for Recorder {
         }
     }
 
-    async fn read_file(&mut self, path: &str) -> Result<String> {
+    async fn read_file(&self, path: &str) -> Result<String> {
         Ok(format!("the body of {path}"))
     }
 }
@@ -34,7 +44,7 @@ fn link(
     let (ours, theirs) = duplex(8192);
     let (reader, writer) = tokio::io::split(ours);
     let (updates, seen) = mpsc::unbounded_channel();
-    let client = Recorder { updates, choice: choice.map(str::to_owned) };
+    let client = Recorder { updates, choice: choice.map(str::to_owned), held: None };
     (Connection::new(reader, writer, client), theirs, seen)
 }
 
@@ -218,4 +228,49 @@ async fn a_dead_agent_frees_everyone_waiting_on_it() {
 
     let failure = asking.await.expect("join").expect_err("an error");
     assert!(format!("{failure:#}").contains("went away"));
+}
+
+#[tokio::test]
+async fn one_question_waiting_on_an_answer_does_not_hold_up_the_next() {
+    let (ours, theirs) = duplex(8192);
+    let (reader, writer) = tokio::io::split(ours);
+    let (updates, _seen) = mpsc::unbounded_channel();
+    let gate = Arc::new(Gate {
+        arrived: std::sync::atomic::AtomicUsize::new(0),
+        open: tokio::sync::Semaphore::new(0),
+    });
+    let client = Recorder { updates, choice: None, held: Some(Arc::clone(&gate)) };
+    let _connection = Connection::new(reader, writer, client);
+
+    let mut agent = BufReader::new(theirs);
+    for number in 1..=2 {
+        let body = json!({
+            "jsonrpc": "2.0",
+            "id": number,
+            "method": "session/request_permission",
+            "params": {
+                "sessionId": "abc",
+                "toolCall": { "toolCallId": "ask", "title": format!("question {number}") },
+                "options": [{ "optionId": "yes", "name": "Yes" }],
+            },
+        });
+        agent.get_mut().write_all(format!("{body}\n").as_bytes()).await.expect("write");
+    }
+
+    let both = tokio::time::timeout(std::time::Duration::from_secs(2), async {
+        while gate.arrived.load(std::sync::atomic::Ordering::SeqCst) < 2 {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await;
+    assert!(both.is_ok(), "the second question never reached the client while the first waited");
+
+    gate.open.add_permits(2);
+    let mut answered = Vec::new();
+    for _ in 0..2 {
+        let line = next_line(&mut agent).await;
+        answered.push(line["id"].as_u64().expect("an id"));
+    }
+    answered.sort_unstable();
+    assert_eq!(answered, vec![1, 2]);
 }
