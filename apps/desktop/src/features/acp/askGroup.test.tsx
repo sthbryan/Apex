@@ -46,11 +46,15 @@ function view() {
       (node) => node.textContent === label,
     );
   const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
-  const marks = () =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-mark"));
-  const here = () => marks().findIndex((mark) => mark.dataset.here === "true") + 1;
-  const title = () => container.querySelector(".ui-question-title")?.textContent;
-  return { container, rows, button, send, marks, here, title };
+  const items = () => Array.from(container.querySelectorAll<HTMLElement>(".ui-question-item"));
+  const here = () => items().findIndex((item) => item.dataset.here === "true") + 1;
+  const title = () =>
+    items()
+      .find((item) => item.dataset.here === "true")
+      ?.querySelector(".ui-question-title")?.textContent;
+  const answers = () =>
+    Array.from(container.querySelectorAll(".ui-question-answer")).map((node) => node.textContent);
+  return { container, rows, button, send, items, here, title, answers };
 }
 
 beforeEach(() => {
@@ -62,11 +66,11 @@ beforeEach(() => {
 
 describe("a set of questions from one call", () => {
   it("shows one at a time and says which one it is on", () => {
-    const { here, title, rows, marks } = view();
+    const { here, title, rows, items } = view();
     expect(here()).toBe(1);
     expect(title()).toBe("pregunta 1");
     expect(rows()).toHaveLength(3);
-    expect(marks()).toHaveLength(3);
+    expect(items()).toHaveLength(3);
   });
 
   it("holds every answer back until the last one is in", () => {
@@ -166,9 +170,9 @@ describe("not letting one answer go out twice", () => {
   });
 
   it("can jump straight to a question further along", () => {
-    const { marks, here, title } = view();
+    const { items, here, title } = view();
 
-    act(() => marks()[2].click());
+    act(() => items()[2].querySelector<HTMLButtonElement>(".ui-question-ask")?.click());
     expect(here()).toBe(3);
     expect(title()).toBe("pregunta 3");
   });
@@ -176,7 +180,7 @@ describe("not letting one answer go out twice", () => {
 
 describe("a question that shows up after the first was answered", () => {
   it("wakes the card back up instead of leaving it on Sending", () => {
-    const { rows, send, container, marks } = view();
+    const { rows, send, container, items } = view();
     transcripts.value = {
       [ID]: [{ index: 0, at: 0, body: { type: "permission", ask: ask(1, 0, ["a", "b"]) } }],
     };
@@ -197,17 +201,51 @@ describe("a question that shows up after the first was answered", () => {
       };
     });
 
-    expect(marks()).toHaveLength(2);
+    expect(items()).toHaveLength(2);
     expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBeUndefined();
     expect(send()?.textContent).not.toBe("Sending…");
   });
 
-  it("says which one of how many, once", () => {
+  it("says how many there are, once, at the top", () => {
     const { container } = view();
-    expect(container.querySelector(".ui-question-count")?.textContent).toBe("1/3");
-    expect(container.querySelector(".ui-question-marks")?.getAttribute("aria-label")).toBe(
-      "question 1 of 3",
-    );
-    expect(container.querySelector(".ui-question-mark")?.textContent).toBe("");
+    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("3 questions");
+    expect(container.querySelectorAll(".ui-question-number")).toHaveLength(3);
+  });
+});
+
+describe("once the whole set is answered", () => {
+  it("keeps them together in one card with their answers", () => {
+    const { rows, send, container, answers } = view();
+
+    for (let step = 0; step < 3; step += 1) {
+      act(() => rows()[0].click());
+      act(() => send()?.click());
+    }
+
+    act(() => {
+      transcripts.value = {
+        [ID]: [
+          {
+            index: 0,
+            at: 0,
+            body: { type: "permission", ask: { ...ask(1, 0, ["a", "b"]), decided: "a" } },
+          },
+          {
+            index: 1,
+            at: 0,
+            body: { type: "permission", ask: { ...ask(2, 1, ["c", "d"]), decided: "c" } },
+          },
+          {
+            index: 2,
+            at: 0,
+            body: { type: "permission", ask: { ...ask(3, 2, ["e", "f"]), decided: "cancelled" } },
+          },
+        ],
+      };
+    });
+
+    expect(container.querySelectorAll(".ui-question")).toHaveLength(1);
+    expect(answers()).toEqual(["a", "c", "no answer"]);
+    expect(container.querySelector(".ui-question-foot")).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
-export { OWN, QuestionCard } from "@/organisms/question-card/QuestionCard";
+export { answerable, OWN, QuestionCard } from "@/organisms/question-card/QuestionCard";
 export type {
+  AskedQuestion,
   QuestionCardProps,
   QuestionOption,
-  QuestionMark,
 } from "@/organisms/question-card/QuestionCard";

@@ -23,43 +23,9 @@
     @apply flex items-center gap-3;
   }
 
-  .ui-question-marks {
-    @apply flex items-center gap-1;
-  }
-
-  .ui-question-count {
-    @apply shrink-0 font-mono text-2xs text-faint tabular-nums;
-  }
-
-  .ui-question-track {
-    @apply min-w-0 flex-1;
-  }
-
-  .ui-question-mark {
-    @apply block h-1 w-full rounded-full;
-    background-color: color-mix(in oklab, var(--apex-faint) 30%, transparent);
-    transition: background-color var(--apex-quick) var(--apex-ease);
-  }
-
-  .ui-question-mark:hover {
-    background-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
-  }
-
-  .ui-question-mark[data-answered] {
-    background-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
-  }
-
-  .ui-question-mark[data-here] {
-    background-color: var(--apex-accent);
-  }
-
-  .ui-question-send {
-    height: var(--apex-h-sm);
-    @apply px-2.5 text-xs;
-  }
-
-  .ui-question-send[aria-disabled="true"] {
-    @apply cursor-not-allowed opacity-45;
+  .ui-question-heading {
+    @apply min-w-0 flex-1 text-2xs text-muted uppercase;
+    letter-spacing: var(--apex-tracking-caps);
   }
 
   .ui-question-dismiss {
@@ -87,20 +53,59 @@
     rotate: -45deg;
   }
 
-  .ui-question-title {
-    @apply min-w-0 flex-1 font-medium text-md text-text;
+  .ui-question-list {
+    @apply flex flex-col;
   }
 
-  .ui-question[data-settled] .ui-question-title {
-    @apply truncate font-normal text-muted;
+  .ui-question-item {
+    @apply flex flex-col gap-2 py-1;
+  }
+
+  .ui-question-ask {
+    @apply flex w-full items-baseline gap-2.5 rounded-sm text-left;
+  }
+
+  .ui-question-ask:not(:disabled):hover .ui-question-title {
+    color: var(--apex-accent);
+  }
+
+  .ui-question-number {
+    @apply w-4 shrink-0 font-mono text-2xs text-faint tabular-nums;
+  }
+
+  .ui-question-item[data-here] .ui-question-number {
+    color: var(--apex-accent);
+  }
+
+  .ui-question-text {
+    @apply flex min-w-0 flex-1 flex-col;
+  }
+
+  .ui-question-title {
+    @apply text-md text-muted;
+    transition: color var(--apex-quick) var(--apex-ease);
+  }
+
+  .ui-question-item[data-here] .ui-question-title {
+    @apply font-medium;
+    color: var(--apex-text);
   }
 
   .ui-question-answer {
-    @apply shrink-0 font-mono text-2xs text-faint tabular-nums;
+    @apply mt-0.5 text-sm text-text;
+  }
+
+  .ui-question-answer::before {
+    content: "→ ";
+    color: var(--apex-faint);
   }
 
   .ui-question-rows {
-    @apply flex flex-col gap-1;
+    @apply flex flex-col gap-1 pl-6;
+  }
+
+  .ui-question-list:not(:has(.ui-question-number)) .ui-question-rows {
+    @apply pl-0;
   }
 
   .ui-question-row {
@@ -153,7 +158,16 @@
   }
 
   .ui-question-foot {
-    @apply flex items-center justify-end gap-2;
+    @apply flex items-center justify-end gap-2 pt-1;
+  }
+
+  .ui-question-send {
+    height: var(--apex-h-sm);
+    @apply px-2.5 text-xs;
+  }
+
+  .ui-question-send[aria-disabled="true"] {
+    @apply cursor-not-allowed opacity-45;
   }
 
   @media (prefers-reduced-motion: reduce) {

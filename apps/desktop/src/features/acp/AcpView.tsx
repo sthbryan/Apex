@@ -287,25 +287,25 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
     return <Ask id={id} ask={asks[0]} />;
   }
 
-  if (asks.every((ask) => ask.decided !== null)) {
-    return (
-      <>
-        {asks.map((ask) => (
-          <QuestionCard
-            key={ask.request}
-            question={ask.title}
-            answer={labelOf(ask, ask.decided ?? "")}
-            options={[]}
-            answeredLabel={t("acp.answered")}
-          />
-        ))}
-      </>
-    );
-  }
-
+  const done = asks.every((ask) => ask.decided !== null);
   const step = asks[Math.min(at, asks.length - 1)];
-  const draft = drafts[step.request] ?? BLANK;
   const last = at >= asks.length - 1;
+
+  const shown = asks.map((ask) => {
+    const draft = drafts[ask.request] ?? BLANK;
+    return {
+      id: String(ask.request),
+      question: ask.title,
+      answer: ask.decided === null ? null : spellAnswer(ask, ask.decided),
+      picked: draft.row,
+      own: draft.own,
+      options: ask.options.map((option) => ({
+        id: option.id,
+        label: option.name || option.id,
+        hint: option.about ?? undefined,
+      })),
+    };
+  });
 
   const write = (next: Draft) => {
     const all = { ...latest.current, [step.request]: next };
@@ -333,22 +333,10 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
 
   return (
     <QuestionCard
-      question={step.title}
-      count={`${at + 1}/${asks.length}`}
-      countLabel={t("acp.oneOf", { at: String(at + 1), of: String(asks.length) })}
-      picked={draft.row}
-      own={draft.own}
+      questions={shown}
+      at={done ? -1 : at}
       sent={sent}
-      marks={asks.map((ask, index) => ({
-        label: ask.title,
-        answered: answerOf(drafts[ask.request]) !== null,
-        here: index === at,
-      }))}
-      options={step.options.map((option) => ({
-        id: option.id,
-        label: option.name || option.id,
-        hint: option.about ?? undefined,
-      }))}
+      headingLabel={t("acp.howMany", { count: String(asks.length) })}
       ownLabel={t("acp.own")}
       ownPlaceholder={t("acp.ownPlaceholder")}
       skipLabel={t("acp.skip")}
@@ -356,8 +344,8 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       submitLabel={last ? t("acp.submit") : t("acp.next")}
       sendingLabel={t("acp.sending")}
       dismissLabel={t("acp.dismissAll")}
-      onPick={(row) => write({ ...draft, row })}
-      onOwn={(own) => write({ ...draft, own })}
+      onPick={(_who, row) => write({ ...(drafts[step.request] ?? BLANK), row })}
+      onOwn={(_who, own) => write({ ...(drafts[step.request] ?? BLANK), own })}
       onAnswer={() => {
         if (answerOf(latest.current[step.request]) !== null) {
           move(latest.current);
@@ -366,9 +354,13 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       onSkip={() => move({ ...latest.current, [step.request]: BLANK })}
       onBack={at > 0 ? () => setAt(at - 1) : undefined}
       onJump={asks.length > 1 ? setAt : undefined}
-      onDismiss={asks.length > 1 ? () => send(drafts) : undefined}
+      onDismiss={asks.length > 1 ? () => send(latest.current) : undefined}
     />
   );
+}
+
+function spellAnswer(ask: AcpPermission, decided: string): string {
+  return decided === "cancelled" ? t("acp.noAnswer") : labelOf(ask, decided);
 }
 
 function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
