@@ -426,6 +426,7 @@ export const en = {
     back: "Back",
     next: "Next",
     dismissAll: "Leave them all",
+    oneOf: "question {at} of {of}",
     own: "Other",
     ownPlaceholder: "Type your own answer here",
     sending: "Sending…",

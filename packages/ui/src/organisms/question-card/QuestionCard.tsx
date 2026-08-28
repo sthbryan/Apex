@@ -21,6 +21,7 @@ export interface QuestionCardProps {
   answer?: string | null;
   picked?: string | null;
   own?: string;
+  count?: string;
   marks?: QuestionMark[];
   sent?: boolean;
   ownLabel?: string;
@@ -49,6 +50,7 @@ export function QuestionCard({
   answer,
   picked = null,
   own = "",
+  count,
   marks,
   sent,
   ownLabel = "Other",
@@ -129,6 +131,7 @@ export function QuestionCard({
 
       {marks && marks.length > 1 ? (
         <ol class="ui-question-marks">
+          <li class="ui-question-count">{count}</li>
           {marks.map((mark, index) => (
             <li key={mark.label}>
               <button

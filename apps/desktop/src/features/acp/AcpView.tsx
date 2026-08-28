@@ -278,9 +278,10 @@ function answerOf(draft: Draft | undefined): string | null {
 function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
   const [drafts, setDrafts] = useState<Record<number, Draft>>({});
   const [at, setAt] = useState(0);
-  const [sent, setSent] = useState(false);
+  const [sentFor, setSentFor] = useState(0);
   const latest = useRef(drafts);
   latest.current = drafts;
+  const sent = sentFor === asks.length;
 
   if (!asking(asks[0])) {
     return <Ask id={id} ask={asks[0]} />;
@@ -313,7 +314,7 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
   };
 
   const send = (held: Record<number, Draft>) => {
-    setSent(true);
+    setSentFor(asks.length);
     latest.current = held;
     for (const ask of asks) {
       void decide(id, ask.request, answerOf(held[ask.request]));
@@ -333,6 +334,7 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
   return (
     <QuestionCard
       question={step.title}
+      count={t("acp.oneOf", { at: String(at + 1), of: String(asks.length) })}
       picked={draft.row}
       own={draft.own}
       sent={sent}

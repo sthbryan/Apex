@@ -173,3 +173,37 @@ describe("not letting one answer go out twice", () => {
     expect(title()).toBe("pregunta 3");
   });
 });
+
+describe("a question that shows up after the first was answered", () => {
+  it("wakes the card back up instead of leaving it on Sending", () => {
+    const { rows, send, container, marks } = view();
+    transcripts.value = {
+      [ID]: [{ index: 0, at: 0, body: { type: "permission", ask: ask(1, 0, ["a", "b"]) } }],
+    };
+
+    const only = container.querySelector<HTMLElement>(".ui-question");
+    expect(only).not.toBeNull();
+    act(() => rows()[0].click());
+    act(() => send()?.click());
+    expect(decided()).toHaveLength(1);
+    expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBe("true");
+
+    act(() => {
+      transcripts.value = {
+        [ID]: [
+          { index: 0, at: 0, body: { type: "permission", ask: ask(1, 0, ["a", "b"]) } },
+          { index: 1, at: 0, body: { type: "permission", ask: ask(2, 1, ["c", "d"]) } },
+        ],
+      };
+    });
+
+    expect(marks()).toHaveLength(2);
+    expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBeUndefined();
+    expect(send()?.textContent).not.toBe("Sending…");
+  });
+
+  it("says how many there are in words, not just dots", () => {
+    const { container } = view();
+    expect(container.querySelector(".ui-question-count")?.textContent).toBe("question 1 of 3");
+  });
+});

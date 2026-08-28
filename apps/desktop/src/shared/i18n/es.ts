@@ -427,6 +427,7 @@ export const es: Messages = {
     back: "Atrás",
     next: "Siguiente",
     dismissAll: "Dejarlas todas",
+    oneOf: "pregunta {at} de {of}",
     own: "Otra cosa",
     ownPlaceholder: "Escribí tu propia respuesta",
     sending: "Mandando…",
