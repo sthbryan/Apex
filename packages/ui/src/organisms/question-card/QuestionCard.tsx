@@ -22,6 +22,7 @@ export interface QuestionCardProps {
   picked?: string | null;
   own?: string;
   count?: string;
+  countLabel?: string;
   marks?: QuestionMark[];
   sent?: boolean;
   ownLabel?: string;
@@ -51,6 +52,7 @@ export function QuestionCard({
   picked = null,
   own = "",
   count,
+  countLabel,
   marks,
   sent,
   ownLabel = "Other",
@@ -118,6 +120,9 @@ export function QuestionCard({
       }}
     >
       <div class="ui-question-head">
+        {marks && marks.length > 1 && count ? (
+          <span class="ui-question-count">{count}</span>
+        ) : null}
         <span class="ui-question-title">{question}</span>
         {onDismiss ? (
           <button
@@ -130,21 +135,19 @@ export function QuestionCard({
       </div>
 
       {marks && marks.length > 1 ? (
-        <ol class="ui-question-marks">
-          <li class="ui-question-count">{count}</li>
+        <ol class="ui-question-marks" aria-label={countLabel}>
           {marks.map((mark, index) => (
-            <li key={mark.label}>
+            <li key={mark.label} class="ui-question-track">
               <button
                 type="button"
                 class="ui-question-mark"
                 title={mark.label}
+                aria-label={mark.label}
                 aria-current={mark.here}
                 data-here={mark.here || undefined}
                 data-answered={mark.answered || undefined}
                 onClick={() => onJump?.(index)}
-              >
-                {index + 1}
-              </button>
+              />
             </li>
           ))}
         </ol>

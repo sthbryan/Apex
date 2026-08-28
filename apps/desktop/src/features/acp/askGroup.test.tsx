@@ -202,8 +202,12 @@ describe("a question that shows up after the first was answered", () => {
     expect(send()?.textContent).not.toBe("Sending…");
   });
 
-  it("says how many there are in words, not just dots", () => {
+  it("says which one of how many, once", () => {
     const { container } = view();
-    expect(container.querySelector(".ui-question-count")?.textContent).toBe("question 1 of 3");
+    expect(container.querySelector(".ui-question-count")?.textContent).toBe("1/3");
+    expect(container.querySelector(".ui-question-marks")?.getAttribute("aria-label")).toBe(
+      "question 1 of 3",
+    );
+    expect(container.querySelector(".ui-question-mark")?.textContent).toBe("");
   });
 });

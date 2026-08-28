@@ -334,7 +334,8 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
   return (
     <QuestionCard
       question={step.title}
-      count={t("acp.oneOf", { at: String(at + 1), of: String(asks.length) })}
+      count={`${at + 1}/${asks.length}`}
+      countLabel={t("acp.oneOf", { at: String(at + 1), of: String(asks.length) })}
       picked={draft.row}
       own={draft.own}
       sent={sent}

@@ -100,7 +100,7 @@ describe("answering a question", () => {
         { label: "la ultima", answered: false, here: false },
       ],
     });
-    expect(marks().map((mark) => mark.textContent)).toEqual(["1", "2", "3"]);
+    expect(marks()).toHaveLength(3);
     expect(marks()[0].dataset.answered).toBe("true");
     expect(marks()[1].dataset.here).toBe("true");
 

@@ -24,31 +24,32 @@
   }
 
   .ui-question-marks {
-    @apply flex flex-wrap items-center gap-1;
+    @apply flex items-center gap-1;
   }
 
   .ui-question-count {
-    @apply mr-1 font-mono text-2xs text-muted tabular-nums;
+    @apply shrink-0 font-mono text-2xs text-faint tabular-nums;
+  }
+
+  .ui-question-track {
+    @apply min-w-0 flex-1;
   }
 
   .ui-question-mark {
-    @apply flex size-5 items-center justify-center rounded-xs font-mono text-2xs tabular-nums;
-    color: var(--apex-faint);
-    background-color: color-mix(in oklab, var(--apex-raised) 70%, transparent);
-    transition: color var(--apex-quick) var(--apex-ease);
+    @apply block h-1 w-full rounded-full;
+    background-color: color-mix(in oklab, var(--apex-faint) 30%, transparent);
+    transition: background-color var(--apex-quick) var(--apex-ease);
   }
 
   .ui-question-mark:hover {
-    color: var(--apex-text);
+    background-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
   }
 
   .ui-question-mark[data-answered] {
-    color: var(--apex-text);
-    background-color: color-mix(in oklab, var(--apex-accent) 12%, transparent);
+    background-color: color-mix(in oklab, var(--apex-accent) 45%, transparent);
   }
 
   .ui-question-mark[data-here] {
-    color: var(--apex-accent-fg);
     background-color: var(--apex-accent);
   }
 
