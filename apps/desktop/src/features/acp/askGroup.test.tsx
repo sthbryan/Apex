@@ -47,14 +47,12 @@ function view() {
     );
   const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
   const items = () => Array.from(container.querySelectorAll<HTMLElement>(".ui-question-item"));
-  const here = () => items().findIndex((item) => item.dataset.here === "true") + 1;
-  const title = () =>
-    items()
-      .find((item) => item.dataset.here === "true")
-      ?.querySelector(".ui-question-title")?.textContent;
+  const heading = () => container.querySelector(".ui-question-heading")?.textContent ?? "";
+  const here = () => Number(/^question (\d+)/.exec(heading())?.[1] ?? 0);
+  const title = () => container.querySelector(".ui-question-title")?.textContent;
   const answers = () =>
     Array.from(container.querySelectorAll(".ui-question-answer")).map((node) => node.textContent);
-  return { container, rows, button, send, items, here, title, answers };
+  return { container, rows, button, send, items, heading, here, title, answers };
 }
 
 beforeEach(() => {
@@ -70,7 +68,7 @@ describe("a set of questions from one call", () => {
     expect(here()).toBe(1);
     expect(title()).toBe("pregunta 1");
     expect(rows()).toHaveLength(3);
-    expect(items()).toHaveLength(3);
+    expect(items()).toHaveLength(1);
   });
 
   it("holds every answer back until the last one is in", () => {
@@ -169,10 +167,13 @@ describe("not letting one answer go out twice", () => {
     expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBe("true");
   });
 
-  it("can jump straight to a question further along", () => {
-    const { items, here, title } = view();
+  it("walks forward one question at a time", () => {
+    const { rows, send, here, title } = view();
 
-    act(() => items()[2].querySelector<HTMLButtonElement>(".ui-question-ask")?.click());
+    act(() => rows()[0].click());
+    act(() => send()?.click());
+    act(() => rows()[0].click());
+    act(() => send()?.click());
     expect(here()).toBe(3);
     expect(title()).toBe("pregunta 3");
   });
@@ -180,7 +181,7 @@ describe("not letting one answer go out twice", () => {
 
 describe("a question that shows up after the first was answered", () => {
   it("wakes the card back up instead of leaving it on Sending", () => {
-    const { rows, send, container, items } = view();
+    const { rows, send, container } = view();
     transcripts.value = {
       [ID]: [{ index: 0, at: 0, body: { type: "permission", ask: ask(1, 0, ["a", "b"]) } }],
     };
@@ -201,15 +202,14 @@ describe("a question that shows up after the first was answered", () => {
       };
     });
 
-    expect(items()).toHaveLength(2);
     expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBeUndefined();
     expect(send()?.textContent).not.toBe("Sending…");
   });
 
-  it("says how many there are, once, at the top", () => {
-    const { container } = view();
-    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("3 questions");
-    expect(container.querySelectorAll(".ui-question-number")).toHaveLength(3);
+  it("says which one of how many while you answer", () => {
+    const { heading, items } = view();
+    expect(heading()).toBe("question 1 of 3");
+    expect(items()).toHaveLength(1);
   });
 });
 
@@ -245,6 +245,7 @@ describe("once the whole set is answered", () => {
     });
 
     expect(container.querySelectorAll(".ui-question")).toHaveLength(1);
+    expect(container.querySelectorAll(".ui-question-item")).toHaveLength(3);
     expect(answers()).toEqual(["a", "c", "no answer"]);
     expect(container.querySelector(".ui-question-foot")).toBeNull();
   });

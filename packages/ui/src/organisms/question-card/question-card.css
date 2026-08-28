@@ -62,11 +62,7 @@
   }
 
   .ui-question-ask {
-    @apply flex w-full items-baseline gap-2.5 rounded-sm text-left;
-  }
-
-  .ui-question-ask:not(:disabled):hover .ui-question-title {
-    color: var(--apex-accent);
+    @apply flex w-full items-baseline gap-2.5;
   }
 
   .ui-question-number {
@@ -101,11 +97,7 @@
   }
 
   .ui-question-rows {
-    @apply flex flex-col gap-1 pl-6;
-  }
-
-  .ui-question-list:not(:has(.ui-question-number)) .ui-question-rows {
-    @apply pl-0;
+    @apply flex flex-col gap-1;
   }
 
   .ui-question-row {

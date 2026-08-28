@@ -35,7 +35,6 @@ export interface QuestionCardProps {
   onAnswer?: () => void;
   onSkip?: () => void;
   onBack?: () => void;
-  onJump?: (at: number) => void;
   onDismiss?: () => void;
   class?: string;
 }
@@ -65,7 +64,6 @@ export function QuestionCard({
   onAnswer,
   onSkip,
   onBack,
-  onJump,
   onDismiss,
   class: className,
 }: QuestionCardProps) {
@@ -73,6 +71,7 @@ export function QuestionCard({
   const many = questions.length > 1;
   const open = questions[at];
   const settled = open === undefined;
+  const listed = settled ? questions : [open];
 
   const take = (question: AskedQuestion, option: string) => {
     onPick?.(question.id, option);
@@ -119,8 +118,8 @@ export function QuestionCard({
       ) : null}
 
       <ol class="ui-question-list">
-        {questions.map((question, index) => {
-          const here = index === at;
+        {listed.map((question, index) => {
+          const here = !settled;
           const rows: QuestionOption[] = [...question.options, { id: OWN, label: ownLabel }];
           return (
             <li
@@ -129,21 +128,17 @@ export function QuestionCard({
               data-here={here || undefined}
               data-done={question.answer ? "" : undefined}
             >
-              <button
-                type="button"
-                class="ui-question-ask"
-                aria-expanded={here}
-                disabled={here || settled}
-                onClick={() => onJump?.(index)}
-              >
-                {many ? <span class="ui-question-number">{index + 1}</span> : null}
+              <div class="ui-question-ask">
+                {many && settled ? (
+                  <span class="ui-question-number">{index + 1}</span>
+                ) : null}
                 <span class="ui-question-text">
                   <span class="ui-question-title">{question.question}</span>
                   {question.answer ? (
                     <span class="ui-question-answer">{question.answer}</span>
                   ) : null}
                 </span>
-              </button>
+              </div>
 
               {here ? (
                 <ul class="ui-question-rows">

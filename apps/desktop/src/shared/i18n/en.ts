@@ -426,6 +426,7 @@ export const en = {
     back: "Back",
     next: "Next",
     dismissAll: "Leave them all",
+    oneOf: "question {at} of {of}",
     howMany: "{count} questions",
     noAnswer: "no answer",
     own: "Other",

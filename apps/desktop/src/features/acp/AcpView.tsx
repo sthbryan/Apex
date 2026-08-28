@@ -336,7 +336,11 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       questions={shown}
       at={done ? -1 : at}
       sent={sent}
-      headingLabel={t("acp.howMany", { count: String(asks.length) })}
+      headingLabel={
+        done
+          ? t("acp.howMany", { count: String(asks.length) })
+          : t("acp.oneOf", { at: String(at + 1), of: String(asks.length) })
+      }
       ownLabel={t("acp.own")}
       ownPlaceholder={t("acp.ownPlaceholder")}
       skipLabel={t("acp.skip")}
@@ -353,7 +357,6 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       }}
       onSkip={() => move({ ...latest.current, [step.request]: BLANK })}
       onBack={at > 0 ? () => setAt(at - 1) : undefined}
-      onJump={asks.length > 1 ? setAt : undefined}
       onDismiss={asks.length > 1 ? () => send(latest.current) : undefined}
     />
   );

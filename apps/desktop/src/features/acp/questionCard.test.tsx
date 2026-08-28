@@ -19,7 +19,6 @@ function card(over: Partial<Parameters<typeof QuestionCard>[0]> = {}) {
   const onPick = vi.fn();
   const onAnswer = vi.fn();
   const onSkip = vi.fn();
-  const onJump = vi.fn();
   const { container } = render(
     <QuestionCard
       questions={[asked()]}
@@ -27,7 +26,6 @@ function card(over: Partial<Parameters<typeof QuestionCard>[0]> = {}) {
       onPick={onPick}
       onAnswer={onAnswer}
       onSkip={onSkip}
-      onJump={onJump}
       {...over}
     />,
   );
@@ -38,7 +36,7 @@ function card(over: Partial<Parameters<typeof QuestionCard>[0]> = {}) {
     Array.from(container.querySelectorAll(".ui-question-title")).map((node) => node.textContent);
   const answers = () =>
     Array.from(container.querySelectorAll(".ui-question-answer")).map((node) => node.textContent);
-  return { container, rows, send, items, titles, answers, onPick, onAnswer, onSkip, onJump };
+  return { container, rows, send, items, titles, answers, onPick, onAnswer, onSkip };
 }
 
 describe("answering a question", () => {
@@ -117,42 +115,34 @@ describe("a whole set of questions", () => {
     asked({ id: "3", question: "la ultima" }),
   ];
 
-  it("lists them all so you can see what is coming", () => {
-    const { titles, container } = card({ questions: THREE, at: 1, headingLabel: "3 questions" });
-    expect(titles()).toEqual(["una", "otra", "la ultima"]);
-    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("3 questions");
-  });
-
-  it("opens only the one you are on", () => {
-    const { items, rows } = card({ questions: THREE, at: 1 });
-    expect(items()[1].dataset.here).toBe("true");
-    expect(items()[0].dataset.here).toBeUndefined();
+  it("shows only the one you are on, and says which", () => {
+    const { titles, items, rows, container } = card({
+      questions: THREE,
+      at: 1,
+      headingLabel: "question 2 of 3",
+    });
+    expect(titles()).toEqual(["otra"]);
+    expect(items()).toHaveLength(1);
     expect(rows()).toHaveLength(3);
+    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("question 2 of 3");
+    expect(container.querySelectorAll(".ui-question-number")).toHaveLength(0);
   });
 
-  it("keeps every answer in the same card", () => {
+  it("keeps the ones already answered out of the way until the end", () => {
     const { answers } = card({ questions: THREE, at: 1 });
-    expect(answers()).toEqual(["la primera"]);
+    expect(answers()).toEqual([]);
   });
 
-  it("lets you jump to one you already passed", () => {
-    const { items, onJump } = card({ questions: THREE, at: 1 });
-    act(() => items()[0].querySelector<HTMLButtonElement>(".ui-question-ask")?.click());
-    expect(onJump).toHaveBeenCalledWith(0);
-  });
-
-  it("numbers them only when there is more than one", () => {
-    const many = card({ questions: THREE, at: 0 });
-    expect(many.container.querySelectorAll(".ui-question-number")).toHaveLength(3);
-
-    const lone = card();
-    expect(lone.container.querySelectorAll(".ui-question-number")).toHaveLength(0);
-  });
-
-  it("closes up and drops the footer once every answer is in", () => {
+  it("lays them all out with their answers once every one is in", () => {
     const settled = THREE.map((one) => ({ ...one, answer: `respuesta a ${one.question}` }));
-    const { container, rows, answers } = card({ questions: settled, at: -1, onDismiss: () => {} });
+    const { container, rows, answers, titles } = card({
+      questions: settled,
+      at: -1,
+      onDismiss: () => {},
+    });
 
+    expect(titles()).toEqual(["una", "otra", "la ultima"]);
+    expect(container.querySelectorAll(".ui-question-number")).toHaveLength(3);
     expect(rows()).toHaveLength(0);
     expect(container.querySelector(".ui-question-foot")).toBeNull();
     expect(container.querySelector(".ui-question-dismiss")).toBeNull();
