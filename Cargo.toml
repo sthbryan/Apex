@@ -18,6 +18,7 @@ apex-metrics = { path = "crates/apex-metrics" }
 apex-tasks = { path = "crates/apex-tasks" }
 apex-pty = { path = "crates/apex-pty" }
 apex-quota = { path = "crates/apex-quota" }
+agent-client-protocol = "2.0.0"
 
 anyhow = "1"
 base64 = "0.22"
