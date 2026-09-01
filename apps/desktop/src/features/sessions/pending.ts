@@ -7,7 +7,7 @@ import type { WorktreeDisposal } from "@/bindings/WorktreeDisposal";
 import { clearRejects } from "@/features/git/state";
 import { activeProjectId } from "@/features/projects/state";
 import { closeSession, createSession, sessions, tellSession } from "@/features/sessions/state";
-import { modeOf, rememberAgent } from "@/features/settings/agentMode";
+import { modeOf, rememberAgent, sessionMode } from "@/features/settings/agentMode";
 import {
   buildLayout,
   countPanes,
@@ -85,7 +85,7 @@ export async function startSession(
     isolation,
     null,
     slug,
-    mode,
+    sessionMode(request.agent, chosenMode(request.agent), mode),
   );
   if (request.direction) {
     splitActive({ type: "session", sessionId: created.id }, request.direction);

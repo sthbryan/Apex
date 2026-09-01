@@ -19,6 +19,7 @@ import {
   raceUnattended,
   rememberAgent,
   runsUnattended,
+  sessionMode,
   setAgentEnabled,
   setAgentMode,
   setAgentUnattended,
@@ -55,6 +56,12 @@ describe("modeOf and setAgentMode", () => {
   it("stores and retrieves a mode", () => {
     setAgentMode("claude", "acp");
     expect(modeOf("claude", "pty")).toBe("acp");
+  });
+
+  it("uses the stored mode when a launcher does not override it", () => {
+    setAgentMode("opencode", "acp");
+    expect(sessionMode("opencode", "pty", null)).toBe("acp");
+    expect(sessionMode("opencode", "pty", "pty")).toBe("pty");
   });
 });
 

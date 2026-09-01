@@ -20,6 +20,14 @@ export function modeOf(agent: string, fallback: AgentMode): AgentMode {
   return agentModes.value[agent] ?? fallback;
 }
 
+export function sessionMode(
+  agent: string,
+  fallback: AgentMode,
+  requested: AgentMode | null,
+): AgentMode {
+  return requested ?? modeOf(agent, fallback);
+}
+
 export function setAgentMode(agent: string, mode: AgentMode): void {
   agentModes.value = { ...agentModes.value, [agent]: mode };
   localStorage.setItem(STORE, JSON.stringify(agentModes.value));
