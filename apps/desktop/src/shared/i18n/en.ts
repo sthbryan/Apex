@@ -441,6 +441,8 @@ export const en = {
     working: "The agent is working… {seconds}s",
     you: "You",
     latest: "Jump to latest",
+    thought: "Thinking",
+    permission: "Permission required",
   },
   race: {
     started: "{count} agents are on it",

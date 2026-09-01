@@ -51,12 +51,43 @@
 }
 
 .acp-view .ui-approval-card {
-  @apply rounded-md;
+  @apply rounded-sm;
 }
 
 .acp-view .ui-approval-card[data-settled] {
   @apply gap-0 px-3 py-2;
   background-color: color-mix(in oklab, var(--apex-overlay) 55%, transparent);
+}
+
+.acp-view .acp-permission:not([data-settled]) {
+  @apply grid items-center gap-x-4 gap-y-2 px-3 py-2.5;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-color: color-mix(in oklab, var(--apex-state-blocked) 42%, var(--apex-border));
+  background-color: color-mix(in oklab, var(--apex-state-blocked) 5%, var(--apex-bg));
+  box-shadow: none;
+}
+
+.acp-view .acp-permission:not([data-settled]) .ui-approval-card-question {
+  @apply font-medium text-sm text-text;
+}
+
+.acp-view .acp-permission:not([data-settled]) .ui-approval-card-head {
+  grid-column: 1;
+}
+
+.acp-view .acp-permission:not([data-settled]) .ui-approval-card-command {
+  @apply bg-transparent p-0 text-xs text-muted;
+  grid-column: 1;
+}
+
+.acp-view .acp-permission:not([data-settled]) .ui-approval-card-actions {
+  @apply flex-nowrap;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.acp-view .acp-permission .ui-button[data-variant="danger"] {
+  @apply bg-transparent;
 }
 
 .acp-view .ui-approval-card-actions {
@@ -94,13 +125,40 @@
   min-height: 44px;
 }
 
-.acp-view .acp-thought .ui-message-body {
-  max-width: 72ch;
+.acp-thought > button {
+  @apply flex items-center gap-2 py-0.5 text-2xs text-faint;
 }
 
-.acp-thought .ui-message-body {
-  @apply italic;
-  color: var(--apex-faint);
+.acp-thought > button:hover {
+  @apply text-muted;
+}
+
+.acp-thought-chevron {
+  @apply size-1.5 border-r border-b;
+  rotate: -45deg;
+  transition: rotate var(--apex-swift) var(--apex-ease);
+}
+
+.acp-thought[data-open] .acp-thought-chevron {
+  rotate: 45deg;
+}
+
+.acp-thought-fold {
+  @apply grid overflow-hidden;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--apex-swift) var(--apex-ease-out),
+    opacity var(--apex-quick) var(--apex-ease);
+}
+
+.acp-thought[data-open] .acp-thought-fold {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.acp-thought-fold > p {
+  @apply min-h-0 max-w-[72ch] overflow-hidden pt-1 pl-5 text-sm italic leading-normal text-faint;
 }
 
 .acp-notice .ui-message-body {
@@ -130,12 +188,25 @@
   .acp-view .reply textarea {
     @apply px-3 pt-3 pb-2;
   }
+
+  .acp-view .acp-permission:not([data-settled]) {
+    @apply flex flex-col items-stretch;
+  }
+
+  .acp-view .acp-permission:not([data-settled]) .ui-approval-card-actions {
+    @apply flex-wrap;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .acp-view .animate-pulse,
   .acp-view .animate-drop-in {
     animation: none;
+  }
+
+  .acp-thought-chevron,
+  .acp-thought-fold {
+    transition: none;
   }
 }
 

@@ -442,6 +442,8 @@ export const es: Messages = {
     working: "El agente está trabajando… {seconds}s",
     you: "Tú",
     latest: "Ir a lo último",
+    thought: "Razonamiento",
+    permission: "Permiso requerido",
   },
   race: {
     live: "Corriendo",

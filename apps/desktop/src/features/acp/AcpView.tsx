@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import type { AcpDiff } from "@/bindings/AcpDiff";
 import type { AcpEntry } from "@/bindings/AcpEntry";
 import type { AcpPermission } from "@/bindings/AcpPermission";
+import type { AcpPicker } from "@/bindings/AcpPicker";
 import type { AcpToolCall } from "@/bindings/AcpToolCall";
 import type { AcpToolStatus } from "@/bindings/AcpToolStatus";
 import {
@@ -165,11 +166,7 @@ function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
         </Message>
       );
     case "thought":
-      return (
-        <Message class="acp-thought">
-          <span class="whitespace-pre-wrap">{body.text}</span>
-        </Message>
-      );
+      return <Thought text={body.text} />;
     case "notice":
       return (
         <Message class="acp-notice">
@@ -194,6 +191,22 @@ function Entry({ id, entry }: { id: string; entry: AcpEntry }) {
     case "permission":
       return <Asked id={id} asks={[body.ask]} />;
   }
+}
+
+function Thought({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section class="acp-thought" data-open={open || undefined}>
+      <button type="button" onClick={() => setOpen((shown) => !shown)} aria-expanded={open}>
+        <Icon name="activity" size={12} />
+        <span>{t("acp.thought")}</span>
+        <span class="acp-thought-chevron" aria-hidden="true" />
+      </button>
+      <div class="acp-thought-fold">
+        <p class="whitespace-pre-wrap">{text}</p>
+      </div>
+    </section>
+  );
 }
 
 export function spellClock(at: number, now: number = Date.now()): string {
@@ -370,6 +383,7 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
   if (ask.decided) {
     return (
       <ApprovalCard
+        class="acp-permission"
         settled
         question={ask.title}
         meta={t("acp.decided", { option: labelOf(ask, ask.decided) })}
@@ -381,7 +395,9 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
 
   return (
     <ApprovalCard
-      question={ask.title}
+      class="acp-permission"
+      question={t("acp.permission")}
+      command={ask.title}
       lead={<Icon name="keyboard" size={14} />}
       actions={
         <>
@@ -403,7 +419,7 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
               {option.name || option.id}
             </Button>
           ))}
-          <span class="ui-approval-card-aside">
+          {!ask.options.some((option) => option.kind.startsWith("reject")) && (
             <Button
               size="sm"
               variant="subtle"
@@ -412,7 +428,7 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
             >
               {t("acp.reject")}
             </Button>
-          </span>
+          )}
         </>
       }
     />
@@ -529,7 +545,7 @@ function Reply({ id, working }: { id: string; working: boolean }) {
         class="reply"
         elRef={field}
         value={text}
-        rows={2}
+        rows={1}
         label={t("acp.send")}
         placeholder={t("acp.placeholder")}
         onSubmit={(event) => {
@@ -600,7 +616,11 @@ function Reply({ id, working }: { id: string; working: boolean }) {
 
 function Choices({ id, kind }: { id: string; kind: "model" | "mode" }) {
   const picker = (kind === "model" ? models.value : modes.value)[id];
-  if (!picker || picker.choices.length === 0) {
+  if (!picker) {
+    return null;
+  }
+  const choices = pickerChoices(picker);
+  if (choices.length === 0) {
     return null;
   }
   return (
@@ -608,12 +628,19 @@ function Choices({ id, kind }: { id: string; kind: "model" | "mode" }) {
       class="max-w-40"
       label={t(kind === "model" ? "acp.model" : "acp.mode")}
       value={picker.chosen ?? undefined}
-      options={picker.choices.map((choice) => ({ value: choice.id, label: choice.name }))}
+      options={choices.map((choice) => ({ value: choice.id, label: choice.name }))}
       onChange={(wanted) =>
         void choose(id, kind === "model" ? wanted : null, kind === "mode" ? wanted : null)
       }
     />
   );
+}
+
+export function pickerChoices(picker: AcpPicker): AcpPicker["choices"] {
+  if (picker.choices.length > 0 || picker.chosen === null) {
+    return picker.choices;
+  }
+  return [{ id: picker.chosen, name: picker.chosen }];
 }
 
 function labelOf(ask: AcpPermission, decided: string): string {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AcpPermission } from "@/bindings/AcpPermission";
-import { asking, spellClock } from "@/features/acp/AcpView";
+import { asking, pickerChoices, spellClock } from "@/features/acp/AcpView";
 
 function ask(kinds: string[]): AcpPermission {
   return {
@@ -45,5 +45,13 @@ describe("saying when something arrived", () => {
   it("adds the day for something older", () => {
     const shown = spellClock(noon - 3 * 86_400_000, noon);
     expect(shown.length).toBeGreaterThan(spellClock(noon, noon).length);
+  });
+});
+
+describe("showing the session model", () => {
+  it("keeps the chosen model visible when the agent omits its catalog", () => {
+    expect(pickerChoices({ choices: [], chosen: "qwen3:8b" })).toEqual([
+      { id: "qwen3:8b", name: "qwen3:8b" },
+    ]);
   });
 });
