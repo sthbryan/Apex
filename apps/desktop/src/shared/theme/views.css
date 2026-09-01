@@ -39,6 +39,21 @@
   @apply px-1.5 py-1.5;
 }
 
+.acp-view .ui-tool-call-chevron {
+  width: 7px;
+  height: 7px;
+  transform: rotate(-45deg);
+  transition: transform var(--apex-swift) var(--apex-ease);
+}
+
+.acp-view .ui-tool-call[data-open] .ui-tool-call-chevron {
+  transform: rotate(45deg);
+}
+
+.acp-view .ui-tool-call-fold {
+  overflow: hidden;
+}
+
 .acp-view .ui-tool-call-head:hover {
   background-color: var(--apex-raised);
 }
@@ -87,6 +102,10 @@
   @apply px-2 pt-0.5 pb-1.5;
 }
 
+.acp-view .reply textarea {
+  @apply px-4 pt-3 pb-1;
+}
+
 .acp-view .ui-composer {
   margin-bottom: 12px;
 }
@@ -122,6 +141,10 @@
 
   .acp-view .reply {
     width: 100%;
+  }
+
+  .acp-view .reply textarea {
+    @apply px-3 pt-3 pb-1;
   }
 }
 
