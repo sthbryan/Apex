@@ -13,6 +13,10 @@ use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::{Mutex, mpsc, oneshot};
+use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
+
+use agent_client_protocol::schema::{ProtocolVersion, v1 as sdk};
+use agent_client_protocol::{Agent as SdkAgent, ByteStreams, ConnectionTo};
 
 pub use types::*;
 
@@ -189,6 +193,84 @@ fn describe(error: &Value) -> String {
         .unwrap_or_else(|| error.to_string())
 }
 
+fn sdk_error(error: impl std::fmt::Display) -> agent_client_protocol::Error {
+    agent_client_protocol::Error::new(-32603, error.to_string())
+}
+
+async fn sdk_connection<R, W, C>(reader: R, writer: W, client: C) -> Result<ConnectionTo<SdkAgent>>
+where
+    R: AsyncRead + Unpin + Send + 'static,
+    W: AsyncWrite + Unpin + Send + 'static,
+    C: Client,
+{
+    let client = Arc::new(client);
+    let updates = Arc::clone(&client);
+    let permissions = Arc::clone(&client);
+    let reads = Arc::clone(&client);
+    let writes = Arc::clone(&client);
+    let builder = agent_client_protocol::Client
+        .builder()
+        .name("apex")
+        .on_receive_notification(
+            async move |notice: sdk::SessionNotification, _| {
+                let raw = serde_json::to_value(notice).map_err(sdk_error)?;
+                let notice: SessionNotification = serde_json::from_value(raw).map_err(sdk_error)?;
+                updates.update(&notice.session_id, notice.update).await;
+                Ok(())
+            },
+            agent_client_protocol::on_receive_notification!(),
+        )
+        .on_receive_request(
+            async move |request: sdk::RequestPermissionRequest, responder, _| {
+                let raw = serde_json::to_value(request).map_err(sdk_error)?;
+                let request: PermissionRequest = serde_json::from_value(raw).map_err(sdk_error)?;
+                let outcome = match permissions.permission(request).await {
+                    PermissionOutcome::Cancelled => sdk::RequestPermissionOutcome::Cancelled,
+                    PermissionOutcome::Selected { option_id } => {
+                        sdk::RequestPermissionOutcome::Selected(
+                            sdk::SelectedPermissionOutcome::new(option_id),
+                        )
+                    }
+                };
+                responder.respond(sdk::RequestPermissionResponse::new(outcome))
+            },
+            agent_client_protocol::on_receive_request!(),
+        )
+        .on_receive_request(
+            async move |request: sdk::ReadTextFileRequest, responder, _| {
+                let content = reads
+                    .read_file(request.path.to_string_lossy().as_ref())
+                    .await
+                    .map_err(sdk_error)?;
+                responder.respond(sdk::ReadTextFileResponse::new(content))
+            },
+            agent_client_protocol::on_receive_request!(),
+        )
+        .on_receive_request(
+            async move |request: sdk::WriteTextFileRequest, responder, _| {
+                writes
+                    .write_file(request.path.to_string_lossy().as_ref(), &request.content)
+                    .await
+                    .map_err(sdk_error)?;
+                responder.respond(sdk::WriteTextFileResponse::new())
+            },
+            agent_client_protocol::on_receive_request!(),
+        );
+    let transport = ByteStreams::new(writer.compat_write(), reader.compat());
+    let (ready, connection) = oneshot::channel();
+    tokio::spawn(async move {
+        let future = builder.connect_with(transport, async move |current| {
+            let _ = ready.send(current.clone());
+            current.incoming_closed().await;
+            Ok(())
+        });
+        if let Err(error) = future.await {
+            tracing::debug!(%error, "acp connection closed");
+        }
+    });
+    connection.await.context("the acp connection did not start")
+}
+
 async fn answer_request<C: Client>(client: &C, method: &str, params: Value) -> Result<Value> {
     match method {
         "session/request_permission" => {
@@ -223,7 +305,7 @@ async fn notify_client<C: Client>(client: &C, method: &str, params: Value) {
 }
 
 pub struct Agent {
-    connection: Connection,
+    connection: ConnectionTo<SdkAgent>,
     child: Mutex<Option<Child>>,
     pid: u32,
     complaints: Arc<Mutex<Vec<String>>>,
@@ -271,27 +353,19 @@ impl Agent {
             });
         }
 
-        Ok(Self {
-            connection: Connection::new(stdout, stdin, client),
-            child: Mutex::new(Some(child)),
-            pid,
-            complaints,
-        })
+        let connection = sdk_connection(stdout, stdin, client).await?;
+        Ok(Self { connection, child: Mutex::new(Some(child)), pid, complaints })
     }
 
     pub async fn initialize(&self) -> Result<Initialized> {
-        let initialized: Initialized = self
-            .connection
-            .request(
-                "initialize",
-                Initialize {
-                    protocol_version: PROTOCOL_VERSION,
-                    client_capabilities: ClientCapabilities {
-                        fs: FsCapabilities { read_text_file: true, write_text_file: true },
-                    },
-                },
-            )
-            .await?;
+        let mut capabilities = sdk::ClientCapabilities::default();
+        capabilities.fs.read_text_file = true;
+        capabilities.fs.write_text_file = true;
+        let request = sdk::InitializeRequest::new(ProtocolVersion::V1)
+            .client_capabilities(capabilities)
+            .client_info(sdk::Implementation::new("apex", env!("CARGO_PKG_VERSION")));
+        let answer = self.connection.send_request(request).block_task().await?;
+        let initialized: Initialized = serde_json::from_value(serde_json::to_value(answer)?)?;
 
         if initialized.protocol_version > PROTOCOL_VERSION {
             bail!(
@@ -303,44 +377,56 @@ impl Agent {
     }
 
     pub async fn authenticate(&self, method: &str) -> Result<()> {
-        let _: Value =
-            self.connection.request("authenticate", json!({ "methodId": method })).await?;
-        Ok(())
-    }
-
-    pub async fn new_session(&self, cwd: &Path, servers: &[McpServer]) -> Result<NewSession> {
-        self.connection.request("session/new", json!({ "cwd": cwd, "mcpServers": servers })).await
-    }
-
-    pub async fn set_model(&self, session: &str, model: &str) -> Result<()> {
-        let _: Value = self
-            .connection
-            .request("session/set_model", json!({ "sessionId": session, "modelId": model }))
+        self.connection
+            .send_request(sdk::AuthenticateRequest::new(method.to_owned()))
+            .block_task()
             .await?;
         Ok(())
     }
 
-    pub async fn set_mode(&self, session: &str, mode: &str) -> Result<()> {
-        let _: Value = self
+    pub async fn new_session(&self, cwd: &Path, servers: &[McpServer]) -> Result<NewSession> {
+        let servers = serde_json::from_value(serde_json::to_value(servers)?)?;
+        let answer = self
             .connection
-            .request("session/set_mode", json!({ "sessionId": session, "modeId": mode }))
+            .send_request(sdk::NewSessionRequest::new(cwd).mcp_servers(servers))
+            .block_task()
+            .await?;
+        tokio::task::yield_now().await;
+        Ok(serde_json::from_value(serde_json::to_value(answer)?)?)
+    }
+
+    pub async fn set_model(&self, session: &str, model: &str) -> Result<()> {
+        let request = sdk::SetSessionConfigOptionRequest::new(
+            session.to_owned(),
+            "model",
+            sdk::SessionConfigValueId::from(model.to_owned()),
+        );
+        self.connection.send_request(request).block_task().await?;
+        Ok(())
+    }
+
+    pub async fn set_mode(&self, session: &str, mode: &str) -> Result<()> {
+        self.connection
+            .send_request(sdk::SetSessionModeRequest::new(session.to_owned(), mode.to_owned()))
+            .block_task()
             .await?;
         Ok(())
     }
 
     pub async fn prompt(&self, session: &str, text: &str) -> Result<StopReason> {
-        let prompted: Prompted = self
-            .connection
-            .request(
-                "session/prompt",
-                json!({ "sessionId": session, "prompt": [ContentBlock::text(text)] }),
-            )
-            .await?;
+        let request = sdk::PromptRequest::new(
+            session.to_owned(),
+            vec![sdk::ContentBlock::Text(sdk::TextContent::new(text.to_owned()))],
+        );
+        let answer = self.connection.send_request(request).block_task().await?;
+        let prompted: Prompted = serde_json::from_value(serde_json::to_value(answer)?)?;
         Ok(prompted.stop_reason)
     }
 
     pub fn cancel(&self, session: &str) -> Result<()> {
-        self.connection.notify("session/cancel", json!({ "sessionId": session }))
+        self.connection
+            .send_notification(sdk::CancelNotification::new(session.to_owned()))
+            .map_err(Into::into)
     }
 
     pub fn pid(&self) -> Option<u32> {
