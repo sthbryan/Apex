@@ -277,3 +277,41 @@ impl Agent {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn official_permissions_keep_apex_question_metadata() {
+        let raw = json!({
+            "sessionId": "session",
+            "toolCall": { "toolCallId": "call", "title": "Which one?" },
+            "options": [{
+                "optionId": "first",
+                "name": "First",
+                "kind": "allow_once",
+                "_meta": { "description": "the first choice" },
+            }],
+            "_meta": {
+                "apexQuestion": true,
+                "apexGroup": { "id": "call", "at": 0, "of": 2 },
+            },
+        });
+        let official: sdk::RequestPermissionRequest =
+            serde_json::from_value(raw).expect("an official permission");
+        let request: PermissionRequest = serde_json::from_value(
+            serde_json::to_value(official).expect("a serialized permission"),
+        )
+        .expect("an apex permission");
+
+        assert_eq!(request.options.len(), 1);
+        assert!(request.meta.as_ref().is_some_and(|meta| meta.apex_question));
+        assert_eq!(request.meta.and_then(|meta| meta.apex_group).map(|group| group.of), Some(2));
+        assert_eq!(
+            request.options[0].meta.as_ref().and_then(|meta| meta.description.as_deref()),
+            Some("the first choice")
+        );
+    }
+}

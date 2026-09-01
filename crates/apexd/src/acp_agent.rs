@@ -444,44 +444,50 @@ impl Surface for Voice {
     ) -> Vec<Option<String>> {
         let of = questions.len() as u32;
         let waiting = questions.iter().enumerate().map(|(at, question)| {
-            let offered: Vec<Value> = question
-                .options
-                .iter()
-                .map(|choice| {
-                    json!({
-                        "optionId": choice.label,
-                        "name": choice.label,
-                        "description": choice.description,
-                        "kind": "other",
-                    })
-                })
-                .collect();
             let side = Arc::clone(&self.side);
             let session = self.session.clone();
-            let title = question.question.clone();
-            let group = group.to_owned();
+            let request = question_permission(&session, group, question, at as u32, of);
             async move {
-                let answer = side
-                    .request(
-                        "session/request_permission",
-                        json!({
-                            "sessionId": session,
-                            "toolCall": {
-                                "toolCallId": group,
-                                "title": title,
-                                "kind": "other",
-                            },
-                            "options": offered,
-                            "apexGroup": { "id": group, "at": at as u32, "of": of },
-                        }),
-                    )
-                    .await
-                    .ok()?;
+                let answer = side.request("session/request_permission", request).await.ok()?;
                 chose(&answer)
             }
         });
         futures_util::future::join_all(waiting).await
     }
+}
+
+fn question_permission(
+    session: &str,
+    group: &str,
+    question: &apex_agent::tools::ask::Question,
+    at: u32,
+    of: u32,
+) -> Value {
+    let options = question
+        .options
+        .iter()
+        .map(|choice| {
+            json!({
+                "optionId": choice.label,
+                "name": choice.label,
+                "kind": "allow_once",
+                "_meta": { "description": choice.description },
+            })
+        })
+        .collect::<Vec<_>>();
+    json!({
+        "sessionId": session,
+        "toolCall": {
+            "toolCallId": group,
+            "title": question.question,
+            "kind": "other",
+        },
+        "options": options,
+        "_meta": {
+            "apexGroup": { "id": group, "at": at, "of": of },
+            "apexQuestion": true,
+        },
+    })
 }
 
 pub fn spell_call(call: &Call) -> String {

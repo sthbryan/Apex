@@ -300,6 +300,15 @@ pub struct PermissionOption {
     pub description: Option<String>,
     #[serde(default)]
     pub kind: Option<String>,
+    #[serde(default, rename = "_meta")]
+    pub meta: Option<PermissionOptionMeta>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionOptionMeta {
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -309,8 +318,17 @@ pub struct PermissionRequest {
     pub tool_call: ToolCall,
     #[serde(default)]
     pub options: Vec<PermissionOption>,
+    #[serde(default, rename = "_meta")]
+    pub meta: Option<PermissionMeta>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionMeta {
     #[serde(default)]
     pub apex_group: Option<AskGroup>,
+    #[serde(default)]
+    pub apex_question: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

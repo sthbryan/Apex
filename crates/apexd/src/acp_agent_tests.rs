@@ -66,6 +66,22 @@ fn an_answer_that_makes_no_sense_comes_back_as_no_answer() {
 }
 
 #[test]
+fn questions_use_valid_permission_options_and_keep_their_metadata() {
+    let question = apex_agent::tools::ask::Question {
+        question: "Which one?".to_owned(),
+        options: vec![apex_agent::tools::ask::Choice {
+            label: "first".to_owned(),
+            description: Some("the first choice".to_owned()),
+        }],
+    };
+    let request = question_permission("session", "call-1", &question, 1, 3);
+
+    assert_eq!(request["options"][0]["kind"], "allow_once");
+    assert_eq!(request["_meta"]["apexQuestion"], true);
+    assert_eq!(request["_meta"]["apexGroup"]["at"], 1);
+}
+
+#[test]
 fn the_servers_the_client_offers_are_read_out_of_the_call() {
     let offered = json!([
         { "type": "stdio", "name": "apex", "command": "/opt/apex/apexd", "args": ["mcp"], "env": [] }

@@ -440,6 +440,8 @@ impl Client for Relay {
     }
 
     async fn permission(&self, request: PermissionRequest) -> PermissionOutcome {
+        let question = request.meta.as_ref().is_some_and(|meta| meta.apex_question);
+        let group = request.meta.as_ref().and_then(|meta| meta.apex_group.clone());
         let title = request
             .tool_call
             .title
@@ -451,13 +453,19 @@ impl Client for Relay {
             .map(|option| AcpOption {
                 id: option.option_id.clone(),
                 name: option.name.clone(),
-                about: option.description.clone(),
-                kind: option.kind.clone().unwrap_or_else(|| "other".to_owned()),
+                about: option
+                    .description
+                    .clone()
+                    .or_else(|| option.meta.as_ref().and_then(|meta| meta.description.clone())),
+                kind: if question {
+                    "other".to_owned()
+                } else {
+                    option.kind.clone().unwrap_or_else(|| "allow_once".to_owned())
+                },
             })
             .collect();
 
-        let (number, entry) =
-            self.transcript.lock().await.asked(&title, options, request.apex_group.clone());
+        let (number, entry) = self.transcript.lock().await.asked(&title, options, group);
         self.publish(entry);
 
         let (answer, wait) = oneshot::channel();
