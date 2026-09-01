@@ -1,18 +1,13 @@
 mod types;
 
-use std::collections::HashMap;
 use std::path::Path;
 use std::process::Stdio;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
 
-use anyhow::{Context, Result, anyhow, bail};
-use serde::Serialize;
-use serde::de::DeserializeOwned;
-use serde_json::{Value, json};
-use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader};
+use anyhow::{Context, Result, bail};
+use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, BufReader};
 use tokio::process::{Child, Command};
-use tokio::sync::{Mutex, mpsc, oneshot};
+use tokio::sync::{Mutex, oneshot};
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
 use agent_client_protocol::schema::{ProtocolVersion, v1 as sdk};
@@ -21,8 +16,6 @@ use agent_client_protocol::{Agent as SdkAgent, ByteStreams, ConnectionTo};
 pub use types::*;
 
 const STDERR_KEPT: usize = 20;
-
-type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
 #[async_trait::async_trait]
 pub trait Client: Send + Sync + 'static {
@@ -41,156 +34,6 @@ pub trait Client: Send + Sync + 'static {
         let _ = content;
         bail!("this client cannot write {path}")
     }
-}
-
-pub struct Connection {
-    outgoing: mpsc::UnboundedSender<String>,
-    pending: Pending,
-    next: AtomicU64,
-}
-
-impl Connection {
-    pub fn new<R, W, C>(reader: R, writer: W, client: C) -> Self
-    where
-        R: AsyncRead + Unpin + Send + 'static,
-        W: AsyncWrite + Unpin + Send + 'static,
-        C: Client,
-    {
-        let (outgoing, mut queue) = mpsc::unbounded_channel::<String>();
-        let pending: Pending = Arc::default();
-
-        tokio::spawn(async move {
-            let mut writer = writer;
-            while let Some(line) = queue.recv().await {
-                if writer.write_all(line.as_bytes()).await.is_err()
-                    || writer.write_all(b"\n").await.is_err()
-                    || writer.flush().await.is_err()
-                {
-                    break;
-                }
-            }
-        });
-
-        tokio::spawn(listen(reader, outgoing.clone(), Arc::clone(&pending), client));
-
-        Self { outgoing, pending, next: AtomicU64::new(1) }
-    }
-
-    pub async fn request<P: Serialize, T: DeserializeOwned>(
-        &self,
-        method: &str,
-        params: P,
-    ) -> Result<T> {
-        let id = self.next.fetch_add(1, Ordering::Relaxed);
-        let (answer, wait) = oneshot::channel();
-        self.pending.lock().await.insert(id, answer);
-
-        let body = json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "method": method,
-            "params": serde_json::to_value(params)?,
-        });
-        self.outgoing
-            .send(body.to_string())
-            .map_err(|_| anyhow!("the agent is no longer listening"))?;
-
-        let reply =
-            wait.await.map_err(|_| anyhow!("the agent closed before answering {method}"))?;
-        let value = reply.map_err(|message| anyhow!("{method} failed: {message}"))?;
-        serde_json::from_value(value)
-            .with_context(|| format!("could not read the answer to {method}"))
-    }
-
-    pub fn notify<P: Serialize>(&self, method: &str, params: P) -> Result<()> {
-        let body = json!({
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": serde_json::to_value(params)?,
-        });
-        self.outgoing
-            .send(body.to_string())
-            .map_err(|_| anyhow!("the agent is no longer listening"))?;
-        Ok(())
-    }
-}
-
-async fn listen<R, C>(
-    reader: R,
-    outgoing: mpsc::UnboundedSender<String>,
-    pending: Pending,
-    client: C,
-) where
-    R: AsyncRead + Unpin + Send + 'static,
-    C: Client,
-{
-    let client = Arc::new(client);
-    let mut lines = BufReader::new(reader).lines();
-    while let Ok(Some(line)) = lines.next_line().await {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let Ok(message) = serde_json::from_str::<Value>(&line) else {
-            tracing::warn!(line, "the agent sent something that is not json");
-            continue;
-        };
-
-        let method = message.get("method").and_then(Value::as_str).map(str::to_owned);
-        let id = message.get("id").cloned();
-        let params = message.get("params").cloned().unwrap_or_else(|| json!({}));
-
-        match (method, id) {
-            (Some(method), Some(id)) => {
-                let asked = Arc::clone(&client);
-                let back = outgoing.clone();
-                tokio::spawn(async move {
-                    let answer = answer_request(asked.as_ref(), &method, params).await;
-                    let body = match answer {
-                        Ok(result) => json!({ "jsonrpc": "2.0", "id": id, "result": result }),
-                        Err(error) => json!({
-                            "jsonrpc": "2.0",
-                            "id": id,
-                            "error": { "code": -32603, "message": format!("{error:#}") },
-                        }),
-                    };
-                    let _ = back.send(body.to_string());
-                });
-            }
-            (Some(method), None) => notify_client(client.as_ref(), &method, params).await,
-            (None, Some(id)) => {
-                let Some(waiting) = take_pending(&pending, &id).await else {
-                    continue;
-                };
-                let _ = waiting.send(match message.get("error") {
-                    Some(error) => Err(describe(error)),
-                    None => Ok(message.get("result").cloned().unwrap_or(Value::Null)),
-                });
-            }
-            (None, None) => {
-                tracing::warn!(line, "the agent sent a message with no method and no id")
-            }
-        }
-    }
-
-    for (_, waiting) in pending.lock().await.drain() {
-        let _ = waiting.send(Err("the agent went away".to_owned()));
-    }
-}
-
-async fn take_pending(
-    pending: &Pending,
-    id: &Value,
-) -> Option<oneshot::Sender<Result<Value, String>>> {
-    let id = id.as_u64()?;
-    pending.lock().await.remove(&id)
-}
-
-fn describe(error: &Value) -> String {
-    error
-        .get("message")
-        .and_then(Value::as_str)
-        .map(str::to_owned)
-        .unwrap_or_else(|| error.to_string())
 }
 
 fn sdk_error(error: impl std::fmt::Display) -> agent_client_protocol::Error {
@@ -269,39 +112,6 @@ where
         }
     });
     connection.await.context("the acp connection did not start")
-}
-
-async fn answer_request<C: Client>(client: &C, method: &str, params: Value) -> Result<Value> {
-    match method {
-        "session/request_permission" => {
-            let request: PermissionRequest = serde_json::from_value(params)?;
-            let outcome = client.permission(request).await;
-            Ok(json!({ "outcome": outcome }))
-        }
-        "fs/read_text_file" => {
-            let request: FileRequest = serde_json::from_value(params)?;
-            let content = client.read_file(&request.path).await?;
-            Ok(json!({ "content": content }))
-        }
-        "fs/write_text_file" => {
-            let request: FileRequest = serde_json::from_value(params)?;
-            client
-                .write_file(&request.path, request.content.as_deref().unwrap_or_default())
-                .await?;
-            Ok(Value::Null)
-        }
-        other => bail!("this client does not answer {other}"),
-    }
-}
-
-async fn notify_client<C: Client>(client: &C, method: &str, params: Value) {
-    if method != "session/update" {
-        return;
-    }
-    match serde_json::from_value::<SessionNotification>(params) {
-        Ok(notice) => client.update(&notice.session_id, notice.update).await,
-        Err(error) => tracing::warn!(%error, "the agent sent an update this client cannot read"),
-    }
 }
 
 pub struct Agent {
@@ -419,8 +229,7 @@ impl Agent {
             vec![sdk::ContentBlock::Text(sdk::TextContent::new(text.to_owned()))],
         );
         let answer = self.connection.send_request(request).block_task().await?;
-        let prompted: Prompted = serde_json::from_value(serde_json::to_value(answer)?)?;
-        Ok(prompted.stop_reason)
+        Ok(serde_json::from_value(serde_json::to_value(answer.stop_reason)?)?)
     }
 
     pub fn cancel(&self, session: &str) -> Result<()> {
@@ -468,7 +277,3 @@ impl Agent {
         Ok(())
     }
 }
-
-#[cfg(test)]
-#[path = "lib_tests.rs"]
-mod tests;

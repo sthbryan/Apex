@@ -3,26 +3,6 @@ use serde_json::Value;
 
 pub const PROTOCOL_VERSION: u32 = 1;
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FsCapabilities {
-    pub read_text_file: bool,
-    pub write_text_file: bool,
-}
-
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClientCapabilities {
-    pub fs: FsCapabilities,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Initialize {
-    pub protocol_version: u32,
-    pub client_capabilities: ClientCapabilities,
-}
-
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentInfo {
@@ -158,12 +138,6 @@ pub enum StopReason {
     MaxTurnRequests,
     Refusal,
     Cancelled,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Prompted {
-    pub stop_reason: StopReason,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -352,12 +326,4 @@ pub struct AskGroup {
 pub enum PermissionOutcome {
     Cancelled,
     Selected { option_id: String },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FileRequest {
-    pub path: String,
-    #[serde(default)]
-    pub content: Option<String>,
 }
