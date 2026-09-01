@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use anyhow::{Context, Result, anyhow, bail};
 use apex_agent::chat::{Chat, Surface};
 use apex_agent::choice;
-use apex_agent::mcp::{Servers, Wanted};
+use apex_agent::mcp::{Offered, Servers, Wanted};
 use apex_agent::mode::Mode;
 use apex_agent::tools::todo::Todo;
 use apex_agent::tools::{Call, Done, Kit, our_names, sketch};
@@ -338,7 +338,10 @@ pub fn plugged(offered: Option<&Value>) -> Vec<Wanted> {
     let Some(listed) = offered.and_then(Value::as_array) else {
         return Vec::new();
     };
-    listed.iter().filter_map(|one| serde_json::from_value::<Wanted>(one.clone()).ok()).collect()
+    listed
+        .iter()
+        .filter_map(|one| serde_json::from_value::<Offered>(one.clone()).ok().map(Into::into))
+        .collect()
 }
 
 pub fn spoken(prompt: Option<&Value>) -> String {

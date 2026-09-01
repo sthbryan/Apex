@@ -4,18 +4,18 @@ notify() {
 }
 
 while IFS= read -r line; do
-  id=$(printf '%s' "$line" | sed -n 's/.*"id":\([0-9]*\).*/\1/p')
+  id=$(printf '%s' "$line" | sed -n 's/.*"id":\([^,}]*\).*/\1/p')
   case "$line" in
     *'"initialize"'*)
       printf '{"jsonrpc":"2.0","id":%s,"result":{"protocolVersion":1,"agentInfo":{"name":"fake","version":"0"},"agentCapabilities":{"mcpCapabilities":{"http":true}}}}\n' "$id"
       ;;
     *'"session/new"'*)
       printf '%s\n' "$line" > ./session-new.json
-      printf '{"jsonrpc":"2.0","id":%s,"result":{"sessionId":"s-1","models":{"currentModelId":"fast","availableModels":[{"modelId":"fast","name":"Fast"},{"modelId":"deep","name":"Deep"}]}}}\n' "$id"
+      printf '{"jsonrpc":"2.0","id":%s,"result":{"sessionId":"s-1","configOptions":[{"id":"model","name":"Model","category":"model","type":"select","currentValue":"fast","options":[{"value":"fast","name":"Fast"},{"value":"deep","name":"Deep"}]}]}}\n' "$id"
       notify '{"sessionUpdate":"available_commands_update","availableCommands":[{"name":"compact","description":"Shrink the context"}]}'
       ;;
-    *'"session/set_model"'*)
-      printf '{"jsonrpc":"2.0","id":%s,"result":null}\n' "$id"
+    *'"session/set_config_option"'*)
+      printf '{"jsonrpc":"2.0","id":%s,"result":{"configOptions":[]}}\n' "$id"
       ;;
     *'"session/prompt"'*)
       case "$line" in

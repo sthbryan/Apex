@@ -32,6 +32,29 @@ pub enum Wanted {
     },
 }
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum Offered {
+    Tagged(Wanted),
+    Stdio {
+        name: String,
+        command: String,
+        #[serde(default)]
+        args: Vec<String>,
+        #[serde(default)]
+        env: Vec<Pair>,
+    },
+}
+
+impl From<Offered> for Wanted {
+    fn from(value: Offered) -> Self {
+        match value {
+            Offered::Tagged(wanted) => wanted,
+            Offered::Stdio { name, command, args, env } => Self::Stdio { name, command, args, env },
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Pair {
     pub name: String,
