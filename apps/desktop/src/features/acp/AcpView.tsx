@@ -104,9 +104,9 @@ export function AcpView({ id }: { id: string }) {
   }, []);
 
   return (
-    <div class="flex h-full flex-col bg-bg">
+    <div class="acp-view flex h-full flex-col bg-bg">
       <div class="relative flex min-h-0 flex-1 flex-col">
-        <Transcript elRef={scroll}>
+        <Transcript elRef={scroll} class="acp-transcript">
           {entries.length === 0 && <p class="text-faint">{t("acp.empty")}</p>}
           {laidOut(entries).map((shown) =>
             shown.kind === "ask" ? (
@@ -389,7 +389,13 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
             <Button
               key={option.id}
               size="sm"
-              variant={option.kind === "reject_once" ? "danger" : "primary"}
+              variant={
+                option.kind === "allow_once"
+                  ? "primary"
+                  : option.kind.startsWith("reject")
+                    ? "danger"
+                    : "subtle"
+              }
               class="max-w-64 truncate"
               title={option.name || option.id}
               onClick={() => void decide(id, ask.request, option.id)}
@@ -398,7 +404,12 @@ function Ask({ id, ask }: { id: string; ask: AcpPermission }) {
             </Button>
           ))}
           <span class="ui-approval-card-aside">
-            <Button size="sm" variant="subtle" onClick={() => void decide(id, ask.request, null)}>
+            <Button
+              size="sm"
+              variant="subtle"
+              class="acp-dismiss"
+              onClick={() => void decide(id, ask.request, null)}
+            >
               {t("acp.reject")}
             </Button>
           </span>

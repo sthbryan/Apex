@@ -6,8 +6,93 @@
   @apply min-h-0 px-3 pt-2 pb-0 text-md;
 }
 
+.acp-view .ui-transcript {
+  @apply gap-5;
+  padding: 24px;
+}
+
+.acp-view .ui-transcript > * {
+  width: min(100%, 920px);
+  margin-inline: auto;
+}
+
+.acp-view .ui-transcript > .ui-message[data-from="user"] {
+  width: min(72%, 680px);
+  margin-right: max(0px, calc((100% - 920px) / 2));
+  margin-left: auto;
+}
+
+.acp-view .ui-message-body {
+  max-width: 76ch;
+}
+
+.acp-view .ui-message[data-from="user"] .ui-message-body {
+  max-width: 100%;
+}
+
+.acp-view .ui-tool-call {
+  @apply rounded-none border-x-0 border-t-0 bg-transparent;
+  border-bottom-color: color-mix(in oklab, var(--apex-border) 70%, transparent);
+}
+
+.acp-view .ui-tool-call-head {
+  @apply px-1.5 py-1.5;
+}
+
+.acp-view .ui-tool-call-head:hover {
+  background-color: var(--apex-raised);
+}
+
+.acp-view .ui-tool-call-output {
+  @apply mx-1.5 mb-1.5 rounded-sm border border-border;
+}
+
+.acp-view .ui-approval-card,
+.acp-view .ui-question {
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
+
+.acp-view .ui-approval-card {
+  @apply rounded-md;
+}
+
+.acp-view .ui-approval-card-actions {
+  gap: 6px;
+}
+
+.acp-view .acp-dismiss {
+  @apply px-1 text-faint;
+}
+
+.acp-view .ui-question-row {
+  @apply rounded-sm;
+}
+
+.acp-view > .relative > .acp-transcript + button {
+  right: max(12px, calc((100% - 920px) / 2));
+}
+
+.acp-view > .border-t,
+.acp-view > .relative + .border-t {
+  padding-inline: 24px;
+}
+
+.acp-view .reply {
+  width: min(100%, 920px);
+  margin-inline: auto;
+}
+
 .reply .ui-composer-bar {
   @apply px-2 pt-0.5 pb-1.5;
+}
+
+.acp-view .ui-composer {
+  margin-bottom: 12px;
+}
+
+.acp-view .acp-thought .ui-message-body {
+  max-width: 72ch;
 }
 
 .acp-thought .ui-message-body {
@@ -17,6 +102,34 @@
 
 .acp-notice .ui-message-body {
   color: var(--apex-state-failed);
+}
+
+@media (max-width: 719px) {
+  .acp-view .ui-transcript {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .acp-view .ui-transcript > .ui-message[data-from="user"] {
+    width: 88%;
+    margin-right: 0;
+  }
+
+  .acp-view > .border-t,
+  .acp-view > .relative + .border-t {
+    padding-inline: 12px;
+  }
+
+  .acp-view .reply {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acp-view .animate-pulse,
+  .acp-view .animate-drop-in {
+    animation: none;
+  }
 }
 
 .ui-code-view pre,
