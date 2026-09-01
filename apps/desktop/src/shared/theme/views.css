@@ -54,6 +54,11 @@
   @apply rounded-md;
 }
 
+.acp-view .ui-approval-card[data-settled] {
+  @apply gap-0 px-3 py-2;
+  background-color: color-mix(in oklab, var(--apex-overlay) 55%, transparent);
+}
+
 .acp-view .ui-approval-card-actions {
   gap: 6px;
 }

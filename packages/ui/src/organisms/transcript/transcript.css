@@ -87,13 +87,17 @@
   }
 
   .ui-tool-call-fold {
-    @apply grid;
+    @apply grid overflow-hidden;
     grid-template-rows: 0fr;
-    transition: grid-template-rows var(--apex-swift) var(--apex-ease-out);
+    opacity: 0;
+    transition:
+      grid-template-rows var(--apex-swift) var(--apex-ease-out),
+      opacity var(--apex-quick) var(--apex-ease);
   }
 
   .ui-tool-call[data-open] .ui-tool-call-fold {
     grid-template-rows: 1fr;
+    opacity: 1;
   }
 
   .ui-tool-call-fold > * {
