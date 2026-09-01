@@ -11,7 +11,7 @@ import {
   Transcript,
 } from "@apex/ui";
 import cn from "cnfast";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type { AcpDiff } from "@/bindings/AcpDiff";
 import type { AcpEntry } from "@/bindings/AcpEntry";
@@ -76,18 +76,18 @@ export function AcpView({ id }: { id: string }) {
   const following = useRef(true);
   following.current = !stale && working;
 
-  const toFoot = () => {
+  const toFoot = useCallback(() => {
     const el = scroll.current;
     if (el) {
       el.scrollTop = el.scrollHeight;
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!stale) {
       toFoot();
     }
-  }, [entries.length, stale]);
+  }, [entries.length, stale, toFoot]);
 
   useEffect(() => {
     const el = scroll.current;
@@ -529,7 +529,7 @@ function Reply({ id, working }: { id: string; working: boolean }) {
         class="reply"
         elRef={field}
         value={text}
-        rows={3}
+        rows={2}
         label={t("acp.send")}
         placeholder={t("acp.placeholder")}
         onSubmit={(event) => {

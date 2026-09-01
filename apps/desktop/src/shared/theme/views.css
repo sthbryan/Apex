@@ -2,23 +2,19 @@
   @apply rounded-none border-0 bg-transparent shadow-none;
 }
 
-.reply textarea {
-  @apply min-h-0 px-3 pt-2 pb-0 text-md;
-}
-
 .acp-view .ui-transcript {
-  @apply gap-5;
-  padding: 24px;
+  @apply gap-3;
+  padding: 16px;
 }
 
 .acp-view .ui-transcript > * {
-  width: min(100%, 920px);
+  width: min(100%, 960px);
   margin-inline: auto;
 }
 
 .acp-view .ui-transcript > .ui-message[data-from="user"] {
-  width: min(72%, 680px);
-  margin-right: max(0px, calc((100% - 920px) / 2));
+  width: min(78%, 720px);
+  margin-right: max(0px, calc((100% - 960px) / 2));
   margin-left: auto;
 }
 
@@ -31,40 +27,26 @@
 }
 
 .acp-view .ui-tool-call {
-  @apply rounded-none border-x-0 border-t-0 bg-transparent;
-  border-bottom-color: color-mix(in oklab, var(--apex-border) 70%, transparent);
+  @apply rounded-sm;
+  background-color: color-mix(in oklab, var(--apex-overlay) 72%, transparent);
 }
 
 .acp-view .ui-tool-call-head {
-  @apply px-1.5 py-1.5;
+  @apply px-2.5 py-1.5;
 }
 
 .acp-view .ui-tool-call-chevron {
   width: 7px;
   height: 7px;
-  transform: rotate(-45deg);
-  transition: transform var(--apex-swift) var(--apex-ease);
-}
-
-.acp-view .ui-tool-call[data-open] .ui-tool-call-chevron {
-  transform: rotate(45deg);
-}
-
-.acp-view .ui-tool-call-fold {
-  overflow: hidden;
-}
-
-.acp-view .ui-tool-call-head:hover {
-  background-color: var(--apex-raised);
 }
 
 .acp-view .ui-tool-call-output {
-  @apply mx-1.5 mb-1.5 rounded-sm border border-border;
+  @apply border-t border-border px-2.5 py-2;
 }
 
 .acp-view .ui-approval-card,
 .acp-view .ui-question {
-  width: min(100%, 760px);
+  width: min(100%, 960px);
   margin-inline: auto;
 }
 
@@ -85,29 +67,26 @@
 }
 
 .acp-view > .relative > .acp-transcript + button {
-  right: max(12px, calc((100% - 920px) / 2));
+  right: max(12px, calc((100% - 960px) / 2));
 }
 
 .acp-view > .border-t,
 .acp-view > .relative + .border-t {
-  padding-inline: 24px;
+  padding-inline: 16px;
 }
 
 .acp-view .reply {
-  width: min(100%, 920px);
+  width: min(100%, 960px);
   margin-inline: auto;
 }
 
 .reply .ui-composer-bar {
-  @apply px-2 pt-0.5 pb-1.5;
+  @apply px-2.5 pt-1.5 pb-2.5;
 }
 
 .acp-view .reply textarea {
-  @apply px-4 pt-3 pb-1;
-}
-
-.acp-view .ui-composer {
-  margin-bottom: 12px;
+  @apply min-h-0 px-4 pt-3 pb-2 text-md;
+  min-height: 44px;
 }
 
 .acp-view .acp-thought .ui-message-body {
@@ -126,7 +105,7 @@
 @media (max-width: 719px) {
   .acp-view .ui-transcript {
     padding: 12px;
-    gap: 16px;
+    gap: 12px;
   }
 
   .acp-view .ui-transcript > .ui-message[data-from="user"] {
@@ -144,7 +123,7 @@
   }
 
   .acp-view .reply textarea {
-    @apply px-3 pt-3 pb-1;
+    @apply px-3 pt-3 pb-2;
   }
 }
 
