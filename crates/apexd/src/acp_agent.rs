@@ -181,7 +181,7 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
     };
 
     let wire = provider.dial(&held)?;
-    let listing = model::list(&wire).await.unwrap_or_default();
+    let listing = ensure_model(model::list(&wire).await.unwrap_or_default(), &picked.model);
     if !listing.is_empty() && !listing.iter().any(|one| one.id == picked.model) {
         bail!(
             "{} does not have a model called {}, pick another one in Settings",
@@ -244,6 +244,18 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
 
 async fn listed(wire: &apex_agent::Wire, model: &str) -> Option<u32> {
     model::list(wire).await.ok()?.into_iter().find(|one| one.id == model)?.context
+}
+
+fn ensure_model(mut listed: Vec<model::Model>, picked: &str) -> Vec<model::Model> {
+    if !listed.iter().any(|model| model.id == picked) {
+        listed.push(model::Model {
+            id: picked.to_owned(),
+            label: picked.to_owned(),
+            context: None,
+        });
+        listed.sort_by(|left, right| left.id.cmp(&right.id));
+    }
+    listed
 }
 
 async fn switched(rooms: &Arc<Rooms>, params: Value) -> Result<Value> {

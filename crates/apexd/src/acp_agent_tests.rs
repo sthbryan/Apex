@@ -82,6 +82,13 @@ fn questions_use_valid_permission_options_and_keep_their_metadata() {
 }
 
 #[test]
+fn the_configured_model_is_offered_when_its_provider_lists_nothing() {
+    let listed = ensure_model(Vec::new(), "qwen3:8b");
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].id, "qwen3:8b");
+}
+
+#[test]
 fn the_servers_the_client_offers_are_read_out_of_the_call() {
     let offered = json!([
         { "type": "stdio", "name": "apex", "command": "/opt/apex/apexd", "args": ["mcp"], "env": [] }
