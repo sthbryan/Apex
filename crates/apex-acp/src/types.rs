@@ -111,6 +111,7 @@ pub struct ConfigChoice {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigOption {
+    #[serde(alias = "configId")]
     pub id: String,
     #[serde(default)]
     pub current_value: Option<String>,

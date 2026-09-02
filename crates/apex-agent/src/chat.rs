@@ -114,6 +114,12 @@ impl Chat {
         self.kit.works_in(mode);
     }
 
+    pub fn thinks_with(&mut self, brain: Brain, window: Option<u32>) {
+        self.brain = Arc::new(brain);
+        self.window = window;
+        self.filled = 0;
+    }
+
     pub fn mode(&self) -> Mode {
         self.kit.mode()
     }

@@ -17,7 +17,14 @@ use tokio::sync::{Mutex, mpsc, oneshot};
 
 const PROTOCOL: u32 = 1;
 
-type Held = Arc<Mutex<Chat>>;
+struct Room {
+    chat: Chat,
+    wire: apex_agent::Wire,
+    models: Vec<model::Model>,
+    model: String,
+}
+
+type Held = Arc<Mutex<Room>>;
 
 pub struct Side {
     out: mpsc::UnboundedSender<String>,
@@ -137,7 +144,8 @@ async fn asked(side: &Arc<Side>, rooms: &Arc<Rooms>, method: &str, params: Value
         "authenticate" => Ok(Value::Null),
         "session/new" => opened(side, rooms, params).await,
         "session/prompt" => prompted(side, rooms, params).await,
-        "session/set_model" => Ok(Value::Null),
+        "session/set_config_option" => configured(rooms, params).await,
+        "session/set_model" => configured_legacy(rooms, params).await,
         "session/set_mode" => switched(rooms, params).await,
         other => bail!("apex does not answer {other}"),
     }
@@ -204,7 +212,13 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
     chat.holds(window);
 
     let id = format!("apex-{}", rooms.next.fetch_add(1, Ordering::Relaxed));
-    rooms.live.lock().await.insert(id.clone(), Arc::new(Mutex::new(chat)));
+    let model = picked.model.clone();
+    let options = model_options(&listing, &model);
+    rooms
+        .live
+        .lock()
+        .await
+        .insert(id.clone(), Arc::new(Mutex::new(Room { chat, wire, models: listing, model })));
     if let Some(said) = wiring {
         Voice { side: Arc::clone(side), session: id.clone() }.noted(&said);
     }
@@ -224,13 +238,7 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
 
     Ok(json!({
         "sessionId": id,
-        "models": {
-            "currentModelId": picked.model,
-            "availableModels": listing
-                .iter()
-                .map(|one| json!({ "modelId": one.id, "name": one.label }))
-                .collect::<Vec<_>>(),
-        },
+        "configOptions": options,
         "modes": {
             "currentModeId": Mode::default().as_str(),
             "availableModes": [
@@ -258,12 +266,57 @@ fn ensure_model(mut listed: Vec<model::Model>, picked: &str) -> Vec<model::Model
     listed
 }
 
+fn model_options(listing: &[model::Model], current: &str) -> Value {
+    json!([{
+        "configId": "model",
+        "name": "Model",
+        "category": "model",
+        "type": "select",
+        "currentValue": current,
+        "options": listing
+            .iter()
+            .map(|one| json!({ "value": one.id, "name": one.label }))
+            .collect::<Vec<_>>(),
+    }])
+}
+
+async fn configured(rooms: &Arc<Rooms>, params: Value) -> Result<Value> {
+    let config = params.get("configId").and_then(Value::as_str).context("no config")?;
+    if config != "model" {
+        bail!("there is no {config} config")
+    }
+    let session = params.get("sessionId").and_then(Value::as_str).context("no session")?;
+    let wanted = params.get("value").and_then(Value::as_str).context("no model")?;
+    switch_model(rooms, session, wanted).await
+}
+
+async fn configured_legacy(rooms: &Arc<Rooms>, params: Value) -> Result<Value> {
+    let session = params.get("sessionId").and_then(Value::as_str).context("no session")?;
+    let wanted = params.get("modelId").and_then(Value::as_str).context("no model")?;
+    switch_model(rooms, session, wanted).await
+}
+
+async fn switch_model(rooms: &Arc<Rooms>, session: &str, wanted: &str) -> Result<Value> {
+    let held = room(rooms, session).await?;
+    let mut room = held.lock().await;
+    let selected = room
+        .models
+        .iter()
+        .find(|one| one.id == wanted)
+        .with_context(|| format!("there is no {wanted} model"))?;
+    let context = selected.context.or_else(|| window::guess(wanted));
+    let brain = room.wire.brain(wanted);
+    room.chat.thinks_with(brain, context);
+    room.model = wanted.to_owned();
+    Ok(json!({ "configOptions": model_options(&room.models, &room.model) }))
+}
+
 async fn switched(rooms: &Arc<Rooms>, params: Value) -> Result<Value> {
     let session = params.get("sessionId").and_then(Value::as_str).context("no session")?;
     let wanted = params.get("modeId").and_then(Value::as_str).context("no mode")?;
     let mode = Mode::parse(wanted).with_context(|| format!("there is no {wanted} mode"))?;
     let held = room(rooms, session).await?;
-    held.lock().await.works_in(mode);
+    held.lock().await.chat.works_in(mode);
     Ok(Value::Null)
 }
 
@@ -282,7 +335,7 @@ async fn prompted(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result
 
     let mut voice = Voice { side: Arc::clone(side), session: session.clone() };
     let running = tokio::spawn(async move {
-        held.lock().await.turn(&said, &mut voice).await.map_err(|cause| format!("{cause:#}"))
+        held.lock().await.chat.turn(&said, &mut voice).await.map_err(|cause| format!("{cause:#}"))
     });
     rooms.running.lock().await.insert(session.clone(), running.abort_handle());
 
@@ -299,7 +352,7 @@ async fn prompted(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result
 
 async fn ordered(side: &Arc<Side>, held: &Held, session: &str, order: &str) -> Result<Value> {
     let told = match order {
-        "compact" => match held.lock().await.compact().await {
+        "compact" => match held.lock().await.chat.compact().await {
             Ok(summary) => format!("Compacted. From here on I am working from this:\n\n{summary}"),
             Err(cause) => format!("Compacting did not work out: {cause:#}"),
         },

@@ -89,6 +89,24 @@ fn the_configured_model_is_offered_when_its_provider_lists_nothing() {
 }
 
 #[test]
+fn models_are_published_as_an_official_acp_config_option() {
+    let listed = vec![model::Model {
+        id: "qwen3:8b".to_owned(),
+        label: "Qwen 3 8B".to_owned(),
+        context: Some(32_768),
+    }];
+    let opened = json!({
+        "sessionId": "one",
+        "configOptions": model_options(&listed, "qwen3:8b"),
+    });
+    let session: apex_acp::NewSession = serde_json::from_value(opened).expect("session");
+
+    assert_eq!(session.config_options[0].id, "model");
+    assert_eq!(session.config_options[0].current_value.as_deref(), Some("qwen3:8b"));
+    assert_eq!(session.config_options[0].options[0].name, "Qwen 3 8B");
+}
+
+#[test]
 fn the_servers_the_client_offers_are_read_out_of_the_call() {
     let offered = json!([
         { "type": "stdio", "name": "apex", "command": "/opt/apex/apexd", "args": ["mcp"], "env": [] }
