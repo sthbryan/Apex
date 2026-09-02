@@ -2,10 +2,8 @@
 
 @layer components {
   .ui-question {
-    @apply flex flex-col overflow-hidden;
-    border-radius: var(--apex-r-sm);
-    background-color: var(--apex-overlay);
-    border: 1px solid color-mix(in oklab, var(--apex-accent) 22%, var(--apex-border));
+    @apply flex flex-col;
+    background-color: transparent;
     animation: apex-rise-in var(--apex-swift) var(--apex-ease-out) both;
   }
 
@@ -15,12 +13,10 @@
 
   .ui-question[data-settled] {
     @apply py-1;
-    border-color: var(--apex-border);
-    background-color: color-mix(in oklab, var(--apex-overlay) 60%, transparent);
   }
 
   .ui-question-head {
-    @apply flex items-center gap-3 border-b border-border px-3 py-2;
+    @apply mb-2 flex items-center gap-3;
   }
 
   .ui-question-heading {
@@ -54,7 +50,7 @@
   }
 
   .ui-question-list {
-    @apply flex flex-col px-3 pt-2.5;
+    @apply flex flex-col;
   }
 
   .ui-question-item {
@@ -97,29 +93,29 @@
   }
 
   .ui-question-rows {
-    @apply flex flex-col overflow-hidden rounded-sm border border-border;
+    @apply flex flex-col gap-1;
   }
 
   .ui-question-row {
-    @apply flex min-h-10 w-full items-center gap-2.5 border-b border-border px-2.5 py-1.5 text-left last:border-b-0;
-    background-color: transparent;
+    @apply flex min-h-10 w-full items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-left;
+    background-color: color-mix(in oklab, var(--apex-raised) 58%, transparent);
     transition:
       background-color var(--apex-quick) var(--apex-ease),
       color var(--apex-quick) var(--apex-ease);
   }
 
   .ui-question-row::before {
-    @apply size-3 shrink-0 rounded-full border border-border;
+    @apply size-3 shrink-0 rounded-full border border-faint;
     content: "";
     box-shadow: inset 0 0 0 3px var(--apex-overlay);
   }
 
   .ui-question-row:hover {
-    background-color: var(--apex-raised);
+    background-color: color-mix(in oklab, var(--apex-raised) 88%, transparent);
   }
 
   .ui-question-row[data-picked] {
-    background-color: color-mix(in oklab, var(--apex-accent) 9%, transparent);
+    background-color: color-mix(in oklab, var(--apex-accent) 8%, var(--apex-raised));
   }
 
   .ui-question-row[data-picked]::before {
@@ -161,8 +157,7 @@
   }
 
   .ui-question-foot {
-    @apply mt-2 flex items-center justify-end gap-1.5 border-t border-border px-2.5 py-2;
-    background-color: color-mix(in oklab, var(--apex-raised) 35%, transparent);
+    @apply mt-2 flex items-center justify-end gap-1.5;
   }
 
   .ui-question-send {

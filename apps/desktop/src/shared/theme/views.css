@@ -51,7 +51,7 @@
 }
 
 .acp-view .ui-question {
-  width: min(100%, 680px);
+  width: min(100%, 620px);
 }
 
 .acp-view .ui-approval-card {
@@ -59,8 +59,7 @@
 }
 
 .acp-view .ui-approval-card[data-settled] {
-  @apply gap-0 px-3 py-2;
-  background-color: color-mix(in oklab, var(--apex-overlay) 55%, transparent);
+  @apply gap-0 border-0 bg-transparent px-0 py-1 shadow-none;
 }
 
 .acp-view .acp-permission:not([data-settled]) {
