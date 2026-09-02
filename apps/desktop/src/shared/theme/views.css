@@ -111,8 +111,7 @@
 }
 
 .acp-view .reply {
-  width: min(100%, 960px);
-  margin-inline: auto;
+  width: 100%;
 }
 
 .reply .ui-composer-bar {

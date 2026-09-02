@@ -370,6 +370,7 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       }}
       onSkip={() => move({ ...latest.current, [step.request]: BLANK })}
       onBack={at > 0 ? () => setAt(at - 1) : undefined}
+      onGo={setAt}
       onDismiss={asks.length > 1 ? () => send(latest.current) : undefined}
     />
   );

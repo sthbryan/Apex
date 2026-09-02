@@ -24,6 +24,22 @@
     letter-spacing: var(--apex-tracking-caps);
   }
 
+  .ui-question-steps {
+    @apply flex items-center gap-1;
+  }
+
+  .ui-question-step {
+    @apply flex size-5 items-center justify-center rounded-xs font-mono text-2xs text-faint tabular-nums;
+  }
+
+  .ui-question-step:hover {
+    @apply bg-raised text-muted;
+  }
+
+  .ui-question-step[data-current] {
+    @apply bg-raised text-accent;
+  }
+
   .ui-question-dismiss {
     @apply relative size-4 shrink-0 rounded-xs;
     color: var(--apex-faint);

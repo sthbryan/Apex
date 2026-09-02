@@ -108,6 +108,19 @@ describe("a set of questions from one call", () => {
     );
   });
 
+  it("lets you jump between questions without answering first", () => {
+    const { container, here, title } = view();
+    const steps = container.querySelectorAll<HTMLButtonElement>(".ui-question-step");
+
+    act(() => steps[2]?.click());
+    expect(here()).toBe(3);
+    expect(title()).toBe("pregunta 3");
+
+    act(() => steps[0]?.click());
+    expect(here()).toBe(1);
+    expect(title()).toBe("pregunta 1");
+  });
+
   it("records a skipped question as no answer and carries on", () => {
     const { rows, here, send, button } = view();
 

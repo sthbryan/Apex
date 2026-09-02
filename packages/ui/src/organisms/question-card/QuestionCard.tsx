@@ -35,6 +35,7 @@ export interface QuestionCardProps {
   onAnswer?: () => void;
   onSkip?: () => void;
   onBack?: () => void;
+  onGo?: (at: number) => void;
   onDismiss?: () => void;
   class?: string;
 }
@@ -64,6 +65,7 @@ export function QuestionCard({
   onAnswer,
   onSkip,
   onBack,
+  onGo,
   onDismiss,
   class: className,
 }: QuestionCardProps) {
@@ -106,6 +108,23 @@ export function QuestionCard({
       {many ? (
         <div class="ui-question-head">
           <span class="ui-question-heading">{headingLabel}</span>
+          {onGo && !settled ? (
+            <span class="ui-question-steps">
+              {questions.map((question, index) => (
+                <button
+                  key={question.id}
+                  type="button"
+                  class="ui-question-step"
+                  data-current={index === at || undefined}
+                  aria-label={question.question}
+                  aria-current={index === at ? "step" : undefined}
+                  onClick={() => onGo(index)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </span>
+          ) : null}
           {onDismiss && !settled ? (
             <button
               type="button"
