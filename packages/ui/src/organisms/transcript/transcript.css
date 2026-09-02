@@ -100,8 +100,8 @@
     opacity: 1;
   }
 
-  .ui-tool-call-fold > * {
-    @apply min-h-0;
+  .ui-tool-call-fold-inner {
+    @apply min-h-0 overflow-hidden;
   }
 
   .ui-tool-call-output {

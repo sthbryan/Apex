@@ -92,7 +92,9 @@ export function ToolCall({
       </Head>
       {ever && children ? (
         <div class="ui-tool-call-fold">
-          <div class="ui-tool-call-output">{children}</div>
+          <div class="ui-tool-call-fold-inner">
+            <div class="ui-tool-call-output">{children}</div>
+          </div>
         </div>
       ) : null}
     </section>
