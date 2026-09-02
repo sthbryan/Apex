@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "dev:design": "bun run --cwd apps/design dev",
-    "desktop:linux": "bun run --cwd apps/desktop dev:linux",
-    "desktop:macos": "bun run --cwd apps/desktop dev:macos",
+    "desktop:linux": "bun run build:packages && bun run --cwd apps/desktop dev:linux",
+    "desktop:macos": "bun run build:packages && bun run --cwd apps/desktop dev:macos",
     "dev:daemon": "cargo run -p apexd",
     "sandbox:linux": "APEX_HOME=$HOME/.apex-dev bun run desktop:linux",
     "sandbox:macos": "APEX_HOME=$HOME/.apex-dev bun run desktop:macos",
