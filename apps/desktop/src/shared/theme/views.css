@@ -50,10 +50,6 @@
   margin-inline: auto;
 }
 
-.acp-view .ui-question {
-  width: min(100%, 620px);
-}
-
 .acp-view .ui-approval-card {
   @apply rounded-sm;
 }
