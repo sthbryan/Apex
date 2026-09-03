@@ -314,4 +314,28 @@ mod tests {
             Some("the first choice")
         );
     }
+
+    #[test]
+    fn official_v1_sessions_keep_model_options() {
+        let raw = json!({
+            "sessionId": "session",
+            "configOptions": [{
+                "id": "model",
+                "name": "Model",
+                "category": "model",
+                "type": "select",
+                "currentValue": "qwen3:8b",
+                "options": [{ "value": "qwen3:8b", "name": "Qwen 3 8B" }],
+            }],
+        });
+        let official: sdk::NewSessionResponse =
+            serde_json::from_value(raw).expect("an official session");
+        let session: NewSession =
+            serde_json::from_value(serde_json::to_value(official).expect("a serialized session"))
+                .expect("an apex session");
+
+        assert_eq!(session.config_options[0].id, "model");
+        assert_eq!(session.config_options[0].current_value.as_deref(), Some("qwen3:8b"));
+        assert_eq!(session.config_options[0].options[0].name, "Qwen 3 8B");
+    }
 }

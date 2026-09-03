@@ -268,7 +268,7 @@ fn ensure_model(mut listed: Vec<model::Model>, picked: &str) -> Vec<model::Model
 
 fn model_options(listing: &[model::Model], current: &str) -> Value {
     json!([{
-        "configId": "model",
+        "id": "model",
         "name": "Model",
         "category": "model",
         "type": "select",
