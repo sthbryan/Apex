@@ -5,6 +5,37 @@ const sendNotification = vi.fn();
 const isPermissionGranted = vi.fn();
 const requestPermission = vi.fn();
 const onFocusChanged = vi.fn();
+const startTone = vi.fn();
+
+class FakeAudioContext {
+  currentTime = 0;
+  destination = {};
+
+  createGain() {
+    return {
+      gain: {
+        setValueAtTime: vi.fn(),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+      connect: vi.fn(),
+    };
+  }
+
+  createOscillator() {
+    return {
+      type: "sine",
+      frequency: { setValueAtTime: vi.fn() },
+      connect: vi.fn(),
+      start: startTone,
+      stop: vi.fn(),
+      onended: null,
+    };
+  }
+
+  close() {
+    return Promise.resolve();
+  }
+}
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
@@ -120,6 +151,8 @@ beforeEach(async () => {
   metrics.value = null;
   toasts.value = [];
   sendNotification.mockReset();
+  startTone.mockReset();
+  vi.stubGlobal("AudioContext", FakeAudioContext);
   complain.mockReset();
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2024, 0, 1).getTime());
@@ -302,6 +335,26 @@ describe("push + shouldDisturb", () => {
     mod.push({ sessionId: "s1", kind: "done", title: "t", body: "b" });
     mod.push({ sessionId: "s2", kind: "done", title: "t", body: "b" });
     expect(sendNotification).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("attention sound", () => {
+  it("chimes when a visible session starts waiting", () => {
+    shared.visibleSessions.value = new Set(["s1"]);
+
+    mod.push({ sessionId: "s1", kind: "blocked", title: "t", body: "b" });
+
+    expect(startTone).toHaveBeenCalledTimes(2);
+  });
+
+  it("stays quiet for completed or muted sessions", () => {
+    shared.visibleSessions.value = new Set(["s1"]);
+    shared.mutedSessions.value = ["s1"];
+
+    mod.push({ sessionId: "s1", kind: "blocked", title: "t", body: "b" });
+    mod.push({ sessionId: "s1", kind: "done", title: "t", body: "b" });
+
+    expect(startTone).not.toHaveBeenCalled();
   });
 });
 

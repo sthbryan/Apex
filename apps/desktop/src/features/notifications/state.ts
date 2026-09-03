@@ -62,6 +62,9 @@ export function push(entry: Omit<Notice, "id" | "at" | "read">): void {
   if (shouldDisturb(notice)) {
     sendNotification({ title: notice.title, body: notice.body });
   }
+  if (shouldChime(notice)) {
+    chime();
+  }
 }
 
 export function warnBlockedAgents(): void {
@@ -125,6 +128,45 @@ function shouldDisturb(notice: Notice): boolean {
     return false;
   }
   return !sentRecently(notice.sessionId);
+}
+
+function shouldChime(notice: Notice): boolean {
+  return (
+    notice.kind === "blocked" &&
+    focused &&
+    notifyEnabled.peek() &&
+    notice.sessionId !== null &&
+    visibleSessions.peek().has(notice.sessionId) &&
+    !mutedSessions.peek().includes(notice.sessionId)
+  );
+}
+
+function chime(): void {
+  try {
+    const context = new AudioContext();
+    const gain = context.createGain();
+    const first = context.createOscillator();
+    const second = context.createOscillator();
+    const now = context.currentTime;
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+    first.type = "sine";
+    first.frequency.setValueAtTime(660, now);
+    second.type = "sine";
+    second.frequency.setValueAtTime(880, now + 0.1);
+    first.connect(gain);
+    second.connect(gain);
+    gain.connect(context.destination);
+    first.start(now);
+    first.stop(now + 0.18);
+    second.start(now + 0.1);
+    second.stop(now + 0.32);
+    second.onended = () => void context.close();
+  } catch {
+    return;
+  }
 }
 
 function sentRecently(sessionId: string): boolean {
