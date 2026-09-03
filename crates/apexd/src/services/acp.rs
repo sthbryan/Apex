@@ -367,11 +367,10 @@ impl AcpSession {
     }
 
     pub async fn decide(&self, request: u32, option: Option<String>) -> Result<()> {
-        let waiting = self.decisions.lock().await.remove(&request);
-        waiting
-            .context("that question is no longer open")?
-            .send(option)
-            .map_err(|_| anyhow::anyhow!("nobody is waiting for that answer"))
+        if let Some(waiting) = self.decisions.lock().await.remove(&request) {
+            let _ = waiting.send(option);
+        }
+        Ok(())
     }
 
     pub fn cancel(&self) -> Result<()> {
@@ -465,18 +464,19 @@ impl Client for Relay {
             })
             .collect();
 
-        let (number, entry) = self.transcript.lock().await.asked(&title, options, group);
-        self.publish(entry);
-
         let (answer, wait) = oneshot::channel();
+        let (number, entry) = self.transcript.lock().await.asked(&title, options, group);
         self.decisions.lock().await.insert(number, answer);
+        self.publish(entry);
         self.moved_to(SessionState::Blocked).await;
 
         let chosen = wait.await.unwrap_or(None);
         if let Some(entry) = self.transcript.lock().await.decided(number, chosen.clone()) {
             self.publish(entry);
         }
-        self.moved_to(SessionState::Working).await;
+        if self.decisions.lock().await.is_empty() {
+            self.moved_to(SessionState::Working).await;
+        }
 
         match chosen {
             Some(option_id) => PermissionOutcome::Selected { option_id },
