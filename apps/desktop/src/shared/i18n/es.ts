@@ -431,6 +431,7 @@ export const es: Messages = {
     noAnswer: "sin respuesta",
     own: "Otra cosa",
     ownPlaceholder: "Escribí tu propia respuesta",
+    example: "Ejemplo",
     sending: "Mandando…",
     submit: "Mandar",
     next: "Siguiente",

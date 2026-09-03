@@ -52,6 +52,41 @@ describe("answering a question", () => {
     );
   });
 
+  it("shows an optional example without changing ordinary questions", () => {
+    const plain = card();
+    expect(plain.container.querySelector(".ui-question-example")).toBeNull();
+
+    const shown = card({
+      questions: [
+        asked({
+          example: { title: "Así quedaría", content: "src/\n  auth/", language: "text" },
+        }),
+      ],
+    });
+    expect(shown.container.querySelector(".ui-question-example")?.getAttribute("aria-label")).toBe(
+      "Así quedaría",
+    );
+    expect(shown.container.querySelector(".ui-question-example-content")?.textContent).toBe(
+      "src/\n  auth/",
+    );
+  });
+
+  it("prefers the example belonging to the selected option", () => {
+    const { container } = card({
+      questions: [
+        asked({
+          picked: "browser",
+          example: { content: "general" },
+          options: [
+            { id: "browser", label: "Browser", example: { content: "specific" } },
+            { id: "byok", label: "BYOK" },
+          ],
+        }),
+      ],
+    });
+    expect(container.querySelector(".ui-question-example-content")?.textContent).toBe("specific");
+  });
+
   it("hands the pick up instead of keeping it", () => {
     const { rows, onPick } = card();
     act(() => rows()[1].click());

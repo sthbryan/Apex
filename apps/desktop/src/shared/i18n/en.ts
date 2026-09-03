@@ -430,6 +430,7 @@ export const en = {
     noAnswer: "no answer",
     own: "Other",
     ownPlaceholder: "Type your own answer here",
+    example: "Example",
     sending: "Sending…",
     submit: "Submit",
     next: "Next",

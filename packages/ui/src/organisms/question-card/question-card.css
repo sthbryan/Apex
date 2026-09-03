@@ -112,6 +112,26 @@
     @apply flex flex-col gap-1;
   }
 
+  .ui-question-body {
+    @apply grid min-w-0 gap-3;
+  }
+
+  .ui-question-example {
+    @apply min-w-0 overflow-hidden rounded-sm border border-border bg-raised;
+  }
+
+  .ui-question-example-head {
+    @apply flex min-h-8 items-center justify-between gap-3 border-b border-border px-3 text-2xs font-medium text-muted;
+  }
+
+  .ui-question-example-head span:last-child:not(:first-child) {
+    @apply font-mono text-faint;
+  }
+
+  .ui-question-example-content {
+    @apply max-h-72 overflow-auto p-3 font-mono text-xs leading-5 whitespace-pre text-text;
+  }
+
   .ui-question-row {
     @apply flex min-h-10 w-full items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-left;
     background-color: color-mix(in oklab, var(--apex-raised) 58%, transparent);
@@ -183,6 +203,12 @@
 
   .ui-question-send[aria-disabled="true"] {
     @apply cursor-not-allowed opacity-45;
+  }
+
+  @media (min-width: 64rem) {
+    .ui-question-body[data-example] {
+      grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

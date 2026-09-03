@@ -7,6 +7,13 @@ export interface QuestionOption {
   id: string;
   label: string;
   hint?: string;
+  example?: QuestionExample;
+}
+
+export interface QuestionExample {
+  title?: string;
+  content: string;
+  language?: string;
 }
 
 export interface AskedQuestion {
@@ -16,6 +23,7 @@ export interface AskedQuestion {
   answer?: string | null;
   picked?: string | null;
   own?: string;
+  example?: QuestionExample;
 }
 
 export interface QuestionCardProps {
@@ -25,6 +33,7 @@ export interface QuestionCardProps {
   headingLabel?: string;
   ownLabel?: string;
   ownPlaceholder?: string;
+  exampleLabel?: string;
   skipLabel?: string;
   backLabel?: string;
   submitLabel?: string;
@@ -55,6 +64,7 @@ export function QuestionCard({
   headingLabel,
   ownLabel = "Other",
   ownPlaceholder = "Type your own answer here",
+  exampleLabel = "Example",
   skipLabel = "Skip",
   backLabel = "Back",
   submitLabel = "Submit",
@@ -140,6 +150,9 @@ export function QuestionCard({
         {listed.map((question, index) => {
           const here = !settled;
           const rows: QuestionOption[] = [...question.options, { id: OWN, label: ownLabel }];
+          const example =
+            question.options.find((option) => option.id === question.picked)?.example ??
+            question.example;
           return (
             <li
               key={question.id}
@@ -160,47 +173,58 @@ export function QuestionCard({
               </div>
 
               {here ? (
-                <ul class="ui-question-rows">
-                  {rows.map((row, slot) => (
-                    <li key={row.id}>
-                      <button
-                        type="button"
-                        class="ui-question-row"
-                        data-picked={question.picked === row.id || undefined}
-                        aria-pressed={question.picked === row.id}
-                        onClick={() => take(question, row.id)}
-                      >
-                        <span class="ui-question-row-text">
-                          <span class="ui-question-row-label">{row.label}</span>
-                          {row.hint ? <span class="ui-question-row-hint">{row.hint}</span> : null}
-                        </span>
-                        <span class="ui-question-row-key">{slot + 1}</span>
-                      </button>
-                      {row.id === OWN && question.picked === OWN ? (
-                        <input
-                          ref={(node) => {
-                            if (node) fields.current.set(question.id, node);
-                            else fields.current.delete(question.id);
-                          }}
-                          class="ui-question-own"
-                          value={question.own ?? ""}
-                          spellcheck={false}
-                          aria-label={ownLabel}
-                          placeholder={ownPlaceholder}
-                          onInput={(event: JSX.TargetedEvent<HTMLInputElement>) =>
-                            onOwn?.(question.id, event.currentTarget.value)
-                          }
-                          onKeyDown={(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
-                            if (event.key === "Enter" && event.currentTarget.value.trim()) {
-                              event.preventDefault();
-                              onAnswer?.();
+                <div class="ui-question-body" data-example={example ? "" : undefined}>
+                  <ul class="ui-question-rows">
+                    {rows.map((row, slot) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          class="ui-question-row"
+                          data-picked={question.picked === row.id || undefined}
+                          aria-pressed={question.picked === row.id}
+                          onClick={() => take(question, row.id)}
+                        >
+                          <span class="ui-question-row-text">
+                            <span class="ui-question-row-label">{row.label}</span>
+                            {row.hint ? <span class="ui-question-row-hint">{row.hint}</span> : null}
+                          </span>
+                          <span class="ui-question-row-key">{slot + 1}</span>
+                        </button>
+                        {row.id === OWN && question.picked === OWN ? (
+                          <input
+                            ref={(node) => {
+                              if (node) fields.current.set(question.id, node);
+                              else fields.current.delete(question.id);
+                            }}
+                            class="ui-question-own"
+                            value={question.own ?? ""}
+                            spellcheck={false}
+                            aria-label={ownLabel}
+                            placeholder={ownPlaceholder}
+                            onInput={(event: JSX.TargetedEvent<HTMLInputElement>) =>
+                              onOwn?.(question.id, event.currentTarget.value)
                             }
-                          }}
-                        />
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                            onKeyDown={(event: JSX.TargetedKeyboardEvent<HTMLInputElement>) => {
+                              if (event.key === "Enter" && event.currentTarget.value.trim()) {
+                                event.preventDefault();
+                                onAnswer?.();
+                              }
+                            }}
+                          />
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                  {example ? (
+                    <aside class="ui-question-example" aria-label={example.title ?? exampleLabel}>
+                      <div class="ui-question-example-head">
+                        <span>{example.title ?? exampleLabel}</span>
+                        {example.language ? <span>{example.language}</span> : null}
+                      </div>
+                      <pre class="ui-question-example-content">{example.content}</pre>
+                    </aside>
+                  ) : null}
+                </div>
               ) : null}
             </li>
           );

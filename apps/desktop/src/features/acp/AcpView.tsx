@@ -310,10 +310,24 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       answer: ask.decided === null ? null : spellAnswer(ask, ask.decided),
       picked: draft.row,
       own: draft.own,
+      example: ask.example
+        ? {
+            title: ask.example.title ?? undefined,
+            content: ask.example.content,
+            language: ask.example.language ?? undefined,
+          }
+        : undefined,
       options: ask.options.map((option) => ({
         id: option.id,
         label: option.name || option.id,
         hint: option.about ?? undefined,
+        example: option.example
+          ? {
+              title: option.example.title ?? undefined,
+              content: option.example.content,
+              language: option.example.language ?? undefined,
+            }
+          : undefined,
       })),
     };
   });
@@ -354,6 +368,7 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
       }
       ownLabel={t("acp.own")}
       ownPlaceholder={t("acp.ownPlaceholder")}
+      exampleLabel={t("acp.example")}
       skipLabel={t("acp.skip")}
       backLabel={t("acp.back")}
       submitLabel={last ? t("acp.submit") : t("acp.next")}
