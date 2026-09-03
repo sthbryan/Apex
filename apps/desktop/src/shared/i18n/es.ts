@@ -267,6 +267,8 @@ export const es: Messages = {
     keyPlaceholder: "pegala una vez",
     keyKeep: "Guardar",
     agentModelNone: "elegí un modelo",
+    modelSearch: "Buscar modelos…",
+    modelSearchEmpty: "No hay modelos que coincidan",
     agentModelNothing: "nada para elegir",
     groupTools: "Herramientas",
     groupToolsSub:

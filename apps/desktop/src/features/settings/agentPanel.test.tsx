@@ -145,6 +145,35 @@ describe("taking a provider away", () => {
   });
 });
 
+describe("finding a model", () => {
+  it("filters a long catalog by model name or id", () => {
+    providers.value = [MINIMAX];
+    chosen.value = { provider: "minimax", model: "alpha" };
+    models.value = {
+      minimax: [
+        { id: "alpha", label: "Alpha", context: null },
+        { id: "openrouter/qwen3", label: "Qwen 3", context: 128_000 },
+        { id: "omega", label: "Omega", context: null },
+      ],
+    };
+    const container = panel();
+
+    options(container, "Model");
+    const search = container.querySelector<HTMLInputElement>(".ui-select-search");
+    expect(search).not.toBeNull();
+    act(() => {
+      if (search) {
+        search.value = "qwen3";
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+
+    expect(
+      Array.from(container.querySelectorAll(".ui-select-option")).map((node) => node.textContent),
+    ).toEqual(["Qwen 3128K"]);
+  });
+});
+
 describe("spelling things out", () => {
   it("turns a name into something that can be a filename", () => {
     expect(slug(" My Gateway ")).toBe("my-gateway");

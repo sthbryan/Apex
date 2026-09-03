@@ -579,6 +579,9 @@ function ProviderDetail({
           size="lg"
           class="w-64"
           label={t("settings.modelLabel")}
+          searchable
+          searchPlaceholder={t("settings.modelSearch")}
+          emptyLabel={t("settings.modelSearchEmpty")}
           value={picked?.provider === name ? picked.model : ""}
           placeholder={spellWaiting(listed, trouble)}
           disabled={working || !listed?.length}
@@ -589,6 +592,7 @@ function ProviderDetail({
           }}
           options={(listed ?? []).map((model) => ({
             value: model.id,
+            keywords: model.label,
             label: (
               <span class="flex min-w-0 flex-1 items-baseline justify-between gap-3">
                 <span class="truncate">{model.label}</span>

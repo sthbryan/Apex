@@ -6,6 +6,7 @@ import { clippedRoom, opensLeftward, opensUpward } from "@/lib/place";
 export interface SelectOption {
   value: string;
   label: ComponentChildren;
+  keywords?: string;
 }
 
 export interface SelectProps {
@@ -13,6 +14,9 @@ export interface SelectProps {
   label: string;
   value?: string;
   placeholder?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  emptyLabel?: string;
   disabled?: boolean;
   onChange?: (value: string) => void;
   size?: "md" | "lg";
@@ -20,41 +24,64 @@ export interface SelectProps {
 }
 
 export function Select({
-  options, label, value, placeholder = "Select…", disabled, onChange, size, class: className,
+  options,
+  label,
+  value,
+  placeholder = "Select…",
+  searchable,
+  searchPlaceholder = "Search…",
+  emptyLabel = "No matches",
+  disabled,
+  onChange,
+  size,
+  class: className,
 }: SelectProps) {
   const id = useId();
   const root = useRef<HTMLSpanElement>(null);
   const list = useRef<HTMLDivElement>(null);
+  const search = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
   const [left, setLeft] = useState(false);
   const [own, setOwn] = useState(options[0]?.value);
+  const [query, setQuery] = useState("");
   const current = value ?? own;
   const selected = options.findIndex((o) => o.value === current);
-  const [active, setActive] = useState(selected < 0 ? 0 : selected);
+  const filtered = options
+    .map((option, index) => ({ option, index }))
+    .filter(({ option }) => {
+      const wanted = query.trim().toLocaleLowerCase();
+      if (!wanted) return true;
+      const words = option.keywords ?? (typeof option.label === "string" ? option.label : "");
+      return `${words} ${option.value}`.toLocaleLowerCase().includes(wanted);
+    });
+  const selectedInFiltered = filtered.findIndex(({ index }) => index === selected);
+  const [active, setActive] = useState(selectedInFiltered < 0 ? 0 : selectedInFiltered);
 
   useEffect(() => {
     if (!open) return;
-    list.current?.focus();
+    (searchable ? search.current : list.current)?.focus();
     const onPointerDown = (e: PointerEvent) => {
       if (!root.current?.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+  }, [open, searchable]);
 
   const pick = (index: number) => {
-    const option = options[index];
+    const option = filtered[index]?.option;
     if (!option) return;
     setOwn(option.value);
     setActive(index);
     setOpen(false);
+    setQuery("");
     onChange?.(option.value);
     (root.current?.querySelector("button") as HTMLElement | null)?.focus();
   };
 
   const start = () => {
     if (disabled) return;
+    setQuery("");
     setActive(selected < 0 ? 0 : selected);
     setUp(opensUpward(root.current, options.length, clippedRoom(root.current)));
     setLeft(opensLeftward(root.current));
@@ -65,15 +92,18 @@ export function Select({
     if (event.key === "Escape") {
       setOpen(false);
       (root.current?.querySelector("button") as HTMLElement | null)?.focus();
-    } else if (event.key === "ArrowDown") {
-      setActive((i) => (i + 1) % options.length);
-    } else if (event.key === "ArrowUp") {
-      setActive((i) => (i - 1 + options.length) % options.length);
+    } else if (event.key === "ArrowDown" && filtered.length > 0) {
+      setActive((i) => (i + 1) % filtered.length);
+    } else if (event.key === "ArrowUp" && filtered.length > 0) {
+      setActive((i) => (i - 1 + filtered.length) % filtered.length);
     } else if (event.key === "Home") {
       setActive(0);
     } else if (event.key === "End") {
-      setActive(options.length - 1);
-    } else if (event.key === "Enter" || event.key === " ") {
+      setActive(filtered.length - 1);
+    } else if (
+      event.key === "Enter" ||
+      (event.key === " " && (event.target as HTMLElement).tagName !== "INPUT")
+    ) {
       pick(active);
     } else {
       return;
@@ -106,31 +136,52 @@ export function Select({
           class="ui-select-list"
           data-up={up || undefined}
           data-left={left || undefined}
-          role="listbox"
-          aria-label={label}
-          aria-activedescendant={`${id}-${active}`}
-          tabIndex={-1}
-          ref={list}
           onKeyDown={onKeyDown}
         >
-          {options.map((option, index) => (
+          {searchable ? (
+            <input
+              ref={search}
+              class="ui-select-search"
+              type="search"
+              value={query}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
+              aria-controls={`${id}-options`}
+              aria-activedescendant={filtered[active] ? `${id}-${filtered[active].index}` : undefined}
+              onInput={(event) => {
+                setQuery(event.currentTarget.value);
+                setActive(0);
+              }}
+            />
+          ) : null}
+          <div
+            id={`${id}-options`}
+            class="ui-select-options"
+            role="listbox"
+            aria-label={label}
+            aria-activedescendant={filtered[active] ? `${id}-${filtered[active].index}` : undefined}
+            tabIndex={searchable ? -1 : 0}
+            ref={list}
+          >
+          {filtered.map(({ option, index }, slot) => (
             <div
               key={option.value}
               id={`${id}-${index}`}
               class="ui-select-option"
               role="option"
               aria-selected={index === selected}
-              data-active={index === active || undefined}
-              onPointerEnter={() => setActive(index)}
-              onClick={() => pick(index)}
+              data-active={slot === active || undefined}
+              onPointerEnter={() => setActive(slot)}
+              onClick={() => pick(slot)}
             >
               <span class="ui-select-option-label">{option.label}</span>
               {index === selected ? <span class="ui-select-check" aria-hidden="true" /> : null}
             </div>
           ))}
+          {filtered.length === 0 ? <p class="ui-select-empty">{emptyLabel}</p> : null}
+          </div>
         </div>
       ) : null}
     </span>
   );
 }
-

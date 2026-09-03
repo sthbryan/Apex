@@ -266,6 +266,8 @@ export const en = {
     keyPlaceholder: "paste it once",
     keyKeep: "Keep",
     agentModelNone: "pick a model",
+    modelSearch: "Search models…",
+    modelSearchEmpty: "No matching models",
     agentModelNothing: "nothing to pick",
     groupTools: "Tools",
     groupToolsSub:
