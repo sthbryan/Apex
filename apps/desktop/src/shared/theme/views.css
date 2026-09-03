@@ -115,12 +115,14 @@
 }
 
 .reply .ui-composer-bar {
-  @apply px-2.5 pt-1.5 pb-2.5;
+  @apply pt-1.5 pb-2.5;
+  padding-inline: max(10px, calc((100% - 960px) / 2));
 }
 
 .acp-view .reply textarea {
-  @apply min-h-0 px-4 pt-3 pb-2 text-md;
+  @apply min-h-0 pt-3 pb-2 text-md;
   min-height: 44px;
+  padding-inline: max(16px, calc((100% - 960px) / 2));
 }
 
 .acp-thought > button {
@@ -185,6 +187,10 @@
 
   .acp-view .reply textarea {
     @apply px-3 pt-3 pb-2;
+  }
+
+  .reply .ui-composer-bar {
+    @apply px-2.5;
   }
 
   .acp-view .acp-permission:not([data-settled]) {
