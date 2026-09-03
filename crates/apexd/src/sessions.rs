@@ -195,7 +195,7 @@ impl SessionManager {
     }
 
     pub async fn acp_cancel(&self, id: Uuid) -> Result<()> {
-        self.acp.require(id).await?.cancel()
+        self.acp.require(id).await?.cancel().await
     }
 
     pub async fn acp_decide(&self, id: Uuid, request: u32, option: Option<String>) -> Result<()> {

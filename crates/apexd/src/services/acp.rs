@@ -373,7 +373,10 @@ impl AcpSession {
         Ok(())
     }
 
-    pub fn cancel(&self) -> Result<()> {
+    pub async fn cancel(&self) -> Result<()> {
+        for (_, waiting) in self.decisions.lock().await.drain() {
+            let _ = waiting.send(None);
+        }
         self.agent.cancel(&self.remote)
     }
 
@@ -755,7 +758,7 @@ impl AcpRegistry {
         let Some(session) = self.sessions.write().await.remove(&id) else {
             bail!("session {id} does not exist")
         };
-        let _ = session.cancel();
+        let _ = session.cancel().await;
         let _ = session.kill().await;
         if let Some(http) = self.http.get() {
             http.revoke(id).await;
