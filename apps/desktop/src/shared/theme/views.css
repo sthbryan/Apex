@@ -125,6 +125,16 @@
   padding-inline: max(16px, calc((100% - 960px) / 2));
 }
 
+.acp-reply-status,
+.acp-reply-command-hint {
+  @apply flex min-w-0 items-center gap-1.5 truncate text-2xs text-faint;
+}
+
+.acp-reply-status-dot {
+  @apply size-1.5 shrink-0 rounded-full bg-state-working;
+  animation: apex-breathe 1.6s var(--apex-ease) infinite;
+}
+
 .acp-thought > button {
   @apply flex items-center gap-2 py-0.5 text-2xs text-faint;
 }

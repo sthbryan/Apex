@@ -135,8 +135,6 @@ export function AcpView({ id }: { id: string }) {
 
       {failure.value && <p class="px-3 pb-1 text-state-failed">{failure.value}</p>}
 
-      <Working since={session?.state} on={working} />
-
       <Reply id={id} working={working} />
     </div>
   );
@@ -440,40 +438,29 @@ export function asking(ask: AcpPermission): boolean {
   return ask.options.every((option) => !option.kind.startsWith("allow"));
 }
 
-function Working({ since, on }: { since: string | undefined; on: boolean }) {
-  const [seconds, setSeconds] = useState(0);
-
-  useEffect(() => {
-    if (!on) {
-      setSeconds(0);
-      return;
-    }
-    const started = Date.now();
-    const tick = setInterval(() => setSeconds(Math.round((Date.now() - started) / 1000)), 500);
-    return () => clearInterval(tick);
-  }, [on, since]);
-
-  if (!on) {
-    return null;
-  }
-
-  return (
-    <p class="flex shrink-0 animate-pulse items-center gap-2 border-t border-border px-3 py-1 text-state-working">
-      <Icon name="activity" size={12} class="shrink-0" />
-      <span>{t("acp.working", { seconds: String(seconds) })}</span>
-    </p>
-  );
-}
-
 function Reply({ id, working }: { id: string; working: boolean }) {
   const [text, setText] = useState("");
   const [cursor, setCursor] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const field = useRef<HTMLTextAreaElement>(null);
   const offered = commands.value[id] ?? [];
   const typed = /^\/(\S*)$/.exec(text);
   const matches = typed ? offered.filter((command) => command.name.startsWith(typed[1])) : [];
 
   const waiting = queuedIn(id);
+
+  useEffect(() => {
+    setSeconds(0);
+    if (!working) {
+      return;
+    }
+    const started = Date.now();
+    const tick = window.setInterval(
+      () => setSeconds(Math.round((Date.now() - started) / 1000)),
+      500,
+    );
+    return () => window.clearInterval(tick);
+  }, [id, working]);
 
   useEffect(() => {
     if (!working && waiting.length > 0) {
@@ -548,7 +535,7 @@ function Reply({ id, working }: { id: string; working: boolean }) {
         value={text}
         rows={1}
         label={t("acp.send")}
-        placeholder={t("acp.placeholder")}
+        placeholder={t(working ? "acp.placeholderQueue" : "acp.placeholder")}
         onSubmit={(event) => {
           event.preventDefault();
           send();
@@ -589,13 +576,14 @@ function Reply({ id, working }: { id: string; working: boolean }) {
           <>
             <Choices id={id} kind="model" />
             <Choices id={id} kind="mode" />
-            <span class="min-w-0 truncate text-faint">
-              {working
-                ? t("acp.hintQueue")
-                : offered.length > 0
-                  ? t("acp.hintCommands")
-                  : t("acp.hint")}
-            </span>
+            {working ? (
+              <span class="acp-reply-status" role="status">
+                <span class="acp-reply-status-dot" />
+                {t("acp.working", { seconds: String(seconds) })}
+              </span>
+            ) : offered.length > 0 ? (
+              <span class="acp-reply-command-hint">/ {t("acp.commands")}</span>
+            ) : null}
           </>
         }
         actions={
