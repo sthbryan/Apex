@@ -310,6 +310,8 @@ pub struct PermissionOption {
 pub struct PermissionOptionMeta {
     #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
+    pub apex_example: Option<AskExample>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -330,6 +332,18 @@ pub struct PermissionMeta {
     pub apex_group: Option<AskGroup>,
     #[serde(default)]
     pub apex_question: bool,
+    #[serde(default)]
+    pub apex_example: Option<AskExample>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AskExample {
+    #[serde(default)]
+    pub title: Option<String>,
+    pub content: String,
+    #[serde(default)]
+    pub language: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

@@ -69,9 +69,19 @@ fn an_answer_that_makes_no_sense_comes_back_as_no_answer() {
 fn questions_use_valid_permission_options_and_keep_their_metadata() {
     let question = apex_agent::tools::ask::Question {
         question: "Which one?".to_owned(),
+        example: Some(apex_agent::tools::ask::Example {
+            title: Some("Like this".to_owned()),
+            content: "src/".to_owned(),
+            language: Some("text".to_owned()),
+        }),
         options: vec![apex_agent::tools::ask::Choice {
             label: "first".to_owned(),
             description: Some("the first choice".to_owned()),
+            example: Some(apex_agent::tools::ask::Example {
+                title: None,
+                content: "src/first/".to_owned(),
+                language: None,
+            }),
         }],
     };
     let request = question_permission("session", "call-1", &question, 1, 3);
@@ -79,6 +89,8 @@ fn questions_use_valid_permission_options_and_keep_their_metadata() {
     assert_eq!(request["options"][0]["kind"], "allow_once");
     assert_eq!(request["_meta"]["apexQuestion"], true);
     assert_eq!(request["_meta"]["apexGroup"]["at"], 1);
+    assert_eq!(request["_meta"]["apexExample"]["content"], "src/");
+    assert_eq!(request["options"][0]["_meta"]["apexExample"]["content"], "src/first/");
 }
 
 #[test]

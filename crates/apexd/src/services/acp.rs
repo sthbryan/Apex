@@ -1,10 +1,14 @@
 use std::collections::HashMap;
 
-use apex_acp::{ContentBlock, SessionUpdate, ToolCall, ToolContent, ToolStatus};
+use apex_acp::{AskExample, ContentBlock, SessionUpdate, ToolCall, ToolContent, ToolStatus};
 use apex_proto::{
-    AcpBody, AcpChoice, AcpCommand, AcpDiff, AcpEntry, AcpOption, AcpPermission, AcpPicker,
-    AcpPlanEntry, AcpSnapshot, AcpToolCall, AcpToolStatus,
+    AcpBody, AcpChoice, AcpCommand, AcpDiff, AcpEntry, AcpExample, AcpOption, AcpPermission,
+    AcpPicker, AcpPlanEntry, AcpSnapshot, AcpToolCall, AcpToolStatus,
 };
+
+fn example_of(example: AskExample) -> AcpExample {
+    AcpExample { title: example.title, content: example.content, language: example.language }
+}
 
 #[derive(Default)]
 pub struct Transcript {
@@ -37,6 +41,7 @@ impl Transcript {
         title: &str,
         options: Vec<AcpOption>,
         group: Option<apex_acp::AskGroup>,
+        example: Option<AcpExample>,
     ) -> (u32, AcpEntry) {
         self.speaking = None;
         self.thinking = None;
@@ -46,6 +51,7 @@ impl Transcript {
             request,
             title: title.to_owned(),
             options,
+            example,
             decided: None,
             group: group.as_ref().map(|held| held.id.clone()),
             at: group.as_ref().map_or(0, |held| held.at),
@@ -459,6 +465,11 @@ impl Client for Relay {
                     .description
                     .clone()
                     .or_else(|| option.meta.as_ref().and_then(|meta| meta.description.clone())),
+                example: option
+                    .meta
+                    .as_ref()
+                    .and_then(|meta| meta.apex_example.clone())
+                    .map(example_of),
                 kind: if question {
                     "other".to_owned()
                 } else {
@@ -468,7 +479,9 @@ impl Client for Relay {
             .collect();
 
         let (answer, wait) = oneshot::channel();
-        let (number, entry) = self.transcript.lock().await.asked(&title, options, group);
+        let example =
+            request.meta.as_ref().and_then(|meta| meta.apex_example.clone()).map(example_of);
+        let (number, entry) = self.transcript.lock().await.asked(&title, options, group, example);
         self.decisions.lock().await.insert(number, answer);
         self.publish(entry);
         self.moved_to(SessionState::Blocked).await;

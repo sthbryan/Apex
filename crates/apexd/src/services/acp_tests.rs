@@ -99,9 +99,11 @@ fn a_decision_marks_the_question_it_answers() {
         vec![AcpOption {
             id: "allow_once".into(),
             about: None,
+            example: None,
             name: "Allow once".into(),
             kind: "allow_once".into(),
         }],
+        None,
         None,
     );
     assert_eq!(entry.index, 0);
@@ -116,7 +118,7 @@ fn a_decision_marks_the_question_it_answers() {
 #[test]
 fn a_cancelled_question_is_still_marked_as_decided() {
     let mut transcript = Transcript::default();
-    let (request, _) = transcript.asked("Write main.rs", Vec::new(), None);
+    let (request, _) = transcript.asked("Write main.rs", Vec::new(), None, None);
     let answered = transcript.decided(request, None).expect("an entry");
     let AcpBody::Permission { ask } = answered.body else {
         panic!("expected a permission");

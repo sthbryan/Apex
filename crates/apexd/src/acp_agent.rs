@@ -536,7 +536,10 @@ fn question_permission(
                 "optionId": choice.label,
                 "name": choice.label,
                 "kind": "allow_once",
-                "_meta": { "description": choice.description },
+                "_meta": {
+                    "description": choice.description,
+                    "apexExample": choice.example,
+                },
             })
         })
         .collect::<Vec<_>>();
@@ -551,6 +554,7 @@ fn question_permission(
         "_meta": {
             "apexGroup": { "id": group, "at": at, "of": of },
             "apexQuestion": true,
+            "apexExample": question.example,
         },
     })
 }

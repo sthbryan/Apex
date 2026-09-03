@@ -433,11 +433,22 @@ pub struct AcpToolCall {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct AcpExample {
+    pub title: Option<String>,
+    pub content: String,
+    pub language: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct AcpOption {
     pub id: String,
     pub name: String,
     #[serde(default)]
     pub about: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub example: Option<AcpExample>,
     pub kind: String,
 }
 
@@ -447,6 +458,9 @@ pub struct AcpPermission {
     pub request: u32,
     pub title: String,
     pub options: Vec<AcpOption>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub example: Option<AcpExample>,
     pub decided: Option<String>,
     #[serde(default)]
     pub group: Option<String>,

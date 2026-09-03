@@ -16,10 +16,40 @@ fn a_question_with_choices_is_read_whole() {
     assert_eq!(
         asking.questions[0].options,
         vec![
-            Choice { label: "uno".to_owned(), description: None },
-            Choice { label: "dos".to_owned(), description: None },
+            Choice { label: "uno".to_owned(), description: None, example: None },
+            Choice { label: "dos".to_owned(), description: None, example: None },
         ]
     );
+}
+
+#[test]
+fn examples_are_optional_and_cleaned() {
+    let asking = read(&json!({
+        "questions": [{
+            "question": "arquitectura?",
+            "example": { "title": " Así quedaría ", "content": " src/\n  auth/ ", "language": " text " },
+            "options": [
+                { "label": "feature", "example": { "content": " src/auth/ " } },
+                { "label": "flat", "example": { "content": "   " } }
+            ]
+        }]
+    }))
+    .expect("read");
+
+    let question = &asking.questions[0];
+    assert_eq!(
+        question.example.as_ref().map(|example| example.content.as_str()),
+        Some("src/\n  auth/")
+    );
+    assert_eq!(
+        question.example.as_ref().and_then(|example| example.title.as_deref()),
+        Some("Así quedaría")
+    );
+    assert_eq!(
+        question.options[0].example.as_ref().map(|example| example.content.as_str()),
+        Some("src/auth/")
+    );
+    assert_eq!(question.options[1].example, None);
 }
 
 #[test]

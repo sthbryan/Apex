@@ -1,6 +1,6 @@
 use anyhow::Result;
 use rig_core::completion::ToolDefinition;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use super::asked;
@@ -10,6 +10,17 @@ pub struct Choice {
     pub label: String,
     #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
+    pub example: Option<Example>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Example {
+    #[serde(default)]
+    pub title: Option<String>,
+    pub content: String,
+    #[serde(default)]
+    pub language: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -17,6 +28,8 @@ pub struct Question {
     pub question: String,
     #[serde(default)]
     pub options: Vec<Choice>,
+    #[serde(default)]
+    pub example: Option<Example>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -28,7 +41,7 @@ pub struct Asking {
 pub fn offered() -> ToolDefinition {
     ToolDefinition {
         name: "ask".to_owned(),
-        description: "Ask the person one or more questions and wait for their answers. Use it when a choice is theirs to make, not to check work you can check yourself. Put every question you have into the one call: they are answered together as a set. Each question carries the answers to that question, never other questions, and never Yes/No as a single option: one option per answer."
+        description: "Ask the person one or more questions and wait for their answers. Use it when a choice is theirs to make, not to check work you can check yourself. Put every question you have into the one call: they are answered together as a set. Each question carries the answers to that question, never other questions, and never Yes/No as a single option: one option per answer. Add an optional example to a question or option only when seeing concrete text or code would make the choice clearer."
             .to_owned(),
         parameters: json!({
             "type": "object",
@@ -44,6 +57,7 @@ pub fn offered() -> ToolDefinition {
                                 "type": "string",
                                 "description": "What you need to know, in one sentence."
                             },
+                            "example": example_schema("An optional example that makes the choice concrete."),
                             "options": {
                                 "type": "array",
                                 "description": "The answers to this question, at least two. Each is one answer the person could give, not another question.",
@@ -58,7 +72,8 @@ pub fn offered() -> ToolDefinition {
                                         "description": {
                                             "type": "string",
                                             "description": "One short line on what picking it means."
-                                        }
+                                        },
+                                        "example": example_schema("An optional example shown when this answer is selected.")
                                     },
                                     "required": ["label"]
                                 }
@@ -94,6 +109,7 @@ pub fn read(args: &Value) -> Result<Asking> {
                     .description
                     .map(|line| line.trim().to_owned())
                     .filter(|line| !line.is_empty()),
+                example: choice.example.and_then(clean_example),
             })
             .collect();
         if options.len() < 2 {
@@ -101,10 +117,39 @@ pub fn read(args: &Value) -> Result<Asking> {
                 "a question with nothing to pick from cannot be answered, offer at least two options"
             )
         }
-        kept.push(Question { question: question.question.trim().to_owned(), options });
+        kept.push(Question {
+            question: question.question.trim().to_owned(),
+            options,
+            example: question.example.and_then(clean_example),
+        });
     }
 
     Ok(Asking { questions: kept })
+}
+
+fn clean_example(example: Example) -> Option<Example> {
+    let content = example.content.trim().to_owned();
+    (!content.is_empty()).then(|| Example {
+        title: example.title.map(|title| title.trim().to_owned()).filter(|title| !title.is_empty()),
+        content,
+        language: example
+            .language
+            .map(|language| language.trim().to_owned())
+            .filter(|language| !language.is_empty()),
+    })
+}
+
+fn example_schema(description: &str) -> Value {
+    json!({
+        "type": "object",
+        "description": description,
+        "properties": {
+            "title": { "type": "string", "description": "A short heading for the example." },
+            "content": { "type": "string", "description": "The example itself. Plain text or code." },
+            "language": { "type": "string", "description": "Optional language hint such as text, json, typescript, or bash." }
+        },
+        "required": ["content"]
+    })
 }
 
 pub fn spell(questions: &[Question], answers: &[Option<String>]) -> String {

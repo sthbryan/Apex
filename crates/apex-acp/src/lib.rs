@@ -296,11 +296,15 @@ mod tests {
                 "optionId": "first",
                 "name": "First",
                 "kind": "allow_once",
-                "_meta": { "description": "the first choice" },
+                "_meta": {
+                    "description": "the first choice",
+                    "apexExample": { "content": "src/first/", "language": "text" },
+                },
             }],
             "_meta": {
                 "apexQuestion": true,
                 "apexGroup": { "id": "call", "at": 0, "of": 2 },
+                "apexExample": { "title": "Like this", "content": "src/" },
             },
         });
         let official: sdk::RequestPermissionRequest =
@@ -312,10 +316,29 @@ mod tests {
 
         assert_eq!(request.options.len(), 1);
         assert!(request.meta.as_ref().is_some_and(|meta| meta.apex_question));
-        assert_eq!(request.meta.and_then(|meta| meta.apex_group).map(|group| group.of), Some(2));
+        assert_eq!(
+            request.meta.as_ref().and_then(|meta| meta.apex_group.as_ref()).map(|group| group.of),
+            Some(2)
+        );
         assert_eq!(
             request.options[0].meta.as_ref().and_then(|meta| meta.description.as_deref()),
             Some("the first choice")
+        );
+        assert_eq!(
+            request
+                .meta
+                .as_ref()
+                .and_then(|meta| meta.apex_example.as_ref())
+                .map(|example| example.content.as_str()),
+            Some("src/")
+        );
+        assert_eq!(
+            request.options[0]
+                .meta
+                .as_ref()
+                .and_then(|meta| meta.apex_example.as_ref())
+                .map(|example| example.content.as_str()),
+            Some("src/first/")
         );
     }
 
