@@ -67,15 +67,19 @@ where
             async move |request: sdk::RequestPermissionRequest, responder, _| {
                 let raw = serde_json::to_value(request).map_err(sdk_error)?;
                 let request: PermissionRequest = serde_json::from_value(raw).map_err(sdk_error)?;
-                let outcome = match permissions.permission(request).await {
-                    PermissionOutcome::Cancelled => sdk::RequestPermissionOutcome::Cancelled,
-                    PermissionOutcome::Selected { option_id } => {
-                        sdk::RequestPermissionOutcome::Selected(
-                            sdk::SelectedPermissionOutcome::new(option_id),
-                        )
-                    }
-                };
-                responder.respond(sdk::RequestPermissionResponse::new(outcome))
+                let permissions = Arc::clone(&permissions);
+                tokio::spawn(async move {
+                    let outcome = match permissions.permission(request).await {
+                        PermissionOutcome::Cancelled => sdk::RequestPermissionOutcome::Cancelled,
+                        PermissionOutcome::Selected { option_id } => {
+                            sdk::RequestPermissionOutcome::Selected(
+                                sdk::SelectedPermissionOutcome::new(option_id),
+                            )
+                        }
+                    };
+                    let _ = responder.respond(sdk::RequestPermissionResponse::new(outcome));
+                });
+                Ok(())
             },
             agent_client_protocol::on_receive_request!(),
         )
