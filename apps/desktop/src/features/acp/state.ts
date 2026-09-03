@@ -36,7 +36,13 @@ export function laidOut(entries: AcpEntry[]): Shown[] {
     }
     shown.push({ kind: "ask", at: entry.index, asks: [ask] });
   }
-  return shown;
+  return shown.filter(
+    (entry) =>
+      entry.kind !== "ask" ||
+      entry.asks[0].group === null ||
+      entry.asks[0].of === 0 ||
+      entry.asks.length >= entry.asks[0].of,
+  );
 }
 
 export function entriesOf(id: string): AcpEntry[] {

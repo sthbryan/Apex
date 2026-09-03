@@ -21,6 +21,7 @@ export interface AskedQuestion {
 export interface QuestionCardProps {
   questions: AskedQuestion[];
   at?: number;
+  simultaneous?: boolean;
   sent?: boolean;
   headingLabel?: string;
   ownLabel?: string;
@@ -51,6 +52,7 @@ export function answerable(question: AskedQuestion): boolean {
 export function QuestionCard({
   questions,
   at = -1,
+  simultaneous,
   sent,
   headingLabel,
   ownLabel = "Other",
@@ -69,16 +71,16 @@ export function QuestionCard({
   onDismiss,
   class: className,
 }: QuestionCardProps) {
-  const field = useRef<HTMLInputElement>(null);
+  const fields = useRef(new Map<string, HTMLInputElement>());
   const many = questions.length > 1;
   const open = questions[at];
-  const settled = open === undefined;
-  const listed = settled ? questions : [open];
+  const settled = !simultaneous && open === undefined;
+  const listed = simultaneous || settled ? questions : [open];
 
   const take = (question: AskedQuestion, option: string) => {
     onPick?.(question.id, option);
     if (option === OWN) {
-      window.setTimeout(() => field.current?.focus(), 0);
+      window.setTimeout(() => fields.current.get(question.id)?.focus(), 0);
     }
   };
 
@@ -87,11 +89,13 @@ export function QuestionCard({
       class={cn("ui-question", className)}
       data-sent={sent || undefined}
       data-settled={settled || undefined}
+      data-simultaneous={simultaneous || undefined}
       role="group"
       aria-label={many ? headingLabel : questions[0]?.question}
       onKeyDown={(event: JSX.TargetedKeyboardEvent<HTMLElement>) => {
         if (
           !open ||
+          simultaneous ||
           event.key < "1" ||
           event.key > "9" ||
           (event.target as HTMLElement).tagName === "INPUT"
@@ -108,7 +112,7 @@ export function QuestionCard({
       {many ? (
         <div class="ui-question-head">
           <span class="ui-question-heading">{headingLabel}</span>
-          {onGo && !settled ? (
+          {onGo && !settled && !simultaneous ? (
             <span class="ui-question-steps">
               {questions.map((question, index) => (
                 <button
@@ -138,7 +142,7 @@ export function QuestionCard({
 
       <ol class="ui-question-list">
         {listed.map((question, index) => {
-          const here = !settled;
+          const here = simultaneous || !settled;
           const rows: QuestionOption[] = [...question.options, { id: OWN, label: ownLabel }];
           return (
             <li
@@ -148,7 +152,7 @@ export function QuestionCard({
               data-done={question.answer ? "" : undefined}
             >
               <div class="ui-question-ask">
-                {many && settled ? (
+                {many && (settled || simultaneous) ? (
                   <span class="ui-question-number">{index + 1}</span>
                 ) : null}
                 <span class="ui-question-text">
@@ -178,7 +182,10 @@ export function QuestionCard({
                       </button>
                       {row.id === OWN && question.picked === OWN ? (
                         <input
-                          ref={field}
+                          ref={(node) => {
+                            if (node) fields.current.set(question.id, node);
+                            else fields.current.delete(question.id);
+                          }}
                           class="ui-question-own"
                           value={question.own ?? ""}
                           spellcheck={false}
@@ -219,7 +226,11 @@ export function QuestionCard({
             class="ui-button ui-question-send"
             data-size="sm"
             data-variant="primary"
-            aria-disabled={!open || !answerable(open) || sent ? "true" : "false"}
+            aria-disabled={
+              (!(simultaneous ? questions.some(answerable) : open && answerable(open)) || sent)
+                ? "true"
+                : "false"
+            }
             onClick={() => {
               if (!sent) {
                 onAnswer?.();

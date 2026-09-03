@@ -24,14 +24,10 @@ function ask(request: number, at: number, labels: string[]): AcpPermission {
   };
 }
 
-function seed(): void {
-  const asks = [ask(1, 0, ["a", "b"]), ask(2, 1, ["c", "d"]), ask(3, 2, ["e", "f"])];
-  const entries: AcpEntry[] = asks.map((one, index) => ({
-    index,
-    at: 0,
-    body: { type: "permission", ask: one },
-  }));
-  transcripts.value = { [ID]: entries };
+function entries(count = 3): AcpEntry[] {
+  return [ask(1, 0, ["a", "b"]), ask(2, 1, ["c", "d"]), ask(3, 2, ["e", "f"])]
+    .slice(0, count)
+    .map((one, index) => ({ index, at: 0, body: { type: "permission", ask: one } }));
 }
 
 function decided() {
@@ -40,226 +36,107 @@ function decided() {
 
 function view() {
   const { container } = render(<AcpView id={ID} />);
-  const rows = () => Array.from(container.querySelectorAll<HTMLElement>(".ui-question-row"));
-  const button = (label: string) =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-foot button")).find(
-      (node) => node.textContent === label,
-    );
-  const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
   const items = () => Array.from(container.querySelectorAll<HTMLElement>(".ui-question-item"));
-  const heading = () => container.querySelector(".ui-question-heading")?.textContent ?? "";
-  const here = () => Number(/^question (\d+)/.exec(heading())?.[1] ?? 0);
-  const title = () => container.querySelector(".ui-question-title")?.textContent;
-  const answers = () =>
-    Array.from(container.querySelectorAll(".ui-question-answer")).map((node) => node.textContent);
-  return { container, rows, button, send, items, heading, here, title, answers };
+  const rows = (at: number) =>
+    Array.from(items()[at]?.querySelectorAll<HTMLButtonElement>(".ui-question-row") ?? []);
+  const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
+  return { container, items, rows, send };
 }
 
 beforeEach(() => {
   invoke.mockClear();
-  seed();
-  // biome-ignore lint/suspicious/noExplicitAny: test fixture
-  sessions.value = [{ id: ID, state: "blocked" } as any];
+  transcripts.value = { [ID]: entries() };
+  sessions.value = [{ id: ID, state: "blocked" } as (typeof sessions.value)[number]];
 });
 
 describe("a set of questions from one call", () => {
-  it("shows one at a time and says which one it is on", () => {
-    const { here, title, rows, items } = view();
-    expect(here()).toBe(1);
-    expect(title()).toBe("pregunta 1");
-    expect(rows()).toHaveLength(3);
-    expect(items()).toHaveLength(1);
-  });
-
-  it("holds every answer back until the last one is in", () => {
-    const { rows, here, send } = view();
-
-    act(() => rows()[0].click());
-    act(() => send()?.click());
-    expect(decided()).toEqual([]);
-    expect(here()).toBe(2);
-
-    act(() => rows()[0].click());
-    act(() => send()?.click());
-    expect(decided()).toEqual([]);
-    expect(here()).toBe(3);
-
-    act(() => rows()[1].click());
-    act(() => send()?.click());
-
-    expect(decided()).toEqual([
-      ["acp_decide", { id: ID, request: 1, option: "a" }],
-      ["acp_decide", { id: ID, request: 2, option: "c" }],
-      ["acp_decide", { id: ID, request: 3, option: "f" }],
+  it("shows the complete set together", () => {
+    const { container, items } = view();
+    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("3 questions");
+    expect(items()).toHaveLength(3);
+    expect(items().map((item) => item.querySelector(".ui-question-title")?.textContent)).toEqual([
+      "pregunta 1",
+      "pregunta 2",
+      "pregunta 3",
     ]);
   });
 
-  it("lets you walk back and keeps what you had picked", () => {
-    const { rows, here, send, button, container } = view();
-
-    act(() => rows()[1].click());
-    act(() => send()?.click());
-    expect(button("Back")).toBeDefined();
-
-    act(() => button("Back")?.click());
-    expect(here()).toBe(1);
-    expect(container.querySelector<HTMLElement>(".ui-question-row[data-picked]")?.textContent).toBe(
-      "b2",
-    );
+  it("waits until every question in the group has arrived", () => {
+    transcripts.value = { [ID]: entries(1) };
+    const { container } = view();
+    expect(container.querySelector(".ui-question")).toBeNull();
+    act(() => {
+      transcripts.value = { [ID]: entries(3) };
+    });
+    expect(container.querySelectorAll(".ui-question-item")).toHaveLength(3);
   });
 
-  it("lets you jump between questions without answering first", () => {
-    const { container, here, title } = view();
-    const steps = container.querySelectorAll<HTMLButtonElement>(".ui-question-step");
-
-    act(() => steps[2]?.click());
-    expect(here()).toBe(3);
-    expect(title()).toBe("pregunta 3");
-
-    act(() => steps[0]?.click());
-    expect(here()).toBe(1);
-    expect(title()).toBe("pregunta 1");
-  });
-
-  it("records a skipped question as no answer and carries on", () => {
-    const { rows, here, send, button } = view();
-
-    act(() => button("Skip")?.click());
-    expect(here()).toBe(2);
-    expect(decided()).toEqual([]);
-
-    act(() => button("Skip")?.click());
-    act(() => rows()[0].click());
+  it("submits every answer once", () => {
+    const { rows, send } = view();
+    act(() => rows(0)[0].click());
+    act(() => rows(1)[1].click());
+    act(() => rows(2)[0].click());
     act(() => send()?.click());
-
     expect(decided()).toEqual([
-      ["acp_decide", { id: ID, request: 1, option: null }],
-      ["acp_decide", { id: ID, request: 2, option: null }],
+      ["acp_decide", { id: ID, request: 1, option: "a" }],
+      ["acp_decide", { id: ID, request: 2, option: "d" }],
       ["acp_decide", { id: ID, request: 3, option: "e" }],
     ]);
   });
 
-  it("answers them all with nothing when the set is waved away", () => {
-    const { rows, send, container } = view();
-
-    act(() => rows()[0].click());
+  it("sends unanswered questions as skipped", () => {
+    const { rows, send } = view();
+    act(() => rows(1)[0].click());
     act(() => send()?.click());
-    act(() => container.querySelector<HTMLButtonElement>(".ui-question-dismiss")?.click());
-
     expect(decided()).toEqual([
-      ["acp_decide", { id: ID, request: 1, option: "a" }],
-      ["acp_decide", { id: ID, request: 2, option: null }],
+      ["acp_decide", { id: ID, request: 1, option: null }],
+      ["acp_decide", { id: ID, request: 2, option: "c" }],
       ["acp_decide", { id: ID, request: 3, option: null }],
     ]);
   });
-});
 
-describe("not letting one answer go out twice", () => {
-  it("takes the pick and the send in the same breath", () => {
-    const { rows, send, here } = view();
-
+  it("takes a pick and submit in the same render", () => {
+    const { rows, send } = view();
     act(() => {
-      rows()[0].click();
+      rows(0)[1].click();
       send()?.click();
     });
-
-    expect(here()).toBe(2);
+    expect(decided()[0]).toEqual(["acp_decide", { id: ID, request: 1, option: "b" }]);
   });
 
-  it("goes quiet after the last answer is on its way", () => {
-    const { rows, send, container } = view();
-
-    for (let step = 0; step < 3; step += 1) {
-      act(() => rows()[0].click());
-      act(() => send()?.click());
-    }
-    expect(decided()).toHaveLength(3);
-
+  it("does not send the set twice", () => {
+    const { rows, send } = view();
+    act(() => rows(0)[0].click());
+    act(() => send()?.click());
     act(() => send()?.click());
     expect(decided()).toHaveLength(3);
-    expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBe("true");
-  });
-
-  it("walks forward one question at a time", () => {
-    const { rows, send, here, title } = view();
-
-    act(() => rows()[0].click());
-    act(() => send()?.click());
-    act(() => rows()[0].click());
-    act(() => send()?.click());
-    expect(here()).toBe(3);
-    expect(title()).toBe("pregunta 3");
-  });
-});
-
-describe("a question that shows up after the first was answered", () => {
-  it("wakes the card back up instead of leaving it on Sending", () => {
-    const { rows, send, container } = view();
-    transcripts.value = {
-      [ID]: [{ index: 0, at: 0, body: { type: "permission", ask: ask(1, 0, ["a", "b"]) } }],
-    };
-
-    const only = container.querySelector<HTMLElement>(".ui-question");
-    expect(only).not.toBeNull();
-    act(() => rows()[0].click());
-    act(() => send()?.click());
-    expect(decided()).toHaveLength(1);
-    expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBe("true");
-
-    act(() => {
-      transcripts.value = {
-        [ID]: [
-          { index: 0, at: 0, body: { type: "permission", ask: ask(1, 0, ["a", "b"]) } },
-          { index: 1, at: 0, body: { type: "permission", ask: ask(2, 1, ["c", "d"]) } },
-        ],
-      };
-    });
-
-    expect(container.querySelector<HTMLElement>(".ui-question")?.dataset.sent).toBeUndefined();
-    expect(send()?.textContent).not.toBe("Sending…");
-  });
-
-  it("says which one of how many while you answer", () => {
-    const { heading, items } = view();
-    expect(heading()).toBe("question 1 of 3");
-    expect(items()).toHaveLength(1);
   });
 });
 
 describe("once the whole set is answered", () => {
-  it("keeps them together in one card with their answers", () => {
-    const { rows, send, container, answers } = view();
-
-    for (let step = 0; step < 3; step += 1) {
-      act(() => rows()[0].click());
-      act(() => send()?.click());
-    }
-
+  it("keeps the answers together as a compact summary", () => {
+    const { container } = view();
     act(() => {
       transcripts.value = {
-        [ID]: [
-          {
-            index: 0,
-            at: 0,
-            body: { type: "permission", ask: { ...ask(1, 0, ["a", "b"]), decided: "a" } },
-          },
-          {
-            index: 1,
-            at: 0,
-            body: { type: "permission", ask: { ...ask(2, 1, ["c", "d"]), decided: "c" } },
-          },
-          {
-            index: 2,
-            at: 0,
-            body: { type: "permission", ask: { ...ask(3, 2, ["e", "f"]), decided: "cancelled" } },
-          },
-        ],
+        [ID]: entries().map((entry, index) => {
+          if (entry.body.type !== "permission") throw new Error("expected permission");
+          return {
+            ...entry,
+            body: {
+              type: "permission",
+              ask: {
+                ...entry.body.ask,
+                decided: index === 2 ? "cancelled" : ["a", "c"][index],
+              },
+            },
+          };
+        }),
       };
     });
-
     expect(container.querySelectorAll(".ui-question")).toHaveLength(1);
-    expect(container.querySelectorAll(".ui-question-item")).toHaveLength(3);
-    expect(answers()).toEqual(["a", "c", "no answer"]);
-    expect(container.querySelector(".ui-question-foot")).toBeNull();
+    expect(container.querySelectorAll(".ui-question-row")).toHaveLength(0);
+    expect(
+      Array.from(container.querySelectorAll(".ui-question-answer")).map((node) => node.textContent),
+    ).toEqual(["a", "c", "no answer"]);
   });
 });

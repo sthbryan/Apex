@@ -42,12 +42,16 @@ describe("laying the transcript out", () => {
   });
 
   it("puts them back in the order the agent asked them", () => {
-    const shown = laidOut([asked(0, ask(9, "call-1", 2, 3)), asked(1, ask(7, "call-1", 0, 3))]);
+    const shown = laidOut([
+      asked(0, ask(9, "call-1", 2, 3)),
+      asked(1, ask(7, "call-1", 0, 3)),
+      asked(2, ask(8, "call-1", 1, 3)),
+    ]);
     const group = shown[0];
     if (group.kind !== "ask") {
       throw new Error("expected one group");
     }
-    expect(group.asks.map((one) => one.at)).toEqual([0, 2]);
+    expect(group.asks.map((one) => one.at)).toEqual([0, 1, 2]);
   });
 
   it("keeps two different calls apart", () => {
@@ -60,12 +64,12 @@ describe("laying the transcript out", () => {
     expect(shown).toHaveLength(2);
   });
 
-  it("breaks a group when something else lands between", () => {
+  it("does not expose an interrupted partial group", () => {
     const shown = laidOut([
       asked(0, ask(1, "call-1", 0, 2)),
       said(1),
       asked(2, ask(2, "call-1", 1, 2)),
     ]);
-    expect(shown.map((one) => one.kind)).toEqual(["ask", "entry", "ask"]);
+    expect(shown.map((one) => one.kind)).toEqual(["entry"]);
   });
 });
