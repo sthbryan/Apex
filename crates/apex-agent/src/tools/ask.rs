@@ -145,7 +145,7 @@ fn example_schema(description: &str) -> Value {
         "description": description,
         "properties": {
             "title": { "type": "string", "description": "A short heading for the example." },
-            "content": { "type": "string", "description": "The example itself. Plain text or code." },
+            "content": { "type": "string", "description": "The example itself. Use meaningful line breaks and indentation for code, trees, diagrams, or structured text." },
             "language": { "type": "string", "description": "Optional language hint such as text, json, typescript, or bash." }
         },
         "required": ["content"]

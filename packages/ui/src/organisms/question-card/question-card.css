@@ -129,7 +129,8 @@
   }
 
   .ui-question-example-content {
-    @apply max-h-72 overflow-auto p-3 font-mono text-xs leading-5 whitespace-pre text-text;
+    @apply max-h-72 overflow-y-auto p-3 font-mono text-xs leading-5 whitespace-pre-wrap text-text;
+    overflow-wrap: anywhere;
   }
 
   .ui-question-row {
