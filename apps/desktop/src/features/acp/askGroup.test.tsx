@@ -37,10 +37,13 @@ function decided() {
 function view() {
   const { container } = render(<AcpView id={ID} />);
   const items = () => Array.from(container.querySelectorAll<HTMLElement>(".ui-question-item"));
-  const rows = (at: number) =>
-    Array.from(items()[at]?.querySelectorAll<HTMLButtonElement>(".ui-question-row") ?? []);
+  const rows = () => Array.from(container.querySelectorAll<HTMLButtonElement>(".ui-question-row"));
   const send = () => container.querySelector<HTMLButtonElement>(".ui-question-send");
-  return { container, items, rows, send };
+  const button = (label: string) =>
+    Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
+      (item) => item.textContent === label,
+    );
+  return { container, items, rows, send, button };
 }
 
 beforeEach(() => {
@@ -50,15 +53,11 @@ beforeEach(() => {
 });
 
 describe("a set of questions from one call", () => {
-  it("shows the complete set together", () => {
+  it("starts with the first question", () => {
     const { container, items } = view();
-    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("3 questions");
-    expect(items()).toHaveLength(3);
-    expect(items().map((item) => item.querySelector(".ui-question-title")?.textContent)).toEqual([
-      "pregunta 1",
-      "pregunta 2",
-      "pregunta 3",
-    ]);
+    expect(container.querySelector(".ui-question-heading")?.textContent).toBe("Question 1 of 3");
+    expect(items()).toHaveLength(1);
+    expect(container.querySelector(".ui-question-title")?.textContent).toBe("pregunta 1");
   });
 
   it("waits until every question in the group has arrived", () => {
@@ -68,14 +67,18 @@ describe("a set of questions from one call", () => {
     act(() => {
       transcripts.value = { [ID]: entries(3) };
     });
-    expect(container.querySelectorAll(".ui-question-item")).toHaveLength(3);
+    expect(container.querySelectorAll(".ui-question-item")).toHaveLength(1);
   });
 
-  it("submits every answer once", () => {
+  it("moves locally before submitting every answer once", () => {
     const { rows, send } = view();
-    act(() => rows(0)[0].click());
-    act(() => rows(1)[1].click());
-    act(() => rows(2)[0].click());
+    act(() => rows()[0].click());
+    act(() => send()?.click());
+    expect(decided()).toHaveLength(0);
+    act(() => rows()[1].click());
+    act(() => send()?.click());
+    expect(decided()).toHaveLength(0);
+    act(() => rows()[0].click());
     act(() => send()?.click());
     expect(decided()).toEqual([
       ["acp_decide", { id: ID, request: 1, option: "a" }],
@@ -85,9 +88,11 @@ describe("a set of questions from one call", () => {
   });
 
   it("sends unanswered questions as skipped", () => {
-    const { rows, send } = view();
-    act(() => rows(1)[0].click());
+    const { rows, send, button } = view();
+    act(() => button("Skip")?.click());
+    act(() => rows()[0].click());
     act(() => send()?.click());
+    act(() => button("Skip")?.click());
     expect(decided()).toEqual([
       ["acp_decide", { id: ID, request: 1, option: null }],
       ["acp_decide", { id: ID, request: 2, option: "c" }],
@@ -95,18 +100,26 @@ describe("a set of questions from one call", () => {
     ]);
   });
 
-  it("takes a pick and submit in the same render", () => {
+  it("takes the final pick and submit in the same render", () => {
     const { rows, send } = view();
+    act(() => rows()[0].click());
+    act(() => send()?.click());
+    act(() => rows()[0].click());
+    act(() => send()?.click());
     act(() => {
-      rows(0)[1].click();
+      rows()[1].click();
       send()?.click();
     });
-    expect(decided()[0]).toEqual(["acp_decide", { id: ID, request: 1, option: "b" }]);
+    expect(decided()[2]).toEqual(["acp_decide", { id: ID, request: 3, option: "f" }]);
   });
 
   it("does not send the set twice", () => {
     const { rows, send } = view();
-    act(() => rows(0)[0].click());
+    act(() => rows()[0].click());
+    act(() => send()?.click());
+    act(() => rows()[0].click());
+    act(() => send()?.click());
+    act(() => rows()[0].click());
     act(() => send()?.click());
     act(() => send()?.click());
     expect(decided()).toHaveLength(3);

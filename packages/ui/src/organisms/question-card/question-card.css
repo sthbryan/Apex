@@ -69,10 +69,6 @@
     @apply flex flex-col;
   }
 
-  .ui-question[data-simultaneous] .ui-question-list {
-    @apply gap-4;
-  }
-
   .ui-question-item {
     @apply flex flex-col gap-2;
   }

@@ -288,6 +288,7 @@ function answerOf(draft: Draft | undefined): string | null {
 
 function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
   const [drafts, setDrafts] = useState<Record<number, Draft>>({});
+  const [at, setAt] = useState(0);
   const [sentFor, setSentFor] = useState(0);
   const latest = useRef(drafts);
   latest.current = drafts;
@@ -298,6 +299,8 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
   }
 
   const done = asks.every((ask) => ask.decided !== null);
+  const step = asks[Math.min(at, asks.length - 1)];
+  const last = at >= asks.length - 1;
 
   const shown = asks.map((ask) => {
     const draft = drafts[ask.request] ?? BLANK;
@@ -329,33 +332,43 @@ function Asked({ id, asks }: { id: string; asks: AcpPermission[] }) {
     }
   };
 
+  const move = (next: Record<number, Draft>) => {
+    latest.current = next;
+    setDrafts(next);
+    if (last) {
+      send(next);
+    } else {
+      setAt(at + 1);
+    }
+  };
+
   return (
     <QuestionCard
       questions={shown}
-      at={done ? -1 : 0}
-      simultaneous={!done}
+      at={done ? -1 : at}
       sent={sent}
-      headingLabel={t("acp.howMany", { count: String(asks.length) })}
+      headingLabel={
+        done
+          ? t("acp.howMany", { count: String(asks.length) })
+          : t("acp.oneOf", { at: String(at + 1), of: String(asks.length) })
+      }
       ownLabel={t("acp.own")}
       ownPlaceholder={t("acp.ownPlaceholder")}
       skipLabel={t("acp.skip")}
-      submitLabel={t("acp.submit")}
+      backLabel={t("acp.back")}
+      submitLabel={last ? t("acp.submit") : t("acp.next")}
       sendingLabel={t("acp.sending")}
       dismissLabel={t("acp.dismissAll")}
-      onPick={(who, row) => {
-        const request = Number(who);
-        write(request, { ...(drafts[request] ?? BLANK), row });
-      }}
-      onOwn={(who, own) => {
-        const request = Number(who);
-        write(request, { ...(drafts[request] ?? BLANK), own });
-      }}
+      onPick={(_who, row) => write(step.request, { ...(drafts[step.request] ?? BLANK), row })}
+      onOwn={(_who, own) => write(step.request, { ...(drafts[step.request] ?? BLANK), own })}
       onAnswer={() => {
-        if (asks.some((ask) => answerOf(latest.current[ask.request]) !== null)) {
-          send(latest.current);
+        if (answerOf(latest.current[step.request]) !== null) {
+          move(latest.current);
         }
       }}
-      onSkip={() => send(latest.current)}
+      onSkip={() => move({ ...latest.current, [step.request]: BLANK })}
+      onBack={at > 0 ? () => setAt(at - 1) : undefined}
+      onGo={setAt}
       onDismiss={asks.length > 1 ? () => send(latest.current) : undefined}
     />
   );
