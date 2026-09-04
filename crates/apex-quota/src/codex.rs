@@ -12,6 +12,7 @@ use crate::{QuotaReport, QuotaWindow, iso_from_epoch, percent, window_label};
 
 const READ_TIMEOUT: Duration = Duration::from_secs(20);
 const RATE_LIMITS_ID: u64 = 2;
+const APP_SERVER_ARGS: [&str; 5] = ["-s", "read-only", "-a", "never", "app-server"];
 
 pub async fn read(
     agent: &str,
@@ -24,7 +25,7 @@ pub async fn read(
 
 async fn ask(binary: &Path, env: &BTreeMap<String, String>) -> Option<String> {
     let mut child = Command::new(binary)
-        .args(["-s", "read-only", "-a", "untrusted", "app-server"])
+        .args(APP_SERVER_ARGS)
         .env_clear()
         .envs(env)
         .stdin(Stdio::piped())

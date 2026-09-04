@@ -24,6 +24,11 @@ fn an_answer_without_windows_is_discarded() {
     assert!(parse("codex", r#"{"id":2,"error":{"code":-32601}}"#).is_none());
 }
 
+#[test]
+fn the_app_server_runs_without_an_obsolete_approval_policy() {
+    assert_eq!(APP_SERVER_ARGS, ["-s", "read-only", "-a", "never", "app-server"]);
+}
+
 #[tokio::test]
 #[ignore = "needs a signed-in codex"]
 async fn the_real_app_server_answers() {

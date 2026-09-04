@@ -32,7 +32,8 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
 
   const [lead, ...rest] = reports;
   const windows = lead?.windows ?? [];
-  const picked = windows.find((window, index) => nameOf(window, index) === chosen) ?? windows[0];
+  const pickedIndex = Math.min(Number(chosen ?? 0), Math.max(0, windows.length - 1));
+  const picked = windows[pickedIndex];
   const others = windows.filter((window) => window !== picked);
 
   const updatedAgo = reports.some((report) => report.updated_at)
@@ -75,11 +76,7 @@ export function UsagePopover({ open, reports, failures, anchor, onClose }: Props
       {!lead && failures.length === 0 && <p class="text-faint">{t("resources.noQuota")}</p>}
 
       {lead && windows.length > 1 && (
-        <Segments
-          windows={windows}
-          picked={picked ? nameOf(picked, windows.indexOf(picked)) : ""}
-          onPick={setChosen}
-        />
+        <Segments windows={windows} picked={String(pickedIndex)} onPick={setChosen} />
       )}
 
       {picked && (
@@ -166,7 +163,7 @@ function Segments({
       label={t("usage.window")}
       value={picked}
       options={windows.map((window, index) => ({
-        value: nameOf(window, index),
+        value: String(index),
         label: nameOf(window, index),
       }))}
       onChange={onPick}
