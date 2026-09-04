@@ -23,8 +23,20 @@ body,
   border-right: 0;
 }
 
+[data-workspace-style="floating"] .apex-dock-cluster .ui-rail {
+  border-right: 0;
+}
+
 [data-workspace-style="floating"] :is(.ui-title-bar, .ui-status-bar) {
   background-color: var(--apex-raised);
+}
+
+[data-workspace-style="floating"] .ui-title-bar {
+  border-bottom: 0;
+}
+
+[data-workspace-style="floating"] .ui-status-bar {
+  border-top: 0;
 }
 
 [data-workspace-style="floating"] .apex-panel-surface .ui-side-panel-inner {
