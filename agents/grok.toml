@@ -2,6 +2,8 @@ name = "grok"
 command = "grok"
 mode = "pty"
 auto_args = ["--always-approve"]
+acp_command = "grok"
+acp_args = ["agent", "stdio"]
 
 [mcp]
 kind = "project"
@@ -25,4 +27,3 @@ cache_ttl_secs = 900
 
 [[quota.sources]]
 kind = "native"
-

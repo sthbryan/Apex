@@ -21,6 +21,15 @@ fn claude_declares_resume_and_acp() {
 }
 
 #[test]
+fn grok_declares_its_native_acp_server() {
+    let set = ProfileSet::builtin().expect("builtin profiles");
+    let grok = set.get("grok").expect("grok");
+    assert_eq!(grok.acp_command.as_deref(), Some("grok"));
+    assert_eq!(grok.acp_args, vec!["agent".to_owned(), "stdio".to_owned()]);
+    assert!(grok.pty);
+}
+
+#[test]
 fn shell_profile_has_no_agent_machinery() {
     let set = ProfileSet::builtin().expect("builtin profiles");
     let shell = set.get("shell").expect("shell");
