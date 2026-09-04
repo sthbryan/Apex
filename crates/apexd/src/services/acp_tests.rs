@@ -1,7 +1,7 @@
 use apex_acp::{PlanEntry, ToolLocation};
 use apex_proto::{AcpBody, AcpOption, AcpToolStatus};
 
-use crate::services::acp::Transcript;
+use crate::services::acp::{Transcript, readable_path, writable_path};
 
 fn chunk(text: &str) -> apex_acp::SessionUpdate {
     apex_acp::SessionUpdate::AgentMessageChunk { content: apex_acp::ContentBlock::text(text) }
@@ -151,4 +151,27 @@ fn a_mode_change_is_not_worth_an_entry() {
         .absorb(apex_acp::SessionUpdate::CurrentModeUpdate { current_mode_id: "ask".into() });
     assert!(entry.is_none());
     assert!(transcript.entries().is_empty());
+}
+
+#[tokio::test]
+async fn project_paths_do_not_follow_symlinks_outside() {
+    let project = tempfile::tempdir().expect("project");
+    let outside = tempfile::tempdir().expect("outside");
+    let secret = outside.path().join("secret.txt");
+    std::fs::write(&secret, "secret").expect("secret");
+    std::os::unix::fs::symlink(outside.path(), project.path().join("escape")).expect("symlink");
+
+    let read = project.path().join("escape/secret.txt");
+    let write = project.path().join("escape/new.txt");
+    assert!(readable_path(project.path(), read.to_str().expect("path")).await.is_err());
+    assert!(writable_path(project.path(), write.to_str().expect("path")).await.is_err());
+}
+
+#[tokio::test]
+async fn a_new_nested_file_can_stay_inside_the_project() {
+    let project = tempfile::tempdir().expect("project");
+    let wanted = project.path().join("new/nested/file.txt");
+    let resolved =
+        writable_path(project.path(), wanted.to_str().expect("path")).await.expect("inside");
+    assert!(resolved.starts_with(project.path().canonicalize().expect("root")));
 }

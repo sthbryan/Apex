@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use apex_acp::{AskExample, ContentBlock, SessionUpdate, ToolCall, ToolContent, ToolStatus};
 use apex_proto::{
@@ -420,14 +421,46 @@ impl Relay {
         }
         let _ = self.events.send(Event::SessionStateChanged { id: self.id, state });
     }
+}
 
-    fn within_project(&self, path: &str) -> Result<PathBuf> {
-        let candidate = PathBuf::from(path);
-        if !candidate.is_absolute() || !candidate.starts_with(&self.root) {
-            bail!("{path} is outside this project")
-        }
-        Ok(candidate)
+async fn project_root(root: &Path) -> Result<PathBuf> {
+    Ok(tokio::fs::canonicalize(root)
+        .await
+        .with_context(|| format!("could not resolve project root {}", root.display()))?)
+}
+
+pub(crate) async fn readable_path(root: &Path, path: &str) -> Result<PathBuf> {
+    let candidate = PathBuf::from(path);
+    if !candidate.is_absolute() {
+        bail!("{path} is outside this project")
     }
+    let root = project_root(root).await?;
+    let resolved = tokio::fs::canonicalize(&candidate)
+        .await
+        .with_context(|| format!("could not resolve {path}"))?;
+    if !resolved.starts_with(&root) {
+        bail!("{path} is outside this project")
+    }
+    Ok(resolved)
+}
+
+pub(crate) async fn writable_path(root: &Path, path: &str) -> Result<PathBuf> {
+    let candidate = PathBuf::from(path);
+    if !candidate.is_absolute() {
+        bail!("{path} is outside this project")
+    }
+    if tokio::fs::symlink_metadata(&candidate).await.is_ok() {
+        return readable_path(root, path).await;
+    }
+    let parent = candidate.parent().context("a file path is required")?;
+    let name = candidate.file_name().context("a file path is required")?;
+    tokio::fs::create_dir_all(parent).await?;
+    let root = project_root(root).await?;
+    let parent = tokio::fs::canonicalize(parent).await?;
+    if !parent.starts_with(&root) {
+        bail!("{path} is outside this project")
+    }
+    Ok(parent.join(name))
 }
 
 #[async_trait::async_trait]
@@ -501,15 +534,12 @@ impl Client for Relay {
     }
 
     async fn read_file(&self, path: &str) -> Result<String> {
-        let path = self.within_project(path)?;
+        let path = readable_path(&self.root, path).await?;
         Ok(tokio::fs::read_to_string(&path).await?)
     }
 
     async fn write_file(&self, path: &str, content: &str) -> Result<()> {
-        let path = self.within_project(path)?;
-        if let Some(parent) = path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
-        }
+        let path = writable_path(&self.root, path).await?;
         Ok(tokio::fs::write(&path, content).await?)
     }
 }
