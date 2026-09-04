@@ -10,16 +10,21 @@ body,
   background: var(--apex-raised);
 }
 
-[data-workspace-style="floating"] .ui-rail {
-  border-right: 0;
-}
-
+[data-workspace-style="floating"] .apex-dock-cluster,
 [data-workspace-style="floating"] .apex-panel-surface,
 [data-workspace-style="floating"] .apex-workspace-surface {
   overflow: hidden;
   border: 1px solid var(--apex-border);
   border-radius: var(--apex-r-md);
   background: var(--apex-bg);
+}
+
+[data-workspace-style="floating"] .apex-dock-cluster .ui-side-panel {
+  border-right: 0;
+}
+
+[data-workspace-style="floating"] :is(.ui-title-bar, .ui-status-bar) {
+  background-color: var(--apex-raised);
 }
 
 [data-workspace-style="floating"] .apex-panel-surface .ui-side-panel-inner {
@@ -36,10 +41,6 @@ body,
   margin-left: calc(-1 * var(--apex-space-md));
 }
 
-[data-workspace-style="floating"] .apex-panel-surface[data-side="left"][data-collapsed] {
-  margin-right: calc(-1 * var(--apex-space-md));
-}
-
 @media (max-width: 860px) {
   [data-workspace-style="floating"] .ui-app-body {
     gap: var(--apex-space-xs);
@@ -48,10 +49,6 @@ body,
 
   [data-workspace-style="floating"] .apex-panel-surface[data-side="right"][data-collapsed] {
     margin-left: calc(-1 * var(--apex-space-xs));
-  }
-
-  [data-workspace-style="floating"] .apex-panel-surface[data-side="left"][data-collapsed] {
-    margin-right: calc(-1 * var(--apex-space-xs));
   }
 }
 

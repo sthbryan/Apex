@@ -104,57 +104,58 @@ export function Layout({ onNewSession }: Props) {
       />
 
       <AppBody>
-        <Rail aria-label={t("dock.panels")} data-reorder>
-          <RailButton label={t("home.title")} current={homeOpen.value} onClick={openHome}>
-            <Icon name="home" size={16} />
-          </RailButton>
-          <RailDivider />
-          {order.map((id, index) => {
-            const mark = seat !== null && from >= 0 && seat !== from && index === seat;
-            return (
-              <RailButton
-                key={id}
-                data-seat
-                label={DOCK_PANELS[id].label()}
-                current={!rail && active === id}
-                badge={DOCK_PANELS[id].badge?.() ?? undefined}
-                class={cn(held === id && "opacity-40")}
-                onMouseDown={(event) => grab(id, index, event)}
-                onClick={() => {
-                  setDockPanel(id);
-                  setDockMode("expanded");
-                }}
-              >
-                <Icon name={DOCK_PANELS[id].icon} size={16} />
-                {mark ? (
-                  <span
-                    class={cn(
-                      "absolute inset-x-1 h-0.5 bg-accent",
-                      seat < from ? "top-0" : "bottom-0",
-                    )}
-                  />
-                ) : null}
-              </RailButton>
-            );
-          })}
-        </Rail>
+        <div class="apex-dock-cluster flex min-h-0 flex-none">
+          <Rail aria-label={t("dock.panels")} data-reorder>
+            <RailButton label={t("home.title")} current={homeOpen.value} onClick={openHome}>
+              <Icon name="home" size={16} />
+            </RailButton>
+            <RailDivider />
+            {order.map((id, index) => {
+              const mark = seat !== null && from >= 0 && seat !== from && index === seat;
+              return (
+                <RailButton
+                  key={id}
+                  data-seat
+                  label={DOCK_PANELS[id].label()}
+                  current={!rail && active === id}
+                  badge={DOCK_PANELS[id].badge?.() ?? undefined}
+                  class={cn(held === id && "opacity-40")}
+                  onMouseDown={(event) => grab(id, index, event)}
+                  onClick={() => {
+                    setDockPanel(id);
+                    setDockMode("expanded");
+                  }}
+                >
+                  <Icon name={DOCK_PANELS[id].icon} size={16} />
+                  {mark ? (
+                    <span
+                      class={cn(
+                        "absolute inset-x-1 h-0.5 bg-accent",
+                        seat < from ? "top-0" : "bottom-0",
+                      )}
+                    />
+                  ) : null}
+                </RailButton>
+              );
+            })}
+          </Rail>
 
-        <SidePanel
-          flush
-          class="apex-panel-surface"
-          collapsed={rail}
-          data-resizing={dockResizing.value || undefined}
-          grip={<DockResize />}
-          head={<ProjectPicker />}
-          foot={
-            <Button variant="primary" size="lg" class="w-full" onClick={openHome}>
-              <Icon name="plus" size={14} />
-              {t("toolbar.newSession")}
-            </Button>
-          }
-        >
-          <Dock />
-        </SidePanel>
+          <SidePanel
+            flush
+            collapsed={rail}
+            data-resizing={dockResizing.value || undefined}
+            grip={<DockResize />}
+            head={<ProjectPicker />}
+            foot={
+              <Button variant="primary" size="lg" class="w-full" onClick={openHome}>
+                <Icon name="plus" size={14} />
+                {t("toolbar.newSession")}
+              </Button>
+            }
+          >
+            <Dock />
+          </SidePanel>
+        </div>
 
         <div class="apex-workspace-surface flex min-w-0 flex-1 flex-col">
           <Views />
