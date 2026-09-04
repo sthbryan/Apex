@@ -370,7 +370,7 @@ impl AcpSession {
 
     pub async fn choose(&self, model: Option<String>, mode: Option<String>) -> Result<()> {
         if let Some(model) = model {
-            self.agent.set_model(&self.remote, &model).await?;
+            self.agent.set_config_option(&self.remote, "model", &model).await?;
             self.models.lock().await.chosen = Some(model);
         }
         if let Some(mode) = mode {

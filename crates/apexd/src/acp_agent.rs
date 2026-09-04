@@ -145,7 +145,6 @@ async fn asked(side: &Arc<Side>, rooms: &Arc<Rooms>, method: &str, params: Value
         "session/new" => opened(side, rooms, params).await,
         "session/prompt" => prompted(side, rooms, params).await,
         "session/set_config_option" => configured(rooms, params).await,
-        "session/set_model" => configured_legacy(rooms, params).await,
         "session/set_mode" => switched(rooms, params).await,
         other => bail!("apex does not answer {other}"),
     }
@@ -287,12 +286,6 @@ async fn configured(rooms: &Arc<Rooms>, params: Value) -> Result<Value> {
     }
     let session = params.get("sessionId").and_then(Value::as_str).context("no session")?;
     let wanted = params.get("value").and_then(Value::as_str).context("no model")?;
-    switch_model(rooms, session, wanted).await
-}
-
-async fn configured_legacy(rooms: &Arc<Rooms>, params: Value) -> Result<Value> {
-    let session = params.get("sessionId").and_then(Value::as_str).context("no session")?;
-    let wanted = params.get("modelId").and_then(Value::as_str).context("no model")?;
     switch_model(rooms, session, wanted).await
 }
 

@@ -209,11 +209,11 @@ impl Agent {
         Ok(serde_json::from_value(serde_json::to_value(answer)?)?)
     }
 
-    pub async fn set_model(&self, session: &str, model: &str) -> Result<()> {
+    pub async fn set_config_option(&self, session: &str, option: &str, value: &str) -> Result<()> {
         let request = sdk::SetSessionConfigOptionRequest::new(
             session.to_owned(),
-            "model",
-            sdk::SessionConfigValueId::from(model.to_owned()),
+            option.to_owned(),
+            sdk::SessionConfigValueId::from(value.to_owned()),
         );
         self.connection.send_request(request).block_task().await?;
         Ok(())
