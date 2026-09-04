@@ -176,6 +176,16 @@ async fn a_new_nested_file_can_stay_inside_the_project() {
     assert!(resolved.starts_with(project.path().canonicalize().expect("root")));
 }
 
+#[tokio::test]
+async fn rejecting_an_external_write_does_not_create_its_directories() {
+    let project = tempfile::tempdir().expect("project");
+    let outside = tempfile::tempdir().expect("outside");
+    let directory = outside.path().join("should-not-exist");
+    let wanted = directory.join("file.txt");
+    assert!(writable_path(project.path(), wanted.to_str().expect("path")).await.is_err());
+    assert!(!directory.exists());
+}
+
 #[test]
 fn acp_agents_only_inherit_operational_environment() {
     let environment = std::collections::BTreeMap::from([

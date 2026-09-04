@@ -482,8 +482,16 @@ pub(crate) async fn writable_path(root: &Path, path: &str) -> Result<PathBuf> {
     }
     let parent = candidate.parent().context("a file path is required")?;
     let name = candidate.file_name().context("a file path is required")?;
-    tokio::fs::create_dir_all(parent).await?;
     let root = project_root(root).await?;
+    let mut existing = parent;
+    while tokio::fs::symlink_metadata(existing).await.is_err() {
+        existing = existing.parent().context("could not resolve a writable parent")?;
+    }
+    let existing = tokio::fs::canonicalize(existing).await?;
+    if !existing.starts_with(&root) {
+        bail!("{path} is outside this project")
+    }
+    tokio::fs::create_dir_all(parent).await?;
     let parent = tokio::fs::canonicalize(parent).await?;
     if !parent.starts_with(&root) {
         bail!("{path} is outside this project")
