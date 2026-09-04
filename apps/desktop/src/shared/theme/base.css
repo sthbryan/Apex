@@ -7,7 +7,7 @@ body,
 [data-workspace-style="floating"] .ui-app-body {
   gap: var(--apex-space-md);
   padding: var(--apex-space-md);
-  background: var(--apex-shell);
+  background: var(--apex-raised);
 }
 
 [data-workspace-style="floating"] .ui-rail {
