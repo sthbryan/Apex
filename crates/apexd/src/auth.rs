@@ -39,7 +39,7 @@ pub fn spell_keys(held: &[(&Provider, Option<Source>)]) -> String {
 
 pub fn spell_holding(provider: &Provider, from: Option<Source>) -> String {
     match from {
-        Some(Source::Keychain) => "kept".to_owned(),
+        Some(Source::Stored) => "kept".to_owned(),
         Some(Source::Environment) => match provider.env.as_deref() {
             Some(name) => format!("from {name}"),
             None => "from the environment".to_owned(),

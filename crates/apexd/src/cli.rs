@@ -29,7 +29,7 @@ usage:
                   speak the agent client protocol on stdin and stdout
   apex auth       list the providers and which of them hold a key
   apex auth add <provider>
-                  type a key once and keep it in the OS keychain
+                  type a key once and keep it in Apex
   apex auth rm <provider>
                   forget the key kept for a provider
   apex auth models <provider>

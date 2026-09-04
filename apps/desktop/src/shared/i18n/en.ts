@@ -238,7 +238,7 @@ export const en = {
     agentRuns: "Apex runs {model} on {provider}",
     agentModelWait: "asking for the models…",
     keyChecking: "Checking…",
-    groupAgent: "Our agent",
+    groupAgent: "Apex agent",
     groupAgentSub: "Providers, keys and the model Apex uses when it runs the agent itself",
     providerLabel: "Provider",
     providerNone: "None set up yet. Add one and Apex can run an agent of its own.",
@@ -257,8 +257,8 @@ export const en = {
     keyLabel: "Key",
     keyFromLaunch:
       "Apex is borrowing {name} from the environment it was started in. Keep one here and that one is used instead.",
-    keyKept: "kept in the OS keychain",
-    keyKeptOverEnv: "kept in the OS keychain, so {name} is left alone",
+    keyKept: "stored privately by Apex",
+    keyKeptOverEnv: "stored privately by Apex, so {name} is left alone",
     keyWaiting: "there is already one in {name}, so Apex can use that",
     keyNotNeeded: "this one answers without a key",
     keyMissing: "nothing kept yet",
@@ -358,6 +358,7 @@ export const en = {
   },
   notify: {
     allow: "Allow",
+    open: "Open",
     blocked: "An agent is waiting for you",
     mcpBlocked: "{agent} started without the Apex tools",
     done: "An agent finished",

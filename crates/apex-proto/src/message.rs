@@ -1121,7 +1121,7 @@ pub enum Reply {
 #[ts(export)]
 #[serde(rename_all = "snake_case")]
 pub enum KeyFrom {
-    Keychain,
+    Stored,
     Environment,
 }
 

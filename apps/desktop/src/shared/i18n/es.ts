@@ -239,7 +239,7 @@ export const es: Messages = {
     agentRuns: "Apex corre {model} en {provider}",
     agentModelWait: "pidiendo los modelos…",
     keyChecking: "Probando…",
-    groupAgent: "Nuestro agente",
+    groupAgent: "Agente de Apex",
     groupAgentSub: "Providers, claves y el modelo que usa Apex cuando corre el agente propio",
     providerLabel: "Provider",
     providerNone: "Todavía no hay ninguno. Agregá uno y Apex puede correr su propio agente.",
@@ -258,8 +258,8 @@ export const es: Messages = {
     keyLabel: "Clave",
     keyFromLaunch:
       "Apex está tomando prestada {name} del entorno con el que arrancó. Guardá una acá y se usa esa.",
-    keyKept: "guardada en el llavero del sistema",
-    keyKeptOverEnv: "guardada en el llavero del sistema, así que {name} queda de lado",
+    keyKept: "guardada de forma privada por Apex",
+    keyKeptOverEnv: "guardada de forma privada por Apex, así que {name} queda de lado",
     keyWaiting: "ya hay una en {name}, así que Apex puede usar esa",
     keyNotNeeded: "este responde sin clave",
     keyMissing: "todavía no hay ninguna guardada",
@@ -359,6 +359,7 @@ export const es: Messages = {
   },
   notify: {
     allow: "Permitir",
+    open: "Abrir",
     blocked: "Un agente te está esperando",
     mcpBlocked: "{agent} arrancó sin las herramientas de Apex",
     done: "Un agente terminó",

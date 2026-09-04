@@ -27,6 +27,5 @@ url = "2"
 workspace = true
 
 [dev-dependencies]
-keyring-core.workspace = true
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
 tempfile.workspace = true

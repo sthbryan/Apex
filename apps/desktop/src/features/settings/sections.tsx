@@ -609,7 +609,7 @@ function ProviderDetail({
 
       {trouble && <p class="border-danger border-l-2 py-2 pl-2.5 text-danger text-xs">{trouble}</p>}
 
-      {(provider.added || provider.held === "keychain") && (
+      {(provider.added || provider.held === "stored") && (
         <Field label={provider.label} hint={t("settings.providerRemoveHint")}>
           <Button
             size="md"
@@ -650,7 +650,7 @@ function KeyRow({
     return <Field label={t("settings.keyLabel")} hint={t("settings.keyNotNeeded")} />;
   }
 
-  if (provider.held === "keychain") {
+  if (provider.held === "stored") {
     return (
       <Field
         label={t("settings.keyLabel")}

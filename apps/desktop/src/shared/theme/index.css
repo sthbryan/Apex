@@ -11,3 +11,36 @@
 @import "./dock.css";
 @import "./views.css";
 @import "./syntax.css";
+
+.apex-sonner-toast {
+  width: min(22rem, calc(100vw - 2rem));
+  border: 1px solid var(--apex-border) !important;
+  border-radius: var(--apex-r-md) !important;
+  background: var(--apex-overlay) !important;
+  color: var(--apex-text) !important;
+  box-shadow: var(--apex-shadow-lg) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.apex-sonner-title {
+  color: var(--apex-text) !important;
+  font-size: var(--apex-text-md) !important;
+  font-weight: 600 !important;
+}
+
+.apex-sonner-detail {
+  color: var(--apex-muted) !important;
+  font-size: var(--apex-text-xs) !important;
+}
+
+.apex-sonner-action {
+  border-radius: var(--apex-r-sm) !important;
+  background: var(--apex-accent-soft) !important;
+  color: var(--apex-accent) !important;
+}
+
+.apex-sonner-close {
+  border-color: var(--apex-border) !important;
+  background: var(--apex-overlay) !important;
+  color: var(--apex-muted) !important;
+}

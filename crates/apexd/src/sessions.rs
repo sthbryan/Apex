@@ -1304,7 +1304,7 @@ impl SessionManager {
                 added: set.was_added(&provider.name),
                 in_env: provider.key_from_env().is_some(),
                 held: apex_agent::key::find(provider)?.map(|found| match found.from {
-                    apex_agent::key::Source::Keychain => apex_proto::KeyFrom::Keychain,
+                    apex_agent::key::Source::Stored => apex_proto::KeyFrom::Stored,
                     apex_agent::key::Source::Environment => apex_proto::KeyFrom::Environment,
                 }),
             });

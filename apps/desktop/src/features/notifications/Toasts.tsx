@@ -1,149 +1,85 @@
-import { Toast as KitToast, ToastStack, type ToastTone } from "@apex/ui";
-import { useState } from "preact/hooks";
+import { useSignalEffect } from "@preact/signals";
+import { Toaster, toast } from "sonner";
 
 import type { Notice } from "@/features/notifications/state";
 import { dismissToast, lasting, live, notices } from "@/features/notifications/state";
-import { AgentIcon } from "@/features/sessions/AgentIcon";
 import { sessions } from "@/features/sessions/state";
 import { focusSession, openInNewTab } from "@/features/workspace/state";
 import { t } from "@/shared/i18n";
-import { Icon, type IconName } from "@/shared/ui/Icon";
 
-const STACKED = 3;
-const SWIPE = 60;
 const RUNS = 6000;
 
-const GLYPH: Record<string, IconName> = {
-  error: "activity",
-  quota: "activity",
-  blocked: "bell",
-  done: "check",
-};
-
-const TONES: Record<string, ToastTone> = {
-  error: "failed",
-  quota: "blocked",
-  blocked: "blocked",
-  done: "done",
-};
-
 export function Toasts() {
-  const [expanded, setExpanded] = useState(false);
-  const shown = live.value
-    .map((id) => notices.value.find((notice) => notice.id === id))
-    .filter((notice): notice is Notice => notice !== undefined)
-    .slice(-STACKED)
-    .reverse();
-
-  if (shown.length === 0) {
-    return null;
-  }
+  useSignalEffect(() => {
+    const active = new Set(live.value);
+    for (const notice of notices.value) {
+      if (active.has(notice.id) && !toast.getToasts().some((shown) => shown.id === notice.id)) {
+        show(notice);
+      }
+    }
+    for (const shown of toast.getToasts()) {
+      if (typeof shown.id === "number" && !active.has(shown.id)) {
+        toast.dismiss(shown.id);
+      }
+    }
+  });
 
   return (
-    <ToastStack
-      aria-label={t("notify.title")}
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
-      class={expanded ? "top-11 bottom-auto w-80" : "top-11 bottom-auto block h-16 w-80"}
-      style={{ paddingRight: "var(--apex-controls-end, 0px)" }}
-    >
-      {shown.map((notice, depth) => (
-        <Toast key={notice.id} notice={notice} depth={depth} expanded={expanded} />
-      ))}
-    </ToastStack>
+    <Toaster
+      position="top-right"
+      visibleToasts={4}
+      gap={8}
+      closeButton
+      expand
+      offset={{ top: 44, right: "var(--apex-controls-end, 16px)" }}
+      swipeDirections={["right"]}
+      toastOptions={{
+        closeButtonAriaLabel: t("sessions.dismiss"),
+        classNames: {
+          toast: "apex-sonner-toast",
+          title: "apex-sonner-title",
+          description: "apex-sonner-detail",
+          actionButton: "apex-sonner-action",
+          closeButton: "apex-sonner-close",
+        },
+      }}
+    />
   );
 }
 
-function Toast({ notice, depth, expanded }: { notice: Notice; depth: number; expanded: boolean }) {
-  const [drag, setDrag] = useState(0);
+function show(notice: Notice): void {
   const session = sessions.value.find((candidate) => candidate.id === notice.sessionId);
-
-  const stacked = expanded
-    ? {}
-    : {
-        position: "absolute" as const,
-        top: 0,
-        right: 0,
-        left: 0,
-        zIndex: STACKED - depth,
-        transform: `translateY(${depth * 8}px) scale(${1 - depth * 0.05})`,
-        opacity: depth === 0 ? 1 : 0.7,
-      };
-
-  const open = () => {
-    if (session && !focusSession(session.id)) {
-      openInNewTab(session);
-    }
-    dismissToast(notice.id);
+  const action = session
+    ? {
+        label: t("notify.open"),
+        onClick: () => {
+          if (!focusSession(session.id)) {
+            openInNewTab(session);
+          }
+        },
+      }
+    : undefined;
+  const options = {
+    id: notice.id,
+    description: notice.body || undefined,
+    duration: lasting(notice.kind) ? Number.POSITIVE_INFINITY : RUNS,
+    action,
+    onDismiss: () => dismissToast(notice.id),
+    onAutoClose: () => dismissToast(notice.id),
   };
 
-  return (
-    <KitToast
-      class={
-        notice.kind === "error" ? "w-full touch-none border-state-failed" : "w-full touch-none"
-      }
-      tone={TONES[notice.kind] ?? "accent"}
-      duration={lasting(notice.kind) ? undefined : RUNS}
-      title={notice.title}
-      detail={notice.body ?? undefined}
-      role={session ? "button" : undefined}
-      tabIndex={session ? 0 : undefined}
-      onClick={session ? open : undefined}
-      onKeyDown={
-        session
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                open();
-              }
-            }
-          : undefined
-      }
-      onPointerMove={(event) => {
-        if (event.buttons !== 1) {
-          return;
-        }
-        const next = Math.max(0, event.movementX + drag);
-        if (next > 0 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.setPointerCapture(event.pointerId);
-        }
-        setDrag(next);
-      }}
-      onPointerUp={(event) => {
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId);
-        }
-        if (drag > SWIPE) {
-          dismissToast(notice.id);
-        }
-        setDrag(0);
-      }}
-      style={{
-        ...stacked,
-        ...(drag > 0
-          ? { transform: `translateX(${drag}px)`, opacity: 1 - drag / (SWIPE * 2) }
-          : {}),
-      }}
-      lead={
-        session ? (
-          <AgentIcon agent={session.agent} class="text-faint" />
-        ) : (
-          <Icon name={GLYPH[notice.kind] ?? "bell"} size={13} class="shrink-0 text-faint" />
-        )
-      }
-      actions={
-        <button
-          type="button"
-          title={t("sessions.dismiss")}
-          onClick={(event) => {
-            event.stopPropagation();
-            dismissToast(notice.id);
-          }}
-          class="shrink-0 text-faint transition-colors hover:text-text"
-        >
-          <Icon name="close" size={12} />
-        </button>
-      }
-    />
-  );
+  switch (notice.kind) {
+    case "error":
+      toast.error(notice.title, options);
+      break;
+    case "blocked":
+    case "quota":
+      toast.warning(notice.title, options);
+      break;
+    case "done":
+      toast.success(notice.title, options);
+      break;
+    default:
+      toast(notice.title, options);
+  }
 }

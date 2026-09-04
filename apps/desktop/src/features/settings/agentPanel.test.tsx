@@ -45,7 +45,7 @@ const STRAY = provider({
   in_env: true,
   held: "environment",
 });
-const KEPT = provider({ held: "keychain" });
+const KEPT = provider({ held: "stored" });
 const BARE = provider({ name: "groq", label: "Groq", env: "GROQ_API_KEY" });
 
 function panel() {
@@ -137,7 +137,7 @@ describe("taking a provider away", () => {
   });
 
   it("says which variable is being left alone once a key is kept", () => {
-    providers.value = [provider({ held: "keychain", in_env: true })];
+    providers.value = [provider({ held: "stored", in_env: true })];
 
     const container = panel();
     expect(container.querySelector('input[type="password"]')).toBeNull();

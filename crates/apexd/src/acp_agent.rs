@@ -173,7 +173,7 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
     let agent_dir = paths.agent_dir();
     let set = ProviderSet::load(&paths.providers_dir())?;
     let picked = choice::read(&agent_dir).context(
-        "no provider is set up yet: open Settings, Our agent, put in a key and pick a model",
+        "no provider is set up yet: open Settings, Apex agent, put in a key and pick a model",
     )?;
     let provider = set.get(&picked.provider).with_context(|| {
         format!("{} is not a provider any more, pick another one in Settings", picked.provider)
@@ -183,7 +183,7 @@ async fn opened(side: &Arc<Side>, rooms: &Arc<Rooms>, params: Value) -> Result<V
         Some(found) => found.key,
         None if provider.keyless => String::new(),
         None => {
-            bail!("{} has no key yet: open Settings, Our agent, and put one in", provider.label)
+            bail!("{} has no key yet: open Settings, Apex agent, and put one in", provider.label)
         }
     };
 

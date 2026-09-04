@@ -16,7 +16,7 @@ fn provider(name: &str, env: Option<&str>, keyless: bool) -> Provider {
 #[test]
 fn a_provider_holding_a_kept_key_says_so() {
     let openai = provider("openai", Some("OPENAI_API_KEY"), false);
-    assert_eq!(spell_holding(&openai, Some(Source::Keychain)), "kept");
+    assert_eq!(spell_holding(&openai, Some(Source::Stored)), "kept");
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn a_local_provider_with_nothing_kept_is_not_missing_anything() {
 fn the_listing_lines_up_on_the_longest_name() {
     let openai = provider("openai", None, false);
     let openrouter = provider("openrouter", None, false);
-    let spelled = spell_keys(&[(&openai, Some(Source::Keychain)), (&openrouter, None)]);
+    let spelled = spell_keys(&[(&openai, Some(Source::Stored)), (&openrouter, None)]);
     assert_eq!(spelled, "openai      kept\nopenrouter  no key yet\n");
 }
 
