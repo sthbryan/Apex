@@ -117,6 +117,7 @@ export function Home() {
       foot={<Summary />}
     >
       <Composer
+        class="mt-2"
         elRef={field}
         label={t("home.task")}
         placeholder={racing ? t("home.racePlaceholder") : t("home.placeholder")}
