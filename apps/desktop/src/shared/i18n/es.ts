@@ -440,6 +440,8 @@ export const es: Messages = {
     reject: "Denegar",
     decided: "Respondido: {option}",
     model: "Modelo de esta sesión",
+    modelSearch: "Buscar modelos…",
+    modelSearchEmpty: "No hay modelos que coincidan",
     mode: "Cuánto piensa",
     working: "Trabajando · {seconds}s",
     you: "Tú",

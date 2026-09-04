@@ -631,8 +631,15 @@ function Choices({ id, kind }: { id: string; kind: "model" | "mode" }) {
     <Select
       class="max-w-40"
       label={t(kind === "model" ? "acp.model" : "acp.mode")}
+      searchable={kind === "model"}
+      searchPlaceholder={t("acp.modelSearch")}
+      emptyLabel={t("acp.modelSearchEmpty")}
       value={picker.chosen ?? undefined}
-      options={choices.map((choice) => ({ value: choice.id, label: choice.name }))}
+      options={choices.map((choice) => ({
+        value: choice.id,
+        label: choice.name,
+        keywords: choice.name,
+      }))}
       onChange={(wanted) =>
         void choose(id, kind === "model" ? wanted : null, kind === "mode" ? wanted : null)
       }

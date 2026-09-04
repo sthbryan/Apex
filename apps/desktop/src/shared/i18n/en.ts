@@ -439,6 +439,8 @@ export const en = {
     reject: "Deny",
     decided: "Answered: {option}",
     model: "Model for this session",
+    modelSearch: "Search models…",
+    modelSearchEmpty: "No matching models",
     mode: "How hard it thinks",
     working: "Working · {seconds}s",
     you: "You",
