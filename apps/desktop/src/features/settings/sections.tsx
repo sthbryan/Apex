@@ -52,12 +52,14 @@ import {
   setVeilArea,
   setVeilContrast,
   setVeilOpacity,
+  setWorkspaceStyle,
   translucencySupported,
   translucent,
   uiScale,
   veilArea,
   veilContrast,
   veilOpacity,
+  workspaceStyle,
 } from "@/features/settings/appearance";
 import { browsing, setBrowsing } from "@/features/settings/browsing";
 import { cli, cliBusy, installCli, removeCli } from "@/features/settings/cli";
@@ -75,6 +77,8 @@ import {
   UI_SCALES,
   VEIL_AREA_LABEL,
   VEIL_AREAS,
+  WORKSPACE_STYLE_LABEL,
+  WORKSPACE_STYLES,
 } from "@/features/settings/constants";
 import { DockOrder } from "@/features/settings/DockOrder";
 import {
@@ -145,6 +149,22 @@ export function lookSection(): Section {
             options={UI_SCALES.map((option) => ({
               value: option,
               label: t(UI_SCALE_LABEL[option]),
+            }))}
+          />
+        ),
+      },
+      {
+        id: "workspaceStyle",
+        label: t("settings.workspaceStyle"),
+        hint: t("settings.workspaceStyleHint"),
+        control: (
+          <Segmented
+            label={t("settings.workspaceStyle")}
+            value={workspaceStyle.value}
+            onChange={setWorkspaceStyle}
+            options={WORKSPACE_STYLES.map((option) => ({
+              value: option,
+              label: t(WORKSPACE_STYLE_LABEL[option]),
             }))}
           />
         ),

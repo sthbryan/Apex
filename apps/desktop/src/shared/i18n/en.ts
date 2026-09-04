@@ -197,6 +197,11 @@ export const en = {
     uiScaleCompact: "Compact",
     uiScaleNormal: "Normal",
     uiScaleRoomy: "Roomy",
+    workspaceStyle: "Panel layout",
+    workspaceStyleHint:
+      "Choose whether workspace panels meet at their edges or sit as separate surfaces.",
+    workspaceStyleEdge: "Edge to edge",
+    workspaceStyleFloating: "Floating",
     theme: "Theme",
     themeHint: "Follows your system.",
     themeHintLight: "Always uses the light theme.",

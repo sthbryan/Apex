@@ -27,6 +27,7 @@ export function Aside() {
   return (
     <SidePanel
       flush
+      class="apex-panel-surface"
       side="right"
       width={asideWidth.value}
       collapsed={!open}

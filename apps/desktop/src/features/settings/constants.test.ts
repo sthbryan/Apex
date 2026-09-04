@@ -8,6 +8,7 @@ import {
   THEMES,
   UI_SCALES,
   VEIL_AREAS,
+  WORKSPACE_STYLES,
 } from "./constants";
 
 describe("constants", () => {
@@ -24,6 +25,7 @@ describe("constants", () => {
     expect(UI_SCALES).toEqual(["compact", "normal", "roomy"]);
     expect(FROSTS).toEqual(["soft", "glare", "bright", "deep"]);
     expect(VEIL_AREAS).toEqual(["window", "sidebar"]);
+    expect(WORKSPACE_STYLES).toEqual(["edge", "floating"]);
   });
 
   it("defines idle graces", () => {

@@ -7,6 +7,7 @@ import { complain, platform } from "@/shared/daemon";
 export type UiScale = "compact" | "normal" | "roomy";
 export type Frost = "soft" | "glare" | "bright" | "deep";
 export type VeilArea = "window" | "sidebar";
+export type WorkspaceStyle = "edge" | "floating";
 
 const SCALE = "apex.ui-scale";
 const TRANSLUCENT = "apex.translucent";
@@ -16,6 +17,7 @@ const LEGACY_BLUR = "apex.blur";
 const AREA = "apex.veil-area";
 const GLASS_BLUR = "apex.glass-blur";
 const CONTRAST = "apex.veil-contrast";
+const WORKSPACE_STYLE = "apex.workspace-style";
 
 const SCALES: Record<UiScale, number> = { compact: 0.92, normal: 1, roomy: 1.14 };
 
@@ -57,6 +59,10 @@ function restoreScale(): UiScale {
   }
 }
 
+function restoreWorkspaceStyle(): WorkspaceStyle {
+  return localStorage.getItem(WORKSPACE_STYLE) === "floating" ? "floating" : "edge";
+}
+
 // TODO: Missing testing on Windows for translucency support
 export const translucencySupported = computed(
   () => platform.value === "macos" || platform.value === "linux",
@@ -69,6 +75,7 @@ export const frost = signal<Frost>(restoreFrost());
 export const veilArea = signal<VeilArea>(restoreArea());
 export const glassBlur = signal<number>(restoreNumber(GLASS_BLUR, DEFAULT_BLUR, 0, MAX_BLUR));
 export const veilContrast = signal<number>(restoreNumber(CONTRAST, 0, 0, MAX_CONTRAST));
+export const workspaceStyle = signal<WorkspaceStyle>(restoreWorkspaceStyle());
 
 export function setUiScale(next: UiScale): void {
   uiScale.value = next;
@@ -113,6 +120,12 @@ export function setFrost(next: Frost): void {
   applyAppearance();
 }
 
+export function setWorkspaceStyle(next: WorkspaceStyle): void {
+  workspaceStyle.value = next;
+  localStorage.setItem(WORKSPACE_STYLE, next);
+  applyAppearance();
+}
+
 export function applyAppearance(): void {
   const root = document.documentElement;
   const on = translucent.value;
@@ -133,6 +146,7 @@ export function applyAppearance(): void {
   }
   root.style.setProperty("--apex-scale", String(SCALES[uiScale.value]));
   root.style.setProperty("--apex-glass-blur", `${glassBlur.value}px`);
+  root.setAttribute("data-workspace-style", workspaceStyle.value);
 
   void invoke("set_window_material", { frost: on ? frost.value : "none" }).catch(complain);
 

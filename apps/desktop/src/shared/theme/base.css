@@ -4,6 +4,57 @@ body,
   height: 100%;
 }
 
+[data-workspace-style="floating"] .ui-app-body {
+  gap: var(--apex-space-md);
+  padding: var(--apex-space-md);
+  background: var(--apex-shell);
+}
+
+[data-workspace-style="floating"] .ui-rail {
+  border-right: 0;
+}
+
+[data-workspace-style="floating"] .apex-panel-surface,
+[data-workspace-style="floating"] .apex-workspace-surface {
+  overflow: hidden;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-r-md);
+  background: var(--apex-bg);
+}
+
+[data-workspace-style="floating"] .apex-panel-surface .ui-side-panel-inner {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+[data-workspace-style="floating"] .apex-panel-surface[data-collapsed] {
+  border: 0;
+  background: transparent;
+}
+
+[data-workspace-style="floating"] .apex-panel-surface[data-side="right"][data-collapsed] {
+  margin-left: calc(-1 * var(--apex-space-md));
+}
+
+[data-workspace-style="floating"] .apex-panel-surface[data-side="left"][data-collapsed] {
+  margin-right: calc(-1 * var(--apex-space-md));
+}
+
+@media (max-width: 860px) {
+  [data-workspace-style="floating"] .ui-app-body {
+    gap: var(--apex-space-xs);
+    padding: var(--apex-space-xs);
+  }
+
+  [data-workspace-style="floating"] .apex-panel-surface[data-side="right"][data-collapsed] {
+    margin-left: calc(-1 * var(--apex-space-xs));
+  }
+
+  [data-workspace-style="floating"] .apex-panel-surface[data-side="left"][data-collapsed] {
+    margin-right: calc(-1 * var(--apex-space-xs));
+  }
+}
+
 button:not(:disabled),
 select:not(:disabled),
 summary,

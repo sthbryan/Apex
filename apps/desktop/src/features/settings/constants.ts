@@ -1,5 +1,5 @@
 import type { VNode } from "preact";
-import type { Frost, UiScale, VeilArea } from "@/features/settings/appearance";
+import type { Frost, UiScale, VeilArea, WorkspaceStyle } from "@/features/settings/appearance";
 import type { Locale } from "@/shared/i18n";
 import type { ThemeMode } from "@/shared/theme/mode";
 import type { IconName } from "@/shared/ui/Icon";
@@ -18,6 +18,13 @@ export const LANGUAGES: { value: Locale; label: string }[] = [
 export const PANE_CAPS = [2, 3, 4, 5, 6, 8];
 
 export const UI_SCALES: UiScale[] = ["compact", "normal", "roomy"];
+
+export const WORKSPACE_STYLES: WorkspaceStyle[] = ["edge", "floating"];
+
+export const WORKSPACE_STYLE_LABEL = {
+  edge: "settings.workspaceStyleEdge",
+  floating: "settings.workspaceStyleFloating",
+} as const;
 
 export const FROSTS: Frost[] = ["soft", "glare", "bright", "deep"];
 

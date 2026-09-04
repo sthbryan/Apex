@@ -141,6 +141,7 @@ export function Layout({ onNewSession }: Props) {
 
         <SidePanel
           flush
+          class="apex-panel-surface"
           collapsed={rail}
           data-resizing={dockResizing.value || undefined}
           grip={<DockResize />}
@@ -155,7 +156,7 @@ export function Layout({ onNewSession }: Props) {
           <Dock />
         </SidePanel>
 
-        <div class="flex min-w-0 flex-1 flex-col">
+        <div class="apex-workspace-surface flex min-w-0 flex-1 flex-col">
           <Views />
         </div>
 

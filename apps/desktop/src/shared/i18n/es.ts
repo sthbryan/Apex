@@ -198,6 +198,11 @@ export const es: Messages = {
     uiScaleCompact: "Compacta",
     uiScaleNormal: "Normal",
     uiScaleRoomy: "Cómoda",
+    workspaceStyle: "Distribución de paneles",
+    workspaceStyleHint:
+      "Elegí si los paneles se unen en los bordes o se muestran como superficies separadas.",
+    workspaceStyleEdge: "De borde a borde",
+    workspaceStyleFloating: "Flotantes",
     theme: "Tema",
     themeHint: "Sigue al sistema.",
     themeHintLight: "Usa siempre el tema claro.",
