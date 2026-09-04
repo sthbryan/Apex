@@ -1,7 +1,7 @@
 use apex_acp::{PlanEntry, ToolLocation};
 use apex_proto::{AcpBody, AcpOption, AcpToolStatus};
 
-use crate::services::acp::{Transcript, readable_path, writable_path};
+use crate::services::acp::{Transcript, acp_environment, readable_path, writable_path};
 
 fn chunk(text: &str) -> apex_acp::SessionUpdate {
     apex_acp::SessionUpdate::AgentMessageChunk { content: apex_acp::ContentBlock::text(text) }
@@ -174,4 +174,22 @@ async fn a_new_nested_file_can_stay_inside_the_project() {
     let resolved =
         writable_path(project.path(), wanted.to_str().expect("path")).await.expect("inside");
     assert!(resolved.starts_with(project.path().canonicalize().expect("root")));
+}
+
+#[test]
+fn acp_agents_only_inherit_operational_environment() {
+    let environment = std::collections::BTreeMap::from([
+        ("PATH".to_owned(), "/usr/bin".to_owned()),
+        ("HOME".to_owned(), "/home/person".to_owned()),
+        ("LC_ALL".to_owned(), "en_US.UTF-8".to_owned()),
+        ("OPENAI_API_KEY".to_owned(), "secret".to_owned()),
+        ("HTTP_PROXY".to_owned(), "https://secret@proxy".to_owned()),
+        ("SSH_AUTH_SOCK".to_owned(), "/tmp/agent.sock".to_owned()),
+    ]);
+    let inherited = acp_environment(environment);
+    assert_eq!(inherited.get("PATH").map(String::as_str), Some("/usr/bin"));
+    assert_eq!(inherited.get("LC_ALL").map(String::as_str), Some("en_US.UTF-8"));
+    assert!(!inherited.contains_key("OPENAI_API_KEY"));
+    assert!(!inherited.contains_key("HTTP_PROXY"));
+    assert!(!inherited.contains_key("SSH_AUTH_SOCK"));
 }

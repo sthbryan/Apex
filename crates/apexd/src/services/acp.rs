@@ -314,6 +314,34 @@ const HANDSHAKE_PATIENCE: std::time::Duration = std::time::Duration::from_secs(9
 type Shared = Arc<Mutex<SessionSummary>>;
 type Commands = Arc<Mutex<Vec<AcpCommand>>>;
 
+const ACP_ENV_KEYS: &[&str] = &[
+    "APEX_HOME",
+    "HOME",
+    "LANG",
+    "LOGNAME",
+    "PATH",
+    "SHELL",
+    "SSL_CERT_DIR",
+    "SSL_CERT_FILE",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+    "USER",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_STATE_HOME",
+];
+
+pub(crate) fn acp_environment(
+    environment: std::collections::BTreeMap<String, String>,
+) -> std::collections::BTreeMap<String, String> {
+    environment
+        .into_iter()
+        .filter(|(key, _)| ACP_ENV_KEYS.contains(&key.as_str()) || key.starts_with("LC_"))
+        .collect()
+}
+
 pub struct AcpSession {
     pub summary: Shared,
     agent: Agent,
@@ -424,9 +452,9 @@ impl Relay {
 }
 
 async fn project_root(root: &Path) -> Result<PathBuf> {
-    Ok(tokio::fs::canonicalize(root)
+    tokio::fs::canonicalize(root)
         .await
-        .with_context(|| format!("could not resolve project root {}", root.display()))?)
+        .with_context(|| format!("could not resolve project root {}", root.display()))
 }
 
 pub(crate) async fn readable_path(root: &Path, path: &str) -> Result<PathBuf> {
@@ -581,7 +609,7 @@ impl AcpRegistry {
             profiles,
             resolver,
             store,
-            base_env,
+            base_env: acp_environment(base_env),
             sessions: Arc::new(RwLock::new(std::collections::HashMap::new())),
             greeting: Arc::new(RwLock::new(std::collections::HashMap::new())),
             events,
