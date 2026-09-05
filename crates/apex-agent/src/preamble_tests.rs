@@ -3,7 +3,9 @@ use super::*;
 #[test]
 fn the_builtin_one_says_something() {
     assert!(builtin().contains("Apex"));
-    assert!(builtin().len() > 200);
+    assert!(builtin().contains("preserve existing work"));
+    assert!(builtin().contains("verify it in proportion to its risk"));
+    assert!(builtin().contains("Avoid destructive actions"));
 }
 
 #[test]
