@@ -31,6 +31,8 @@ export function Button({
       data-size={size}
       data-loading={loading || undefined}
       data-icon-only={iconOnly || undefined}
+      data-cuelume-press="press"
+      data-cuelume-release="release"
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}

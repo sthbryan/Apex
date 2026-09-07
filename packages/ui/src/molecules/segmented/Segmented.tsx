@@ -40,6 +40,7 @@ export function Segmented<T extends string = string>({
           aria-checked={option.value === value}
           disabled={disabled || option.disabled}
           title={option.title}
+          data-cuelume-press="press"
           onClick={() => onChange(option.value)}
         >
           {option.label}

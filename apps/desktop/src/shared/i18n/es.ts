@@ -203,6 +203,8 @@ export const es: Messages = {
       "Elegí si los paneles se unen en los bordes o se muestran como superficies separadas.",
     workspaceStyleEdge: "De borde a borde",
     workspaceStyleFloating: "Flotantes",
+    interactionSounds: "Sonidos de interacción",
+    interactionSoundsHint: "Reproduce señales suaves al usar controles y navegar.",
     theme: "Tema",
     themeHint: "Sigue al sistema.",
     themeHintLight: "Usa siempre el tema claro.",

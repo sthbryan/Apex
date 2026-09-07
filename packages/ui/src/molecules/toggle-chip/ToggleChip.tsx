@@ -18,6 +18,7 @@ export function ToggleChip({ pressed, size = "md", iconOnly, lead, trail, class:
       data-size={size}
       data-icon-only={iconOnly || undefined}
       aria-pressed={pressed}
+      data-cuelume-toggle="droplet"
       {...rest}
     >
       {lead}

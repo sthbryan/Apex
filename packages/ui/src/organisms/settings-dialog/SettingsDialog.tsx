@@ -77,6 +77,8 @@ export function SettingsDialog({
             type="button"
             class="ui-settings-nav-item"
             aria-selected={s.id === section}
+            data-cuelume-hover="tick"
+            data-cuelume-press="press"
             onClick={() => onSection(s.id)}
           >
             {s.icon}

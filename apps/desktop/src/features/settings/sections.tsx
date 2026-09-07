@@ -96,6 +96,11 @@ import {
   spellContext,
 } from "@/features/settings/providers";
 import {
+  interactionSoundsEnabled,
+  playSliderCue,
+  setInteractionSoundsEnabled,
+} from "@/features/settings/sounds";
+import {
   groupOn,
   OPTIONAL_GROUPS,
   type OptionalGroup,
@@ -169,6 +174,18 @@ export function lookSection(): Section {
           />
         ),
       },
+      {
+        id: "interactionSounds",
+        label: t("settings.interactionSounds"),
+        hint: t("settings.interactionSoundsHint"),
+        control: (
+          <Switch
+            label={t("settings.interactionSounds")}
+            checked={interactionSoundsEnabled.value}
+            onChange={setInteractionSoundsEnabled}
+          />
+        ),
+      },
       ...(import.meta.env.DEV
         ? [
             {
@@ -213,7 +230,10 @@ export function lookSection(): Section {
                   value={veilOpacity.value}
                   min={MIN_OPACITY}
                   max={100}
-                  onChange={setVeilOpacity}
+                  onChange={(value) => {
+                    setVeilOpacity(value);
+                    playSliderCue();
+                  }}
                 />
               ),
             },
@@ -227,7 +247,10 @@ export function lookSection(): Section {
                   value={veilContrast.value}
                   min={0}
                   max={MAX_CONTRAST}
-                  onChange={setVeilContrast}
+                  onChange={(value) => {
+                    setVeilContrast(value);
+                    playSliderCue();
+                  }}
                 />
               ),
             },
@@ -260,7 +283,10 @@ export function lookSection(): Section {
                         min={0}
                         max={MAX_BLUR}
                         unit="px"
-                        onChange={setGlassBlur}
+                        onChange={(value) => {
+                          setGlassBlur(value);
+                          playSliderCue();
+                        }}
                       />
                     ),
                   },
