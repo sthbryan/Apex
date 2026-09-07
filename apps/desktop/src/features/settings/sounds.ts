@@ -37,16 +37,20 @@ export function startSettingsSounds(root: HTMLElement): void {
 }
 
 let lastSliderCue = Number.NEGATIVE_INFINITY;
-let lastSearchCue = Number.NEGATIVE_INFINITY;
+let lastTypingCue = Number.NEGATIVE_INFINITY;
 
 function playSearchCue(event: Event): void {
   const target = event.target;
   if (!(target instanceof HTMLInputElement)) return;
   if (!target.matches(".ui-settings-search input, .ui-select-search")) return;
 
+  playTypingCue();
+}
+
+export function playTypingCue(): void {
   const now = performance.now();
-  if (now - lastSearchCue < SEARCH_INTERVAL) return;
-  lastSearchCue = now;
+  if (now - lastTypingCue < SEARCH_INTERVAL) return;
+  lastTypingCue = now;
   play("tick", { volume: 0.35 });
 }
 

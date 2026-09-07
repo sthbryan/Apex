@@ -22,6 +22,7 @@ import { slugify, suggestName } from "@/features/sessions/naming";
 import { startSession } from "@/features/sessions/pending";
 import { raceSession } from "@/features/sessions/state";
 import { enabledAgents, lastAgent, runsUnattended } from "@/features/settings/agentMode";
+import { playTypingCue } from "@/features/settings/sounds";
 import { focusSession, homeAsk, homeRacing } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
@@ -122,7 +123,10 @@ export function Home() {
         label={t("home.task")}
         placeholder={racing ? t("home.racePlaceholder") : t("home.placeholder")}
         value={task}
-        onInput={(event) => setTask(event.currentTarget.value)}
+        onInput={(event) => {
+          setTask(event.currentTarget.value);
+          playTypingCue();
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey && !event.isComposing && ready) {
             start(event);
