@@ -1,4 +1,5 @@
 import { useSignalEffect } from "@preact/signals";
+import { play, type SoundName } from "cuelume";
 import { Toaster, toast } from "sonner";
 
 import type { Notice } from "@/features/notifications/state";
@@ -67,6 +68,7 @@ function show(notice: Notice): void {
     onDismiss: () => dismissToast(notice.id),
     onAutoClose: () => dismissToast(notice.id),
   };
+  play(soundFor(notice.kind));
 
   switch (notice.kind) {
     case "error":
@@ -81,5 +83,18 @@ function show(notice: Notice): void {
       break;
     default:
       toast(notice.title, options);
+  }
+}
+
+export function soundFor(kind: Notice["kind"]): SoundName {
+  switch (kind) {
+    case "error":
+    case "blocked":
+    case "quota":
+      return "error";
+    case "done":
+      return "success";
+    default:
+      return "loading";
   }
 }
