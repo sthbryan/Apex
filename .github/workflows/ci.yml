@@ -22,12 +22,19 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install JS deps
         run: bun install --frozen-lockfile
 
       - name: Build UI package
         working-directory: .
         run: bun run build:packages
+
+      - name: Generate TypeScript bindings
+        working-directory: .
+        run: cargo test -p apex-proto -p apex-core export_bindings
 
       - name: Lint
         run: bun run lint
