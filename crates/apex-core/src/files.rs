@@ -62,7 +62,7 @@ pub fn read_file(root: &Path, relative: &str) -> Result<FileContents> {
     }
 
     let size = metadata.len();
-    let revision = revision(&metadata);
+    let revision = revision(&target, &metadata);
     if let Some(mime) = image_mime(&target) {
         return read_image(&target, relative, size, revision, mime);
     }
@@ -126,7 +126,7 @@ pub fn write_file(
         Ok(metadata) if metadata.len() > MAX_FILE_BYTES => {
             bail!("{relative} is too large to edit")
         }
-        Ok(metadata) => Some(revision(&metadata)),
+        Ok(metadata) => Some(revision(&target, &metadata)),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => {
             return Err(error).with_context(|| format!("reading {}", target.display()));
@@ -153,12 +153,25 @@ pub fn write_file(
 
     let metadata =
         fs::metadata(&target).with_context(|| format!("reading {}", target.display()))?;
-    revision(&metadata).context("the filesystem does not report modification times")
+    revision(&target, &metadata).context("the filesystem does not report a file revision")
 }
 
-pub fn revision(metadata: &fs::Metadata) -> Option<String> {
+pub fn revision(target: &Path, metadata: &fs::Metadata) -> Option<String> {
     let stamp = metadata.modified().ok()?.duration_since(UNIX_EPOCH).ok()?;
-    Some(format!("{}-{}", stamp.as_nanos(), metadata.len()))
+    let mut file = fs::File::open(target).ok()?;
+    let mut digest = 0xcbf29ce484222325_u64;
+    let mut buffer = [0_u8; SNIFF_BYTES];
+    loop {
+        let read = file.read(&mut buffer).ok()?;
+        if read == 0 {
+            break;
+        }
+        for byte in &buffer[..read] {
+            digest ^= u64::from(*byte);
+            digest = digest.wrapping_mul(0x100000001b3);
+        }
+    }
+    Some(format!("{}-{}-{digest:016x}", stamp.as_nanos(), metadata.len()))
 }
 
 pub fn image_mime(target: &Path) -> Option<&'static str> {
