@@ -1,5 +1,6 @@
 import { signal } from "@preact/signals";
 import { invoke } from "@tauri-apps/api/core";
+import { play } from "cuelume";
 
 import type { AcpCommand } from "@/bindings/AcpCommand";
 import type { AcpEntry } from "@/bindings/AcpEntry";
@@ -51,6 +52,7 @@ export function entriesOf(id: string): AcpEntry[] {
 
 export function absorb(id: string, entry: AcpEntry): void {
   const current = entriesOf(id);
+  const previous = current[entry.index];
   const next = current.slice();
   const missing = entry.index > next.length;
   for (let slot = next.length; slot < entry.index; slot += 1) {
@@ -58,6 +60,13 @@ export function absorb(id: string, entry: AcpEntry): void {
   }
   next[entry.index] = entry;
   transcripts.value = { ...transcripts.value, [id]: next };
+  if (
+    entry.body.type === "tool" &&
+    entry.body.call.status === "failed" &&
+    (previous?.body.type !== "tool" || previous.body.call.status !== "failed")
+  ) {
+    play("error");
+  }
   if (missing) {
     void loadTranscript(id);
   }
