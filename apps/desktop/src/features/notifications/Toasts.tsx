@@ -89,9 +89,10 @@ function show(notice: Notice): void {
 export function soundFor(kind: Notice["kind"]): SoundName {
   switch (kind) {
     case "error":
-    case "blocked":
     case "quota":
       return "error";
+    case "blocked":
+      return "ready";
     case "done":
       return "success";
     default:

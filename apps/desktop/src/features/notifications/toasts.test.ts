@@ -4,8 +4,11 @@ import { soundFor } from "./Toasts";
 describe("toast sounds", () => {
   it("uses error for problems that need attention", () => {
     expect(soundFor("error")).toBe("error");
-    expect(soundFor("blocked")).toBe("error");
     expect(soundFor("quota")).toBe("error");
+  });
+
+  it("uses ready when an agent needs attention", () => {
+    expect(soundFor("blocked")).toBe("ready");
   });
 
   it("uses success for completed work", () => {
