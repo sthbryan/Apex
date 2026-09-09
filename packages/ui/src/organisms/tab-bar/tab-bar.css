@@ -4,7 +4,7 @@
   .ui-tab-bar {
     @apply flex flex-none items-stretch overflow-x-auto;
     background-color: var(--apex-bar);
-    min-height: var(--apex-h-xl);
+    min-height: 40px;
     border-bottom: 1px solid var(--apex-border);
     scrollbar-width: none;
   }
@@ -17,8 +17,7 @@
 
   .ui-tab {
     @apply relative flex min-w-0 max-w-64 flex-none items-center gap-1.5 pr-1.5 text-muted;
-    height: var(--apex-h-xl);
-    border-right: 1px solid var(--apex-border);
+    height: 40px;
   }
 
   .ui-tab:hover {
@@ -31,18 +30,12 @@
     background-color: var(--apex-tab-active);
   }
 
-  .ui-tab[aria-selected="true"]::before {
-    @apply absolute inset-x-0 top-0 block h-0.5 bg-accent;
-    content: "";
-    border-radius: 0 0 2px 2px;
-  }
-
   .ui-tab-open {
     @apply flex min-w-0 flex-1 cursor-pointer items-center gap-2 self-stretch pl-3;
   }
 
   .ui-tab-title {
-    @apply min-w-0 max-w-40 truncate text-left text-md;
+    @apply min-w-0 max-w-40 truncate text-left text-sm;
   }
 
   @media (max-width: 640px) {
@@ -59,9 +52,8 @@
 
   .ui-tab-add {
     @apply grid flex-none place-items-center text-muted;
-    width: var(--apex-h-xl);
-    height: var(--apex-h-xl);
-    border-right: 1px solid var(--apex-border);
+    width: 40px;
+    height: 40px;
   }
 
   .ui-tab-add:hover {

@@ -15,9 +15,45 @@
   min-height: 36px;
 }
 
-.sessions-panel .ui-list-row[data-selected="true"] {
+.sessions-panel .ui-list-row[aria-selected="true"] {
   background: var(--apex-raised);
   color: var(--apex-text);
+}
+
+.apex-aside-tabs {
+  display: flex;
+  align-items: stretch;
+  flex: none;
+  min-height: 40px;
+  border-bottom: 1px solid var(--apex-border);
+  background: var(--apex-bar);
+}
+
+.apex-aside-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: var(--apex-text-sm);
+  color: var(--apex-muted);
+}
+
+.apex-aside-tabs button:hover,
+.apex-aside-tabs button[aria-pressed="true"] {
+  background: var(--apex-tab-active);
+  color: var(--apex-text);
+}
+
+.apex-aside-tabs .apex-aside-close {
+  margin-left: auto;
+  flex: none;
+}
+
+.apex-panel-surface .ui-side-panel-body > .ui-pane {
+  height: auto;
+  flex: 1;
 }
 
 .dock-scroll {

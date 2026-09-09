@@ -68,6 +68,7 @@ export const es: Messages = {
     response: "Respuesta",
   },
   aside: {
+    close: "Cerrar panel lateral",
     resize: "Cambiar el ancho del panel lateral",
   },
   dock: {

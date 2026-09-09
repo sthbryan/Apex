@@ -66,6 +66,7 @@ export const en = {
     response: "Response",
   },
   aside: {
+    close: "Close side panel",
     resize: "Resize the side panel",
   },
   dock: {
