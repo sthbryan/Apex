@@ -158,24 +158,31 @@ export function Home() {
                 );
               })}
             </ToggleChipGroup>
-            <label class="home-option" title={t("home.modeRaceHint")}>
-              <input
-                type="checkbox"
-                checked={racing}
-                onChange={(event) => swapMode(event.currentTarget.checked ? "race" : "session")}
-              />
-              {t("home.modeRace")}
-            </label>
-            {!racing && project?.is_git && (
-              <label class="home-option" title={t("isolation.worktreeHint")}>
-                <input
-                  type="checkbox"
-                  checked={isolate}
-                  onChange={(event) => setIsolate(event.currentTarget.checked)}
-                />
-                {t("home.isolate")}
-              </label>
-            )}
+            <div class="home-options">
+              <button
+                type="button"
+                class="home-option"
+                title={t("home.modeRaceHint")}
+                aria-pressed={racing}
+                onClick={() => swapMode(racing ? "session" : "race")}
+              >
+                <Icon name="swap" size={14} />
+                {t("home.modeRace")}
+              </button>
+              {(racing || project?.is_git) && (
+                <button
+                  type="button"
+                  class="home-option"
+                  title={t("isolation.worktreeHint")}
+                  aria-pressed={racing || isolate}
+                  disabled={racing}
+                  onClick={() => setIsolate((on) => !on)}
+                >
+                  <Icon name="branch" size={14} />
+                  {t("home.isolate")}
+                </button>
+              )}
+            </div>
           </>
         }
         actions={

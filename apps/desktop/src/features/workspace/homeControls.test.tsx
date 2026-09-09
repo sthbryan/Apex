@@ -31,7 +31,7 @@ it("keeps single-agent selection and isolation while exposing race selection", (
   const { container } = render(<Home />);
   expect(container.querySelector(".ui-select-trigger")).toBeNull();
   const selected = () =>
-    Array.from(container.querySelectorAll('button[aria-pressed="true"]')).map((button) =>
+    Array.from(container.querySelectorAll('.ui-toggle-chip[aria-pressed="true"]')).map((button) =>
       button.getAttribute("title"),
     );
   const agent = (name: string) => {
@@ -42,14 +42,15 @@ it("keeps single-agent selection and isolation while exposing race selection", (
   expect(selected()).toEqual(["codex"]);
   act(() => agent("opencode").click());
   expect(selected()).toEqual(["opencode"]);
-  const checks = container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+  const checks = container.querySelectorAll<HTMLButtonElement>(".home-option");
   expect(checks).toHaveLength(2);
   act(() => checks[1].click());
-  expect(checks[1].checked).toBe(true);
+  expect(checks[1].getAttribute("aria-pressed")).toBe("true");
   act(() => checks[0].click());
   expect(container.querySelector(".ui-select-trigger")).toBeNull();
-  expect(container.querySelectorAll('input[type="checkbox"]')).toHaveLength(1);
-  expect(container.querySelectorAll("[aria-pressed]")).toHaveLength(2);
+  expect(container.querySelectorAll('input[type="checkbox"]')).toHaveLength(0);
+  expect(checks[1].disabled).toBe(true);
+  expect(checks[1].getAttribute("aria-pressed")).toBe("true");
   act(() => agent("codex").click());
   expect(selected()).toEqual(["codex", "opencode"]);
   act(() => agent("opencode").click());
@@ -57,7 +58,6 @@ it("keeps single-agent selection and isolation while exposing race selection", (
   act(() => agent("opencode").click());
   act(() => checks[0].click());
   expect(selected()).toEqual(["codex"]);
-  expect(container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[1].checked).toBe(
-    true,
-  );
+  expect(checks[1].getAttribute("aria-pressed")).toBe("true");
+  expect(checks[1].disabled).toBe(false);
 });

@@ -4,19 +4,38 @@
   box-shadow: 0 3px 12px rgb(0 0 0 / 0.06);
 }
 
+.home-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-left: 1px solid var(--apex-border);
+  padding-left: 8px;
+}
+
 .home-option {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 30px;
-  padding-inline: 4px;
+  padding-inline: 8px;
+  border-radius: var(--apex-r-sm);
   font-size: var(--apex-text-sm);
   color: var(--apex-muted);
   cursor: pointer;
 }
 
-.home-option input {
-  accent-color: var(--apex-accent);
+.home-option:hover:not(:disabled) {
+  background: var(--apex-raised);
+  color: var(--apex-text);
+}
+
+.home-option[aria-pressed="true"] {
+  background: var(--apex-accent-soft);
+  color: var(--apex-accent);
+}
+
+.home-option:disabled {
+  cursor: default;
 }
 
 .home-summary .ui-list-row {
