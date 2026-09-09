@@ -23,10 +23,10 @@
   --apex-space-2xl: 24px;
   --apex-space-3xl: 32px;
 
-  --apex-rail-width: 52px;
+  --apex-rail-width: 46px;
   --apex-dock-width: 268px;
   --apex-title-bar-height: 46px;
-  --apex-status-bar-height: 28px;
+  --apex-status-bar-height: 30px;
 
   --apex-text-2xs: calc(10px * var(--apex-scale));
   --apex-text-xs: calc(11px * var(--apex-scale));

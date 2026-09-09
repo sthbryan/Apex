@@ -2,9 +2,9 @@
 
 @layer components {
   .ui-status-bar {
-    @apply relative flex min-w-0 flex-none items-center gap-1 px-2.5 text-sm whitespace-nowrap text-muted;
+    @apply relative flex min-w-0 flex-none items-center gap-1 px-3 text-xs whitespace-nowrap text-muted;
     background-color: var(--apex-bar);
-    height: var(--apex-h-lg);
+    min-height: var(--apex-status-bar-height);
     z-index: var(--apex-z-dock);
     border-top: 1px solid var(--apex-border);
   }
@@ -14,8 +14,8 @@
   }
 
   .ui-status-pill {
-    @apply inline-flex flex-none items-center gap-1.5 rounded-full border border-transparent px-2.5;
-    height: var(--apex-h-xs);
+    @apply inline-flex flex-none items-center gap-1.5 rounded-xs border border-transparent px-2;
+    height: 26px;
   }
 
   button.ui-status-pill:hover {
@@ -24,7 +24,6 @@
 
   .ui-status-pill[data-live="true"] {
     color: var(--apex-state-working);
-    border-color: color-mix(in oklab, var(--apex-state-working) 35%, transparent);
   }
 
   .ui-status-pill[data-live="true"] .ui-status-pill-beacon {
@@ -36,7 +35,8 @@
   @media (max-width: 640px) {
     .ui-status-bar {
       @apply gap-1 px-2 text-xs;
-      height: 36px;
+      flex-wrap: wrap;
+      padding-block: 2px;
     }
     .ui-status-pill {
       @apply px-2 gap-1;

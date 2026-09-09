@@ -20,8 +20,8 @@ export function StatusBar() {
       }
     >
       <GitChip />
-      <Racing />
       <UsageStrip />
+      <Racing />
     </Bar>
   );
 }
