@@ -504,7 +504,7 @@ function Reply({ id, working }: { id: string; working: boolean }) {
   };
 
   return (
-    <div class="relative shrink-0 border-t border-border">
+    <div class="acp-reply-wrap relative shrink-0">
       {waiting.length > 0 && (
         <ul class="flex flex-col gap-1 border-b border-border px-3 py-2">
           {waiting.map((held, index) => (

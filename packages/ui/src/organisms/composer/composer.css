@@ -4,7 +4,7 @@
   .ui-composer {
     @apply w-full rounded-xl border border-border;
     background-color: var(--apex-overlay);
-    box-shadow: var(--apex-shadow-sm), var(--apex-shadow-lg);
+    box-shadow: 0 3px 12px rgb(0 0 0 / 0.06);
   }
 
   .ui-composer:focus-within {
@@ -22,12 +22,12 @@
   }
 
   .ui-composer-bar {
-    @apply flex min-w-0 items-center gap-1.5 px-2.5 pt-2 pb-2.5;
+    @apply flex min-w-0 flex-wrap items-center gap-1.5 px-2.5 pt-2 pb-2.5;
   }
 
   @media (max-width: 640px) {
     .ui-composer {
-      @apply rounded-[14px];
+      @apply rounded-lg;
     }
     .ui-composer textarea {
       @apply px-3 pt-3;

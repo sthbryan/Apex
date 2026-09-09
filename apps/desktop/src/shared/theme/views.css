@@ -1,20 +1,22 @@
 .reply {
-  @apply rounded-none border-0 bg-transparent shadow-none;
+  @apply rounded-lg border border-border;
+  background: var(--apex-overlay);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 0.06);
 }
 
 .acp-view .ui-transcript {
-  @apply gap-3;
-  padding: 16px;
+  @apply gap-5;
+  padding: 28px 26px;
 }
 
 .acp-view .ui-transcript > * {
-  width: min(100%, 960px);
+  width: min(100%, 720px);
   margin-inline: auto;
 }
 
 .acp-view .ui-transcript > .ui-message[data-from="user"] {
-  width: min(78%, 720px);
-  margin-right: max(0px, calc((100% - 960px) / 2));
+  width: min(85%, 612px);
+  margin-right: max(0px, calc((100% - 720px) / 2));
   margin-left: auto;
 }
 
@@ -46,7 +48,7 @@
 
 .acp-view .ui-approval-card,
 .acp-view .ui-question {
-  width: min(100%, 960px);
+  width: min(100%, 720px);
   margin-inline: auto;
 }
 
@@ -102,7 +104,7 @@
 }
 
 .acp-view > .relative > .acp-transcript + button {
-  right: max(12px, calc((100% - 960px) / 2));
+  right: max(12px, calc((100% - 720px) / 2));
 }
 
 .acp-view > .border-t,
@@ -114,15 +116,21 @@
   width: 100%;
 }
 
+.acp-reply-wrap {
+  width: min(100%, 772px);
+  margin-inline: auto;
+  padding: 12px 26px 24px;
+}
+
 .reply .ui-composer-bar {
   @apply pt-1.5 pb-2.5;
-  padding-inline: max(10px, calc((100% - 960px) / 2));
+  padding-inline: 12px;
 }
 
 .acp-view .reply textarea {
   @apply min-h-0 pt-3 pb-2 text-md;
-  min-height: 44px;
-  padding-inline: max(16px, calc((100% - 960px) / 2));
+  min-height: 58px;
+  padding-inline: 16px;
 }
 
 .acp-reply-status,
@@ -176,6 +184,9 @@
 }
 
 @media (max-width: 719px) {
+  .acp-reply-wrap {
+    padding: 10px 12px 16px;
+  }
   .acp-view .ui-transcript {
     padding: 12px;
     gap: 12px;
