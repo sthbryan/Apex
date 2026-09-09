@@ -6,7 +6,7 @@
   }
 
   .ui-race-task {
-    @apply flex flex-none items-center gap-2 border-b border-border px-3 py-1.5;
+    @apply flex flex-none items-center gap-2 border-b border-border px-4 py-3;
   }
 
   .ui-race-task-name {
@@ -36,7 +36,7 @@
   }
 
   .ui-race-col-head {
-    @apply flex flex-none items-center gap-2 border-b border-border px-2.5 py-2;
+    @apply flex flex-none items-center gap-2 border-b border-border px-4 py-3;
   }
 
   .ui-race-col-name {
@@ -44,7 +44,7 @@
   }
 
   .ui-race-col-body {
-    @apply min-h-0 flex-1 overflow-auto px-2.5 py-2 text-md text-muted;
+    @apply min-h-0 flex-1 overflow-auto px-4 py-4 text-md text-muted;
   }
 
   .ui-race-decide {

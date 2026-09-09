@@ -55,7 +55,7 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 type Tab = "params" | "headers" | "body";
 
 const BOX =
-  "min-w-0 rounded-sm border border-border bg-raised px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
+  "min-w-0 rounded-sm border border-border bg-overlay px-2 text-sm text-text placeholder:text-faint focus:border-focus focus:outline-none";
 const LINE = `h-(--apex-h-md) ${BOX}`;
 const FLOW = "w-full whitespace-pre-wrap break-words font-mono text-xs leading-relaxed";
 
@@ -146,7 +146,7 @@ export function ApiPanel() {
         </>
       }
     >
-      <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pt-3 pb-4">
+      <div class="api-panel-content flex min-h-0 flex-1 flex-col overflow-y-auto">
         <Select
           class="w-full"
           label={t("api.request")}
@@ -170,6 +170,7 @@ export function ApiPanel() {
           </span>
           <input
             value={request.url}
+            aria-label="URL"
             spellcheck={false}
             placeholder="https://{{host}}/users"
             onInput={(event) => edit({ url: event.currentTarget.value })}
@@ -177,7 +178,7 @@ export function ApiPanel() {
           />
         </div>
 
-        <div class="flex items-center gap-1.5">
+        <div class="api-actions flex items-center gap-1.5">
           <Select
             class="min-w-0 flex-1"
             label={t("api.environment")}

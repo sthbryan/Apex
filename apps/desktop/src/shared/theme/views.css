@@ -4,6 +4,48 @@
   box-shadow: 0 3px 12px rgb(0 0 0 / 0.06);
 }
 
+.home-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding-inline: 4px;
+  font-size: var(--apex-text-sm);
+  color: var(--apex-muted);
+  cursor: pointer;
+}
+
+.home-option input {
+  accent-color: var(--apex-accent);
+}
+
+.home-summary .ui-list-row {
+  min-height: 48px;
+  padding: 12px 0;
+  border-top: 1px solid var(--apex-border);
+  border-radius: 0;
+}
+
+.api-panel-content {
+  padding: 20px;
+  gap: 18px;
+  container-type: inline-size;
+}
+
+.api-panel-content > section {
+  margin-top: 8px;
+}
+
+.api-panel-content > .api-actions {
+  flex-wrap: wrap;
+}
+
+@container (max-width: 340px) {
+  .api-actions > .ui-select {
+    flex-basis: 100%;
+  }
+}
+
 .acp-view .ui-transcript {
   @apply gap-5;
   padding: 28px 26px;

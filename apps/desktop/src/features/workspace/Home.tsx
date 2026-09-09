@@ -5,6 +5,7 @@ import {
   Dot,
   ListRow,
   SectionLabel,
+  Select,
   ToggleChip,
   ToggleChipGroup,
   Welcome,
@@ -111,7 +112,13 @@ export function Home() {
       mark={<Wordmark size="xl">APEX</Wordmark>}
       tagline={t("home.tagline")}
       suggestions={recentTasks().map((recent) => (
-        <Button key={recent} size="sm" class="rounded-full" onClick={() => setTask(recent)}>
+        <Button
+          key={recent}
+          size="sm"
+          class="max-w-full truncate"
+          title={recent}
+          onClick={() => setTask(recent)}
+        >
           {recent}
         </Button>
       ))}
@@ -135,41 +142,51 @@ export function Home() {
         onSubmit={start}
         lead={
           <>
-            <ToggleChipGroup label={t("home.agents")} scroll>
-              {runnable.map((agent) => {
-                const on = chosen.includes(agent.name);
-                return (
-                  <ToggleChip
-                    key={agent.name}
-                    pressed={on}
-                    iconOnly={!on}
-                    title={agent.name}
-                    lead={<AgentIcon agent={agent.name} size="sm" />}
-                    onClick={() => pick(agent.name)}
-                  >
-                    {on ? agent.name : null}
-                  </ToggleChip>
-                );
-              })}
-            </ToggleChipGroup>
-            <span class="mx-0.5 h-5 w-px flex-none bg-border" />
-            <ToggleChip
-              pressed={racing}
-              title={t("home.modeRaceHint")}
-              lead={<Icon name="swap" size={13} />}
-              onClick={() => swapMode(racing ? "session" : "race")}
-            >
+            {!racing ? (
+              <Select
+                class="min-w-0 max-w-48"
+                label={t("home.agents")}
+                placeholder={t("home.agents")}
+                value={chosen[0] ?? ""}
+                options={runnable.map((agent) => ({ value: agent.name, label: agent.name }))}
+                onChange={pick}
+              />
+            ) : (
+              <ToggleChipGroup label={t("home.agents")} scroll>
+                {runnable.map((agent) => {
+                  const on = chosen.includes(agent.name);
+                  return (
+                    <ToggleChip
+                      key={agent.name}
+                      pressed={on}
+                      iconOnly={!on}
+                      title={agent.name}
+                      lead={<AgentIcon agent={agent.name} size="sm" />}
+                      onClick={() => pick(agent.name)}
+                    >
+                      {on ? agent.name : null}
+                    </ToggleChip>
+                  );
+                })}
+              </ToggleChipGroup>
+            )}
+            <label class="home-option" title={t("home.modeRaceHint")}>
+              <input
+                type="checkbox"
+                checked={racing}
+                onChange={(event) => swapMode(event.currentTarget.checked ? "race" : "session")}
+              />
               {t("home.modeRace")}
-            </ToggleChip>
+            </label>
             {!racing && project?.is_git && (
-              <ToggleChip
-                pressed={isolate}
-                title={t("isolation.worktreeHint")}
-                lead={<Icon name="branch" size={13} />}
-                onClick={() => setIsolate((on) => !on)}
-              >
+              <label class="home-option" title={t("isolation.worktreeHint")}>
+                <input
+                  type="checkbox"
+                  checked={isolate}
+                  onChange={(event) => setIsolate(event.currentTarget.checked)}
+                />
                 {t("home.isolate")}
-              </ToggleChip>
+              </label>
             )}
           </>
         }
@@ -211,7 +228,7 @@ function Summary() {
   }
 
   return (
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-x-6 gap-y-4 text-left">
+    <div class="home-summary flex flex-col gap-6 text-left">
       {blocked.length + reviews.length > 0 && (
         <div>
           <SectionLabel flush count={blocked.length + reviews.length}>
