@@ -19,6 +19,7 @@ export function Switch({ checked, onChange, label, labelHidden = true, disabled,
         checked={checked}
         disabled={disabled}
         aria-label={labelHidden ? label : undefined}
+        data-cuelume-toggle="toggle"
         onChange={(e: JSX.TargetedEvent<HTMLInputElement>) => onChange(e.currentTarget.checked)}
       />
       <span class="ui-switch-track" />

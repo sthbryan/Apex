@@ -1,5 +1,6 @@
 import { useSignalEffect } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+import { play } from "cuelume";
+import { useEffect, useRef } from "preact/hooks";
 
 import { DaemonFailed } from "@/app/DaemonFailed";
 import { useKeymap } from "@/app/keymap";
@@ -40,6 +41,8 @@ import { ContextMenu } from "@/shared/ui/ContextMenu";
 import { watchFullscreen } from "@/shared/window";
 
 export function App() {
+  const previousAgent = useRef<string | null>(null);
+
   useEffect(() => {
     document.documentElement.lang = locale.value;
     void connect()
@@ -127,6 +130,14 @@ export function App() {
     if (session) {
       focusTerminal(session);
     }
+  });
+
+  useSignalEffect(() => {
+    const agent = activeSessionId.value;
+    if (agent && agent !== previousAgent.current) {
+      play("sparkle");
+    }
+    previousAgent.current = agent;
   });
 
   useKeymap({ togglePalette, toggleFinder });

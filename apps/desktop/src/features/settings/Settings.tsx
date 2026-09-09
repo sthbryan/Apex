@@ -15,6 +15,7 @@ import {
   spaceSection,
   toolsSection,
 } from "@/features/settings/sections";
+import { startSettingsSounds } from "@/features/settings/sounds";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -31,6 +32,11 @@ export function Settings() {
     if (page.value === "settings") {
       void loadCli();
       startProviders();
+
+      const dialog = document.querySelector<HTMLElement>(".apex-settings");
+      if (dialog) {
+        startSettingsSounds(dialog);
+      }
     }
   }, [page.value]);
 
@@ -60,6 +66,7 @@ export function Settings() {
 
   return (
     <SettingsDialog
+      class="apex-settings"
       open={page.value === "settings"}
       onClose={closePage}
       title={t("settings.title")}
@@ -93,6 +100,8 @@ export function Settings() {
         <button
           type="button"
           title={t("settings.close")}
+          data-cuelume-press="press"
+          data-cuelume-release="release"
           onClick={closePage}
           class="flex size-6 items-center justify-center rounded text-faint transition-colors hover:bg-raised hover:text-text"
         >

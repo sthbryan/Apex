@@ -120,6 +120,7 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={open}
         disabled={disabled}
+        data-cuelume-press="press"
         onClick={() => open ? setOpen(false) : start()}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -171,6 +172,7 @@ export function Select({
               role="option"
               aria-selected={index === selected}
               data-active={slot === active || undefined}
+              data-cuelume-hover="tick"
               onPointerEnter={() => setActive(slot)}
               onClick={() => pick(slot)}
             >

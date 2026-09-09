@@ -6,6 +6,7 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
+import { play } from "cuelume";
 
 import type { NotifyKind } from "@/bindings/NotifyKind";
 import type { SessionState } from "@/bindings/SessionState";
@@ -62,8 +63,8 @@ export function push(entry: Omit<Notice, "id" | "at" | "read">): void {
   if (shouldDisturb(notice)) {
     sendNotification({ title: notice.title, body: notice.body });
   }
-  if (shouldChime(notice)) {
-    chime();
+  if (shouldCueInPlace(notice)) {
+    play(notice.kind === "done" ? "success" : notice.kind === "error" ? "error" : "ready");
   }
 }
 
@@ -130,43 +131,14 @@ function shouldDisturb(notice: Notice): boolean {
   return !sentRecently(notice.sessionId);
 }
 
-function shouldChime(notice: Notice): boolean {
+function shouldCueInPlace(notice: Notice): boolean {
   return (
-    notice.kind === "blocked" &&
+    (notice.kind === "blocked" || notice.kind === "done" || notice.kind === "error") &&
     focused &&
-    notifyEnabled.peek() &&
     notice.sessionId !== null &&
     visibleSessions.peek().has(notice.sessionId) &&
     !mutedSessions.peek().includes(notice.sessionId)
   );
-}
-
-function chime(): void {
-  try {
-    const context = new AudioContext();
-    const gain = context.createGain();
-    const first = context.createOscillator();
-    const second = context.createOscillator();
-    const now = context.currentTime;
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
-    first.type = "sine";
-    first.frequency.setValueAtTime(660, now);
-    second.type = "sine";
-    second.frequency.setValueAtTime(880, now + 0.1);
-    first.connect(gain);
-    second.connect(gain);
-    gain.connect(context.destination);
-    first.start(now);
-    first.stop(now + 0.18);
-    second.start(now + 0.1);
-    second.stop(now + 0.32);
-    second.onended = () => void context.close();
-  } catch {
-    return;
-  }
 }
 
 function sentRecently(sessionId: string): boolean {
@@ -216,10 +188,15 @@ export async function startNotifications(): Promise<() => void> {
         continue;
       }
       if (session.state === "blocked" || session.state === "done") {
+        const failed =
+          session.state === "done" && session.exit_code !== null && session.exit_code !== 0;
         push({
           sessionId: session.id,
-          kind: session.state,
-          title: session.state === "blocked" ? t("notify.blocked") : t("notify.done"),
+          kind: failed ? "error" : session.state,
+          title:
+            session.state === "blocked"
+              ? t("notify.blocked")
+              : t(failed ? "notify.error" : "notify.done"),
           body: scopeOf(session.id),
         });
       }

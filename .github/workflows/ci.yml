@@ -22,12 +22,19 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install JS deps
         run: bun install --frozen-lockfile
 
       - name: Build UI package
         working-directory: .
         run: bun run build:packages
+
+      - name: Generate TypeScript bindings
+        working-directory: .
+        run: cargo test -p apex-proto -p apex-core export_bindings
 
       - name: Lint
         run: bun run lint
@@ -57,6 +64,13 @@ jobs:
             libssl-dev \
             librsvg2-dev \
             libayatana-appindicator3-dev
+
+      - name: Build desktop sidecar
+        run: |
+          cargo build -p apexd
+          mkdir -p apps/desktop/src-tauri/binaries
+          cp target/debug/apexd apps/desktop/src-tauri/binaries/apexd-$(rustc -vV | sed -n 's|host: ||p')
+          chmod +x apps/desktop/src-tauri/binaries/apexd-*
 
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings

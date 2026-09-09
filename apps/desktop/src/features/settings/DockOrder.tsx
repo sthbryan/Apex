@@ -102,6 +102,8 @@ export function DockOrder() {
               role="button"
               tabIndex={0}
               title={t("settings.sidebarDrag")}
+              data-cuelume-hover="tick"
+              data-cuelume-release="release"
               data-held={held === row || undefined}
               onMouseDown={(event) => grab(row, index, event)}
               onKeyDown={(event) => nudge(row, index, event)}

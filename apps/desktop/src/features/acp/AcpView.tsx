@@ -39,6 +39,7 @@ import {
 } from "@/features/acp/state";
 import { SplitPatch } from "@/features/git/SplitPatch";
 import { sessions } from "@/features/sessions/state";
+import { playTypingCue } from "@/features/settings/sounds";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -558,6 +559,7 @@ function Reply({ id, working }: { id: string; working: boolean }) {
         onInput={(event) => {
           setText(event.currentTarget.value);
           setCursor(0);
+          playTypingCue();
         }}
         onKeyDown={(event) => {
           if (matches.length > 0) {

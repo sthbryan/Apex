@@ -202,6 +202,8 @@ export const en = {
       "Choose whether workspace panels meet at their edges or sit as separate surfaces.",
     workspaceStyleEdge: "Edge to edge",
     workspaceStyleFloating: "Floating",
+    interactionSounds: "Interaction sounds",
+    interactionSoundsHint: "Plays quiet cues for controls and navigation.",
     theme: "Theme",
     themeHint: "Follows your system.",
     themeHintLight: "Always uses the light theme.",
