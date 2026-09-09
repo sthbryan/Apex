@@ -6,6 +6,20 @@
   @apply gap-0 overflow-hidden p-0;
 }
 
+.sessions-panel {
+  padding: 8px 10px 16px;
+  gap: 4px;
+}
+
+.sessions-panel .ui-list-row {
+  min-height: 36px;
+}
+
+.sessions-panel .ui-list-row[data-selected="true"] {
+  background: var(--apex-raised);
+  color: var(--apex-text);
+}
+
 .dock-scroll {
   @apply flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2;
 }

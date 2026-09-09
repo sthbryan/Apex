@@ -1,6 +1,5 @@
 import {
   AppBody,
-  Button,
   Rail,
   RailButton,
   RailDivider,
@@ -146,12 +145,6 @@ export function Layout({ onNewSession }: Props) {
             data-resizing={dockResizing.value || undefined}
             grip={<DockResize />}
             head={<ProjectPicker />}
-            foot={
-              <Button variant="primary" size="lg" class="w-full" onClick={openHome}>
-                <Icon name="plus" size={14} />
-                {t("toolbar.newSession")}
-              </Button>
-            }
           >
             <Dock />
           </SidePanel>
