@@ -1,12 +1,4 @@
-import {
-  AppBody,
-  Rail,
-  RailButton,
-  RailDivider,
-  SidePanel,
-  TitleBar,
-  Wordmark,
-} from "@apex/ui";
+import { AppBody, Rail, RailButton, RailDivider, SidePanel, TitleBar, Wordmark } from "@apex/ui";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import cn from "cnfast";
 import { useCallback } from "preact/hooks";

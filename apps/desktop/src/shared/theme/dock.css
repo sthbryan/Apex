@@ -56,6 +56,29 @@
   flex: 1;
 }
 
+@media (max-width: 1100px) {
+  .apex-panel-surface {
+    max-width: max(280px, calc(100vw - var(--apex-dock-width) - var(--apex-rail-width) - 320px));
+  }
+
+  .apex-panel-surface .ui-side-panel-inner {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .apex-panel-surface:not([data-collapsed]) {
+    position: absolute;
+    top: var(--apex-title-bar-height);
+    bottom: var(--apex-status-bar-height);
+    right: 0;
+    width: min(420px, calc(100% - var(--apex-rail-width)));
+    max-width: none;
+    z-index: var(--apex-z-dock);
+    background: var(--apex-bg);
+  }
+}
+
 .dock-scroll {
   @apply flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2;
 }

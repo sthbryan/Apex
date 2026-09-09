@@ -401,6 +401,7 @@ export const en = {
     shared: "Shared with every agent",
   },
   browser: {
+    title: "Browser",
     open: "Toggle the browser",
     back: "Back",
     forward: "Forward",

@@ -402,6 +402,7 @@ export const es: Messages = {
     shared: "Lo leen todos los agentes",
   },
   browser: {
+    title: "Navegador",
     open: "Mostrar u ocultar el browser",
     back: "Atrás",
     forward: "Adelante",

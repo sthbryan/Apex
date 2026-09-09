@@ -65,7 +65,7 @@ export function Aside() {
                 onClick={() => openAside("browser")}
               >
                 <Icon name="globe" size={14} />
-                {t("browser.open")}
+                {t("browser.title")}
               </button>
             )}
             <button
