@@ -5,7 +5,6 @@ import {
   Dot,
   ListRow,
   SectionLabel,
-  Select,
   ToggleChip,
   ToggleChipGroup,
   Welcome,
@@ -142,34 +141,23 @@ export function Home() {
         onSubmit={start}
         lead={
           <>
-            {!racing ? (
-              <Select
-                class="min-w-0 max-w-48"
-                label={t("home.agents")}
-                placeholder={t("home.agents")}
-                value={chosen[0] ?? ""}
-                options={runnable.map((agent) => ({ value: agent.name, label: agent.name }))}
-                onChange={pick}
-              />
-            ) : (
-              <ToggleChipGroup label={t("home.agents")} scroll>
-                {runnable.map((agent) => {
-                  const on = chosen.includes(agent.name);
-                  return (
-                    <ToggleChip
-                      key={agent.name}
-                      pressed={on}
-                      iconOnly={!on}
-                      title={agent.name}
-                      lead={<AgentIcon agent={agent.name} size="sm" />}
-                      onClick={() => pick(agent.name)}
-                    >
-                      {on ? agent.name : null}
-                    </ToggleChip>
-                  );
-                })}
-              </ToggleChipGroup>
-            )}
+            <ToggleChipGroup label={t("home.agents")} scroll>
+              {runnable.map((agent) => {
+                const on = chosen.includes(agent.name);
+                return (
+                  <ToggleChip
+                    key={agent.name}
+                    pressed={on}
+                    iconOnly={!on}
+                    title={agent.name}
+                    lead={<AgentIcon agent={agent.name} size="sm" />}
+                    onClick={() => pick(agent.name)}
+                  >
+                    {on ? agent.name : null}
+                  </ToggleChip>
+                );
+              })}
+            </ToggleChipGroup>
             <label class="home-option" title={t("home.modeRaceHint")}>
               <input
                 type="checkbox"
