@@ -15,6 +15,7 @@ const BUILTIN_PROFILES: &[(&str, &str)] = &[
     ("grok", include_str!("../../../agents/grok.toml")),
     ("copilot", include_str!("../../../agents/copilot.toml")),
     ("opencode", include_str!("../../../agents/opencode.toml")),
+    ("opencode2", include_str!("../../../agents/opencode2.toml")),
     ("pi", include_str!("../../../agents/pi.toml")),
     ("shell", include_str!("../../../agents/shell.toml")),
 ];

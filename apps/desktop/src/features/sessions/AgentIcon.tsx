@@ -3,6 +3,7 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 
 const ALIAS: Record<string, string> = {
   copilot: "githubcopilot",
+  opencode2: "opencode",
 };
 
 const FALLBACK_ICONS: Record<string, IconName> = {
