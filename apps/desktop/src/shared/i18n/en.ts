@@ -66,6 +66,7 @@ export const en = {
     response: "Response",
   },
   aside: {
+    close: "Close side panel",
     resize: "Resize the side panel",
   },
   dock: {
@@ -400,6 +401,7 @@ export const en = {
     shared: "Shared with every agent",
   },
   browser: {
+    title: "Browser",
     open: "Toggle the browser",
     back: "Back",
     forward: "Forward",
@@ -614,6 +616,9 @@ export const en = {
     clearFinished: "Clear finished",
   },
   home: {
+    starting: "Starting...",
+    startWait: "Starting {agents}. Your task will be sent when ready.",
+    startSlow: "Still waiting for {agents} to finish starting. Your task is preserved.",
     title: "Home",
     tagline: "Run a team of AI agents, not a wall of terminals.",
     task: "Task",

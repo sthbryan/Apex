@@ -18,7 +18,7 @@
   }
 
   .ui-project-button-path {
-    @apply block truncate font-mono text-2xs text-muted;
+    @apply mt-1 block truncate text-xs text-muted;
   }
 
   .ui-project-button-alert {

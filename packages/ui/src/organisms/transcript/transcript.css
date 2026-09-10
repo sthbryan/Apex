@@ -27,9 +27,9 @@
   }
 
   .ui-message[data-from="user"] .ui-message-body {
-    @apply border border-border px-3 py-2;
+    @apply px-4 py-3;
     background-color: var(--apex-raised);
-    border-radius: var(--apex-r-md) var(--apex-r-md) var(--apex-r-xs) var(--apex-r-md);
+    border-radius: var(--apex-r-sm);
   }
 
   .ui-tool-call {

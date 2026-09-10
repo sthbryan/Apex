@@ -21,6 +21,25 @@ fn claude_declares_resume_and_acp() {
 }
 
 #[test]
+fn opencode_versions_keep_distinct_launchers_and_compatible_project_config() {
+    let set = ProfileSet::builtin().expect("builtin profiles");
+    let stable = set.get("opencode").expect("stable");
+    let beta = set.get("opencode2").expect("beta");
+    assert_eq!(stable.launch_command(), "opencode");
+    assert_eq!(beta.launch_command(), "opencode2");
+    assert_eq!(beta.args, vec!["--standalone"]);
+    assert_eq!(beta.auto_args, vec!["--auto"]);
+    assert_eq!(beta.acp_command.as_deref(), Some("opencode2"));
+    assert_eq!(beta.acp_args, vec!["acp"]);
+    assert_eq!(beta.mcp, stable.mcp);
+    assert!(beta.pty);
+    let mut resolver = BinaryResolver::default();
+    resolver.knows("opencode2", PathBuf::from("/opt/opencode2"));
+    assert!(beta.summarize(&mut resolver).is_available());
+    assert!(!stable.summarize(&mut resolver).is_available());
+}
+
+#[test]
 fn grok_declares_its_native_acp_server() {
     let set = ProfileSet::builtin().expect("builtin profiles");
     let grok = set.get("grok").expect("grok");

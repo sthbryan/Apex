@@ -12,6 +12,7 @@ import { ElsewhereList } from "@/features/sessions/ElsewhereList";
 import { requestClose } from "@/features/sessions/pending";
 import { SessionRow } from "@/features/sessions/SessionRow";
 import { WaitingList } from "@/features/sessions/WaitingList";
+import { openHome } from "@/features/workspace/state";
 import { complain } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
@@ -24,13 +25,13 @@ export function SessionsPanel() {
   const hasSessions = live.length > 0 || finished.length > 0;
 
   return (
-    <div class="dock-view">
+    <div class="dock-view sessions-panel">
       {waiting.value.length > 0 && (
         <WaitingList sessions={waiting.value} projects={projects.value} />
       )}
 
       {live.length === 0 && (
-        <SectionLabel flush action={<PanelActions panel="sessions" />}>
+        <SectionLabel flush action={<SessionActions />}>
           {t("sessions.running")}
         </SectionLabel>
       )}
@@ -39,7 +40,7 @@ export function SessionsPanel() {
 
       {live.length > 0 && (
         <Fragment>
-          <SectionLabel flush count={live.length} action={<PanelActions panel="sessions" />}>
+          <SectionLabel flush count={live.length} action={<SessionActions />}>
             {t("sessions.running")}
           </SectionLabel>
           <ul class="flex flex-col">{renderTree(live)}</ul>
@@ -76,6 +77,22 @@ export function SessionsPanel() {
 
       {elsewhere.length > 0 && <ElsewhereList sessions={elsewhere} projects={projects.value} />}
     </div>
+  );
+}
+
+function SessionActions() {
+  return (
+    <PanelActions panel="sessions">
+      <button
+        type="button"
+        title={t("toolbar.newSession")}
+        aria-label={t("toolbar.newSession")}
+        class="flex size-6 items-center justify-center rounded-xs text-muted hover:bg-raised hover:text-text"
+        onClick={openHome}
+      >
+        <Icon name="plus" size={14} />
+      </button>
+    </PanelActions>
   );
 }
 

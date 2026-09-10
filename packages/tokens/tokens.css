@@ -1,11 +1,11 @@
 :root {
   --apex-scale: 1;
 
-  --apex-r-xs: 8px;
-  --apex-r-sm: 10px;
-  --apex-r-md: 14px;
-  --apex-r-lg: 18px;
-  --apex-r-xl: 24px;
+  --apex-r-xs: 3px;
+  --apex-r-sm: 4px;
+  --apex-r-md: 6px;
+  --apex-r-lg: 8px;
+  --apex-r-xl: 8px;
   --apex-r-full: 999px;
 
   --apex-h-xs: 20px;
@@ -23,15 +23,15 @@
   --apex-space-2xl: 24px;
   --apex-space-3xl: 32px;
 
-  --apex-rail-width: 52px;
+  --apex-rail-width: 46px;
   --apex-dock-width: 268px;
   --apex-title-bar-height: 46px;
-  --apex-status-bar-height: 28px;
+  --apex-status-bar-height: 30px;
 
-  --apex-text-2xs: calc(9.5px * var(--apex-scale));
-  --apex-text-xs: calc(10.5px * var(--apex-scale));
-  --apex-text-sm: calc(11.5px * var(--apex-scale));
-  --apex-text-md: calc(12.5px * var(--apex-scale));
+  --apex-text-2xs: calc(10px * var(--apex-scale));
+  --apex-text-xs: calc(11px * var(--apex-scale));
+  --apex-text-sm: calc(12px * var(--apex-scale));
+  --apex-text-md: calc(13px * var(--apex-scale));
   --apex-text-lg: calc(14px * var(--apex-scale));
   --apex-text-xl: calc(17px * var(--apex-scale));
   --apex-text-2xl: calc(20px * var(--apex-scale));
@@ -49,10 +49,10 @@
   --apex-weight-semibold: 600;
   --apex-weight-bold: 700;
 
-  --apex-tracking-tight: -0.02em;
+  --apex-tracking-tight: 0em;
   --apex-tracking-normal: 0em;
-  --apex-tracking-wide: 0.06em;
-  --apex-tracking-caps: 0.08em;
+  --apex-tracking-wide: 0em;
+  --apex-tracking-caps: 0em;
 
   --apex-ease: cubic-bezier(0.2, 0, 0, 1);
   --apex-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -80,23 +80,23 @@
 }
 
 :root {
-  --apex-bg-solid: light-dark(#faf4ed, #191724);
-  --apex-surface-solid: light-dark(#fffaf3, #1f1d2e);
-  --apex-raised-solid: light-dark(#f2e9e1, #26233a);
-  --apex-overlay-solid: light-dark(#ffffff, #2f2b43);
-  --apex-tty-solid: light-dark(#faf4ed, #191724);
-  --apex-border-solid: light-dark(#dfdad9, #403d52);
-  --apex-text-solid: light-dark(#575279, #e0def4);
-  --apex-muted-solid: light-dark(#797593, #908caa);
-  --apex-faint-solid: light-dark(#9893a5, #6e6a86);
+  --apex-bg-solid: light-dark(#fafaf9, #181818);
+  --apex-surface-solid: light-dark(#f1f2f1, #202020);
+  --apex-raised-solid: light-dark(#eeefec, #292929);
+  --apex-overlay-solid: light-dark(#ffffff, #303030);
+  --apex-tty-solid: light-dark(#f6f6f4, #161616);
+  --apex-border-solid: light-dark(#d7d8d7, #414141);
+  --apex-text-solid: light-dark(#303035, #eeeeee);
+  --apex-muted-solid: light-dark(#63636b, #b5b5ba);
+  --apex-faint-solid: light-dark(#696971, #aaaaaf);
 
-  --apex-accent: light-dark(#98323f, #c04350);
-  --apex-accent-fg: light-dark(#fffaf3, #fff1f2);
+  --apex-accent: light-dark(#9b3446, #c04350);
+  --apex-accent-fg: light-dark(#ffffff, #fff1f2);
   --apex-accent-soft: color-mix(in oklab, var(--apex-accent) 13%, transparent);
   --apex-focus: light-dark(#7f1f2c, #e88d93);
   --apex-selection: color-mix(in oklab, var(--apex-accent) 24%, transparent);
 
-  --apex-state-idle: light-dark(#797593, #6e6a86);
+  --apex-state-idle: light-dark(#696971, #aaaaaf);
   --apex-state-working: light-dark(#907aa9, #c4a7e7);
   --apex-state-blocked: light-dark(#ad7615, #f6c177);
   --apex-state-done: light-dark(#43808c, #9ccfd8);
@@ -110,9 +110,9 @@
   --apex-git-behind: var(--apex-state-blocked);
   --apex-git-conflict: var(--apex-state-failed);
 
-  --apex-tty-fg: light-dark(#575279, #cbc7dd);
-  --apex-tty-dim: light-dark(#9893a5, #6e6a86);
-  --apex-tty-bright: light-dark(#26213a, #e0def4);
+  --apex-tty-fg: light-dark(#434349, #d3d3d3);
+  --apex-tty-dim: light-dark(#696971, #aaaaaf);
+  --apex-tty-bright: light-dark(#303035, #eeeeee);
 
   --apex-ansi-black: light-dark(#f2e9e1, #26233a);
   --apex-ansi-red: light-dark(#b4637a, #eb6f92);
@@ -153,22 +153,22 @@
   --apex-text-solid: color-mix(
     in oklab,
     var(--apex-veil-ink) var(--apex-veil-contrast),
-    light-dark(#26213a, #eae8fb)
+    light-dark(#303035, #eeeeee)
   );
   --apex-muted-solid: color-mix(
     in oklab,
     var(--apex-veil-ink) var(--apex-veil-contrast),
-    light-dark(#3b3757, #aaa6c0)
+    light-dark(#494950, #c4c4c8)
   );
   --apex-faint-solid: color-mix(
     in oklab,
     var(--apex-veil-ink) var(--apex-veil-contrast),
-    light-dark(#4f4a6b, #837e9c)
+    light-dark(#55555d, #b8b8bd)
   );
   --apex-border-solid: color-mix(
     in oklab,
     var(--apex-veil-ink) var(--apex-veil-contrast),
-    light-dark(#bdb3aa, #4a4763)
+    light-dark(#bfc1bf, #505050)
   );
 }
 

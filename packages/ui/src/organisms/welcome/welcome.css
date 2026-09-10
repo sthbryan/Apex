@@ -44,7 +44,7 @@
 
   .ui-welcome-inner {
     @apply flex w-full flex-col items-center gap-4;
-    max-width: 660px;
+    max-width: 690px;
   }
 
   .ui-welcome-mark {
@@ -60,6 +60,6 @@
   }
 
   .ui-welcome-foot {
-    @apply mt-4 w-full;
+    @apply mt-6 w-full;
   }
 }

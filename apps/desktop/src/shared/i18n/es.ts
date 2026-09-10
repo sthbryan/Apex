@@ -68,6 +68,7 @@ export const es: Messages = {
     response: "Respuesta",
   },
   aside: {
+    close: "Cerrar panel lateral",
     resize: "Cambiar el ancho del panel lateral",
   },
   dock: {
@@ -401,6 +402,7 @@ export const es: Messages = {
     shared: "Lo leen todos los agentes",
   },
   browser: {
+    title: "Navegador",
     open: "Mostrar u ocultar el browser",
     back: "Atrás",
     forward: "Adelante",
@@ -615,6 +617,9 @@ export const es: Messages = {
     clearFinished: "Limpiar terminadas",
   },
   home: {
+    starting: "Iniciando...",
+    startWait: "Iniciando {agents}. La tarea se enviará cuando esté listo.",
+    startSlow: "Seguimos esperando que {agents} termine de iniciar. Tu tarea está conservada.",
     title: "Inicio",
     tagline: "Dirigí un equipo de agentes, no una pared de terminales.",
     task: "Tarea",

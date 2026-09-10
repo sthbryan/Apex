@@ -1,13 +1,4 @@
-import {
-  AppBody,
-  Button,
-  Rail,
-  RailButton,
-  RailDivider,
-  SidePanel,
-  TitleBar,
-  Wordmark,
-} from "@apex/ui";
+import { AppBody, Rail, RailButton, RailDivider, SidePanel, TitleBar, Wordmark } from "@apex/ui";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import cn from "cnfast";
 import { useCallback } from "preact/hooks";
@@ -146,12 +137,6 @@ export function Layout({ onNewSession }: Props) {
             data-resizing={dockResizing.value || undefined}
             grip={<DockResize />}
             head={<ProjectPicker />}
-            foot={
-              <Button variant="primary" size="lg" class="w-full" onClick={openHome}>
-                <Icon name="plus" size={14} />
-                {t("toolbar.newSession")}
-              </Button>
-            }
           >
             <Dock />
           </SidePanel>

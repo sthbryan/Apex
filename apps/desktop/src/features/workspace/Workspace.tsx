@@ -16,7 +16,7 @@ export function Workspace() {
     <>
       <TabBar tabs={tabs.value} sessions={sessions.value} />
 
-      <div class="relative m-px min-h-0 flex-1">
+      <div class="relative min-h-0 flex-1">
         {tabs.value.map((tab) => {
           const active = !home && tab.id === activeTabId.value;
           return (

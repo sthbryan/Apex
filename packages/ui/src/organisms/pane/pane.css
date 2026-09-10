@@ -28,7 +28,8 @@
   }
 
   .ui-pane-head {
-    @apply flex h-8 flex-none items-center gap-2.5 px-3;
+    @apply flex h-9 flex-none items-center gap-2.5 px-4;
+    background-color: var(--apex-surface);
     border-bottom: 1px solid var(--apex-border);
   }
 
@@ -37,8 +38,8 @@
   }
 
   .ui-pane-title {
-    @apply truncate font-semibold;
-    font-size: var(--apex-text-md);
+    @apply truncate font-medium;
+    font-size: var(--apex-text-sm);
   }
 
   .ui-pane-sub {

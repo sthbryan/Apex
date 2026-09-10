@@ -8,10 +8,14 @@ import {
   asidePanel,
   asideResizing,
   asideWidth,
+  closeAside,
+  openAside,
   resetAsideWidth,
   setAsideWidth,
 } from "@/app/layout/state";
+import { groupOn } from "@/features/settings/toolGroups";
 import { t } from "@/shared/i18n";
+import { Icon } from "@/shared/ui/Icon";
 
 const BrowserView = lazy(async () => ({
   default: (await import("@/features/browser/BrowserView")).BrowserView,
@@ -46,9 +50,38 @@ export function Aside() {
       }
     >
       {open ? (
-        <Suspense fallback={<p class="p-3 text-faint">{t("dock.loading")}</p>}>
-          {panel === "browser" ? <BrowserView /> : <ApiPanel />}
-        </Suspense>
+        <>
+          <div class="apex-aside-tabs" role="group" aria-label={t("dock.panels")}>
+            {groupOn("api") && (
+              <button type="button" aria-pressed={panel === "api"} onClick={() => openAside("api")}>
+                <Icon name="send" size={14} />
+                {t("api.title")}
+              </button>
+            )}
+            {groupOn("browser") && (
+              <button
+                type="button"
+                aria-pressed={panel === "browser"}
+                onClick={() => openAside("browser")}
+              >
+                <Icon name="globe" size={14} />
+                {t("browser.title")}
+              </button>
+            )}
+            <button
+              type="button"
+              class="apex-aside-close"
+              title={t("aside.close")}
+              aria-label={t("aside.close")}
+              onClick={closeAside}
+            >
+              <Icon name="close" size={14} />
+            </button>
+          </div>
+          <Suspense fallback={<p class="p-3 text-faint">{t("dock.loading")}</p>}>
+            {panel === "browser" ? <BrowserView /> : <ApiPanel />}
+          </Suspense>
+        </>
       ) : null}
     </SidePanel>
   );
