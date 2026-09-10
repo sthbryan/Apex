@@ -124,7 +124,7 @@ export function Home() {
       foot={<Summary />}
     >
       <Composer
-        class="mt-3"
+        class="home-composer mt-3"
         elRef={field}
         label={t("home.task")}
         placeholder={racing ? t("home.racePlaceholder") : t("home.placeholder")}
@@ -141,7 +141,7 @@ export function Home() {
         onSubmit={start}
         lead={
           <>
-            <ToggleChipGroup label={t("home.agents")} scroll>
+            <ToggleChipGroup class="home-agents" label={t("home.agents")} scroll>
               {runnable.map((agent) => {
                 const on = chosen.includes(agent.name);
                 return (

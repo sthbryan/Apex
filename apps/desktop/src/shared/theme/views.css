@@ -4,6 +4,53 @@
   box-shadow: 0 3px 12px rgb(0 0 0 / 0.06);
 }
 
+.home-composer {
+  container-type: inline-size;
+}
+
+.home-composer .ui-composer-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.home-composer .ui-composer-spacer {
+  display: none;
+}
+
+.home-composer .home-agents {
+  min-width: 0;
+  max-width: 100%;
+  padding: 3px;
+  scroll-padding-inline: 3px;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.home-composer .home-agents::-webkit-scrollbar {
+  display: block;
+  height: 5px;
+}
+
+.home-agents .ui-toggle-chip {
+  white-space: nowrap;
+}
+
+@container (max-width: 500px) {
+  .home-composer .ui-composer-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .home-composer .home-agents {
+    grid-column: 1 / -1;
+  }
+
+  .home-composer .home-options {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
 .home-options {
   display: flex;
   flex-wrap: wrap;
