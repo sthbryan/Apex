@@ -616,6 +616,9 @@ export const en = {
     clearFinished: "Clear finished",
   },
   home: {
+    starting: "Starting...",
+    startWait: "Starting {agents}. Your task will be sent when ready.",
+    startSlow: "Still waiting for {agents} to finish starting. Your task is preserved.",
     title: "Home",
     tagline: "Run a team of AI agents, not a wall of terminals.",
     task: "Task",

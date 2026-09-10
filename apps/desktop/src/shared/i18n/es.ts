@@ -617,6 +617,9 @@ export const es: Messages = {
     clearFinished: "Limpiar terminadas",
   },
   home: {
+    starting: "Iniciando...",
+    startWait: "Iniciando {agents}. La tarea se enviará cuando esté listo.",
+    startSlow: "Seguimos esperando que {agents} termine de iniciar. Tu tarea está conservada.",
     title: "Inicio",
     tagline: "Dirigí un equipo de agentes, no una pared de terminales.",
     task: "Tarea",

@@ -1,12 +1,16 @@
 import { act } from "preact/test-utils";
-import { beforeEach, expect, it } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { activeProjectId, projects } from "@/features/projects/state";
+import { startSession } from "@/features/sessions/pending";
 import { agentModes, disabledAgents, lastAgent } from "@/features/settings/agentMode";
 import { Home } from "@/features/workspace/Home";
 import { agents } from "@/shared/daemon";
 import { render } from "@/test/render";
 
+vi.mock("@/features/sessions/pending", () => ({ startSession: vi.fn() }));
+
 beforeEach(() => {
+  vi.mocked(startSession).mockReset();
   projects.value = [{ id: "test", name: "Apex", root: "/tmp/apex", is_git: true }];
   activeProjectId.value = "test";
   disabledAgents.value = [];
@@ -25,6 +29,39 @@ beforeEach(() => {
     mcp_blocked: false,
     mcp_hint: null,
   }));
+});
+
+it("shows pending startup, prevents duplicate requests and retains the task after failure", async () => {
+  let fail: (error: Error) => void = () => {};
+  vi.mocked(startSession).mockImplementation(
+    () =>
+      new Promise((_, reject) => {
+        fail = reject;
+      }),
+  );
+  const { container } = render(<Home />);
+  const field = container.querySelector("textarea");
+  const form = container.querySelector("form");
+  if (!field || !form) throw new Error("Missing composer");
+  act(() => {
+    field.value = "Review startup";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  act(() => {
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  });
+  expect(startSession).toHaveBeenCalledTimes(1);
+  expect(form.getAttribute("aria-busy")).toBe("true");
+  expect(field.value).toBe("Review startup");
+  expect(container.querySelector('[role="status"]')).not.toBeNull();
+  await act(async () => {
+    fail(new Error("Agent did not answer"));
+  });
+  expect(form.getAttribute("aria-busy")).toBe("false");
+  expect(field.value).toBe("Review startup");
+  expect(container.querySelector('[role="alert"]')?.textContent).toBe("Agent did not answer");
+  expect(container.querySelector<HTMLButtonElement>('[type="submit"]')?.disabled).toBe(false);
 });
 
 it("keeps single-agent selection and isolation while exposing race selection", () => {

@@ -5,6 +5,7 @@ import {
   Dot,
   ListRow,
   SectionLabel,
+  Spinner,
   ToggleChip,
   ToggleChipGroup,
   Welcome,
@@ -24,7 +25,7 @@ import { raceSession } from "@/features/sessions/state";
 import { enabledAgents, lastAgent, runsUnattended } from "@/features/settings/agentMode";
 import { playTypingCue } from "@/features/settings/sounds";
 import { focusSession, homeAsk, homeRacing } from "@/features/workspace/state";
-import { complain } from "@/shared/daemon";
+import { spell } from "@/shared/daemon";
 import { t } from "@/shared/i18n";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -40,7 +41,19 @@ export function Home() {
   const [picked, setPicked] = useState<string[]>(() => remembered(runnable.map((a) => a.name)));
   const [isolate, setIsolate] = useState(false);
   const [task, setTask] = useState("");
+  const [starting, setStarting] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const [startError, setStartError] = useState<string | null>(null);
+  const inFlight = useRef(false);
   const field = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (field.current) field.current.readOnly = starting;
+    if (!starting) return;
+    const began = Date.now();
+    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - began) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [starting]);
 
   useEffect(() => {
     field.current?.focus();
@@ -70,39 +83,46 @@ export function Home() {
     }
   };
 
-  const start = (event: Event) => {
+  const start = async (event: Event) => {
     event.preventDefault();
-    if (!ready || !project) {
+    if (!ready || !project || inFlight.current) {
       return;
     }
     const text = task.trim();
-    setTask("");
-    setMode("session");
-    setIsolate(false);
-    setPicked(remembered(runnable.map((agent) => agent.name)));
+    inFlight.current = true;
+    setStarting(true);
+    setSeconds(0);
+    setStartError(null);
 
-    if (racing) {
-      void raceSession(project.id, chosen, text, chosen.filter(runsUnattended))
-        .then((started) => {
-          openRace.value = started[0]?.run ?? null;
-          push({
-            sessionId: null,
-            kind: "info",
-            title: t("race.started", { count: String(started.length) }),
-            body: started.map((session) => session.agent).join(", "),
-          });
-        })
-        .catch(complain);
-      return;
+    try {
+      if (racing) {
+        const started = await raceSession(project.id, chosen, text, chosen.filter(runsUnattended));
+        openRace.value = started[0]?.run ?? null;
+        push({
+          sessionId: null,
+          kind: "info",
+          title: t("race.started", { count: String(started.length) }),
+          body: started.map((session) => session.agent).join(", "),
+        });
+      } else {
+        const agent = chosen[0];
+        const alone = isolate && project.is_git;
+        await startSession(
+          { id: 0, project: project.id, agent, direction: null, isGit: project.is_git, task: text },
+          alone ? "worktree" : "directory",
+          alone ? (text ? slugify(text).slice(0, SLUG_LIMIT) : suggestName(agent)) : null,
+        );
+      }
+      setTask("");
+      setMode("session");
+      setIsolate(false);
+      setPicked(remembered(runnable.map((agent) => agent.name)));
+    } catch (cause) {
+      setStartError(spell(cause));
+    } finally {
+      inFlight.current = false;
+      setStarting(false);
     }
-
-    const agent = chosen[0];
-    const alone = isolate && project.is_git;
-    void startSession(
-      { id: 0, project: project.id, agent, direction: null, isGit: project.is_git, task: text },
-      alone ? "worktree" : "directory",
-      alone ? (text ? slugify(text).slice(0, SLUG_LIMIT) : suggestName(agent)) : null,
-    ).catch(complain);
   };
 
   return (
@@ -113,6 +133,7 @@ export function Home() {
       suggestions={recentTasks().map((recent) => (
         <Button
           key={recent}
+          disabled={starting}
           size="sm"
           class="max-w-full truncate"
           title={recent}
@@ -125,11 +146,13 @@ export function Home() {
     >
       <Composer
         class="home-composer mt-3"
+        aria-busy={starting}
         elRef={field}
         label={t("home.task")}
         placeholder={racing ? t("home.racePlaceholder") : t("home.placeholder")}
         value={task}
         onInput={(event) => {
+          if (inFlight.current) return;
           setTask(event.currentTarget.value);
           playTypingCue();
         }}
@@ -148,6 +171,7 @@ export function Home() {
                   <ToggleChip
                     key={agent.name}
                     pressed={on}
+                    disabled={starting}
                     iconOnly={!on}
                     title={agent.name}
                     lead={<AgentIcon agent={agent.name} size="sm" />}
@@ -164,6 +188,7 @@ export function Home() {
                 class="home-option"
                 title={t("home.modeRaceHint")}
                 aria-pressed={racing}
+                disabled={starting}
                 onClick={() => swapMode(racing ? "session" : "race")}
               >
                 <Icon name="swap" size={14} />
@@ -175,7 +200,7 @@ export function Home() {
                   class="home-option"
                   title={t("isolation.worktreeHint")}
                   aria-pressed={racing || isolate}
-                  disabled={racing}
+                  disabled={racing || starting}
                   onClick={() => setIsolate((on) => !on)}
                 >
                   <Icon name="branch" size={14} />
@@ -186,12 +211,34 @@ export function Home() {
           </>
         }
         actions={
-          <Button type="submit" variant="primary" disabled={!ready} title={t("home.startHint")}>
-            <Icon name="send" size={13} />
-            {racing ? t("home.race") : t("home.start")}
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!ready || starting}
+            title={t("home.startHint")}
+          >
+            {starting ? (
+              <Spinner size="sm" label={t("home.starting")} />
+            ) : (
+              <Icon name="send" size={13} />
+            )}
+            {starting ? t("home.starting") : racing ? t("home.race") : t("home.start")}
           </Button>
         }
       />
+      {starting && (
+        <p class="w-full text-left text-sm text-muted" role="status">
+          {t(seconds >= 15 ? "home.startSlow" : "home.startWait", { agents: chosen.join(", ") })}
+          <span class="ml-2 font-mono tabular-nums" aria-hidden="true">
+            {seconds}s
+          </span>
+        </p>
+      )}
+      {startError && (
+        <p class="w-full text-left text-sm text-state-failed" role="alert">
+          {startError}
+        </p>
+      )}
     </Welcome>
   );
 }
